@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{self, Mint, TokenAccount, Transfer, Token, MintTo};
+use anchor_spl::token::{self, Mint, TokenAccount, Transfer, Token, MintTo, Burn};
 use spl_token::instruction::AuthorityType;
 
 const DECIMALS:u8 = 6;
@@ -90,6 +90,45 @@ pub mod solbond {
 
         Ok(())
     }
+
+    pub fn redeem_bond(ctx: Context<RedeemBond>, amount: u64) -> ProgramResult {
+
+        let bond_account = &mut ctx.accounts.bond_account;
+        let cpi_accounts = Burn {
+            mint: ctx.accounts.redeemable_mint.to_account_info(),
+            to: ctx.accounts.initializer_token_account.to_account_info(),
+            authority: ctx.accounts.initializer.to_account_info(),
+        };
+
+        // put checks for amount in later
+        // update amounts later
+        // lol this is just the start
+        let bump = bond_account.bump;
+        let seeds = &[
+            BOND_PDA_SEED,
+            &[bump],
+        ];
+        
+        let signer = &[&seeds[..]];
+        // burn the tokens
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+        token::burn(cpi_ctx, amount)?;
+
+        // send solana back to user
+
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.bond_solana_account.to_account_info(),
+            to: ctx.accounts.initializer_solana_account.to_account_info(),
+            authority: ctx.accounts.initializer.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        token::transfer(cpi_ctx, amount)?;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -165,13 +204,8 @@ pub struct BuyBond<'info> {
     pub bond_account: ProgramAccount<'info, BondAccount>,
 
     #[account(
-        init,
-        mint::decimals = DECIMALS,
-        mint::authority = bond_account,
         seeds = ["smt_jfh".as_bytes(),b"redeemable_mint".as_ref()],
         bump = bond_account.bump,
-        payer = initializer,
-
     )]
     pub redeemable_mint: Account<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
@@ -181,6 +215,44 @@ pub struct BuyBond<'info> {
 
 }
 
+#[derive(Accounts)]
+pub struct RedeemBond<'info> {
+    #[account(signer)]
+    pub initializer: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub initializer_solana_account: Account<'info, TokenAccount>,
+    
+    #[account(mut)]
+    pub initializer_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub bond_solana_account: Account<'info, TokenAccount>,
+    
+    #[account(mut)]
+    pub bond_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut, 
+              constraint = bond_account.initializer_solana_account == *initializer_solana_account.to_account_info().key,
+              constraint = bond_account.initializer_token_account == *bond_token_account.to_account_info().key,
+              constraint = bond_account.initializer_key == *initializer.to_account_info().key,
+              close = initializer
+              )]
+    pub bond_account: ProgramAccount<'info, BondAccount>,
+
+    #[account(
+        seeds = ["smt_jfh".as_bytes(),b"redeemable_mint".as_ref()],
+        bump = bond_account.bump,
+
+    )]
+    pub redeemable_mint: Account<'info, Mint>,
+
+    pub rent: Sysvar<'info, Rent>,
+
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+
+}
 
 #[account]
 pub struct BondAccount {
@@ -207,23 +279,3 @@ impl BondAccount {
                             + 64   // time_frame
                             + 8;   // bump 
 }
-
-
-
-
-/*impl<'info> BuyBond<'info> {
-    fn into_transfer_to_initializer_context(
-        &self,
-    ) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-        let cpi_accounts = Transfer {
-            from: self.buyer_solana_account.to_account_info().clone(),
-            to: self
-                .bond_solana_account
-                .to_account_info()
-                .clone(),
-            authority: self.signer_account.clone(),
-        };
-        let cpi_program = self.token_program.to_account_info();
-        CpiContext::new(cpi_program, cpi_accounts)
-    }
-}*/

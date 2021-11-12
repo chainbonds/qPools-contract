@@ -21,76 +21,76 @@ pub mod solbond {
                       _bump: u8,
                       _user_name: String) -> ProgramResult {
 
-        // msg!("INITIALIZE BOND");
-        //
-        // // turn name into bytes to write to BondAccount
-        // //let name_bytes = _user_name.as_bytes();
-        // //let mut name_data = [b' '; 10];
-        // //name_data[..name_bytes.len()].copy_from_slice(name_bytes);
-        //
-        // let bond_account = &mut ctx.accounts.bond_account;
-        //
-        // //bond_account.user_name = name_data;
-        // bond_account.bump = _bump;
-        // bond_account.initializer_amount = _initializer_amount;
-        // bond_account.bond_time = _time_frame;
-        //
-        //
-        // // bond_account.initializer is the one who initializes the program
-        // // and has to pay for it
-        // bond_account.initializer_key = *ctx.accounts.initializer.key;
-        //
-        // bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
-        // bond_account.initializer_solana_account = *ctx.accounts.initializer_solana_account.to_account_info().key;
-        // bond_account.solana_holdings_account = *ctx.accounts.solana_holdings_account.to_account_info().key;
-        // bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
-        //
-        // // I think this transfers the solana that the user wants to deposit
-        // // to an address belonging to the bond that holds the solana
-        // let cpi_accounts = Transfer {
-        //     from: ctx.accounts.initializer_solana_account.to_account_info(),
-        //     to: ctx.accounts.solana_holdings_account.to_account_info(),
-        //     authority: ctx.accounts.initializer.to_account_info(),
-        // };
-        // let cpi_program = ctx.accounts.token_program.to_account_info();
-        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        //
-        // token::transfer(cpi_ctx, _initializer_amount)?;
-        //
-        // // Now we give the user some minted tokens so they don't cry
-        // let seeds = &[
-        //     BOND_PDA_SEED,
-        //     &[_bump],
-        // ];
-        //
-        // let signer = &[&seeds[..]];
-        // let cpi_accounts_mint = MintTo {
-        //     mint: ctx.accounts.redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.initializer_token_account.to_account_info(),
-        //     authority: ctx.accounts.initializer.to_account_info(),
-        // };
-        // let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-        // let cpi_ctx_mint = CpiContext::new_with_signer(cpi_program_mint,
-        //                                                           cpi_accounts_mint,
-        //                                                        signer);
-        // token::mint_to(cpi_ctx_mint, _initializer_amount)?;
-        // // Now we give the user some minted tokens so they don't cry
-        // let seeds = &[
-        //     BOND_PDA_SEED,
-        //     &[_bump],
-        // ];
-        //
-        // let signer = &[&seeds[..]];
-        // let cpi_accounts_mint = MintTo {
-        //             mint: ctx.accounts.redeemable_mint.to_account_info(),
-        //             to: ctx.accounts.initializer_token_account.to_account_info(),
-        //             authority: ctx.accounts.initializer.to_account_info(),
-        // };
-        // let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-        // let cpi_ctx_mint = CpiContext::new_with_signer(cpi_program_mint,
-        //                                                                   cpi_accounts_mint,
-        //                                                                signer);
-        // token::mint_to(cpi_ctx_mint, _initializer_amount)?;
+        msg!("INITIALIZE BOND");
+
+        // turn name into bytes to write to BondAccount
+        //let name_bytes = _user_name.as_bytes();
+        //let mut name_data = [b' '; 10];
+        //name_data[..name_bytes.len()].copy_from_slice(name_bytes);
+
+        let bond_account = &mut ctx.accounts.bond_account;
+
+        //bond_account.user_name = name_data;
+        bond_account.bump = _bump;
+        bond_account.initializer_amount = _initializer_amount;
+        bond_account.bond_time = _time_frame;
+
+
+        // bond_account.initializer is the one who initializes the program
+        // and has to pay for it
+        bond_account.initializer_key = *ctx.accounts.initializer.key;
+
+        bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
+        bond_account.initializer_solana_account = *ctx.accounts.initializer_solana_account.to_account_info().key;
+        bond_account.solana_holdings_account = *ctx.accounts.solana_holdings_account.to_account_info().key;
+        bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
+
+        // I think this transfers the solana that the user wants to deposit
+        // to an address belonging to the bond that holds the solana
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.initializer_solana_account.to_account_info(),
+            to: ctx.accounts.solana_holdings_account.to_account_info(),
+            authority: ctx.accounts.initializer.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        token::transfer(cpi_ctx, _initializer_amount)?;
+
+        // Now we give the user some minted tokens so they don't cry
+        let seeds = &[
+            BOND_PDA_SEED,
+            &[_bump],
+        ];
+
+        let signer = &[&seeds[..]];
+        let cpi_accounts_mint = MintTo {
+            mint: ctx.accounts.redeemable_mint.to_account_info(),
+            to: ctx.accounts.initializer_token_account.to_account_info(),
+            authority: ctx.accounts.initializer.to_account_info(),
+        };
+        let cpi_program_mint = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx_mint = CpiContext::new_with_signer(cpi_program_mint,
+                                                                  cpi_accounts_mint,
+                                                               signer);
+        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
+        // Now we give the user some minted tokens so they don't cry
+        let seeds = &[
+            BOND_PDA_SEED,
+            &[_bump],
+        ];
+
+        let signer = &[&seeds[..]];
+        let cpi_accounts_mint = MintTo {
+                    mint: ctx.accounts.redeemable_mint.to_account_info(),
+                    to: ctx.accounts.initializer_token_account.to_account_info(),
+                    authority: ctx.accounts.initializer.to_account_info(),
+        };
+        let cpi_program_mint = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx_mint = CpiContext::new_with_signer(cpi_program_mint,
+                                                                          cpi_accounts_mint,
+                                                                       signer);
+        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
                 
         //let (pda, _bump_seed) = Pubkey::find_program_address(&[BOND_PDA_SEED], ctx.program_id);
 
@@ -175,6 +175,8 @@ pub struct InitializeBond<'info> {
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+
+
 }
 
 
@@ -209,34 +211,34 @@ pub struct BuyBond<'info> {
 
 }*/
 
-//
-// #[account]
-// pub struct BondAccount {
-//     pub initializer_key: Pubkey,
-//     pub initializer_token_account: Pubkey,
-//     pub initializer_solana_account: Pubkey,
-//     pub solana_holdings_account: Pubkey,
-//     pub redeemable_mint: Pubkey,
-//     pub initializer_amount: u64,
-//     pub bond_time: i64,
-//     pub bump: u8,
-//
-//
-// }
-//
-//
-// impl BondAccount {
-//     pub const LEN: usize =    32   // initializer_key
-//                             + 32   // initializer_token_account
-//                             + 32   // initializer_solana_account
-//                             + 32   // solana_holdings_account
-//                             + 32   // redeemable_mint
-//                             + 64   // amount
-//                             + 64   // time_frame
-//                             + 8;   // bump
-// }
-//
-//
+
+#[account]
+pub struct BondAccount {
+    pub initializer_key: Pubkey,
+    pub initializer_token_account: Pubkey,
+    pub initializer_solana_account: Pubkey,
+    pub solana_holdings_account: Pubkey,
+    pub redeemable_mint: Pubkey,
+    pub initializer_amount: u64,
+    pub bond_time: i64,
+    pub bump: u8,
+
+
+}
+
+
+impl BondAccount {
+    pub const LEN: usize =    32   // initializer_key
+                            + 32   // initializer_token_account
+                            + 32   // initializer_solana_account
+                            + 32   // solana_holdings_account
+                            + 32   // redeemable_mint
+                            + 64   // amount
+                            + 64   // time_frame
+                            + 8;   // bump
+}
+
+
 
 
 /*impl<'info> BuyBond<'info> {

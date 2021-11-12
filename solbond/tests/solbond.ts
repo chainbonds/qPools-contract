@@ -18,6 +18,8 @@ describe('solbond', () => {
     const program = anchor.workspace.Solbond as Program<Solbond>;
     const payer = getPayer();
 
+    console.log("Payer is. ", payer);
+
     // Bond account is a random keypair
 
     it('Initialize the state-of-the-world', async () => {
@@ -46,7 +48,11 @@ describe('solbond', () => {
 
         // All these will be controlled fully by the client
         console.log("Creating redeemable Mint");
+        console.log("Provider is: ", provider);
+        console.log("Payer is: ", payer);
+        console.log("Bond Signer is: ", bondSigner);
         redeemableMint = await createMint(provider, payer, bondSigner);
+        console.log("Done creating redeemable Mint");
         // We need to create an associated token account for the guy who has instantiated the redeemableMint
         initializerSolanaAccount = payer.publicKey;
         console.log("Getting initializer token account");
@@ -67,11 +73,13 @@ describe('solbond', () => {
         initializerAmount = new BN(INITIALIZER_AMOUNT);
 
         console.log("Payer: ", payer);
+        return;
+
 
         const addressContext: any = {
-            bondAccount: payer.publicKey,
+            bondAccount: bondAccount.publicKey,
             // bondSigner: payer,
-            // initializer: payer,
+            initializer: payer.publicKey,
             // initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,
             // initializerSolanaAccount: initializerSolanaAccount,
@@ -85,7 +93,10 @@ describe('solbond', () => {
             bondTimeFrame,
             initializerAmount,
             bump,
-            {accounts: addressContext}
+            {
+                accounts: addressContext,
+                signers: [bondAccount,]
+            }
         );
         console.log("Your transaction signature", tx);
     });

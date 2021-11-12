@@ -6,7 +6,7 @@ use spl_token::instruction::AuthorityType;
 
 const DECIMALS: u8 = 6;
 
-declare_id!("7bg6EdDWgEwqDQAft4MfwBradFgFcHKqHbzECcB1i672");
+declare_id!("6wMXJDkQGTykQq2Sf7rPit2qz7H5nsaw4iVKWNrAgd43");
 
 #[program]
 pub mod solbond {
@@ -158,7 +158,7 @@ pub struct InitializeBond<'info> {
     /// @distribution_authority
     /// authority that pays for all transactions
     // #[account(signer)]
-    // pub initializer: Signer<'info>,
+    pub initializer: Signer<'info>,
 
     // /// @initializer_token_account
     // /// the account holding the tokens the user will receive in exchange for the deposit has to be zero

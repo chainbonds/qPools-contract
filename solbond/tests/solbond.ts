@@ -73,12 +73,10 @@ describe('solbond', () => {
         initializerAmount = new BN(INITIALIZER_AMOUNT);
 
         console.log("Payer: ", payer);
-        return;
-
 
         const addressContext: any = {
             bondAccount: bondAccount.publicKey,
-            // bondSigner: payer,
+            bondSigner: bondSigner,
             initializer: payer.publicKey,
             // initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,
@@ -95,10 +93,12 @@ describe('solbond', () => {
             bump,
             {
                 accounts: addressContext,
-                signers: [bondAccount,]
+                signers: [bondAccount]
             }
         );
         console.log("Your transaction signature", tx);
+        return;
+
     });
 
 

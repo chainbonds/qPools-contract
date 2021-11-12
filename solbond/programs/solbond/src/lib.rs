@@ -153,12 +153,12 @@ pub struct InitializeBond<'info> {
     // /// @bond_signer
     // /// PDA that signs all transactions by bond-account
     // #[account(signer)]
-    // pub bond_signer: AccountInfo<'info>,
-    //
+    pub bond_signer: Signer<'info>,
+
     /// @distribution_authority
     /// authority that pays for all transactions
     // #[account(signer)]
-    pub initializer: Signer<'info>,
+    pub initializer: AccountInfo<'info>,
 
     // /// @initializer_token_account
     // /// the account holding the tokens the user will receive in exchange for the deposit has to be zero

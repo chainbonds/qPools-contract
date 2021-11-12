@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer, Token, MintTo};
 use spl_token::instruction::AuthorityType;
-use std::ops::Deref;
 
 const DECIMALS:u8 = 6;
 
@@ -43,41 +42,36 @@ pub mod solbond {
         bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
         bond_account.initializer_solana_account = *ctx.accounts.initializer_solana_account.to_account_info().key;
         bond_account.solana_holdings_account = *ctx.accounts.solana_holdings_account.to_account_info().key;
-        bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
+        // bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
+                
+        //let (pda, _bump_seed) = Pubkey::find_program_address(&[BOND_PDA_SEED], ctx.program_id);
+
+        //token::set_authority(ctx.accounts.into(), AuthorityType::AccountOwner, Some(pda))?;
         
+        Ok(())
+    }
+
+
+    pub fn buy_bond(ctx: Context<BuyBond>) -> ProgramResult {
+        msg!("BUY BOND");
+        let bond_account = &mut ctx.accounts.bond_account;
+
         // I think this transfers the solana that the user wants to deposit 
         // to an address belonging to the bond that holds the solana
         let cpi_accounts = Transfer {
             from: ctx.accounts.initializer_solana_account.to_account_info(),
-            to: ctx.accounts.solana_holdings_account.to_account_info(),
+            to: ctx.accounts.bond_solana_account.to_account_info(),
             authority: ctx.accounts.initializer.to_account_info(),
         };
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-
-        token::transfer(cpi_ctx, _initializer_amount)?;
-
+        let amount = bond_account.initializer_amount;
+        let bump = bond_account.bump;
+        token::transfer(cpi_ctx, amount)?;
         // Now we give the user some minted tokens so they don't cry
         let seeds = &[
             BOND_PDA_SEED,
-            &[_bump],
-        ];
-
-        let signer = &[&seeds[..]];
-        let cpi_accounts_mint = MintTo {
-            mint: ctx.accounts.redeemable_mint.to_account_info(),
-            to: ctx.accounts.initializer_token_account.to_account_info(),
-            authority: ctx.accounts.initializer.to_account_info(),
-        };
-        let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx_mint = CpiContext::new_with_signer(cpi_program_mint, 
-                                                                  cpi_accounts_mint, 
-                                                               signer);
-        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
-        // Now we give the user some minted tokens so they don't cry
-        let seeds = &[
-            BOND_PDA_SEED,
-            &[_bump],
+            &[bump],
         ];
         
         let signer = &[&seeds[..]];
@@ -90,36 +84,12 @@ pub mod solbond {
         let cpi_ctx_mint = CpiContext::new_with_signer(cpi_program_mint, 
                                                                           cpi_accounts_mint, 
                                                                        signer);
-        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
-                
-        //let (pda, _bump_seed) = Pubkey::find_program_address(&[BOND_PDA_SEED], ctx.program_id);
-
-        //token::set_authority(ctx.accounts.into(), AuthorityType::AccountOwner, Some(pda))?;
-
-        Ok(())
-    }
-
-
-
-
-
-
-    /*pub fn buy_bond(ctx: Context<BuyBond>) -> ProgramResult {
-        msg!("BUY BOND");
-        let bond_account = &mut ctx.accounts.bond_account;
-
-        let deposit_amount = bond_account.deposit_amount;
-        let time_frame = bond_account.time_frame;
-
-        token::transfer(
-            ctx.accounts.into_transfer_to_initializer_context(),
-            deposit_amount,
-            )?;
+        token::mint_to(cpi_ctx_mint, amount)?;
 
         
 
         Ok(())
-    }*/
+    }
 }
 
 #[derive(Accounts)]
@@ -160,17 +130,6 @@ pub struct InitializeBond<'info> {
      )]
     pub bond_account: Account<'info, BondAccount>,
 
-    #[account(
-        init,
-        mint::decimals = DECIMALS,
-        mint::authority = bond_account,
-        seeds = [_user_name.as_bytes(),b"redeemable_mint".as_ref()],
-        bump = _redeemable_bump,
-        payer = initializer,
-
-    )]
-    pub redeemable_mint: Account<'info, Mint>,
-
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
@@ -180,15 +139,16 @@ pub struct InitializeBond<'info> {
 }
 
 
-/*#[derive(Accounts)]
+#[derive(Accounts)]
 pub struct BuyBond<'info> {
     #[account(signer)]
-    pub signer_account: AccountInfo<'info>,
+    pub initializer: AccountInfo<'info>,
+
     #[account(mut)]
-    pub buyer_solana_account: Account<'info, TokenAccount>,
+    pub initializer_solana_account: Account<'info, TokenAccount>,
     
     #[account(mut)]
-    pub buyer_token_account: Account<'info, TokenAccount>,
+    pub initializer_token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub bond_solana_account: Account<'info, TokenAccount>,
@@ -196,20 +156,30 @@ pub struct BuyBond<'info> {
     #[account(mut)]
     pub bond_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub initializer: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-
-
     #[account(mut, 
-              constraint = bond_account.buyer_solana_account == *buyer_solana_account.to_account_info().key,
-              constraint = bond_account.token_mint_account == *bond_token_account.to_account_info().key,
-              constraint = bond_account.authority == *initializer.to_account_info().key,
+              constraint = bond_account.initializer_solana_account == *initializer_solana_account.to_account_info().key,
+              constraint = bond_account.initializer_token_account == *bond_token_account.to_account_info().key,
+              constraint = bond_account.initializer_key == *initializer.to_account_info().key,
               close = initializer
               )]
     pub bond_account: ProgramAccount<'info, BondAccount>,
 
-}*/
+    #[account(
+        init,
+        mint::decimals = DECIMALS,
+        mint::authority = bond_account,
+        seeds = ["smt_jfh".as_bytes(),b"redeemable_mint".as_ref()],
+        bump = bond_account.bump,
+        payer = initializer,
+
+    )]
+    pub redeemable_mint: Account<'info, Mint>,
+    pub rent: Sysvar<'info, Rent>,
+
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+
+}
 
 
 #[account]
@@ -218,7 +188,7 @@ pub struct BondAccount {
     pub initializer_token_account: Pubkey,
     pub initializer_solana_account: Pubkey,
     pub solana_holdings_account: Pubkey,
-    pub redeemable_mint: Pubkey,
+    // pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: i64,
     pub bump: u8,
@@ -232,7 +202,7 @@ impl BondAccount {
                             + 32   // initializer_token_account
                             + 32   // initializer_solana_account
                             + 32   // solana_holdings_account
-                            + 32   // redeemable_mint
+                            // + 32   // redeemable_mint
                             + 64   // amount
                             + 64   // time_frame
                             + 8;   // bump 

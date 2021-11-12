@@ -1,7 +1,7 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{self, Mint, TokenAccount, Transfer, Token, MintTo};
+use anchor_spl::token::{self, Burn, Mint, TokenAccount, Transfer, Token, MintTo};
 use spl_token::instruction::AuthorityType;
 
 const DECIMALS: u8 = 6;
@@ -15,7 +15,7 @@ pub mod solbond {
     const BOND_PDA_SEED: &[u8] = b"bond";
 
     pub fn initialize(
-        ctx: Context<Initialize>,
+        ctx: Context<InitializeBond>,
         _time_frame: i64,
         _initializer_amount: u64,
         _bump: u8,
@@ -65,7 +65,7 @@ pub mod solbond {
         // Some seed & signer black magic
         let seeds = &[
             BOND_PDA_SEED,
-            &[_bump]
+            &[bump]
         ];
         let signer = &[&seeds[..]];
 
@@ -80,9 +80,9 @@ pub mod solbond {
             cpi_accounts_mint,
             signer,
         );
-        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
+        token::mint_to(cpi_ctx_mint, amount)?;
 
-        Ok(());
+        Ok(())
     }
 
     pub fn redeem_bond(ctx: Context<RedeemBond>, amount: u64) -> ProgramResult {
@@ -126,7 +126,7 @@ pub mod solbond {
 
         token::transfer(cpi_ctx, amount)?;
 
-        Ok(());
+        Ok(())
     }
 }
 

@@ -66,18 +66,21 @@ describe('solbond', () => {
         bondTimeFrame = nowBn.add(new BN(BOND_LOCKUP_DURACTION_IN_SECONDS));
         initializerAmount = new BN(INITIALIZER_AMOUNT);
 
+        console.log("Payer: ", payer);
+
         const addressContext: any = {
-            // initializer: initializerSolanaAccount,
-            initializerTokenAccount: initializerTokenAccount,
+            bondAccount: payer.publicKey,
+            // bondSigner: payer,
+            // initializer: payer,
+            // initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,
-            initializerSolanaAccount: initializerSolanaAccount,
-            bondAccount: bondAccount,
+            // initializerSolanaAccount: initializerSolanaAccount,
             clock: web3.SYSVAR_CLOCK_PUBKEY,
             systemProgram: web3.SystemProgram.programId,
             tokenProgram: TOKEN_PROGRAM_ID,
         };
 
-        console.log("Getting RPC Call");
+        console.log("Getting RPC Call", addressContext);
         const tx = await program.rpc.initialize(
             bondTimeFrame,
             initializerAmount,

@@ -20,6 +20,9 @@ describe('solbond', () => {
 
     console.log("Payer is. ", payer);
 
+    // Airdrop many tokens to payer
+
+
     // Bond account is a random keypair
 
     it('Initialize the state-of-the-world', async () => {
@@ -88,8 +91,6 @@ describe('solbond', () => {
             bondAuthority: bondSigner,
             initializer: payer.publicKey,
             initializerTokenAccount: initializerTokenAccount,
-            // solanaHoldingsAccount: initializerSolanaAccount,
-            // initializerSolanaAccount: initializerSolanaAccount,
             redeemableMint: redeemableMint.publicKey,
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: web3.SYSVAR_CLOCK_PUBKEY,

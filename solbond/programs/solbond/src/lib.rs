@@ -26,30 +26,64 @@ pub mod solbond {
         //     return Err(ErrorCode::LowBondSolAmount.into());
         // }
 
+
+
+        /**
+         * Transfer tokens from
+         */
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.initializer.to_account_info(),
+            to: ctx.accounts.bond_account.to_account_info(),
+            authority: ctx.accounts.initializer.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        token::transfer(cpi_ctx, _initializer_amount)?;
+
         msg!("MSG 1");
 
         /// Assign Variables to the Bond Pool
-        let bond_account = &mut ctx.accounts.bond_account;
+        let bond_account = &mut ctx.accounts.bond_account.clone();
 
         // Arguments
         bond_account.bump = _bump;
         bond_account.initializer_amount = _initializer_amount;
         bond_account.bond_time = _time_frame;
-        
 
         msg!("MSG 2");
         // Accounts
         bond_account.initializer_account = *ctx.accounts.initializer.key;
-        // bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
+        bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
         msg!("MSG 3");
-        // bond_account.initializer_account = *ctx.accounts.initializer.key;
         bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
-        // bond_account.solana_holdings_account = *ctx.accounts.solana_holdings_account.to_account_info().key;
 
         msg!("MSG 4");
+        // let amount = bond_account.initializer_amount;
+        // let bump = bond_account.bump;
 
-        // TODO: This should be here I believe
-        // bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
+        /**
+         * Mint redeemables
+         */
+        // TODO: Why is this black magic needed?
+        // let seeds = &[
+        //     BOND_PDA_SEED,
+        //     &[bump]
+        // ];
+        // let signer = &[&seeds[..]];
+
+        // let cpi_accounts_mint = MintTo {
+        //     mint: ctx.accounts.redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.initializer_token_account.to_account_info(),
+        //     authority: ctx.accounts.initializer.to_account_info(),
+        // };
+        // let cpi_program_mint = ctx.accounts.token_program.to_account_info();
+        // let cpi_ctx_mint = CpiContext::new_with_signer(
+        //     cpi_program_mint,
+        //     cpi_accounts_mint,
+        //     signer,
+        // );
+        // token::mint_to(cpi_ctx_mint, amount)?;
+
 
         Ok(())
     }
@@ -153,8 +187,8 @@ pub struct InitializeBond<'info> {
     #[account(init, payer = initializer, space = 8 + BondAccount::LEN)]
     pub bond_account: Account<'info, BondAccount>,
 
-    // /// @bond_signer
-    // /// PDA that signs all transactions by bond-account
+    /// @bond_signer
+    /// PDA that signs all transactions by bond-account
     // #[account(mut)]
     pub bond_authority: AccountInfo<'info>,
 
@@ -163,20 +197,11 @@ pub struct InitializeBond<'info> {
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
 
-    // /// @initializer_token_account
-    // /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
-    // /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
+    /// @initializer_token_account
+    /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
+    /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
     #[account(mut, constraint = initializer_token_account.amount == 0)]
     pub initializer_token_account: Account<'info, TokenAccount>,
-    //
-    // // #[account(mut)]
-    // // pub solana_holdings_account: Account<'info, TokenAccount>,
-    //
-    // /// @initializer_solana_account
-    // /// the account holding the solana which the user exchanges for a bond
-    // /// has to be equal to the initializer_amount
-    // #[account(signer)]
-    // pub initializer_solana_account: AccountInfo<'info>,
 
     // init,
     // mint::decimals = 6,
@@ -188,9 +213,7 @@ pub struct InitializeBond<'info> {
     // seeds = [42_u8],
     // bump = _bump
     // seeds = [b"42".as_ref, &[bump]],
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     pub redeemable_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -280,9 +303,7 @@ pub struct InitializeBond<'info> {
 #[account]
 pub struct BondAccount {
     pub initializer_account: Pubkey,
-    // pub initializer_token_account: Pubkey,
-    // pub initializer_solana_account: Pubkey,
-    // pub solana_holdings_account: Pubkey,
+    pub initializer_token_account: Pubkey,
     pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: u64,

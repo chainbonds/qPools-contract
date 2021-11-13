@@ -76,7 +76,7 @@ describe('solbond', () => {
 
         const addressContext: any = {
             bondAccount: bondAccount.publicKey,
-            bondSigner: bondSigner,
+            // bondSigner: bondSigner,
             initializer: payer.publicKey,
             // initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,
@@ -93,7 +93,7 @@ describe('solbond', () => {
             bump,
             {
                 accounts: addressContext,
-                signers: [bondAccount]
+                // signers: [payer]
             }
         );
         console.log("Your transaction signature", tx);

@@ -147,17 +147,17 @@ pub mod solbond {
 pub struct InitializeBond<'info> {
     /// @bond_account
     /// used to save the bond I guess the initializer will pay for the fees of calling this program
-    #[account(init, payer = bond_account, space = 8 + BondAccount::LEN)]
+    #[account(init, payer = initializer, space = 8 + BondAccount::LEN)]
     pub bond_account: Account<'info, BondAccount>,
 
     // /// @bond_signer
     // /// PDA that signs all transactions by bond-account
-    // #[account(signer)]
-    pub bond_signer: Signer<'info>,
+    // #[account(mut)]
+    // pub bond_authority: Signer<'info>,
 
     /// @distribution_authority
     /// authority that pays for all transactions
-    // #[account(signer)]
+    #[account(signer)]
     pub initializer: AccountInfo<'info>,
 
     // /// @initializer_token_account
@@ -260,10 +260,10 @@ pub struct InitializeBond<'info> {
  */
 #[account]
 pub struct BondAccount {
-    pub initializer_account: Pubkey,
-    pub initializer_token_account: Pubkey,
+    // pub initializer_account: Pubkey,
+    // pub initializer_token_account: Pubkey,
     // pub initializer_solana_account: Pubkey,
-    pub solana_holdings_account: Pubkey,
+    // pub solana_holdings_account: Pubkey,
     // pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: i64,

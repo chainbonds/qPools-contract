@@ -43,8 +43,9 @@ pub mod solbond {
         // bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
         msg!("MSG 3");
         // bond_account.initializer_account = *ctx.accounts.initializer.key;
-
+        bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
         // bond_account.solana_holdings_account = *ctx.accounts.solana_holdings_account.to_account_info().key;
+
         msg!("MSG 4");
 
         // TODO: This should be here I believe
@@ -155,11 +156,11 @@ pub struct InitializeBond<'info> {
     // /// @bond_signer
     // /// PDA that signs all transactions by bond-account
     // #[account(mut)]
-    // pub bond_authority: Signer<'info>,
+    pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority
     /// authority that pays for all transactions
-    #[account(signer)]
+    #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
 
     // /// @initializer_token_account
@@ -177,21 +178,20 @@ pub struct InitializeBond<'info> {
     // #[account(signer)]
     // pub initializer_solana_account: AccountInfo<'info>,
 
-    //     #[account(
-    //     seeds = ["smt_jfh".as_bytes(), b"redeemable_mint".as_ref()],
-    //     bump = bond_account.bump,
-    //
-    //     )]
-    //
+    // init,
+    // mint::decimals = 6,
+    // mint::authority = bond_authority,
+    // payer = initializer,
+    // seeds = ["42".as_bytes()],
+    // bump = _bump
+
+    // seeds = [42_u8],
+    // bump = _bump
+    // seeds = [b"42".as_ref, &[bump]],
     #[account(
-        init,
-        mint::decimals = 6,
-        mint::authority = bond_account,
-        payer = initializer,
-        seeds = ["42".as_bytes()],
-        bump = _bump
+        mut,
     )]
-    pub redeemable_mint: CpiAccount<'info, Mint>,
+    pub redeemable_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,

@@ -26,6 +26,14 @@ describe('solbond', () => {
         // Let's see if we even need to add anything into this.
     });
 
+    it('Initialize the state-of-the-world', async () => {
+        // Let's see if we even need to add anything into this.
+    });
+
+    it('Initialize the state-of-the-world', async () => {
+        // Let's see if we even need to add anything into this.
+    });
+
     // These are all variables the client will have to create to initialize the bond logic.
     // Practically, the client goes into a contract with himself, and locking it up in the time-domain
     let bondSigner: PublicKey | null = null;
@@ -77,7 +85,7 @@ describe('solbond', () => {
 
         const addressContext: any = {
             bondAccount: bondAccount.publicKey,
-            // bondSigner: bondSigner,
+            bondAuthority: bondSigner,
             initializer: payer.publicKey,
             initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,

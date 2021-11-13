@@ -93,7 +93,7 @@ describe('solbond', () => {
             bump,
             {
                 accounts: addressContext,
-                // signers: [payer]
+                signers: [bondAccount]
             }
         );
         console.log("Your transaction signature", tx);

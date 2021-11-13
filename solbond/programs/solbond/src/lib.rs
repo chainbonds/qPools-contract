@@ -6,7 +6,7 @@ use spl_token::instruction::AuthorityType;
 
 const DECIMALS: u8 = 6;
 
-declare_id!("6wMXJDkQGTykQq2Sf7rPit2qz7H5nsaw4iVKWNrAgd43");
+declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
 
 #[program]
 pub mod solbond {
@@ -35,10 +35,11 @@ pub mod solbond {
         bond_account.bump = _bump;
         bond_account.initializer_amount = _initializer_amount;
         bond_account.bond_time = _time_frame;
+        
 
         msg!("MSG 2");
         // Accounts
-        // bond_account.initializer_account = *ctx.accounts.initializer.key;
+        bond_account.initializer_account = *ctx.accounts.initializer.key;
         // bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
         msg!("MSG 3");
         // bond_account.initializer_account = *ctx.accounts.initializer.key;
@@ -260,7 +261,7 @@ pub struct InitializeBond<'info> {
  */
 #[account]
 pub struct BondAccount {
-    // pub initializer_account: Pubkey,
+    pub initializer_account: Pubkey,
     // pub initializer_token_account: Pubkey,
     // pub initializer_solana_account: Pubkey,
     // pub solana_holdings_account: Pubkey,

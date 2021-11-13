@@ -40,7 +40,7 @@ describe('solbond', () => {
     it('Is initialized!', async () => {
 
         console.log("Getting bond signer");
-        const [_poolSigner, bump] = await PublicKey.findProgramAddress(
+        const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
             [payer!.publicKey.toBuffer()],
             program.programId
         );
@@ -71,6 +71,7 @@ describe('solbond', () => {
         const nowBn = new BN(time);
         bondTimeFrame = nowBn.add(new BN(BOND_LOCKUP_DURACTION_IN_SECONDS));
         initializerAmount = new BN(INITIALIZER_AMOUNT);
+        const bump = new BN(_bump);
 
         console.log("Payer: ", payer);
 
@@ -78,15 +79,17 @@ describe('solbond', () => {
             bondAccount: bondAccount.publicKey,
             // bondSigner: bondSigner,
             initializer: payer.publicKey,
-            // initializerTokenAccount: initializerTokenAccount,
+            initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,
             // initializerSolanaAccount: initializerSolanaAccount,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: web3.SYSVAR_CLOCK_PUBKEY,
             systemProgram: web3.SystemProgram.programId,
             tokenProgram: TOKEN_PROGRAM_ID,
         };
 
         console.log("Getting RPC Call", addressContext);
+        console.log("Arguments are: ", )
         const tx = await program.rpc.initialize(
             bondTimeFrame,
             initializerAmount,

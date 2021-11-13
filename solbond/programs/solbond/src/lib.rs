@@ -6,7 +6,7 @@ use spl_token::instruction::AuthorityType;
 
 const DECIMALS: u8 = 6;
 
-declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
+declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 
 #[program]
 pub mod solbond {
@@ -16,7 +16,7 @@ pub mod solbond {
 
     pub fn initialize(
         ctx: Context<InitializeBond>,
-        _time_frame: i64,
+        _time_frame: u64,
         _initializer_amount: u64,
         _bump: u8
     ) -> ProgramResult {
@@ -143,8 +143,9 @@ pub mod solbond {
 /**
  * Input Accounts
  */
+// _time_frame: u64,
 #[derive(Accounts)]
-#[instruction(_initializer_amount: u64, _redeemable_bump: u8)]
+#[instruction(_initializer_amount: u64, _bump: u8)]
 pub struct InitializeBond<'info> {
     /// @bond_account
     /// used to save the bond I guess the initializer will pay for the fees of calling this program
@@ -164,8 +165,8 @@ pub struct InitializeBond<'info> {
     // /// @initializer_token_account
     // /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
     // /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
-    // #[account(mut, constraint = initializer_token_account.amount == 0)]
-    // pub initializer_token_account: Account<'info, TokenAccount>,
+    #[account(mut, constraint = initializer_token_account.amount == 0)]
+    pub initializer_token_account: Account<'info, TokenAccount>,
     //
     // // #[account(mut)]
     // // pub solana_holdings_account: Account<'info, TokenAccount>,
@@ -176,6 +177,7 @@ pub struct InitializeBond<'info> {
     // #[account(signer)]
     // pub initializer_solana_account: AccountInfo<'info>,
 
+    pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -267,7 +269,7 @@ pub struct BondAccount {
     // pub solana_holdings_account: Pubkey,
     // pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
-    pub bond_time: i64,
+    pub bond_time: u64,
     pub bump: u8,
 }
 

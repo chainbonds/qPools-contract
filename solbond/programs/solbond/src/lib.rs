@@ -177,6 +177,22 @@ pub struct InitializeBond<'info> {
     // #[account(signer)]
     // pub initializer_solana_account: AccountInfo<'info>,
 
+    //     #[account(
+    //     seeds = ["smt_jfh".as_bytes(), b"redeemable_mint".as_ref()],
+    //     bump = bond_account.bump,
+    //
+    //     )]
+    //
+    #[account(
+        init,
+        mint::decimals = 6,
+        mint::authority = bond_account,
+        payer = initializer,
+        seeds = ["42".as_bytes()],
+        bump = _bump
+    )]
+    pub redeemable_mint: CpiAccount<'info, Mint>,
+
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
@@ -267,7 +283,7 @@ pub struct BondAccount {
     // pub initializer_token_account: Pubkey,
     // pub initializer_solana_account: Pubkey,
     // pub solana_holdings_account: Pubkey,
-    // pub redeemable_mint: Pubkey,
+    pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: u64,
     pub bump: u8,

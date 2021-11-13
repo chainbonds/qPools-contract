@@ -41,7 +41,7 @@ describe('solbond', () => {
 
         console.log("Getting bond signer");
         const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
-            [payer!.publicKey.toBuffer()],
+            [Uint8Array.from([42])],
             program.programId
         );
         bondSigner = _poolSigner;
@@ -82,6 +82,7 @@ describe('solbond', () => {
             initializerTokenAccount: initializerTokenAccount,
             // solanaHoldingsAccount: initializerSolanaAccount,
             // initializerSolanaAccount: initializerSolanaAccount,
+            redeemableMint: redeemableMint.publicKey,
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: web3.SYSVAR_CLOCK_PUBKEY,
             systemProgram: web3.SystemProgram.programId,

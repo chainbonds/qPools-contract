@@ -7,7 +7,7 @@ import {Keypair, PublicKey} from "@solana/web3.js";
 import {expect} from "chai";
 
 const BOND_LOCKUP_DURACTION_IN_SECONDS = 7;
-const INITIALIZER_AMOUNT = 5;
+const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
 
 describe('solbond', () => {
 
@@ -17,6 +17,7 @@ describe('solbond', () => {
 
     const program = anchor.workspace.Solbond as Program<Solbond>;
     const payer = getPayer();
+
 
     console.log("Payer is. ", payer);
 
@@ -49,6 +50,13 @@ describe('solbond', () => {
     let initializerAmount: BN | null = null
 
     it('Is initialized!', async () => {
+
+        // Request 1000 solana to be airdropped
+        let airdropSignature = await provider.connection.requestAirdrop(
+            payer.publicKey,
+            web3.LAMPORTS_PER_SOL * 1000
+        );
+        await provider.connection.confirmTransaction(airdropSignature);
 
         console.log("Getting bond signer");
         const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
@@ -85,6 +93,10 @@ describe('solbond', () => {
         const bump = new BN(_bump);
 
         console.log("Payer: ", payer);
+        // Save how much SOL the payer had first
+        const initialPayerAmount = await provider.connection.getBalance(payer.publicKey);
+        const initialBondAmount = await provider.connection.getBalance(bondAccount.publicKey);
+
 
         const addressContext: any = {
             bondAccount: bondAccount.publicKey,
@@ -100,7 +112,7 @@ describe('solbond', () => {
 
         console.log("Getting RPC Call", addressContext);
         console.log("Arguments are: ", )
-        const tx = await program.rpc.initialize(
+        const initializeTx = await program.rpc.initialize(
             bondTimeFrame,
             initializerAmount,
             bump,
@@ -109,8 +121,23 @@ describe('solbond', () => {
                 signers: [bondAccount]
             }
         );
-        console.log("Your transaction signature", tx);
-        return;
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("Your transaction signature", initializeTx);
+
+        const finalPayerAmount = await provider.connection.getBalance(payer.publicKey);
+        const finalBondAmount = await provider.connection.getBalance(bondAccount.publicKey);
+
+        const delta = INITIALIZER_AMOUNT;
+        console.log("Delta is: ", delta);
+        console.log("Lamports per sol are: ", web3.LAMPORTS_PER_SOL);
+        console.log("Initial Payer Amount is: ", initialPayerAmount);
+        console.log("Final Payer Amount is: ", finalPayerAmount);
+        console.log("Initial Bond Amount is: ", initialBondAmount);
+        console.log("Final Payer Amount is: ", finalBondAmount);
+        // print these two items (initialPayerAmount, finalPayerAmount)
+        expect(initialPayerAmount == (finalPayerAmount - delta)).to.be.true;
+        expect(initialBondAmount == (finalBondAmount + delta)).to.be.true;
+        expect(initialBondAmount == delta).to.be.true;
 
     });
 

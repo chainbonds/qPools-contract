@@ -31,19 +31,25 @@ pub mod solbond {
         /**
          * Transfer tokens from
          */
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.initializer.to_account_info(),
-            to: ctx.accounts.bond_account.to_account_info(),
-            authority: ctx.accounts.initializer.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, _initializer_amount)?;
+        msg!("Transferring initializer-amount");
+        let res = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.initializer.to_account_info().key,
+            ctx.accounts.bond_account.to_account_info().key,
+            _initializer_amount
+        );
+        // let cpi_accounts = Transfer {
+        //     from: ctx.accounts.initializer.to_account_info(),
+        //     to: ctx.accounts.bond_account.to_account_info(),
+        //     authority: ctx.accounts.initializer.to_account_info(),
+        // };
+        // let cpi_program = ctx.accounts.system_program.to_account_info();
+        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        // token::transfer(cpi_ctx, _initializer_amount)?;
 
         msg!("MSG 1");
 
         /// Assign Variables to the Bond Pool
-        let bond_account = &mut ctx.accounts.bond_account.clone();
+        let bond_account = &mut ctx.accounts.bond_account;
 
         // Arguments
         bond_account.bump = _bump;

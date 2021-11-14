@@ -73,11 +73,12 @@ pub mod solbond {
 
         msg!("MSG 2");
         // Accounts
-        bond_account.initializer_account = *ctx.accounts.initializer.key;
+        bond_account.initializer = *ctx.accounts.initializer.key;
         bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
         bond_account.bond_token_account = *ctx.accounts.bond_token_account.to_account_info().key;
         msg!("MSG 3");
         bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
+        bond_account.bond_authority = *ctx.accounts.bond_authority.to_account_info().key;
 
         msg!("MSG 4");
         // let amount = bond_account.initializer_amount;
@@ -211,7 +212,8 @@ pub struct RedeemBond<'info> {
     /// PDA that signs all transactions by bond-account
     // #[account(mut)]
     // seeds = [initializer.key.as_ref()], bump = _bump
-    #[account(mut)]
+    // #[account(mut)]
+    #[account(seeds = [bond_account.initializer.as_ref()], bump = bond_account.bump)]
     pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority
@@ -269,7 +271,8 @@ pub struct RedeemBond<'info> {
  */
 #[account]
 pub struct BondAccount {
-    pub initializer_account: Pubkey,
+    pub initializer: Pubkey,
+    pub bond_authority: Pubkey,
     pub initializer_token_account: Pubkey,
     pub bond_token_account: Pubkey,
     pub redeemable_mint: Pubkey,

@@ -8,6 +8,7 @@ import {expect} from "chai";
 
 const BOND_LOCKUP_DURACTION_IN_SECONDS = 7;
 const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
+const RENT = new BN("2784000");
 
 describe('solbond', () => {
 
@@ -86,6 +87,7 @@ describe('solbond', () => {
         // Save how much SOL the payer had first
         const initialPayerAmount: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         // Super hacky, makes no sense why we first need to convert this to a string
+        const initialBondSignerAmount: BN = new BN(String(await provider.connection.getBalance(bondSigner)));
         const initialBondAmount: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
         const delta: BN = initializerAmount;
 
@@ -116,18 +118,23 @@ describe('solbond', () => {
         console.log("Your transaction signature", initializeTx);
 
         const finalPayerAmount: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const finalBondSignerAmount: BN = new BN(String(await provider.connection.getBalance(bondSigner)));
         const finalBondAmount: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
 
         console.log("Delta is: ", delta.toString());
         console.log("Lamports per sol are: ", web3.LAMPORTS_PER_SOL);
         console.log("Initial Payer Amount is: ", initialPayerAmount.toString());
+        console.log("Initial Bond Authority Amount is: ", initialBondSignerAmount.toString());
         console.log("Initial Bond Amount is: ", initialBondAmount.toString());
+
         console.log("Final Payer Amount is: ", finalPayerAmount.toString());
+        console.log("Final Bond Authority Amount is: ", finalBondSignerAmount.toString());
         console.log("Final Bond Amount is: ", finalBondAmount.toString());
         // print these two items (initialPayerAmount, finalPayerAmount)
-        expect(initialPayerAmount.eq(finalPayerAmount.sub(delta))).to.be.true;
-        expect(initialBondAmount.eq(finalBondAmount.add(delta))).to.be.true;
-        expect(initialBondAmount.eq(delta)).to.be.true;
+
+        // expect(initialPayerAmount.eq(finalPayerAmount.add(delta.add(RENT)))).to.be.true;
+        expect(initialBondAmount.add(delta.add(RENT)).eq(finalBondAmount)).to.be.true;
+        expect(finalBondAmount.eq(delta.add(RENT))).to.be.true;
 
     });
 

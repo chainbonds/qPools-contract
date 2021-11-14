@@ -9,6 +9,7 @@ import {endianness} from "os";
 
 const BOND_LOCKUP_DURACTION_IN_SECONDS = 7;
 const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
+const REDEEM_AMOUNT = 2 * web3.LAMPORTS_PER_SOL;
 const RENT = new BN("2784000");
 
 describe('solbond', () => {
@@ -19,12 +20,6 @@ describe('solbond', () => {
 
     const program = anchor.workspace.Solbond as Program<Solbond>;
     const payer = getPayer();
-
-
-
-    // console.log("Payer amount is: ", 500000999996499140);
-    const initialPayerAmount: BN = new BN("500000999996499140");
-    console.log("initial BN amount is: ", initialPayerAmount);
 
     it('Initialize the state-of-the-world', async () => {
         // Let's see if we even need to add anything into this.
@@ -159,7 +154,42 @@ describe('solbond', () => {
 
     });
 
-    it('Retrieving Bonds!', async () => {
+    it('Redeeming Bonds!', async () => {
+
+        const redeemableAmount = new BN(REDEEM_AMOUNT);
+
+        // Send the transaction to redeem the bond
+        const addressContext: any = {
+            bondAccount: bondAccount.publicKey,
+            bondAuthority: bondSigner,
+            initializer: payer.publicKey,
+            initializerTokenAccount: initializerTokenAccount,
+            bondTokenAccount: bondTokenAccount,
+            redeemableMint: redeemableMint.publicKey,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            clock: web3.SYSVAR_CLOCK_PUBKEY,
+            systemProgram: web3.SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+        };
+
+        console.log("\n");
+        console.log("Bond Account: ", bondAccount.publicKey.toString())
+        console.log("bondAuthority: ", bondSigner.toString());
+        console.log("initializer: ", payer.publicKey.toString());
+        console.log("initializerTokenAccount: ", initializerTokenAccount.toString());
+        console.log("redeemableMint: ", redeemableMint.publicKey.toString());
+        console.log("\n");
+
+        // console.log("Getting RPC Call", addressContext);
+        console.log("Arguments are: ", redeemableAmount.toString())
+        const initializeTx = await program.rpc.redeemBond(
+            redeemableAmount,
+            {
+                accounts: addressContext
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("Your transaction signature", initializeTx);
 
     });
 

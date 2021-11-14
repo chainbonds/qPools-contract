@@ -1,12 +1,7 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
-use solana_program::{
-    instruction::Instruction,
-    program::{invoke, invoke_signed},
-};
+use solana_program::program::invoke;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{self, Burn, Mint, TokenAccount, Transfer, Token, MintTo};
-use spl_token::instruction::AuthorityType;
+use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
 
 const DECIMALS: u8 = 9;
 
@@ -51,18 +46,18 @@ pub mod solbond {
             &[_bump]
         ];
         let signer = &[&seeds[..]];
-        let cpi_accounts_mint = MintTo {
+        let cpi_accounts = MintTo {
             mint: ctx.accounts.redeemable_mint.to_account_info(),
             to: ctx.accounts.initializer_token_account.to_account_info(),
             authority: ctx.accounts.bond_authority.to_account_info(),
         };
-        let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx_mint = CpiContext::new_with_signer(
-            cpi_program_mint,
-            cpi_accounts_mint,
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new_with_signer(
+            cpi_program,
+            cpi_accounts,
             signer,
         );
-        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
+        token::mint_to(cpi_ctx, _initializer_amount)?;
 
         msg!("MSG 1");
 
@@ -93,58 +88,38 @@ pub mod solbond {
 
     pub fn redeem_bond(
         ctx: Context<RedeemBond>,
-        _bump: u8,
         _redeemable_amount: u64,
     ) -> ProgramResult {
         msg!("REDEEM BOND");
 
         let bond_account = &mut ctx.accounts.bond_account;
 
+        // TODO: Have a bunch of constraints across bondAccount
         if bond_account.initializer_amount < _redeemable_amount {
             return Err(ErrorCode::RedeemCapacity.into());
         }
-
-        // I don't think this is needed, because the burn can be done anyways
-        // /**
-        //  * Send Token to Bond Token Address
-        //  */
-        // let cpi_accounts = Transfer {
-        //     from: bond_account.initializer_token_account,
-        //     to: bond_account.bond_token_account,
-        //     authority: bond_account.initializer
-        // };
-        // let cpi_program = ctx.accounts.token_program.clone();
-        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        // token::transfer(cpi_ctx, _redeemable_amount)?;
 
         /**
          * Burn Bond Token
          */
         let cpi_accounts = Burn {
-            mint: bond_account.redeemable_mint,
-            to: bond_account.initializer_token_account,
-            authority: bond_account.initializer,
+            mint: ctx.accounts.redeemable_mint.to_account_info(),
+            to: ctx.accounts.initializer_token_account.to_account_info(),
+            authority: ctx.accounts.bond_authority.to_account_info(),
         };
-        let cpi_program = ctx.accounts.token_program.clone();
+        let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         token::burn(cpi_ctx, _redeemable_amount)?;
-
-        bond_account
-        bond_authority
-        initializer
-        initializer_token_account
-        bond_token_account
-        redeemable_mint
 
         /**
          * Pay out Solana
          */
-        let res = anchor_lang::solana_program::system_instruction::transfer(
-            bond_account.bond_account,
-            bond_account.initializer,
-            _redeemable_amount,
-        );
-        invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_account.to_account_info()]);
+        // let res = anchor_lang::solana_program::system_instruction::transfer(
+        //     bond_account.bond_account,
+        //     bond_account.initializer,
+        //     _redeemable_amount,
+        // );
+        // invoke(&res, &[bond_account.bond_account.to_account_info(), bond_account.initializer.to_account_info()]);
 
         Ok(())
     }
@@ -172,20 +147,6 @@ pub mod solbond {
     //         signer,
     //     );
     //     token::burn(cpi_ctx, amount)?;
-    //
-    //     /// Send SOL back
-    //     let cpi_accounts = Transfer {
-    //         from: ctx.accounts.bond_solana_account.to_account_info(),
-    //         to: ctx.accounts.initializer_solana_account.to_account_info(),
-    //         authority: ctx.accounts.initializer.to_account_info(),
-    //     };
-    //     let cpi_program = ctx.accounts.token_program.to_account_info();
-    //     let cpi_ctx = CpiContext::new(
-    //         cpi_program,
-    //         cpi_accounts,
-    //     );
-    //
-    //     token::transfer(cpi_ctx, amount)?;
     //
     //     Ok(())
     // }
@@ -238,7 +199,6 @@ pub struct InitializeBond<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-_bump: u8,
 _redeemable_amount: u64
 )]
 pub struct RedeemBond<'info> {
@@ -250,7 +210,8 @@ pub struct RedeemBond<'info> {
     /// @bond_signer
     /// PDA that signs all transactions by bond-account
     // #[account(mut)]
-    #[account(mut, seeds = [initializer.key.as_ref()], bump = _bump)]
+    // seeds = [initializer.key.as_ref()], bump = _bump
+    #[account(mut)]
     pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority

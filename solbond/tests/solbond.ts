@@ -38,11 +38,12 @@ describe('solbond', () => {
     let bondAccount: Keypair | null = null;
     let initializerSolanaAccount: PublicKey | null = null;
     let initializerTokenAccount: PublicKey | null = null;
+    let bondTokenAccount: PublicKey | null = null;
 
     let bondTimeFrame: BN | null = null;
     let initializerAmount: BN | null = null
 
-    it('Is initialized!', async () => {
+    it('Buying Bonds!', async () => {
 
         // Request 1000 solana to be airdropped
         let airdropSignature = await provider.connection.requestAirdrop(
@@ -58,6 +59,11 @@ describe('solbond', () => {
         );
         bondSigner = _poolSigner;
 
+        // This is the bond account which will have control over the entire logic.
+        // This is ultimately the 'program' account
+        console.log("Generating bond account");
+        bondAccount = Keypair.generate();
+
         // All these will be controlled fully by the client
         console.log("Creating redeemable Mint");
         console.log("Provider is: ", provider);
@@ -69,12 +75,7 @@ describe('solbond', () => {
         initializerSolanaAccount = payer.publicKey;
         console.log("Getting initializer token account");
         initializerTokenAccount = await redeemableMint!.createAccount(initializerSolanaAccount);
-
-
-        // This is the bond account which will have control over the entire logic.
-        // This is ultimately the 'program' account
-        console.log("Generating bond account");
-        bondAccount = Keypair.generate();
+        bondTokenAccount = await redeemableMint!.createAccount(bondAccount.publicKey);
 
         // Get latest Blockchain Epoch. Lock up the bond accordingly
         console.log("Getting Blockchain Epoch");
@@ -101,6 +102,7 @@ describe('solbond', () => {
             bondAuthority: bondSigner,
             initializer: payer.publicKey,
             initializerTokenAccount: initializerTokenAccount,
+            bondTokenAccount: bondTokenAccount,
             redeemableMint: redeemableMint.publicKey,
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: web3.SYSVAR_CLOCK_PUBKEY,
@@ -152,9 +154,12 @@ describe('solbond', () => {
 
         // Check if the redeemables have been successfully minted
         const redeemableAccountInfo = await redeemableMint.getAccountInfo(initializerTokenAccount);
-        console.log("RedeemableAccountInfo ", redeemableAccountInfo.amount.toString(), redeemableAccountInfo);
+        console.log("RedeemableAccountInfo ", redeemableAccountInfo.amount.toString());
         expect(redeemableAccountInfo.amount.eq(delta)).to.be.true;
 
+    });
+
+    it('Retrieving Bonds!', async () => {
 
     });
 

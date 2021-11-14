@@ -26,9 +26,9 @@ pub mod solbond {
     ) -> ProgramResult {
         msg!("INITIALIZE BOND");
 
-        // if _initializer_amount <= 0  {
-        //     return Err(ErrorCode::LowBondSolAmount.into());
-        // }
+        if _initializer_amount <= 0  {
+            return Err(ErrorCode::LowBondSolAmount.into());
+        }
 
         /**
          * Transfer SOL from user to bond account
@@ -66,7 +66,9 @@ pub mod solbond {
 
         msg!("MSG 1");
 
-        /// Assign Variables to the Bond Pool
+        /**
+         * Assign Variables to the Bond Pool
+         */
         let bond_account = &mut ctx.accounts.bond_account;
 
         // Arguments
@@ -78,6 +80,7 @@ pub mod solbond {
         // Accounts
         bond_account.initializer_account = *ctx.accounts.initializer.key;
         bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
+        bond_account.bond_token_account = *ctx.accounts.bond_token_account.to_account_info().key;
         msg!("MSG 3");
         bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
 
@@ -85,61 +88,23 @@ pub mod solbond {
         // let amount = bond_account.initializer_amount;
         // let bump = bond_account.bump;
 
-        /**
-         * Mint redeemables
-         */
-        // TODO: Why is this black magic needed?
-
-
         Ok(())
     }
 
-    // pub fn buy_bond(ctx: Context<BuyBond>) -> ProgramResult {
-    //     msg!("BUY BOND");
-    //
-    //     // Retrieve the bond account
-    //     let bond_account = &mut ctx.accounts.bond_account;
-    //
-    //     /// Transfer SOL from the initial user to his dedicated bond pool
-    //     let cpi_accounts = Transfer {
-    //         from: ctx.accounts.initializer_solana_account.to_account_info(),
-    //         to: ctx.accounts.bond_solana_account.to_account_info(),
-    //         authority: ctx.accounts.initializer.to_account_info(),
-    //     };
-    //     let cpi_program = ctx.accounts.token_program.to_account_info();
-    //     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    //     let amount = bond_account.initializer_amount;
-    //     let bump = bond_account.bump;
-    //     token::transfer(cpi_ctx, amount)?;
-    //
-    //     /// We do bookkeeping of how much SOL was paid in by minting the equivalent amount of tokens to the user
-    //     // Some seed & signer black magic
-    //     let seeds = &[
-    //         BOND_PDA_SEED,
-    //         &[bump]
-    //     ];
-    //     let signer = &[&seeds[..]];
-    //
-    //     let cpi_accounts_mint = MintTo {
-    //         mint: ctx.accounts.redeemable_mint.to_account_info(),
-    //         to: ctx.accounts.initializer_token_account.to_account_info(),
-    //         authority: ctx.accounts.initializer.to_account_info(),
-    //     };
-    //     let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-    //     let cpi_ctx_mint = CpiContext::new_with_signer(
-    //         cpi_program_mint,
-    //         cpi_accounts_mint,
-    //         signer,
-    //     );
-    //     token::mint_to(cpi_ctx_mint, amount)?;
-    //
-    //     Ok(())
-    // }
-    //
+    pub fn redeem_bond(ctx: Context<RedeemBond>, _redeemable_amount: u64) -> ProgramResult {
+        msg!("REDEEM BOND");
+
+        let bond_account = &mut ctx.accounts.bond_account;
+
+        if bond_account.initializer_amount < _redeemable_amount  {
+            return Err(ErrorCode::RedeemCapacity.into());
+        }
+
+        Ok(())
+
+    }
+
     // pub fn redeem_bond(ctx: Context<RedeemBond>, amount: u64) -> ProgramResult {
-    //     msg!("REDEEM BOND");
-    //
-    //     let bond_account = &mut ctx.accounts.bond_account;
     //
     //     /// Exchange the redeemable tokens for the SOL that was initially paid in
     //     // Some more signer and seed black magic
@@ -214,24 +179,10 @@ pub struct InitializeBond<'info> {
     #[account(mut, constraint = initializer_token_account.amount == 0)]
     pub initializer_token_account: Account<'info, TokenAccount>,
 
-    //
-    // bump = _bump
+    #[account(mut, constraint = initializer_token_account.amount == 0)]
+    pub bond_token_account: Account<'info, TokenAccount>,
 
-    // seeds = [42_u8],
-    // bump = _bump
-    // seeds = [b"42".as_ref, &[bump]],
-    // pool_account.watermelon_mint.as_ref()
-    // _bump
-    // seeds = [initializer.key.as_ref()],
-    // bump = { msg!("bump = {}", _bump); _bump},
-
-    // init,
-    // payer = initializer,
-    // mint::decimals = 9,
-    // mint::authority = bond_authority
-    #[account(
-        mut
-    )]
+    #[account(mut)]
     pub redeemable_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -277,19 +228,45 @@ pub struct InitializeBond<'info> {
 //
 // }
 
+#[derive(Accounts)]
+#[instruction(
+    _bump: u8,
+    _redeemable_amount: u64
+)]
+pub struct RedeemBond<'info> {
+    /// @bond_account
+    /// used to save the bond I guess the initializer will pay for the fees of calling this program
+    #[account(init, payer = initializer, space = 8 + BondAccount::LEN)]
+    pub bond_account: Account<'info, BondAccount>,
+
+    /// @bond_signer
+    /// PDA that signs all transactions by bond-account
+    // #[account(mut)]
+    #[account(mut, seeds = [initializer.key.as_ref()], bump = _bump)]
+    pub bond_authority: AccountInfo<'info>,
+
+    /// @distribution_authority
+    /// authority that pays for all transactions
+    #[account(signer, mut)]
+    pub initializer: AccountInfo<'info>,
+
+    /// @initializer_token_account
+    /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
+    /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
+    #[account(mut, constraint = initializer_token_account.amount == 0)]
+    pub initializer_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub redeemable_mint: Account<'info, Mint>,
+
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
 // #[derive(Accounts)]
 // pub struct RedeemBond<'info> {
-//     #[account(signer)]
-//     pub initializer: AccountInfo<'info>,
-//
-//     #[account(mut)]
-//     pub initializer_solana_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut)]
-//     pub initializer_token_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut)]
-//     pub bond_solana_account: Account<'info, TokenAccount>,
 //
 //     #[account(mut)]
 //     pub bond_token_account: Account<'info, TokenAccount>,
@@ -322,6 +299,7 @@ pub struct InitializeBond<'info> {
 pub struct BondAccount {
     pub initializer_account: Pubkey,
     pub initializer_token_account: Pubkey,
+    pub bond_token_account: Pubkey,
     pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: u64,
@@ -347,4 +325,6 @@ impl BondAccount {
 pub enum ErrorCode {
     #[msg("SOL to be paid into the bond should not be zero")]
     LowBondSolAmount,
+    #[msg("Asking for too much SOL when redeeming!")]
+    RedeemCapacity,
 }

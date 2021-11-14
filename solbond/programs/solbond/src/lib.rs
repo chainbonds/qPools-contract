@@ -1,7 +1,7 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
 use solana_program::{
     instruction::Instruction,
-    program::{invoke, invoke_signed}
+    program::{invoke, invoke_signed},
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
@@ -22,11 +22,11 @@ pub mod solbond {
         ctx: Context<InitializeBond>,
         _bump: u8,
         _time_frame: u64,
-        _initializer_amount: u64
+        _initializer_amount: u64,
     ) -> ProgramResult {
         msg!("INITIALIZE BOND");
 
-        if _initializer_amount <= 0  {
+        if _initializer_amount <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
         }
 
@@ -37,7 +37,7 @@ pub mod solbond {
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.initializer.to_account_info().key,
             ctx.accounts.bond_account.to_account_info().key,
-            _initializer_amount
+            _initializer_amount,
         );
         invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_account.to_account_info()]);
 
@@ -91,17 +91,62 @@ pub mod solbond {
         Ok(())
     }
 
-    pub fn redeem_bond(ctx: Context<RedeemBond>, _redeemable_amount: u64) -> ProgramResult {
+    pub fn redeem_bond(
+        ctx: Context<RedeemBond>,
+        _bump: u8,
+        _redeemable_amount: u64,
+    ) -> ProgramResult {
         msg!("REDEEM BOND");
 
         let bond_account = &mut ctx.accounts.bond_account;
 
-        if bond_account.initializer_amount < _redeemable_amount  {
+        if bond_account.initializer_amount < _redeemable_amount {
             return Err(ErrorCode::RedeemCapacity.into());
         }
 
-        Ok(())
+        // I don't think this is needed, because the burn can be done anyways
+        // /**
+        //  * Send Token to Bond Token Address
+        //  */
+        // let cpi_accounts = Transfer {
+        //     from: bond_account.initializer_token_account,
+        //     to: bond_account.bond_token_account,
+        //     authority: bond_account.initializer
+        // };
+        // let cpi_program = ctx.accounts.token_program.clone();
+        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        // token::transfer(cpi_ctx, _redeemable_amount)?;
 
+        /**
+         * Burn Bond Token
+         */
+        let cpi_accounts = Burn {
+            mint: bond_account.redeemable_mint,
+            to: bond_account.initializer_token_account,
+            authority: bond_account.initializer,
+        };
+        let cpi_program = ctx.accounts.token_program.clone();
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        token::burn(cpi_ctx, _redeemable_amount)?;
+
+        bond_account
+        bond_authority
+        initializer
+        initializer_token_account
+        bond_token_account
+        redeemable_mint
+
+        /**
+         * Pay out Solana
+         */
+        let res = anchor_lang::solana_program::system_instruction::transfer(
+            bond_account.bond_account,
+            bond_account.initializer,
+            _redeemable_amount,
+        );
+        invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_account.to_account_info()]);
+
+        Ok(())
     }
 
     // pub fn redeem_bond(ctx: Context<RedeemBond>, amount: u64) -> ProgramResult {
@@ -152,9 +197,9 @@ pub mod solbond {
 // _time_frame: u64,
 #[derive(Accounts)]
 #[instruction(
-    _bump: u8,
-    _time_frame: u64,
-    _initializer_amount: u64
+_bump: u8,
+_time_frame: u64,
+_initializer_amount: u64
 )]
 pub struct InitializeBond<'info> {
     /// @bond_account
@@ -179,7 +224,7 @@ pub struct InitializeBond<'info> {
     #[account(mut, constraint = initializer_token_account.amount == 0)]
     pub initializer_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut, constraint = initializer_token_account.amount == 0)]
+    #[account(mut, constraint = bond_token_account.amount == 0)]
     pub bond_token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
@@ -191,47 +236,10 @@ pub struct InitializeBond<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-
-// #[derive(Accounts)]
-// pub struct BuyBond<'info> {
-//     #[account(signer)]
-//     pub initializer: AccountInfo<'info>,
-//
-//     #[account(mut)]
-//     pub initializer_solana_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut)]
-//     pub initializer_token_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut)]
-//     pub bond_solana_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut)]
-//     pub bond_token_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut,
-//     constraint = bond_account.initializer == * initializer_solana_account.to_account_info().key,
-//     constraint = bond_account.initializer_token_account == * bond_token_account.to_account_info().key,
-//     constraint = bond_account.initializer_account == * initializer.to_account_info().key,
-//     close = initializer
-//     )]
-//     pub bond_account: ProgramAccount<'info, BondAccount>,
-//
-//     #[account(
-//     seeds = ["smt_jfh".as_bytes(), b"redeemable_mint".as_ref()],
-//     bump = bond_account.bump,
-//     )]
-//     pub redeemable_mint: Account<'info, Mint>,
-//
-//     pub system_program: Program<'info, System>,
-//     pub token_program: Program<'info, Token>,
-//
-// }
-
 #[derive(Accounts)]
 #[instruction(
-    _bump: u8,
-    _redeemable_amount: u64
+_bump: u8,
+_redeemable_amount: u64
 )]
 pub struct RedeemBond<'info> {
     /// @bond_account
@@ -255,6 +263,9 @@ pub struct RedeemBond<'info> {
     /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
     #[account(mut, constraint = initializer_token_account.amount == 0)]
     pub initializer_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut, constraint = bond_token_account.amount == 0)]
+    pub bond_token_account: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub redeemable_mint: Account<'info, Mint>,

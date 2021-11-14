@@ -187,6 +187,11 @@ describe('solbond', () => {
         console.log("redeemableMint: ", redeemableMint.publicKey.toString());
         console.log("\n");
 
+        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
+        console.log("InitialPayerSol ", initialPayerSol.toString());
+        const initialPayerRedeemables = new BN((await redeemableMint.getAccountInfo(initializerTokenAccount)).amount);
+        console.log("RedeemableAccountInfo ", initialPayerRedeemables.toString());
+
         // console.log("Getting RPC Call", addressContext);
         console.log("Arguments are: ", _bump.toString(), redeemableAmount.toString())
         const initializeTx = await program.rpc.redeemBond(
@@ -199,6 +204,16 @@ describe('solbond', () => {
         );
         await provider.connection.confirmTransaction(initializeTx);
         console.log("Your transaction signature", initializeTx);
+
+        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
+        console.log("InitialPayerSol ", initialPayerSol.toString());
+        const finalPayerRedeemables = new BN((await redeemableMint.getAccountInfo(initializerTokenAccount)).amount);
+        console.log("RedeemableAccountInfo ", initialPayerRedeemables.toString());
+
+        console.log("Initial Payer SOL is: ", initialPayerSol.toString());
+        console.log("Iniital Payer Redeemables is: ", initialPayerRedeemables.toString());
+        console.log("Final Payer SOL is: ", finalPayerSol.toString());
+        console.log("Final Payer Redeemables is: ", finalPayerRedeemables.toString());
 
     });
 

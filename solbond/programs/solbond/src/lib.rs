@@ -231,8 +231,7 @@ pub struct RedeemBond<'info> {
     /// @initializer_token_account
     /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
     /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
-    // constraint = initializer_token_account.amount == 0
-    #[account(mut)]
+    #[account(mut, constraint = initializer_token_account.amount > 0)]
     pub initializer_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, constraint = bond_token_account.amount == 0)]

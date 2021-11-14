@@ -149,6 +149,13 @@ describe('solbond', () => {
         expect(initialBondAmount.add(delta.add(RENT)).eq(finalBondAmount)).to.be.true;
         expect(finalBondAmount.eq(delta.add(RENT))).to.be.true;
 
+
+        // Check if the redeemables have been successfully minted
+        const redeemableAccountInfo = await redeemableMint.getAccountInfo(initializerTokenAccount);
+        console.log("RedeemableAccountInfo ", redeemableAccountInfo.amount.toString(), redeemableAccountInfo);
+        expect(redeemableAccountInfo.amount.eq(delta)).to.be.true;
+
+
     });
 
 

@@ -156,6 +156,13 @@ describe('solbond', () => {
 
     it('Redeeming Bonds!', async () => {
 
+        console.log("Getting bond signer");
+        const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
+            [payer.publicKey.toBuffer()],
+            program.programId
+        );
+        bondSigner = _poolSigner;
+
         const redeemableAmount = new BN(REDEEM_AMOUNT);
 
         // Send the transaction to redeem the bond
@@ -181,11 +188,13 @@ describe('solbond', () => {
         console.log("\n");
 
         // console.log("Getting RPC Call", addressContext);
-        console.log("Arguments are: ", redeemableAmount.toString())
+        console.log("Arguments are: ", _bump.toString(), redeemableAmount.toString())
         const initializeTx = await program.rpc.redeemBond(
+            _bump,
             redeemableAmount,
             {
-                accounts: addressContext
+                accounts: addressContext,
+                signers: [bondAccount]
             }
         );
         await provider.connection.confirmTransaction(initializeTx);

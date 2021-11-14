@@ -89,6 +89,7 @@ pub mod solbond {
 
     pub fn redeem_bond(
         ctx: Context<RedeemBond>,
+        _bump: u8,
         _redeemable_amount: u64,
     ) -> ProgramResult {
         msg!("REDEEM BOND");
@@ -96,20 +97,25 @@ pub mod solbond {
         let bond_account = &mut ctx.accounts.bond_account;
 
         // TODO: Have a bunch of constraints across bondAccount
-        if bond_account.initializer_amount < _redeemable_amount {
-            return Err(ErrorCode::RedeemCapacity.into());
-        }
+        // if bond_account.initializer_amount < _redeemable_amount {
+        //     return Err(ErrorCode::RedeemCapacity.into());
+        // }
 
         /**
          * Burn Bond Token
          */
+        let seeds = &[
+            ctx.accounts.initializer.to_account_info().key.as_ref(),
+            &[bond_account.bump]
+        ];
+        let signer = &[&seeds[..]];
         let cpi_accounts = Burn {
             mint: ctx.accounts.redeemable_mint.to_account_info(),
             to: ctx.accounts.initializer_token_account.to_account_info(),
-            authority: ctx.accounts.bond_authority.to_account_info(),
+            authority: ctx.accounts.initializer.to_account_info(),
         };
         let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
         token::burn(cpi_ctx, _redeemable_amount)?;
 
         /**
@@ -200,12 +206,13 @@ pub struct InitializeBond<'info> {
 
 #[derive(Accounts)]
 #[instruction(
+_bump: u8,
 _redeemable_amount: u64
 )]
 pub struct RedeemBond<'info> {
     /// @bond_account
     /// used to save the bond I guess the initializer will pay for the fees of calling this program
-    #[account(init, payer = initializer, space = 8 + BondAccount::LEN)]
+    #[account(signer, mut)]
     pub bond_account: Account<'info, BondAccount>,
 
     /// @bond_signer
@@ -213,18 +220,19 @@ pub struct RedeemBond<'info> {
     // #[account(mut)]
     // seeds = [initializer.key.as_ref()], bump = _bump
     // #[account(mut)]
-    #[account(seeds = [bond_account.initializer.as_ref()], bump = bond_account.bump)]
+    #[account(seeds = [initializer.key.as_ref()], bump = {msg!("bump be {}",_bump); _bump})]
     pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority
     /// authority that pays for all transactions
-    #[account(signer, mut)]
+    #[account(signer)]
     pub initializer: AccountInfo<'info>,
 
     /// @initializer_token_account
     /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
     /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
-    #[account(mut, constraint = initializer_token_account.amount == 0)]
+    // constraint = initializer_token_account.amount == 0
+    #[account(mut)]
     pub initializer_token_account: Account<'info, TokenAccount>,
 
     #[account(mut, constraint = bond_token_account.amount == 0)]

@@ -7,7 +7,7 @@ import {Keypair, PublicKey} from "@solana/web3.js";
 import {expect} from "chai";
 
 const BOND_LOCKUP_DURACTION_IN_SECONDS = 7;
-const INITIALIZER_AMOUNT = 10 * web3.LAMPORTS_PER_SOL;
+const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
 
 describe('solbond', () => {
 
@@ -102,7 +102,7 @@ describe('solbond', () => {
         };
 
         console.log("Getting RPC Call", addressContext);
-        console.log("Arguments are: ", )
+        console.log("Arguments are: ", bondTimeFrame.toString(), initializerAmount.toString(), bump.toString())
         const initializeTx = await program.rpc.initialize(
             bondTimeFrame,
             initializerAmount,

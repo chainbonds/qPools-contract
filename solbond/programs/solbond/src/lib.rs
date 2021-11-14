@@ -1,4 +1,8 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
+use solana_program::{
+    instruction::Instruction,
+    program::{invoke, invoke_signed}
+};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Transfer, Token, MintTo};
@@ -37,6 +41,9 @@ pub mod solbond {
             ctx.accounts.bond_account.to_account_info().key,
             _initializer_amount
         );
+        invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_account.to_account_info()]);
+        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
         // let cpi_accounts = Transfer {
         //     from: ctx.accounts.initializer.to_account_info(),
         //     to: ctx.accounts.bond_account.to_account_info(),

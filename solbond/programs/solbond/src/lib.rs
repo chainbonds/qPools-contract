@@ -8,7 +8,7 @@ use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Transfer, Token, MintTo};
 use spl_token::instruction::AuthorityType;
 
-const DECIMALS: u8 = 6;
+const DECIMALS: u8 = 9;
 
 declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 
@@ -20,9 +20,9 @@ pub mod solbond {
 
     pub fn initialize(
         ctx: Context<InitializeBond>,
+        _bump: u8,
         _time_frame: u64,
-        _initializer_amount: u64,
-        _bump: u8
+        _initializer_amount: u64
     ) -> ProgramResult {
         msg!("INITIALIZE BOND");
 
@@ -30,10 +30,8 @@ pub mod solbond {
         //     return Err(ErrorCode::LowBondSolAmount.into());
         // }
 
-
-
         /**
-         * Transfer tokens from
+         * Transfer SOL from user to bond account
          */
         msg!("Transferring initializer-amount");
         let res = anchor_lang::solana_program::system_instruction::transfer(
@@ -42,16 +40,29 @@ pub mod solbond {
             _initializer_amount
         );
         invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_account.to_account_info()]);
-        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        // let cpi_accounts = Transfer {
-        //     from: ctx.accounts.initializer.to_account_info(),
-        //     to: ctx.accounts.bond_account.to_account_info(),
-        //     authority: ctx.accounts.initializer.to_account_info(),
-        // };
-        // let cpi_program = ctx.accounts.system_program.to_account_info();
-        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        // token::transfer(cpi_ctx, _initializer_amount)?;
+        /**
+         * Track transferred SOL with redeemable tokens
+         */
+        msg!("Bump is: {}", _bump);
+        let seeds = &[
+            ctx.accounts.initializer.to_account_info().key.as_ref(),
+            // BOND_PDA_SEED,
+            &[_bump]
+        ];
+        let signer = &[&seeds[..]];
+        let cpi_accounts_mint = MintTo {
+            mint: ctx.accounts.redeemable_mint.to_account_info(),
+            to: ctx.accounts.initializer_token_account.to_account_info(),
+            authority: ctx.accounts.bond_authority.to_account_info(),
+        };
+        let cpi_program_mint = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx_mint = CpiContext::new_with_signer(
+            cpi_program_mint,
+            cpi_accounts_mint,
+            signer,
+        );
+        token::mint_to(cpi_ctx_mint, _initializer_amount)?;
 
         msg!("MSG 1");
 
@@ -78,24 +89,6 @@ pub mod solbond {
          * Mint redeemables
          */
         // TODO: Why is this black magic needed?
-        // let seeds = &[
-        //     BOND_PDA_SEED,
-        //     &[bump]
-        // ];
-        // let signer = &[&seeds[..]];
-
-        // let cpi_accounts_mint = MintTo {
-        //     mint: ctx.accounts.redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.initializer_token_account.to_account_info(),
-        //     authority: ctx.accounts.initializer.to_account_info(),
-        // };
-        // let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-        // let cpi_ctx_mint = CpiContext::new_with_signer(
-        //     cpi_program_mint,
-        //     cpi_accounts_mint,
-        //     signer,
-        // );
-        // token::mint_to(cpi_ctx_mint, amount)?;
 
 
         Ok(())
@@ -193,7 +186,11 @@ pub mod solbond {
  */
 // _time_frame: u64,
 #[derive(Accounts)]
-#[instruction(_initializer_amount: u64, _bump: u8)]
+#[instruction(
+    _bump: u8,
+    _time_frame: u64,
+    _initializer_amount: u64
+)]
 pub struct InitializeBond<'info> {
     /// @bond_account
     /// used to save the bond I guess the initializer will pay for the fees of calling this program
@@ -203,6 +200,7 @@ pub struct InitializeBond<'info> {
     /// @bond_signer
     /// PDA that signs all transactions by bond-account
     // #[account(mut)]
+    #[account(mut, seeds = [initializer.key.as_ref()], bump = _bump)]
     pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority
@@ -216,17 +214,24 @@ pub struct InitializeBond<'info> {
     #[account(mut, constraint = initializer_token_account.amount == 0)]
     pub initializer_token_account: Account<'info, TokenAccount>,
 
-    // init,
-    // mint::decimals = 6,
-    // mint::authority = bond_authority,
-    // payer = initializer,
-    // seeds = ["42".as_bytes()],
+    //
     // bump = _bump
 
     // seeds = [42_u8],
     // bump = _bump
     // seeds = [b"42".as_ref, &[bump]],
-    #[account(mut)]
+    // pool_account.watermelon_mint.as_ref()
+    // _bump
+    // seeds = [initializer.key.as_ref()],
+    // bump = { msg!("bump = {}", _bump); _bump},
+
+    // init,
+    // payer = initializer,
+    // mint::decimals = 9,
+    // mint::authority = bond_authority
+    #[account(
+        mut
+    )]
     pub redeemable_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,

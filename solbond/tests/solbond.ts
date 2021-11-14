@@ -5,6 +5,7 @@ import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getBlockchainEpoch, getPayer} from "./utils";
 import {Keypair, PublicKey} from "@solana/web3.js";
 import {expect} from "chai";
+import {endianness} from "os";
 
 const BOND_LOCKUP_DURACTION_IN_SECONDS = 7;
 const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
@@ -52,7 +53,7 @@ describe('solbond', () => {
 
         console.log("Getting bond signer");
         const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
-            [Uint8Array.from([42])],
+            [payer.publicKey.toBuffer()],
             program.programId
         );
         bondSigner = _poolSigner;
@@ -62,7 +63,7 @@ describe('solbond', () => {
         console.log("Provider is: ", provider);
         console.log("Payer is: ", payer);
         console.log("Bond Signer is: ", bondSigner);
-        redeemableMint = await createMint(provider, payer, bondSigner);
+        redeemableMint = await createMint(provider, payer, bondSigner, 9);
         console.log("Done creating redeemable Mint");
         // We need to create an associated token account for the guy who has instantiated the redeemableMint
         initializerSolanaAccount = payer.publicKey;
@@ -82,7 +83,11 @@ describe('solbond', () => {
         const nowBn = new BN(time);
         bondTimeFrame = nowBn.add(new BN(BOND_LOCKUP_DURACTION_IN_SECONDS));
         initializerAmount = new BN(INITIALIZER_AMOUNT);
+        console.log("Bump before BN: ", _bump);
         const bump = new BN(_bump);
+        new BN(_bump, );
+        // const bump = _bump;
+        console.log("Bump after BN: ", bump.toString());
 
         // Save how much SOL the payer had first
         const initialPayerAmount: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
@@ -103,12 +108,20 @@ describe('solbond', () => {
             tokenProgram: TOKEN_PROGRAM_ID,
         };
 
-        console.log("Getting RPC Call", addressContext);
+        console.log("\n");
+        console.log("Bond Account: ", bondAccount.publicKey.toString())
+        console.log("bondAuthority: ", bondSigner.toString());
+        console.log("initializer: ", payer.publicKey.toString());
+        console.log("initializerTokenAccount: ", initializerTokenAccount.toString());
+        console.log("redeemableMint: ", redeemableMint.publicKey.toString());
+        console.log("\n");
+
+        // console.log("Getting RPC Call", addressContext);
         console.log("Arguments are: ", bondTimeFrame.toString(), initializerAmount.toString(), bump.toString())
         const initializeTx = await program.rpc.initialize(
+            bump,
             bondTimeFrame,
             initializerAmount,
-            bump,
             {
                 accounts: addressContext,
                 signers: [bondAccount]

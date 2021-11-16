@@ -19,7 +19,6 @@ pub mod solbond {
         _time_frame: u64,
         _initializer_amount: u64,
     ) -> ProgramResult {
-        msg!("INITIALIZE BOND");
 
         if _initializer_amount <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
@@ -28,7 +27,6 @@ pub mod solbond {
         /**
          * Transfer SOL from user to bond account
          */
-        msg!("Transferring initializer-amount");
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.initializer.to_account_info().key,
             ctx.accounts.bond_solana_account.to_account_info().key,
@@ -39,7 +37,6 @@ pub mod solbond {
         /**
          * Track transferred SOL with redeemable tokens
          */
-        msg!("Bump is: {}", _bump);
         let seeds = &[
             ctx.accounts.initializer.to_account_info().key.as_ref(),
             // BOND_PDA_SEED,
@@ -70,6 +67,8 @@ pub mod solbond {
         bond_account.bump = _bump;
         bond_account.initializer_amount = _initializer_amount;
         bond_account.bond_time = _time_frame;
+        // Created-on timestamp team here
+        bond_account.created_timestamp = (ctx.accounts.clock.unix_timestamp) as u64;
 
         msg!("MSG 2");
         // Accounts
@@ -97,10 +96,19 @@ pub mod solbond {
 
         let bond_account = &mut ctx.accounts.bond_account;
 
+        // let current_timestamp: u64 = ctx.accounts.clock.unix_timestamp as
+
         // TODO: Have a bunch of constraints across bondAccount
-        // if bond_account.initializer_amount < _redeemable_amount {
-        //     return Err(ErrorCode::RedeemCapacity.into());
-        // }
+        if bond_account.initializer_amount < _redeemable_amount {
+            return Err(ErrorCode::RedeemCapacity.into());
+        }
+
+        // TODO: Replace all this with safe operations
+        // u64::from
+        let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
+        if bond_account.created_timestamp + bond_account.bond_time > current_timestamp {
+            return Err(ErrorCode::TimeFrameNotPassed.into());
+        }
 
         /**
          * Burn Bond Token
@@ -122,15 +130,11 @@ pub mod solbond {
         /**
          * Pay out Solana
          */
-        // ctx.accounts.initializer.to_account_info().key,
-        // ctx.accounts.bond_account.to_account_info().key,
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.bond_solana_account.to_account_info().key,
             ctx.accounts.initializer.to_account_info().key,
             _redeemable_amount,
         );
-        // TODO: Get account info from solana program here
-        // TODO: Pouya did a different direction here. Not sure if right!
         invoke(&res, &[ctx.accounts.bond_solana_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
 
         Ok(())
@@ -245,6 +249,7 @@ pub struct BondAccount {
     pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: u64,
+    pub created_timestamp: u64,
     pub bump: u8,
 }
 
@@ -269,4 +274,6 @@ pub enum ErrorCode {
     LowBondSolAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
+    #[msg("Bond has not gone past timeframe yet")]
+    TimeFrameNotPassed,
 }

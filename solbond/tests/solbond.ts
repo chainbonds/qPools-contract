@@ -7,10 +7,14 @@ import {Keypair, PublicKey} from "@solana/web3.js";
 import {expect} from "chai";
 import {endianness} from "os";
 
-const BOND_LOCKUP_DURACTION_IN_SECONDS = 7;
+const BOND_LOCKUP_DURACTION_IN_SECONDS = 3;
 const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
 const REDEEM_AMOUNT = 2 * web3.LAMPORTS_PER_SOL;
 const RENT = new BN("2784000");
+
+function delay(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
+}
 
 describe('solbond', () => {
 
@@ -86,11 +90,12 @@ describe('solbond', () => {
         const time = await getBlockchainEpoch(provider);
         console.log("Getting BN Sum");
         const nowBn = new BN(time);
-        bondTimeFrame = nowBn.add(new BN(BOND_LOCKUP_DURACTION_IN_SECONDS));
+        // bondTimeFrame = nowBn.add(new BN(BOND_LOCKUP_DURACTION_IN_SECONDS));
         initializerAmount = new BN(INITIALIZER_AMOUNT);
         console.log("Bump before BN: ", _bump);
         const bump = new BN(_bump);
         sendAmount = initializerAmount;
+        bondTimeFrame = new BN(BOND_LOCKUP_DURACTION_IN_SECONDS);
         // new BN(_bump, );
         // const bump = _bump;
         console.log("Bump after BN: ", bump.toString());
@@ -175,6 +180,7 @@ describe('solbond', () => {
     it('Redeeming Bonds!', async () => {
 
         console.log("Getting bond signer");
+        await delay(BOND_LOCKUP_DURACTION_IN_SECONDS * 1000);
         const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
             [payer.publicKey.toBuffer()],
             program.programId

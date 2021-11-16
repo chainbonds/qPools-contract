@@ -121,12 +121,15 @@ pub mod solbond {
         /**
          * Pay out Solana
          */
-        // let res = anchor_lang::solana_program::system_instruction::transfer(
-        //     bond_account.bond_account,
-        //     bond_account.initializer,
-        //     _redeemable_amount,
-        // );
-        // invoke(&res, &[bond_account.bond_account.to_account_info(), bond_account.initializer.to_account_info()]);
+        // ctx.accounts.initializer.to_account_info().key,
+        // ctx.accounts.bond_account.to_account_info().key,
+        let res = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.bond_account.to_account_info().key,
+            ctx.accounts.initializer.to_account_info().key,
+            _redeemable_amount,
+        );
+        // TODO: Get account info from solana program here
+        invoke(&res, &[ctx.accounts.bond_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
 
         Ok(())
     }

@@ -17,4 +17,5 @@ default = []
 [dependencies]
 anchor-lang = "0.18.0"
 anchor-spl = "0.18.0"
+solana-program = "1.8.3"
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }

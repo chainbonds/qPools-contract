@@ -31,10 +31,10 @@ pub mod solbond {
         msg!("Transferring initializer-amount");
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.initializer.to_account_info().key,
-            ctx.accounts.bond_account.to_account_info().key,
+            ctx.accounts.bond_solana_account.to_account_info().key,
             _initializer_amount,
         );
-        invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_account.to_account_info()]);
+        invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_solana_account.to_account_info()]);
 
         /**
          * Track transferred SOL with redeemable tokens
@@ -79,6 +79,7 @@ pub mod solbond {
         msg!("MSG 3");
         bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
         bond_account.bond_authority = *ctx.accounts.bond_authority.to_account_info().key;
+        bond_account.bond_solana_account = *ctx.accounts.bond_solana_account.to_account_info().key;
 
         msg!("MSG 4");
         // let amount = bond_account.initializer_amount;
@@ -124,42 +125,17 @@ pub mod solbond {
         // ctx.accounts.initializer.to_account_info().key,
         // ctx.accounts.bond_account.to_account_info().key,
         let res = anchor_lang::solana_program::system_instruction::transfer(
-            ctx.accounts.bond_account.to_account_info().key,
+            ctx.accounts.bond_solana_account.to_account_info().key,
             ctx.accounts.initializer.to_account_info().key,
             _redeemable_amount,
         );
         // TODO: Get account info from solana program here
-        invoke(&res, &[ctx.accounts.bond_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
+        // TODO: Pouya did a different direction here. Not sure if right!
+        invoke(&res, &[ctx.accounts.bond_solana_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
 
         Ok(())
     }
 
-    // pub fn redeem_bond(ctx: Context<RedeemBond>, amount: u64) -> ProgramResult {
-    //
-    //     /// Exchange the redeemable tokens for the SOL that was initially paid in
-    //     // Some more signer and seed black magic
-    //     let bump = bond_account.bump;
-    //     let seeds = &[
-    //         BOND_PDA_SEED,
-    //         &[bump],
-    //     ];
-    //     let signer = &[&seeds[..]];
-    //     let cpi_accounts = Burn {
-    //         mint: ctx.accounts.redeemable_mint.to_account_info(),
-    //         to: ctx.accounts.initializer_token_account.to_account_info(),
-    //         authority: ctx.accounts.initializer.to_account_info(),
-    //     };
-    //
-    //     let cpi_program_mint = ctx.accounts.token_program.to_account_info();
-    //     let cpi_ctx = CpiContext::new_with_signer(
-    //         cpi_program_mint,
-    //         cpi_accounts,
-    //         signer,
-    //     );
-    //     token::burn(cpi_ctx, amount)?;
-    //
-    //     Ok(())
-    // }
 }
 
 /**
@@ -197,6 +173,9 @@ pub struct InitializeBond<'info> {
 
     #[account(mut, constraint = bond_token_account.amount == 0)]
     pub bond_token_account: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub bond_solana_account: AccountInfo<'info>,
 
     #[account(mut)]
     pub redeemable_mint: Account<'info, Mint>,
@@ -240,6 +219,9 @@ pub struct RedeemBond<'info> {
     #[account(mut, constraint = bond_token_account.amount == 0)]
     pub bond_token_account: Account<'info, TokenAccount>,
 
+    #[account(signer, mut)]
+    pub bond_solana_account: AccountInfo<'info>,
+
     #[account(mut)]
     pub redeemable_mint: Account<'info, Mint>,
 
@@ -248,32 +230,6 @@ pub struct RedeemBond<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 }
-
-// #[derive(Accounts)]
-// pub struct RedeemBond<'info> {
-//
-//     #[account(mut)]
-//     pub bond_token_account: Account<'info, TokenAccount>,
-//
-//     #[account(mut,
-//     constraint = bond_account.initializer_solana_account == * initializer_solana_account.to_account_info().key,
-//     constraint = bond_account.initializer_token_account == * bond_token_account.to_account_info().key,
-//     constraint = bond_account.initializer_account == * initializer.to_account_info().key,
-//     close = initializer
-//     )]
-//     pub bond_account: ProgramAccount<'info, BondAccount>,
-//
-//     #[account(
-//     seeds = ["smt_jfh".as_bytes(), b"redeemable_mint".as_ref()],
-//     bump = bond_account.bump,
-//
-//     )]
-//     pub redeemable_mint: Account<'info, Mint>,
-//
-//     pub system_program: Program<'info, System>,
-//     pub token_program: Program<'info, Token>,
-//
-// }
 
 
 /**
@@ -285,6 +241,7 @@ pub struct BondAccount {
     pub bond_authority: Pubkey,
     pub initializer_token_account: Pubkey,
     pub bond_token_account: Pubkey,
+    pub bond_solana_account: Pubkey,
     pub redeemable_mint: Pubkey,
     pub initializer_amount: u64,
     pub bond_time: u64,
@@ -295,8 +252,8 @@ impl BondAccount {
     pub const LEN: usize = 32   // initializer_key
         + 32   // initializer_token_account
         + 32   // initializer_solana_account
-        + 32   // solana_holdings_account
-        // + 32   // redeemable_mint
+        + 32   // bond solana account
+        + 32   // redeemable_mint
         + 64   // amount
         + 64   // time_frame
         + 8;   // bump

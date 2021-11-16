@@ -7,13 +7,19 @@ import {PROGRAM_ID} from "../const";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3} from "@project-serum/anchor";
 import {Wallet, Mint} from "../splpasta";
-import {createAssociatedTokenAccountSend} from "../splpasta/tx/associated-token-account";
+import {
+    createAssociatedTokenAccountSend,
+    createAssociatedTokenAccountSendUnsigned
+} from "../splpasta/tx/associated-token-account";
+import {WalletI} from "../splpasta/types";
+import {useState} from "react";
 
 export default function VariableStakeForm(props: any) {
 
     // TODO: Implement Solana input field
     const {register, handleSubmit} = useForm();
     const walletContext: any = useWallet();
+    const [accountInfo, setAccountInfo] = useState({});
 
     const submitToContract = async (d: any) => {
 
@@ -39,8 +45,8 @@ export default function VariableStakeForm(props: any) {
         /**
          * Extract arguments from the form
          */
-        const bondTimeFrame: number = d["timeInSeconds"];
-        const sendAmount: number = d["amount"];
+        const bondTimeFrame: BN = new BN(d["timeInSeconds"]);
+        const sendAmount: BN = new BN(d["amount"]);
 
         /**
          * Fetch the wallet user
@@ -64,62 +70,74 @@ export default function VariableStakeForm(props: any) {
          */
         const bondAccount = Keypair.generate();
         const bondSolanaAccount = Keypair.generate();
-        console.log("PoolAccount Public Key is: ", bondAccount.publicKey, bondAccount.secretKey);
+        console.log("PoolAccount Public Key is: ", bondAccount.publicKey.toBase58(), bondAccount.secretKey.toString());
+        console.log("Signer Public Key is: ", bondSigner.toBase58());
+
+        console.log("Purchaser.publickey is: ", purchaser.publicKey.toBase58(), purchaser);
 
         const redeemableMint: Mint = await Mint.create(connection, 9, bondSigner, purchaser);
-        const purchaserRedeemableTokenAccount: PublicKey = await createAssociatedTokenAccountSend(connection, redeemableMint.key, purchaser.publicKey, purchaser);
-        const bondRedeemableTokenAccount: PublicKey = await createAssociatedTokenAccountSend(connection, redeemableMint.key, bondSigner, purchaser);
-        console.log("Purchaser.publickey is: ", purchaser.publicKey.toBase58(), purchaser);
         console.log("Mint Public Key is: ", redeemableMint.key.toBase58());
+        const purchaserRedeemableTokenAccount: PublicKey = await createAssociatedTokenAccountSend(connection, redeemableMint.key, purchaser.publicKey, purchaser);
+        console.log("purchaserRedeemableTokenAccount: ", purchaserRedeemableTokenAccount.toBase58());
+        const bondRedeemableTokenAccount: PublicKey = await createAssociatedTokenAccountSendUnsigned(connection, redeemableMint.key, bondSigner, purchaser);
+        console.log("bondRedeemableTokenAccount: ", bondRedeemableTokenAccount.toBase58());
+
+        // Hz9gRN4wQithVQtbvEtzQpYLGi9KCcCfwaUrar6H3xMg
 
         const bump = new BN(_bump);
 
         /**
          * Make the actual RPC Call
          */
-        // const addressContext: any = {
-        //     bondAccount: bondAccount.publicKey,
-        //     bondAuthority: bondSigner,
-        //     initializer: purchaser.publicKey,
-        //     initializerTokenAccount: purchaserRedeemableTokenAccount,
-        //     bondTokenAccount: bondRedeemableTokenAccount,
-        //     bondSolanaAccount: bondSolanaAccount.publicKey,
-        //     redeemableMint: redeemableMint.key,
-        //     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        //     clock: web3.SYSVAR_CLOCK_PUBKEY,
-        //     systemProgram: web3.SystemProgram.programId,
-        //     tokenProgram: TOKEN_PROGRAM_ID,
-        // };
-        //
-        // console.log("\n");
-        // console.log("Bond Account: ", bondAccount.publicKey.toString())
-        // console.log("bondAuthority: ", bondSigner.toString());
-        // console.log("initializer: ", purchaser.publicKey.toString());
-        // console.log("purchaserRedeemableTokenAccount: ", purchaserRedeemableTokenAccount.toString());
-        // console.log("redeemableMint: ", redeemableMint.key.toString());
-        // console.log("\n");
-        //
-        // // console.log("Getting RPC Call", addressContext);
-        // console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
-        // const initializeTx = await program.rpc.initialize(
-        //     bump,
-        //     bondTimeFrame,
-        //     sendAmount,
-        //     {
-        //         accounts: addressContext,
-        //         signers: [bondAccount]
-        //     }
-        // );
-        // await provider.connection.confirmTransaction(initializeTx);
-        // console.log("Your transaction signature", initializeTx);
-        //
-        //
-        // /**
-        //  * All created items are:
-        //  */
-        // console.log("RPC Call is: ");
-        //
+        const addressContext: any = {
+            bondAccount: bondAccount.publicKey,
+            bondAuthority: bondSigner,
+            initializer: purchaser.publicKey,
+            initializerTokenAccount: purchaserRedeemableTokenAccount,
+            bondTokenAccount: bondRedeemableTokenAccount,
+            bondSolanaAccount: bondSolanaAccount.publicKey,
+            redeemableMint: redeemableMint.key,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            clock: web3.SYSVAR_CLOCK_PUBKEY,
+            systemProgram: web3.SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+        };
+
+        console.log("\n");
+        console.log("Bond Account: ", bondAccount.publicKey.toString())
+        console.log("bondAuthority: ", bondSigner.toString());
+        console.log("initializer: ", purchaser.publicKey.toString());
+        console.log("purchaserRedeemableTokenAccount: ", purchaserRedeemableTokenAccount.toString());
+        console.log("redeemableMint: ", redeemableMint.key.toString());
+        console.log("\n");
+
+        // console.log("Getting RPC Call", addressContext);
+        console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
+        const initializeTx = await program.rpc.initialize(
+            bump,
+            bondTimeFrame,
+            sendAmount,
+            {
+                accounts: addressContext,
+                signers: [bondAccount]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("Your transaction signature", initializeTx);
+
+
+        /**
+         * All created items are:
+         */
+        console.log("RPC Call is: ");
+
         // props.initializeRpcCall(d);
+
+        console.log("Address context is: ", addressContext);
+
+        setAccountInfo((_prev: any) => {
+            return addressContext
+        })
 
     }
 
@@ -257,6 +275,9 @@ export default function VariableStakeForm(props: any) {
                             </div>
                         </form>
                     </div>
+                    {
+                        JSON.stringify(accountInfo)
+                    }
                 </div>
             </div>
 

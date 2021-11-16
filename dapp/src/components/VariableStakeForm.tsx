@@ -1,5 +1,4 @@
 /* This example requires Tailwind CSS v2.0+ */
-import {useEffect} from "react";
 import { useForm } from "react-hook-form";
 import {useWallet } from '@solana/wallet-adapter-react';
 import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
@@ -16,29 +15,26 @@ export default function VariableStakeForm(props: any) {
     const {register, handleSubmit} = useForm();
     const walletContext: any = useWallet();
 
-    const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-    const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
-    anchor.setProvider(provider);
-    const programId = new anchor.web3.PublicKey(PROGRAM_ID);
-    const program = new anchor.Program(
-        props.idl,
-        programId,
-        provider,
-    );
-
-    useEffect(() => {
-        console.log("walletContext: ", walletContext, walletContext?.wallet?.publicKey);
-    }, [walletContext, walletContext.wallet]);
-
-    const userAccount: Wallet = new Wallet(connection, provider.wallet);
-    console.log("Phantom user account is: ", userAccount);
-    console.log("Provider is: ", provider);
-
     const submitToContract = async (d: any) => {
+
+        const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+        const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
+        anchor.setProvider(provider);
+        const programId = new anchor.web3.PublicKey(PROGRAM_ID);
+        const program = new anchor.Program(
+            props.idl,
+            programId,
+            provider,
+        );
+
         console.log("Submitting logs");
 
         // TODO: Implement RPC Call
         console.log(JSON.stringify(d));
+
+        const userAccount: Wallet = new Wallet(connection, provider.wallet);
+        console.log("Phantom user account is: ", userAccount);
+        console.log("Provider is: ", provider);
 
         /**
          * Extract arguments from the form
@@ -81,49 +77,50 @@ export default function VariableStakeForm(props: any) {
         /**
          * Make the actual RPC Call
          */
-        const addressContext: any = {
-            bondAccount: bondAccount.publicKey,
-            bondAuthority: bondSigner,
-            initializer: purchaser.publicKey,
-            initializerTokenAccount: purchaserRedeemableTokenAccount,
-            bondTokenAccount: bondRedeemableTokenAccount,
-            bondSolanaAccount: bondSolanaAccount.publicKey,
-            redeemableMint: redeemableMint.key,
-            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            clock: web3.SYSVAR_CLOCK_PUBKEY,
-            systemProgram: web3.SystemProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-        };
+        // const addressContext: any = {
+        //     bondAccount: bondAccount.publicKey,
+        //     bondAuthority: bondSigner,
+        //     initializer: purchaser.publicKey,
+        //     initializerTokenAccount: purchaserRedeemableTokenAccount,
+        //     bondTokenAccount: bondRedeemableTokenAccount,
+        //     bondSolanaAccount: bondSolanaAccount.publicKey,
+        //     redeemableMint: redeemableMint.key,
+        //     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        //     clock: web3.SYSVAR_CLOCK_PUBKEY,
+        //     systemProgram: web3.SystemProgram.programId,
+        //     tokenProgram: TOKEN_PROGRAM_ID,
+        // };
+        //
+        // console.log("\n");
+        // console.log("Bond Account: ", bondAccount.publicKey.toString())
+        // console.log("bondAuthority: ", bondSigner.toString());
+        // console.log("initializer: ", purchaser.publicKey.toString());
+        // console.log("purchaserRedeemableTokenAccount: ", purchaserRedeemableTokenAccount.toString());
+        // console.log("redeemableMint: ", redeemableMint.key.toString());
+        // console.log("\n");
+        //
+        // // console.log("Getting RPC Call", addressContext);
+        // console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
+        // const initializeTx = await program.rpc.initialize(
+        //     bump,
+        //     bondTimeFrame,
+        //     sendAmount,
+        //     {
+        //         accounts: addressContext,
+        //         signers: [bondAccount]
+        //     }
+        // );
+        // await provider.connection.confirmTransaction(initializeTx);
+        // console.log("Your transaction signature", initializeTx);
+        //
+        //
+        // /**
+        //  * All created items are:
+        //  */
+        // console.log("RPC Call is: ");
+        //
+        // props.initializeRpcCall(d);
 
-        console.log("\n");
-        console.log("Bond Account: ", bondAccount.publicKey.toString())
-        console.log("bondAuthority: ", bondSigner.toString());
-        console.log("initializer: ", purchaser.publicKey.toString());
-        console.log("purchaserRedeemableTokenAccount: ", purchaserRedeemableTokenAccount.toString());
-        console.log("redeemableMint: ", redeemableMint.key.toString());
-        console.log("\n");
-
-        // console.log("Getting RPC Call", addressContext);
-        console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
-        const initializeTx = await program.rpc.initialize(
-            bump,
-            bondTimeFrame,
-            sendAmount,
-            {
-                accounts: addressContext,
-                signers: [bondAccount]
-            }
-        );
-        await provider.connection.confirmTransaction(initializeTx);
-        console.log("Your transaction signature", initializeTx);
-
-
-        /**
-         * All created items are:
-         */
-        console.log("RPC Call is: ");
-
-        props.initializeRpcCall(d);
     }
 
     return (

@@ -1,23 +1,129 @@
 /* This example requires Tailwind CSS v2.0+ */
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import { useForm } from "react-hook-form";
+import {useWallet } from '@solana/wallet-adapter-react';
+import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
+import * as anchor from "@project-serum/anchor";
+import {PROGRAM_ID} from "../const";
+import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {BN, web3} from "@project-serum/anchor";
+import {Wallet, Mint} from "../splpasta";
+import {createAssociatedTokenAccountSend} from "../splpasta/tx/associated-token-account";
 
-export default function VariableStakeForm() {
+export default function VariableStakeForm(props: any) {
 
     // TODO: Implement Solana input field
-    const [timeInSeconds, setTimeInSeconds] = useState(0.);
     const {register, handleSubmit} = useForm();
+    const walletContext: any = useWallet();
+
+    const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+    const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
+    anchor.setProvider(provider);
+    const programId = new anchor.web3.PublicKey(PROGRAM_ID);
+    const program = new anchor.Program(
+        props.idl,
+        programId,
+        provider,
+    );
 
     useEffect(() => {
+        console.log("walletContext: ", walletContext, walletContext?.wallet?.publicKey);
+    }, [walletContext, walletContext.wallet]);
 
-    }, []);
+    const userAccount: Wallet = new Wallet(connection, provider.wallet);
+    console.log("Phantom user account is: ", userAccount);
+    console.log("Provider is: ", provider);
 
     const submitToContract = async (d: any) => {
         console.log("Submitting logs");
 
         // TODO: Implement RPC Call
-        alert(JSON.stringify(d));
+        console.log(JSON.stringify(d));
 
+        /**
+         * Extract arguments from the form
+         */
+        const bondTimeFrame: number = d["timeInSeconds"];
+        const sendAmount: number = d["amount"];
+
+        /**
+         * Fetch the wallet user
+         */
+        const _userAccount: Wallet = new Wallet(connection, provider.wallet);
+        console.log("Phantom user account is: ", _userAccount);
+        const purchaser: Wallet = _userAccount;
+
+        /**
+         * Get a pool signer together
+         */
+        // Pool Signer is a new program-account, which has power over the pool
+        console.log("Purchaser public key is: ", purchaser);
+        const [bondSigner, _bump] = await PublicKey.findProgramAddress(
+            [purchaser.publicKey.toBuffer()],
+            program.programId
+        );
+
+        /**
+         * Create the redeemable Mint, and the associated token account for the user
+         */
+        const bondAccount = Keypair.generate();
+        const bondSolanaAccount = Keypair.generate();
+        console.log("PoolAccount Public Key is: ", bondAccount.publicKey, bondAccount.secretKey);
+
+        const redeemableMint: Mint = await Mint.create(connection, 9, bondSigner, purchaser);
+        const purchaserRedeemableTokenAccount: PublicKey = await createAssociatedTokenAccountSend(connection, redeemableMint.key, purchaser.publicKey, purchaser);
+        const bondRedeemableTokenAccount: PublicKey = await createAssociatedTokenAccountSend(connection, redeemableMint.key, bondSigner, purchaser);
+        console.log("Purchaser.publickey is: ", purchaser.publicKey.toBase58(), purchaser);
+        console.log("Mint Public Key is: ", redeemableMint.key.toBase58());
+
+        const bump = new BN(_bump);
+
+        /**
+         * Make the actual RPC Call
+         */
+        const addressContext: any = {
+            bondAccount: bondAccount.publicKey,
+            bondAuthority: bondSigner,
+            initializer: purchaser.publicKey,
+            initializerTokenAccount: purchaserRedeemableTokenAccount,
+            bondTokenAccount: bondRedeemableTokenAccount,
+            bondSolanaAccount: bondSolanaAccount.publicKey,
+            redeemableMint: redeemableMint.key,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            clock: web3.SYSVAR_CLOCK_PUBKEY,
+            systemProgram: web3.SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+        };
+
+        console.log("\n");
+        console.log("Bond Account: ", bondAccount.publicKey.toString())
+        console.log("bondAuthority: ", bondSigner.toString());
+        console.log("initializer: ", purchaser.publicKey.toString());
+        console.log("purchaserRedeemableTokenAccount: ", purchaserRedeemableTokenAccount.toString());
+        console.log("redeemableMint: ", redeemableMint.key.toString());
+        console.log("\n");
+
+        // console.log("Getting RPC Call", addressContext);
+        console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
+        const initializeTx = await program.rpc.initialize(
+            bump,
+            bondTimeFrame,
+            sendAmount,
+            {
+                accounts: addressContext,
+                signers: [bondAccount]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("Your transaction signature", initializeTx);
+
+
+        /**
+         * All created items are:
+         */
+        console.log("RPC Call is: ");
+
+        props.initializeRpcCall(d);
     }
 
     return (
@@ -58,36 +164,36 @@ export default function VariableStakeForm() {
                                         {/*</div>*/}
 
                                         <div className="col-span-6 sm:col-span-6">
-                                            <label htmlFor="epochs" className="block text-sm font-medium text-gray-700">
-                                                Time (in Epochs*)
+                                            <label htmlFor="timeInSeconds" className="block text-sm font-medium text-gray-700">
+                                                Duration in Seconds
                                             </label>
                                             <input
                                                 type="number"
-                                                {...register("epochs")}
-                                                id="epochs"
-                                                autoComplete="epochs"
+                                                {...register("timeInSeconds")}
+                                                id="timeInSeconds"
+                                                autoComplete="timeInSeconds"
                                                 className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
                                             />
                                         </div>
 
-                                        <div className="col-span-6 sm:col-span-6">
-                                            <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">
-                                                Monthly Payout
-                                            </label>
-                                            <select
-                                                id="country"
-                                                {...register("country")}
-                                                autoComplete="country-name"
-                                                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                            >
-                                                <option>
-                                                    Pay me Monthly
-                                                </option>
-                                                <option>
-                                                    Don't pay me Monthly (Compound Interest)
-                                                </option>
-                                            </select>
-                                        </div>
+                                        {/*<div className="col-span-6 sm:col-span-6">*/}
+                                        {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
+                                        {/*        Monthly Payout*/}
+                                        {/*    </label>*/}
+                                        {/*    <select*/}
+                                        {/*        id="country"*/}
+                                        {/*        {...register("country")}*/}
+                                        {/*        autoComplete="country-name"*/}
+                                        {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
+                                        {/*    >*/}
+                                        {/*        <option>*/}
+                                        {/*            Pay me Monthly*/}
+                                        {/*        </option>*/}
+                                        {/*        <option>*/}
+                                        {/*            Don't pay me Monthly (Compound Interest)*/}
+                                        {/*        </option>*/}
+                                        {/*    </select>*/}
+                                        {/*</div>*/}
 
                                         {/*<div className="col-span-6">*/}
                                         {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}

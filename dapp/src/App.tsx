@@ -3,7 +3,6 @@
  * https://blog.prototypr.io/design-a-landing-page-using-tailwind-css-3a1a68166c47
  */
 import React, {useEffect, useState} from 'react';
-import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
 import { SocialIcon } from 'react-social-icons';
 import {Connection, PublicKey, SystemProgram, clusterApiUrl, Keypair} from '@solana/web3.js';
@@ -12,14 +11,13 @@ import { Program, Provider, web3 } from '@project-serum/anchor'
 import _idl from './idl.json';
 //@ts-ignore
 import _kp from './keypair.json';
-import NavbarHeader from "./components/NavbarHeader";
 import VariableStakeForm from "./components/VariableStakeForm";
-import ConnectWalletButton from "./components/ConnectWalletButton";
+import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
+import {useWallet} from "@solana/wallet-adapter-react";
 
 const idl: any = _idl;
 const kp: any = _kp;
 
-// let baseAccount = Keypair.generate();
 const arr: any = Object.values(kp._keypair.secretKey);
 const secret = new Uint8Array(arr);
 const baseAccount: Keypair = web3.Keypair.fromSecretKey(secret);
@@ -28,162 +26,58 @@ console.log("Imported keypair is: ", baseAccount.publicKey.toBase58());
 const programID = new PublicKey(idl.metadata.address);
 const network = clusterApiUrl("devnet");
 const opts: any = { preflightCommitment: "processed" };
+const wallets = [getPhantomWallet()];
 
 function App() {
 
     const [inputValue, setInputValue] = useState('');
     const [gifList, setGifList] = useState<any[] | null>([]);
+    const [walletAddress, setWalletAddress] = useState(null);
 
-    const getProvider = () => {
-        const connection = new Connection(network, opts.preflightCommitment);
+    const walletContext: any = useWallet();
+
+    const connectWallet = async () => {
         const { solana }: any = window;
 
-        const provider = new Provider(
-            connection, solana, opts.preflightCommitment,
-        );
+        if (solana) {
+            const response = await solana.connect();
+            console.log('Connected with Public Key:', response.publicKey.toString());
+            setWalletAddress(response.publicKey.toString());
+        }
+    };
+
+    function getProvider() {
+        /* create the provider and return it to the caller */
+        /* network set to local network for now */
+        // TODO Remove this hardcoded network if you want to use proiders as is the case below
+        // const network = "http://127.0.0.1:8899";
+        // TODO: Introduce environment variable
+        const network = "https://api.devnet.solana.com";
+        const connection = new Connection(network, opts.preflightCommitment);
+
+        // TODO: Extract Wallet somehow! anchor.Provider.defaultOptions()
+        const provider = new Provider(connection, walletContext, opts.preflightCommitment);
+
         return provider;
     }
 
-    const createGifAccount = async () => {
-        try {
-            const provider = getProvider();
-            const program = new Program(idl, programID, provider);
-            console.log("ping");
-            await program.rpc.startStuffOff({
-                accounts: {
-                    baseAccount: baseAccount.publicKey,
-                    user: provider.wallet.publicKey,
-                    systemProgram: SystemProgram.programId,
-                },
-                signers: [baseAccount]
-            });
-            console.log("Created a new BaseAccount w/ address: ", baseAccount.publicKey.toString())
-            await getGifList();
-        } catch (error) {
-            console.log("Error creating BaseAccount account: ", error)
-        }
+    const provider = getProvider();
+
+    const renderNotConnectedContainer = () => (
+        <button
+            className="cta-button connect-wallet-button"
+            onClick={connectWallet}
+        >
+            Connect to Wallet
+        </button>
+    );
+
+    const initializeRpcCall = async () => {
+
+
 
     }
 
-    const getGifList = async() => {
-        try {
-            const provider = getProvider();
-            const program = new Program(idl, programID, provider);
-            const account = await program.account.baseAccount.fetch(baseAccount.publicKey);
-            console.log("RPC Call");
-            console.log("gif list is: ", account, account.gifList);
-            setGifList(account.gifList);
-
-        } catch (error) {
-            console.log("Error in getGifs: ", error);
-            setGifList(null);
-        }
-    }
-
-    // const checkIfWalletIsConnected = async () => {
-    //     try {
-    //         const {solana}: any = window;
-    //
-    //         if (solana) {
-    //             if (solana.isPhantom) {
-    //                 console.log('Phantom wallet found!');
-    //
-    //                 const response = await solana.connect({onlyIfTrusted: true});
-    //                 console.log(
-    //                     'Connected with Public Key:',
-    //                     response.publicKey.toString()
-    //                 );
-    //
-    //                 setWalletAddress(response.publicKey.toString());
-    //
-    //             }
-    //         } else {
-    //             alert('Solana object not found! Get a Phantom Wallet 👻');
-    //         }
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // };
-
-    const onInputChange = (event: any) => {
-        const { value }: any = event.target;
-        setInputValue(value);
-    };
-
-    const sendGif = async () => {
-        if (inputValue.length === 0) {
-            console.log("No gif link given!")
-            return
-        }
-        console.log('Gif link:', inputValue);
-
-        try {
-            const provider = getProvider();
-            const program = new Program(idl, programID, provider);
-
-            await program.rpc.addGif(inputValue, {
-                accounts: {
-                    baseAccount: baseAccount.publicKey,
-                },
-            });
-            console.log("GIF sucessfully sent to program", inputValue)
-
-            await getGifList();
-        } catch (error) {
-            console.log("Error sending GIF:", error)
-        }
-
-    };
-
-    const renderConnectedContainer = () => {
-        // If we hit this, it means the program account hasn't be initialized.
-        if (gifList === null) {
-            return (
-                <div className="connected-container">
-                    <button className="cta-button submit-gif-button" onClick={createGifAccount}>
-                        Do One-Time Initialization For GIF Program Account
-                    </button>
-                </div>
-            )
-        }
-        // Otherwise, we're good! Account exists. User can submit GIFs.
-        else {
-            return(
-                <div className="connected-container">
-                    <input
-                        type="text"
-                        placeholder="Enter gif link!"
-                        value={inputValue}
-                        onChange={onInputChange}
-                    />
-                    <button className="cta-button submit-gif-button" onClick={sendGif}>
-                        Submit
-                    </button>
-                    <div className="gif-grid">
-                        {/* We use index as the key instead, also, the src is now item.gifLink */}
-                        {gifList.map((item: any, index) => (
-                            <div className="gif-item" key={index}>
-                                <img src={item.gifLink} alt={item.gifLink} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )
-        }
-    }
-
-    // useEffect(() => {
-    //     window.addEventListener('load', async (event) => {
-    //         await checkIfWalletIsConnected();
-    //     });
-    // }, []);
-
-    // useEffect(() => {
-    //     if (walletAddress) {
-    //         console.log("Fetching GIF list...");
-    //         getGifList();
-    //     }
-    // }, [walletAddress]);
 
     return (
         <div className="App mx-auto bg-gray-400">
@@ -196,7 +90,7 @@ function App() {
                     <div className="flex justify-between">
                         <div>
                             <h1 className="text-3xl font-bold">
-                                ChainBond
+                                ChainBonds
                             </h1>
                             {/*<span>*/}
                             {/*    Diamond Hands Forever*/}
@@ -206,47 +100,8 @@ function App() {
                         <div>
                             <ul className="flex">
 
-                                {/*<li className="ml-24">*/}
-                                {/*    <a href="">*/}
-                                {/*        <div className="flex items-center justify-end">*/}
-                                {/*            <div className="w-10 border-b border-solid border-white"></div>*/}
-                                {/*            <h1 className="ml-3 text-3xl font-bold">1</h1>*/}
-                                {/*        </div>*/}
-                                {/*        <div className="text-right">Connect your Wallet to Stake</div>*/}
-                                {/*    </a>*/}
-                                {/*</li>*/}
-
-                                {/*<li className="ml-24">*/}
-                                {/*    <a href="">*/}
-                                {/*        <div className="flex items-center justify-end">*/}
-                                {/*            <div className="w-10 border-b border-solid border-white"></div>*/}
-                                {/*            <h1 className="ml-3 text-3xl font-bold">2</h1>*/}
-                                {/*        </div>*/}
-                                {/*        <div className="text-right">Components</div>*/}
-                                {/*    </a>*/}
-                                {/*</li>*/}
-                                {/*<li className="ml-24">*/}
-                                {/*    <a href="">*/}
-                                {/*        <div className="flex items-center justify-end">*/}
-                                {/*            <div className="w-10 border-b border-solid border-white"></div>*/}
-                                {/*            <h1 className="ml-3 text-3xl font-bold">3</h1>*/}
-                                {/*        </div>*/}
-                                {/*        <div className="text-right">CSS Modules</div>*/}
-                                {/*    </a>*/}
-                                {/*</li>*/}
-
-                                {/*<li className="ml-24">*/}
-                                {/*    <a href="">*/}
-                                {/*        <div className="flex items-center justify-end">*/}
-                                {/*            <div className="w-10 border-b border-solid border-white"></div>*/}
-                                {/*            <h1 className="ml-3 text-3xl font-bold">4</h1>*/}
-                                {/*        </div>*/}
-                                {/*        <div className="text-right">Build & Deploy</div>*/}
-                                {/*    </a>*/}
-                                {/*</li>*/}
-
                                 <li className="ml-24">
-                                    <ConnectWalletButton />
+                                    {renderNotConnectedContainer()}
                                 </li>
 
                             </ul>
@@ -271,17 +126,16 @@ function App() {
                     </section>
 
                     <div className={"m-auto w-4/12"}>
-                        <VariableStakeForm />
+                        <VariableStakeForm
+                            idl={idl}
+                            initializeRpcCall={initializeRpcCall}
+                        />
                     </div>
 
                 {/* Replace this by Twitter, Discord, Telegram */}
                 <footer className="absolute right-0 bottom-0 p-3 lg:p-10">
-                    {/*<p className="font-bold mb-1">*/}
-                    {/*    Follow Us*/}
-                    {/*</p>*/}
                     <p>
                         <SocialIcon url={"https://twitter.com/chain_crunch"}></SocialIcon>
-                        {/*Chigozie Orunta (Full Stack Engineer)*/}
                     </p>
                 </footer>
 

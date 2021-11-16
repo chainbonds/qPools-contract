@@ -196,7 +196,7 @@ function App() {
                     <div className="flex justify-between">
                         <div>
                             <h1 className="text-3xl font-bold">
-                                SOLBond
+                                ChainBond
                             </h1>
                             {/*<span>*/}
                             {/*    Diamond Hands Forever*/}

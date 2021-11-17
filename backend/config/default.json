@@ -1,0 +1,5 @@
+{
+  "mongoURI": "mongodb+srv://postgres:PVmH1BqpQFs8niB6@cluster0.kt5l5.mongodb.net/imo?retryWrites=true&w=majority",
+  "jwtSecret": "jwtSecretToken",
+  "jwtExpiration": 360000
+}

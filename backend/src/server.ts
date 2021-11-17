@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 
 import connectDB from "../config/database";
-import imo from "./routes/api/imo";
+import bond from "./routes/api/bond";
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.get("/", (_req, res) => {
   res.send("API Running");
 });
 
-app.use("/api/imo", imo);
+app.use("/api/bond", bond);
 
 const port = app.get("port");
 const server = app.listen(port, () =>

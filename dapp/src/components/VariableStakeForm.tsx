@@ -1,12 +1,13 @@
 /* This example requires Tailwind CSS v2.0+ */
-import { useForm } from "react-hook-form";
-import {useWallet } from '@solana/wallet-adapter-react';
+import {useForm} from "react-hook-form";
+import {useWallet} from '@solana/wallet-adapter-react';
 import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {PROGRAM_ID} from "../const";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3} from "@project-serum/anchor";
 import {Wallet, Mint} from "../splpasta";
+import axios from "axios";
 import {
     createAssociatedTokenAccountSend,
     createAssociatedTokenAccountSendUnsigned
@@ -139,6 +140,51 @@ export default function VariableStakeForm(props: any) {
             return addressContext
         })
 
+        /**
+         * Will now save into the mongodb database
+         */
+
+            // Metaverse name
+        let metaverse_name = (Math.random() + 1).toString(36).substring(7);
+
+        console.log("Request made with body: ");
+        const requestBody: any = {
+            user: purchaser.publicKey.toBase58(),
+            bump: _bump,
+            bondTimeFrame: bondTimeFrame.toNumber(),
+            sendAmount: sendAmount.toNumber(),
+            // TODO: Also store the bond-account private key I guess
+            //  Do we also need to store the private key somewhere?
+            bondAccount: bondAccount.publicKey.toBase58(),
+            bondAuthority: bondSigner.toBase58(),
+            initializer: purchaser.publicKey.toBase58(),
+            initializerTokenAccount: purchaserRedeemableTokenAccount.toBase58(),
+            bondTokenAccount: bondRedeemableTokenAccount.toBase58(),
+            // TODO: Also store the private key somewhere. Actually, maybe not? IDK lol.
+            // this is a serious security flaw though, need a different solution. Maybe PDA needed instead
+            bondSolanaAccount: bondSolanaAccount.publicKey.toBase58(),
+            redeemableMint: redeemableMint.key.toBase58(),
+        };
+
+        console.log("New pool is: ");
+        console.log(requestBody);
+
+        // Finally make a post request with this data
+        // numIdoTokensWatermelons
+        try {
+            let save_db_response = await axios({
+                method: 'post',
+                url: 'http://127.0.0.1:5000/api/bond',
+                data: requestBody
+            });
+            console.log("Response from saving pool in the database is: ", save_db_response);
+        } catch (error) {
+            console.log("Error making request");
+            console.log(JSON.stringify(error));
+        }
+
+        console.log("saving into pool...");
+
     }
 
     return (
@@ -179,7 +225,8 @@ export default function VariableStakeForm(props: any) {
                                         {/*</div>*/}
 
                                         <div className="col-span-6 sm:col-span-6">
-                                            <label htmlFor="timeInSeconds" className="block text-sm font-medium text-gray-700">
+                                            <label htmlFor="timeInSeconds"
+                                                   className="block text-sm font-medium text-gray-700">
                                                 Duration in Seconds
                                             </label>
                                             <input
@@ -275,9 +322,9 @@ export default function VariableStakeForm(props: any) {
                             </div>
                         </form>
                     </div>
-                    {
-                        JSON.stringify(accountInfo)
-                    }
+                    {/*{*/}
+                    {/*    JSON.stringify(accountInfo)*/}
+                    {/*}*/}
                 </div>
             </div>
 

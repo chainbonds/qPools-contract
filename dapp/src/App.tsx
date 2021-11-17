@@ -15,6 +15,7 @@ import VariableStakeForm from "./components/VariableStakeForm";
 import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
 import {useWallet, WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
+import ListPools from "./components/ListPools";
 
 const idl: any = _idl;
 const kp: any = _kp;
@@ -92,6 +93,10 @@ function App() {
                     {/*</p>*/}
                 </footer>
 
+            </div>
+
+            <div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>
+                <ListPools />
             </div>
 
         </div>

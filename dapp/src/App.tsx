@@ -33,10 +33,6 @@ function App() {
     return (
         <div className="App mx-auto bg-gray-400">
 
-            <WalletMultiButton className="cta-button connect-wallet-button px-20" onClick={() => {
-                console.log("click")
-            }}/>
-
             <div className={"h-full flex items-center px-6 lg:px-32 bg-purple-900 text-white relative"}>
 
                 <header className="w-full absolute left-0 top-0 p-6 lg:p-28 lg:pt-12">
@@ -56,6 +52,14 @@ function App() {
                             <ul className="flex">
 
                                 <li className="ml-24">
+
+                                    <WalletMultiButton className="cta-button connect-wallet-button px-20" onClick={() => {
+                                        console.log("click")
+                                    }}/>
+
+                                    {/*<div className={"wallet-adapter-modal wallet-adapter-modal-fade-in"} >*/}
+                                    {/*    Div lol*/}
+                                    {/*</div>*/}
 
                                 </li>
                             </ul>
@@ -80,10 +84,10 @@ function App() {
                 </section>
 
                 <div className={"m-auto w-4/12"}>
-                    <VariableStakeForm
-                        idl={idl}
-                        // initializeRpcCall={initializeRpcCall}
-                    />
+                    {/*<VariableStakeForm*/}
+                    {/*    idl={idl}*/}
+                    {/*    // initializeRpcCall={initializeRpcCall}*/}
+                    {/*/>*/}
                 </div>
 
                 {/* Replace this by Twitter, Discord, Telegram */}
@@ -96,7 +100,7 @@ function App() {
             </div>
 
             <div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>
-                <ListPools />
+                {/*<ListPools />*/}
             </div>
 
         </div>

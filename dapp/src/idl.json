@@ -1,86 +1,220 @@
 {
   "version": "0.0.0",
-  "name": "floating_pools",
+  "name": "solbond",
   "instructions": [
     {
-      "name": "startStuffOff",
+      "name": "initialize",
       "accounts": [
         {
-          "name": "baseAccount",
+          "name": "bondAccount",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "user",
+          "name": "bondAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "initializer",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "initializerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bondTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bondSolanaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "redeemableMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "addGif",
-      "accounts": [
+        },
         {
-          "name": "baseAccount",
-          "isMut": true,
+          "name": "tokenProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "gifLink",
-          "type": "string"
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "timeFrame",
+          "type": "u64"
+        },
+        {
+          "name": "initializerAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "redeemBond",
+      "accounts": [
+        {
+          "name": "bondAccount",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bondAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "initializer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "initializerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bondTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bondSolanaAccount",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "redeemableMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "redeemableAmount",
+          "type": "u64"
         }
       ]
     }
   ],
   "accounts": [
     {
-      "name": "BaseAccount",
+      "name": "BondAccount",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "totalGifs",
+            "name": "initializer",
+            "type": "publicKey"
+          },
+          {
+            "name": "bondAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "initializerTokenAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "bondTokenAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "bondSolanaAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "redeemableMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "initializerAmount",
             "type": "u64"
           },
           {
-            "name": "gifList",
-            "type": {
-              "vec": {
-                "defined": "ItemStruct"
-              }
-            }
+            "name": "bondTime",
+            "type": "u64"
+          },
+          {
+            "name": "createdTimestamp",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
     }
   ],
-  "types": [
+  "errors": [
     {
-      "name": "ItemStruct",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "gifLink",
-            "type": "string"
-          },
-          {
-            "name": "userAddress",
-            "type": "publicKey"
-          }
-        ]
-      }
+      "code": 300,
+      "name": "LowBondSolAmount",
+      "msg": "SOL to be paid into the bond should not be zero"
+    },
+    {
+      "code": 301,
+      "name": "RedeemCapacity",
+      "msg": "Asking for too much SOL when redeeming!"
+    },
+    {
+      "code": 302,
+      "name": "TimeFrameNotPassed",
+      "msg": "Bond has not gone past timeframe yet"
     }
   ],
   "metadata": {
-    "address": "AH86b3dLbWjkv8aWbeqjS7JuuQrAMA1aQZfuLZ6N1ZLQ"
+    "address": "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A"
   }
 }

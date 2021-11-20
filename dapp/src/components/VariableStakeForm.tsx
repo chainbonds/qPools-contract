@@ -237,7 +237,7 @@ export default function VariableStakeForm(props: any) {
                             <div className="px-4 py-5 bg-pink-500 bg-gray sm:p-6">
 
                                 <h2 className="text-2xl lg:text-2xl font-bold text-white pb-5 border-b border-white">
-                                    Some Basic Header
+                                    Buy Your Bonds
                                 </h2>
 
                                 {/*<br />*/}

@@ -32,7 +32,7 @@ function App() {
     return (
         <div className="App mx-auto bg-gray-400">
 
-            <div className={"h-full flex items-center px-6 lg:px-32 bg-purple-900 text-white relative"}>
+            <div className={"min-h-full flex items-center px-6 lg:px-32 bg-purple-900 text-white relative"}>
 
                 <header className="w-full absolute left-0 top-0 p-6 lg:p-28 lg:pt-12">
                     <div className="flex justify-between">
@@ -130,9 +130,12 @@ function App() {
 
             </div>
 
-            <div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>
-
+            <div className={"min-h-full px-6 lg:px-32 bg-purple-900"}>
+                <ListPools />
             </div>
+
+            {/*<div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>*/}
+            {/*</div>*/}
 
         </div>
     );

@@ -14,7 +14,6 @@ import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
 import {useWallet, WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
 import ListPools from "./components/ListPools";
-import ActionCard from "./components/ActionCard";
 
 const kp: any = _kp;
 
@@ -28,7 +27,7 @@ const wallets = [getPhantomWallet()];
 
 function App() {
 
-    const [showRedeemBonds, setShowRedeemBonds] = useState<boolean>(false);
+    const [showBuyBonds, setShowBuyBonds] = useState<boolean>(true);
 
     return (
         <div className="App mx-auto bg-gray-400">
@@ -52,7 +51,7 @@ function App() {
                             <ul className="flex">
 
                                 <li className="ml-24">
-                                    <a href="">
+                                    <a onClick={() => setShowBuyBonds((_: boolean) => true)}>
                                         <div className="flex items-center justify-end">
                                             <div className="w-10 border-b border-solid border-white"></div>
                                             <h1 className="ml-3 text-3xl font-bold">1</h1>
@@ -62,7 +61,7 @@ function App() {
                                 </li>
 
                                 <li className="ml-24">
-                                    <a href="">
+                                    <a onClick={() => setShowBuyBonds((_: boolean) => false)}>
                                         <div className="flex items-center justify-end">
                                             <div className="w-10 border-b border-solid border-white"></div>
                                             <h1 className="ml-3 text-3xl font-bold">2</h1>
@@ -83,9 +82,10 @@ function App() {
 
                                 <li className="ml-24">
 
-                                    <WalletMultiButton className="cta-button connect-wallet-button px-20" onClick={() => {
-                                        console.log("click")
-                                    }}/>
+                                    <WalletMultiButton className="cta-button connect-wallet-button px-20"
+                                                       onClick={() => {
+                                                           console.log("click")
+                                                       }}/>
 
                                 </li>
                             </ul>
@@ -110,7 +110,12 @@ function App() {
                 </section>
 
                 <div className={"m-auto w-4/12"}>
-                    <ActionCard />
+
+                    <div className="mt-10 sm:mt-0">
+                        {showBuyBonds && <VariableStakeForm />}
+                        {!showBuyBonds && <ListPools />}
+                    </div>
+
                     {/*<VariableStakeForm*/}
                     {/*    // initializeRpcCall={initializeRpcCall}*/}
                     {/*/>*/}

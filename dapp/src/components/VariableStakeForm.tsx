@@ -1,7 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {clusterApiUrl, Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
+import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3} from "@project-serum/anchor";
@@ -11,7 +11,6 @@ import {
     createAssociatedTokenAccountSend,
     createAssociatedTokenAccountSendUnsigned
 } from "../splpasta/tx/associated-token-account";
-import {WalletI} from "../splpasta/types";
 import {useState} from "react";
 import {solbondProgram} from "../programs/solbond";
 import {Marinade} from "../programs/marinade";
@@ -230,134 +229,149 @@ export default function VariableStakeForm(props: any) {
 
     return (
         <>
-            <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
-                <div className="shadow overflow-hidden sm:rounded-md">
-                    <div className="px-4 py-5 bg-white sm:p-6">
-                        <div className="grid grid-cols-6 gap-6">
+            <div className="md:grid md:grid-cols-2 md:gap-6">
+                <div className="mt-5 md:mt-0 md:col-span-2">
 
-                            <div className="col-span-6 sm:col-span-6">
-                                <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                                    Amount
-                                </label>
-                                <input
-                                    type="number"
-                                    {...register("amount")}
-                                    id="amount"
-                                    autoComplete="amount"
-                                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
-                                />
+                    <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
+                        <div className="shadow overflow-hidden sm:rounded-md">
+                            <div className="px-4 py-5 bg-pink-500 bg-gray sm:p-6">
+
+                                <h2 className="text-2xl lg:text-2xl font-bold text-white pb-5 border-b border-white">
+                                    Some Basic Header
+                                </h2>
+
+                                {/*<br />*/}
+                                {/*<hr />*/}
+                                {/*<br />*/}
+
+                                <div className="grid grid-cols-6 gap-6 pt-5">
+
+                                    <div className="col-span-6 sm:col-span-6">
+                                        <label htmlFor="amount" className="block text-xl font-medium text-white">
+                                            Amount
+                                        </label>
+                                        <input
+                                            type="number"
+                                            {...register("amount")}
+                                            id="amount"
+                                            autoComplete="amount"
+                                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
+                                        />
+                                    </div>
+
+                                    {/*<div className="col-span-6 sm:col-span-3">*/}
+                                    {/*    <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">*/}
+                                    {/*        Last name*/}
+                                    {/*    </label>*/}
+                                    {/*    <input*/}
+                                    {/*        type="text"*/}
+                                    {/*        name="last-name"*/}
+                                    {/*        id="last-name"*/}
+                                    {/*        autoComplete="family-name"*/}
+                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                                    {/*    />*/}
+                                    {/*</div>*/}
+
+                                    <div className="col-span-6 sm:col-span-6">
+                                        <label htmlFor="timeInSeconds"
+                                               className="block text-xl font-medium text-white">
+                                            Duration (in Seconds)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            {...register("timeInSeconds")}
+                                            id="timeInSeconds"
+                                            autoComplete="timeInSeconds"
+                                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
+                                        />
+                                    </div>
+
+                                    {/*<div className="col-span-6 sm:col-span-6">*/}
+                                    {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
+                                    {/*        Monthly Payout*/}
+                                    {/*    </label>*/}
+                                    {/*    <select*/}
+                                    {/*        id="country"*/}
+                                    {/*        {...register("country")}*/}
+                                    {/*        autoComplete="country-name"*/}
+                                    {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
+                                    {/*    >*/}
+                                    {/*        <option>*/}
+                                    {/*            Pay me Monthly*/}
+                                    {/*        </option>*/}
+                                    {/*        <option>*/}
+                                    {/*            Don't pay me Monthly (Compound Interest)*/}
+                                    {/*        </option>*/}
+                                    {/*    </select>*/}
+                                    {/*</div>*/}
+
+                                    {/*<div className="col-span-6">*/}
+                                    {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}
+                                    {/*        Street address*/}
+                                    {/*    </label>*/}
+                                    {/*    <input*/}
+                                    {/*        type="text"*/}
+                                    {/*        name="street-address"*/}
+                                    {/*        id="street-address"*/}
+                                    {/*        autoComplete="street-address"*/}
+                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                                    {/*    />*/}
+                                    {/*</div>*/}
+
+                                    {/*<div className="col-span-6 sm:col-span-6 lg:col-span-2">*/}
+                                    {/*    <label htmlFor="city" className="block text-sm font-medium text-gray-700">*/}
+                                    {/*        City*/}
+                                    {/*    </label>*/}
+                                    {/*    <input*/}
+                                    {/*        type="text"*/}
+                                    {/*        name="city"*/}
+                                    {/*        id="city"*/}
+                                    {/*        autoComplete="address-level2"*/}
+                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                                    {/*    />*/}
+                                    {/*</div>*/}
+
+                                    {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
+                                    {/*    <label htmlFor="region" className="block text-sm font-medium text-gray-700">*/}
+                                    {/*        State / Province*/}
+                                    {/*    </label>*/}
+                                    {/*    <input*/}
+                                    {/*        type="text"*/}
+                                    {/*        name="region"*/}
+                                    {/*        id="region"*/}
+                                    {/*        autoComplete="address-level1"*/}
+                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                                    {/*    />*/}
+                                    {/*</div>*/}
+
+                                    {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
+                                    {/*    <label htmlFor="postal-code" className="block text-sm font-medium text-gray-700">*/}
+                                    {/*        ZIP / Postal code*/}
+                                    {/*    </label>*/}
+                                    {/*    <input*/}
+                                    {/*        type="text"*/}
+                                    {/*        name="postal-code"*/}
+                                    {/*        id="postal-code"*/}
+                                    {/*        autoComplete="postal-code"*/}
+                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                                    {/*    />*/}
+                                    {/*</div>*/}
+
+                                </div>
                             </div>
-
-                            {/*<div className="col-span-6 sm:col-span-3">*/}
-                            {/*    <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">*/}
-                            {/*        Last name*/}
-                            {/*    </label>*/}
-                            {/*    <input*/}
-                            {/*        type="text"*/}
-                            {/*        name="last-name"*/}
-                            {/*        id="last-name"*/}
-                            {/*        autoComplete="family-name"*/}
-                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                            {/*    />*/}
-                            {/*</div>*/}
-
-                            <div className="col-span-6 sm:col-span-6">
-                                <label htmlFor="timeInSeconds"
-                                       className="block text-sm font-medium text-gray-700">
-                                    Duration in Seconds
-                                </label>
-                                <input
-                                    type="number"
-                                    {...register("timeInSeconds")}
-                                    id="timeInSeconds"
-                                    autoComplete="timeInSeconds"
-                                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
-                                />
+                            <div className="px-4 py-3 bg-pink-500 text-right sm:px-6">
+                                <button
+                                    type="submit"
+                                    // className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    className={"cta-button shadow-sm bg-purple-600 hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"}
+                                >
+                                    Purchase Bond
+                                </button>
                             </div>
-
-                            {/*<div className="col-span-6 sm:col-span-6">*/}
-                            {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
-                            {/*        Monthly Payout*/}
-                            {/*    </label>*/}
-                            {/*    <select*/}
-                            {/*        id="country"*/}
-                            {/*        {...register("country")}*/}
-                            {/*        autoComplete="country-name"*/}
-                            {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
-                            {/*    >*/}
-                            {/*        <option>*/}
-                            {/*            Pay me Monthly*/}
-                            {/*        </option>*/}
-                            {/*        <option>*/}
-                            {/*            Don't pay me Monthly (Compound Interest)*/}
-                            {/*        </option>*/}
-                            {/*    </select>*/}
-                            {/*</div>*/}
-
-                            {/*<div className="col-span-6">*/}
-                            {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}
-                            {/*        Street address*/}
-                            {/*    </label>*/}
-                            {/*    <input*/}
-                            {/*        type="text"*/}
-                            {/*        name="street-address"*/}
-                            {/*        id="street-address"*/}
-                            {/*        autoComplete="street-address"*/}
-                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                            {/*    />*/}
-                            {/*</div>*/}
-
-                            {/*<div className="col-span-6 sm:col-span-6 lg:col-span-2">*/}
-                            {/*    <label htmlFor="city" className="block text-sm font-medium text-gray-700">*/}
-                            {/*        City*/}
-                            {/*    </label>*/}
-                            {/*    <input*/}
-                            {/*        type="text"*/}
-                            {/*        name="city"*/}
-                            {/*        id="city"*/}
-                            {/*        autoComplete="address-level2"*/}
-                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                            {/*    />*/}
-                            {/*</div>*/}
-
-                            {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                            {/*    <label htmlFor="region" className="block text-sm font-medium text-gray-700">*/}
-                            {/*        State / Province*/}
-                            {/*    </label>*/}
-                            {/*    <input*/}
-                            {/*        type="text"*/}
-                            {/*        name="region"*/}
-                            {/*        id="region"*/}
-                            {/*        autoComplete="address-level1"*/}
-                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                            {/*    />*/}
-                            {/*</div>*/}
-
-                            {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                            {/*    <label htmlFor="postal-code" className="block text-sm font-medium text-gray-700">*/}
-                            {/*        ZIP / Postal code*/}
-                            {/*    </label>*/}
-                            {/*    <input*/}
-                            {/*        type="text"*/}
-                            {/*        name="postal-code"*/}
-                            {/*        id="postal-code"*/}
-                            {/*        autoComplete="postal-code"*/}
-                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                            {/*    />*/}
-                            {/*</div>*/}
-
                         </div>
-                    </div>
-                    <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                        <button
-                            type="submit"
-                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Purchase Bond
-                        </button>
-                    </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </>
     );
 }

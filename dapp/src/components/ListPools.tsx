@@ -36,8 +36,13 @@ const ListPools = (props: any) => {
         }
     }
 
+    // Update this every couple minutes
+
     useEffect(() => {
         getBondList();
+        setInterval(() => {
+            getBondList();
+        }, 10000);
     }, []);
 
     return (

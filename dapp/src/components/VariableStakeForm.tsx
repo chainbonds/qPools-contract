@@ -3,7 +3,6 @@ import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
 import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
-import {PROGRAM_ID} from "../const";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3} from "@project-serum/anchor";
 import {Wallet, Mint} from "../splpasta";
@@ -14,6 +13,8 @@ import {
 } from "../splpasta/tx/associated-token-account";
 import {WalletI} from "../splpasta/types";
 import {useState} from "react";
+import {solbondProgram} from "../programs/solbond";
+import {marinadeProgram} from "../programs/marinade";
 
 export default function VariableStakeForm(props: any) {
 
@@ -27,12 +28,9 @@ export default function VariableStakeForm(props: any) {
         const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
         const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
         anchor.setProvider(provider);
-        const programId = new anchor.web3.PublicKey(PROGRAM_ID);
-        const program = new anchor.Program(
-            props.idl,
-            programId,
-            provider,
-        );
+
+        const programSolbond: any = solbondProgram(connection, provider);
+        const programMarinade: any = marinadeProgram(connection, provider);
 
         console.log("Submitting logs");
 
@@ -63,7 +61,7 @@ export default function VariableStakeForm(props: any) {
         console.log("Purchaser public key is: ", purchaser);
         const [bondSigner, _bump] = await PublicKey.findProgramAddress(
             [purchaser.publicKey.toBuffer()],
-            program.programId
+            programSolbond.programId
         );
 
         /**
@@ -114,7 +112,9 @@ export default function VariableStakeForm(props: any) {
 
         // console.log("Getting RPC Call", addressContext);
         console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
-        const initializeTx = await program.rpc.initialize(
+
+
+        const initializeIx = await programSolbond.instruction.initialize(
             bump,
             bondTimeFrame,
             sendAmount,
@@ -123,6 +123,25 @@ export default function VariableStakeForm(props: any) {
                 signers: [bondAccount]
             }
         );
+
+        const moveToMarinade = await programMarinade.instruction.
+
+        console.log("First instruction: ", initializeIx, typeof(initializeIx));
+        return;
+
+
+
+        const initializeTx = await programSolbond.rpc.initialize(
+            bump,
+            bondTimeFrame,
+            sendAmount,
+            {
+                accounts: addressContext,
+                signers: [bondAccount]
+            }
+        );
+
+
         await provider.connection.confirmTransaction(initializeTx);
         console.log("Your transaction signature", initializeTx);
 
@@ -189,145 +208,134 @@ export default function VariableStakeForm(props: any) {
 
     return (
         <>
+            <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
+                <div className="shadow overflow-hidden sm:rounded-md">
+                    <div className="px-4 py-5 bg-white sm:p-6">
+                        <div className="grid grid-cols-6 gap-6">
 
-            <div className="mt-10 sm:mt-0">
-                <div className="md:grid md:grid-cols-2 md:gap-6">
-                    <div className="mt-5 md:mt-0 md:col-span-2">
-                        <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
-                            <div className="shadow overflow-hidden sm:rounded-md">
-                                <div className="px-4 py-5 bg-white sm:p-6">
-                                    <div className="grid grid-cols-6 gap-6">
-
-                                        <div className="col-span-6 sm:col-span-6">
-                                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                                                Amount
-                                            </label>
-                                            <input
-                                                type="number"
-                                                {...register("amount")}
-                                                id="amount"
-                                                autoComplete="amount"
-                                                className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
-                                            />
-                                        </div>
-
-                                        {/*<div className="col-span-6 sm:col-span-3">*/}
-                                        {/*    <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        Last name*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="last-name"*/}
-                                        {/*        id="last-name"*/}
-                                        {/*        autoComplete="family-name"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        <div className="col-span-6 sm:col-span-6">
-                                            <label htmlFor="timeInSeconds"
-                                                   className="block text-sm font-medium text-gray-700">
-                                                Duration in Seconds
-                                            </label>
-                                            <input
-                                                type="number"
-                                                {...register("timeInSeconds")}
-                                                id="timeInSeconds"
-                                                autoComplete="timeInSeconds"
-                                                className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
-                                            />
-                                        </div>
-
-                                        {/*<div className="col-span-6 sm:col-span-6">*/}
-                                        {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        Monthly Payout*/}
-                                        {/*    </label>*/}
-                                        {/*    <select*/}
-                                        {/*        id="country"*/}
-                                        {/*        {...register("country")}*/}
-                                        {/*        autoComplete="country-name"*/}
-                                        {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
-                                        {/*    >*/}
-                                        {/*        <option>*/}
-                                        {/*            Pay me Monthly*/}
-                                        {/*        </option>*/}
-                                        {/*        <option>*/}
-                                        {/*            Don't pay me Monthly (Compound Interest)*/}
-                                        {/*        </option>*/}
-                                        {/*    </select>*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6">*/}
-                                        {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        Street address*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="street-address"*/}
-                                        {/*        id="street-address"*/}
-                                        {/*        autoComplete="street-address"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6 sm:col-span-6 lg:col-span-2">*/}
-                                        {/*    <label htmlFor="city" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        City*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="city"*/}
-                                        {/*        id="city"*/}
-                                        {/*        autoComplete="address-level2"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                                        {/*    <label htmlFor="region" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        State / Province*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="region"*/}
-                                        {/*        id="region"*/}
-                                        {/*        autoComplete="address-level1"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                                        {/*    <label htmlFor="postal-code" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        ZIP / Postal code*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="postal-code"*/}
-                                        {/*        id="postal-code"*/}
-                                        {/*        autoComplete="postal-code"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                    </div>
-                                </div>
-                                <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                                    <button
-                                        type="submit"
-                                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    >
-                                        Purchase Bond
-                                    </button>
-                                </div>
+                            <div className="col-span-6 sm:col-span-6">
+                                <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+                                    Amount
+                                </label>
+                                <input
+                                    type="number"
+                                    {...register("amount")}
+                                    id="amount"
+                                    autoComplete="amount"
+                                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
+                                />
                             </div>
-                        </form>
-                    </div>
-                    {/*{*/}
-                    {/*    JSON.stringify(accountInfo)*/}
-                    {/*}*/}
-                </div>
-            </div>
 
+                            {/*<div className="col-span-6 sm:col-span-3">*/}
+                            {/*    <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">*/}
+                            {/*        Last name*/}
+                            {/*    </label>*/}
+                            {/*    <input*/}
+                            {/*        type="text"*/}
+                            {/*        name="last-name"*/}
+                            {/*        id="last-name"*/}
+                            {/*        autoComplete="family-name"*/}
+                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                            {/*    />*/}
+                            {/*</div>*/}
+
+                            <div className="col-span-6 sm:col-span-6">
+                                <label htmlFor="timeInSeconds"
+                                       className="block text-sm font-medium text-gray-700">
+                                    Duration in Seconds
+                                </label>
+                                <input
+                                    type="number"
+                                    {...register("timeInSeconds")}
+                                    id="timeInSeconds"
+                                    autoComplete="timeInSeconds"
+                                    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
+                                />
+                            </div>
+
+                            {/*<div className="col-span-6 sm:col-span-6">*/}
+                            {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
+                            {/*        Monthly Payout*/}
+                            {/*    </label>*/}
+                            {/*    <select*/}
+                            {/*        id="country"*/}
+                            {/*        {...register("country")}*/}
+                            {/*        autoComplete="country-name"*/}
+                            {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
+                            {/*    >*/}
+                            {/*        <option>*/}
+                            {/*            Pay me Monthly*/}
+                            {/*        </option>*/}
+                            {/*        <option>*/}
+                            {/*            Don't pay me Monthly (Compound Interest)*/}
+                            {/*        </option>*/}
+                            {/*    </select>*/}
+                            {/*</div>*/}
+
+                            {/*<div className="col-span-6">*/}
+                            {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}
+                            {/*        Street address*/}
+                            {/*    </label>*/}
+                            {/*    <input*/}
+                            {/*        type="text"*/}
+                            {/*        name="street-address"*/}
+                            {/*        id="street-address"*/}
+                            {/*        autoComplete="street-address"*/}
+                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                            {/*    />*/}
+                            {/*</div>*/}
+
+                            {/*<div className="col-span-6 sm:col-span-6 lg:col-span-2">*/}
+                            {/*    <label htmlFor="city" className="block text-sm font-medium text-gray-700">*/}
+                            {/*        City*/}
+                            {/*    </label>*/}
+                            {/*    <input*/}
+                            {/*        type="text"*/}
+                            {/*        name="city"*/}
+                            {/*        id="city"*/}
+                            {/*        autoComplete="address-level2"*/}
+                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                            {/*    />*/}
+                            {/*</div>*/}
+
+                            {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
+                            {/*    <label htmlFor="region" className="block text-sm font-medium text-gray-700">*/}
+                            {/*        State / Province*/}
+                            {/*    </label>*/}
+                            {/*    <input*/}
+                            {/*        type="text"*/}
+                            {/*        name="region"*/}
+                            {/*        id="region"*/}
+                            {/*        autoComplete="address-level1"*/}
+                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                            {/*    />*/}
+                            {/*</div>*/}
+
+                            {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
+                            {/*    <label htmlFor="postal-code" className="block text-sm font-medium text-gray-700">*/}
+                            {/*        ZIP / Postal code*/}
+                            {/*    </label>*/}
+                            {/*    <input*/}
+                            {/*        type="text"*/}
+                            {/*        name="postal-code"*/}
+                            {/*        id="postal-code"*/}
+                            {/*        autoComplete="postal-code"*/}
+                            {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
+                            {/*    />*/}
+                            {/*</div>*/}
+
+                        </div>
+                    </div>
+                    <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                        <button
+                            type="submit"
+                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Purchase Bond
+                        </button>
+                    </div>
+                </div>
+            </form>
         </>
     );
 }

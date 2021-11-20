@@ -8,16 +8,14 @@ import {SocialIcon} from 'react-social-icons';
 import {Connection, PublicKey, SystemProgram, clusterApiUrl, Keypair} from '@solana/web3.js';
 import {Program, Provider, web3} from '@project-serum/anchor'
 //@ts-ignore
-import _idl from './idl.json';
-//@ts-ignore
 import _kp from './keypair.json';
 import VariableStakeForm from "./components/VariableStakeForm";
 import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
 import {useWallet, WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
 import ListPools from "./components/ListPools";
+import ActionCard from "./components/ActionCard";
 
-const idl: any = _idl;
 const kp: any = _kp;
 
 const arr: any = Object.values(kp._keypair.secretKey);
@@ -29,6 +27,8 @@ const network = clusterApiUrl("devnet");
 const wallets = [getPhantomWallet()];
 
 function App() {
+
+    const [showRedeemBonds, setShowRedeemBonds] = useState<boolean>(false);
 
     return (
         <div className="App mx-auto bg-gray-400">
@@ -52,14 +52,40 @@ function App() {
                             <ul className="flex">
 
                                 <li className="ml-24">
+                                    <a href="">
+                                        <div className="flex items-center justify-end">
+                                            <div className="w-10 border-b border-solid border-white"></div>
+                                            <h1 className="ml-3 text-3xl font-bold">1</h1>
+                                        </div>
+                                        <div className="text-right">Buy Bonds</div>
+                                    </a>
+                                </li>
+
+                                <li className="ml-24">
+                                    <a href="">
+                                        <div className="flex items-center justify-end">
+                                            <div className="w-10 border-b border-solid border-white"></div>
+                                            <h1 className="ml-3 text-3xl font-bold">2</h1>
+                                        </div>
+                                        <div className="text-right">Redeem Bonds</div>
+                                    </a>
+                                </li>
+
+                                <li className="ml-24">
+                                    <a href="">
+                                        <div className="flex items-center justify-end">
+                                            <div className="w-10 border-b border-solid border-white"></div>
+                                            <h1 className="ml-3 text-3xl font-bold">3</h1>
+                                        </div>
+                                        <div className="text-right">Whitepaper</div>
+                                    </a>
+                                </li>
+
+                                <li className="ml-24">
 
                                     <WalletMultiButton className="cta-button connect-wallet-button px-20" onClick={() => {
                                         console.log("click")
                                     }}/>
-
-                                    {/*<div className={"wallet-adapter-modal wallet-adapter-modal-fade-in"} >*/}
-                                    {/*    Div lol*/}
-                                    {/*</div>*/}
 
                                 </li>
                             </ul>
@@ -84,8 +110,8 @@ function App() {
                 </section>
 
                 <div className={"m-auto w-4/12"}>
+                    <ActionCard />
                     {/*<VariableStakeForm*/}
-                    {/*    idl={idl}*/}
                     {/*    // initializeRpcCall={initializeRpcCall}*/}
                     {/*/>*/}
                 </div>
@@ -100,7 +126,7 @@ function App() {
             </div>
 
             <div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>
-                {/*<ListPools />*/}
+
             </div>
 
         </div>

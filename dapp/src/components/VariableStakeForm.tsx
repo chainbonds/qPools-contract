@@ -1,7 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
+import {clusterApiUrl, Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3} from "@project-serum/anchor";
@@ -14,7 +14,7 @@ import {
 import {WalletI} from "../splpasta/types";
 import {useState} from "react";
 import {solbondProgram} from "../programs/solbond";
-import {marinadeProgram} from "../programs/marinade";
+import {Marinade} from "../programs/marinade";
 
 export default function VariableStakeForm(props: any) {
 
@@ -25,12 +25,18 @@ export default function VariableStakeForm(props: any) {
 
     const submitToContract = async (d: any) => {
 
+        // Create a new marina program
+
         const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
         const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
         anchor.setProvider(provider);
 
+
+        const programMarinade = new Marinade(connection, provider);
+
+
         const programSolbond: any = solbondProgram(connection, provider);
-        const programMarinade: any = marinadeProgram(connection, provider);
+        // const programMarinade: any = marinadeProgram(connection, provider);
 
         console.log("Submitting logs");
 
@@ -113,8 +119,10 @@ export default function VariableStakeForm(props: any) {
         // console.log("Getting RPC Call", addressContext);
         console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
 
+        // The full transaction history
+        // Start to create a new transaction from multiple instructions!
 
-        const initializeIx = await programSolbond.instruction.initialize(
+        const initializeInstruction = await programSolbond.rpc.initialize(
             bump,
             bondTimeFrame,
             sendAmount,
@@ -124,26 +132,40 @@ export default function VariableStakeForm(props: any) {
             }
         );
 
-        const moveToMarinade = await programMarinade.instruction.
+        await provider.connection.confirmTransaction(initializeInstruction);
+        console.log("Your transaction signature", initializeInstruction);
 
-        console.log("First instruction: ", initializeIx, typeof(initializeIx));
-        return;
+        const transaction = new web3.Transaction()
 
-
-
-        const initializeTx = await programSolbond.rpc.initialize(
-            bump,
-            bondTimeFrame,
-            sendAmount,
-            {
-                accounts: addressContext,
-                signers: [bondAccount]
-            }
+        const moveToMarinadeInstruction = await programMarinade.depositInstructions(
+            // ownerAddress: PublicKey,
+            // amountLamports: BN
+            // Basically get all the send amount, and send it in
+            provider.wallet.publicKey,
+            new BN(1_000_000_000)
         );
+        console.log("Second type of instructions are: ", moveToMarinadeInstruction);
 
+        moveToMarinadeInstruction.map((instruction: any) => {
+            transaction.add(instruction);
+        });
 
-        await provider.connection.confirmTransaction(initializeTx);
-        console.log("Your transaction signature", initializeTx);
+        // Now move the instruction
+        const transactionSignature = await provider.send(transaction);
+        console.log("Sent transaction signature is: ", transactionSignature);
+
+        // return;
+        //
+        //
+        // const initializeTx = await programSolbond.rpc.initialize(
+        //     bump,
+        //     bondTimeFrame,
+        //     sendAmount,
+        //     {
+        //         accounts: addressContext,
+        //         signers: [bondAccount]
+        //     }
+        // );
 
 
         /**

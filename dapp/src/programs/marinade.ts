@@ -1,22 +1,152 @@
 import * as anchor from "@project-serum/anchor";
 import {PROGRAM_ID_MARINADE, PROGRAM_ID_SOLBOND} from "../const";
-import {clusterApiUrl, Connection} from "@solana/web3.js";
-import {useWallet} from "@solana/wallet-adapter-react";
+import {clusterApiUrl, Connection, PublicKey} from "@solana/web3.js";
+import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
+import { MarinadeConfig } from "./marinade/modules/marinade-config";
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { MarinadeState } from './marinade/marinade-state/marinade-state';
+import { getOrCreateAssociatedTokenAccount, SYSTEM_PROGRAM_ID } from './marinade/util/anchor'
+import { MarinadeResult } from './marinade/marinade.types'
 
 //@ts-ignore
 import _idl from './../marinade-idl.json';
-import {Provider} from "@project-serum/anchor";
 const idl: any = _idl;
 
-export const marinadeProgram = (connection: Connection, provider: Provider) => {
+export class Marinade {
 
-    const programId = new anchor.web3.PublicKey(PROGRAM_ID_MARINADE);
-    const program = new anchor.Program(
-        idl,
-        programId,
-        provider,
-    );
+    connection: Connection;
+    provider: Provider;
+    readonly config: MarinadeConfig;
 
-    return program;
+    constructor (_connection: Connection, _provider: Provider) {
+        this.connection = _connection;
+        this.provider = _provider;
+
+        // Create a new marinade config right here, which should cover most of the logic
+        this.config = new MarinadeConfig();
+    }
+
+    /**
+     * Marina Program
+     */
+    get marinadeProgram (): Program {
+
+        const programId = new anchor.web3.PublicKey(PROGRAM_ID_MARINADE);
+        const program = new anchor.Program(
+            idl,
+            programId,
+            this.provider,
+        );
+
+        return program;
+    }
+
+    async getMarinadeState (): Promise<MarinadeState> {
+        return MarinadeState.fetch(this)
+    }
+
+    /**
+     * Deposit SOL and get mSOL Marina Logic
+     */
+    // Promise<MarinadeResult.Deposit>
+    async depositInstructions (ownerAddress: PublicKey, amountLamports: BN): Promise<any[]> {
+
+        const marinadeState = await this.getMarinadeState()
+        let transactionInstructions: any = [];
+
+        const {
+            associatedTokenAccountAddress: associatedMSolTokenAccountAddress,
+            createAssociateTokenInstruction,
+        } = await getOrCreateAssociatedTokenAccount(this.provider, marinadeState.mSolMintAddress, ownerAddress)
+
+        if (createAssociateTokenInstruction) {
+            transactionInstructions.push(createAssociateTokenInstruction)
+        }
+
+        const depositInstruction = await this.marinadeProgram.instruction.deposit(
+            amountLamports,
+            {
+                accounts: {
+                    reservePda: await marinadeState.reserveAddress(),
+                    state: this.config.marinadeStateAddress,
+                    msolMint: marinadeState.mSolMintAddress,
+                    msolMintAuthority: await marinadeState.mSolMintAuthority(),
+                    liqPoolMsolLegAuthority: await marinadeState.mSolLegAuthority(),
+                    liqPoolMsolLeg: marinadeState.mSolLeg,
+                    liqPoolSolLegPda: await marinadeState.solLeg(),
+                    mintTo: associatedMSolTokenAccountAddress,
+                    transferFrom: ownerAddress,
+                    systemProgram: SYSTEM_PROGRAM_ID,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                },
+            }
+        )
+
+        transactionInstructions.push(depositInstruction)
+
+        return transactionInstructions
+
+    }
+
+
+    async liquidUnstake (ownerAddress: PublicKey, amountLamports: BN): Promise<any[]> {
+
+        const marinadeState = await this.getMarinadeState();
+        let transactionInstructions: any = [];
+
+        const {
+            associatedTokenAccountAddress: associatedMSolTokenAccountAddress,
+            createAssociateTokenInstruction,
+        } = await getOrCreateAssociatedTokenAccount(this.provider, marinadeState.mSolMintAddress, ownerAddress)
+
+        if (createAssociateTokenInstruction) {
+            transactionInstructions.push(createAssociateTokenInstruction)
+        }
+
+        const liquidUnstakeInstruction = await this.marinadeProgram.instruction.liquidUnstake(
+            amountLamports,
+            {
+                accounts: {
+                    state: this.config.marinadeStateAddress,
+                    msolMint: marinadeState.mSolMintAddress,
+                    liqPoolMsolLeg: marinadeState.mSolLeg,
+                    liqPoolSolLegPda: await marinadeState.solLeg(),
+                    getMsolFrom: associatedMSolTokenAccountAddress,
+                    getMsolFromAuthority: ownerAddress,
+                    transferSolTo: ownerAddress,
+                    treasuryMsolAccount: marinadeState.treasuryMsolAccount,
+                    systemProgram: SYSTEM_PROGRAM_ID,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                },
+            }
+        )
+
+        transactionInstructions.push(liquidUnstakeInstruction)
+
+        return transactionInstructions
+    }
 
 }
+
+// export const marinadeProgram = (connection: Connection, provider: Provider) => {
+//
+//     const programId = new anchor.web3.PublicKey(PROGRAM_ID_MARINADE);
+//     const program = new anchor.Program(
+//         idl,
+//         programId,
+//         provider,
+//     );
+//
+//     return program;
+// }
+
+
+/**
+ * Outside our code!
+ */
+
+// export class Marinade {
+//     async getMarinadeState (): Promise<MarinadeState> {
+//         return MarinadeState.fetch(this)
+//     }
+// }

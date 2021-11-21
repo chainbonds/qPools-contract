@@ -138,7 +138,7 @@ export default function VariableStakeForm(props: any) {
         console.log("Your transaction signature", initializeInstruction);
 
         // (2) Now will create a provider for the marinade SOL account
-        const bondSolanaWallet: AnchorWallet = new AnchorWallet(bondAccount);
+        const bondSolanaWallet: AnchorWallet = new AnchorWallet(bondSolanaAccount);
         console.log("Generating bondSolanaProvider with this: ", bondSolanaWallet.publicKey.toBase58());
         const bondSolanaProvider = new anchor.Provider(connection, bondSolanaWallet, anchor.Provider.defaultOptions());
         console.log("Resulting provider is this: ", bondSolanaProvider);
@@ -153,7 +153,6 @@ export default function VariableStakeForm(props: any) {
             // amountLamports: BN
             // Basically get all the send amount, and send it in
             bondSolanaWallet,
-            bondSolanaAccount.publicKey,
             new BN(1_000_000_000)
         );
         console.log("Second type of instructions are: ", moveToMarinadeInstruction);

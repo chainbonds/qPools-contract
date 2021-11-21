@@ -49,7 +49,7 @@ export class Marinade {
      * Deposit SOL and get mSOL Marina Logic
      */
     // Promise<MarinadeResult.Deposit>
-    async depositInstructions (owner: Wallet, ownerAddress: PublicKey, amountLamports: BN): Promise<any[]> {
+    async depositInstructions (owner: Wallet, amountLamports: BN): Promise<any[]> {
 
         const marinadeState = await this.getMarinadeState()
         let transactionInstructions: any = [];
@@ -58,15 +58,17 @@ export class Marinade {
         const {
             associatedTokenAccountAddress: associatedMSolTokenAccountAddress,
             createAssociateTokenInstruction,
-        } = await getOrCreateAssociatedTokenAccount(this.provider, marinadeState.mSolMintAddress, ownerAddress)
+        } = await getOrCreateAssociatedTokenAccount(this.provider, marinadeState.mSolMintAddress, owner.publicKey)
 
         console.log("Created associated token account: ");
 
         if (createAssociateTokenInstruction) {
             transactionInstructions.push(createAssociateTokenInstruction)
         }
+        // Split up into multiple instr
 
         console.log("Creating mSOL transaction: ");
+        console.log("Transfer from signer is. ", owner.payer.publicKey.toBase58(), owner.payer.secretKey.toString());
         const depositInstruction = await this.marinadeProgram.instruction.deposit(
             amountLamports,
             {
@@ -79,7 +81,7 @@ export class Marinade {
                     liqPoolMsolLeg: marinadeState.mSolLeg,
                     liqPoolSolLegPda: await marinadeState.solLeg(),
                     mintTo: associatedMSolTokenAccountAddress,
-                    transferFrom: ownerAddress,
+                    transferFrom: owner.payer.publicKey,
                     systemProgram: SYSTEM_PROGRAM_ID,
                     tokenProgram: TOKEN_PROGRAM_ID,
                 },

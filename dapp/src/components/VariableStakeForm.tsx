@@ -4,7 +4,7 @@ import {useWallet} from '@solana/wallet-adapter-react';
 import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {BN, web3} from "@project-serum/anchor";
+import {BN, web3, Wallet as AnchorWallet} from "@project-serum/anchor";
 import {Wallet, Mint} from "../splpasta";
 import axios from "axios";
 import {
@@ -30,10 +30,8 @@ export default function VariableStakeForm(props: any) {
         const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
         anchor.setProvider(provider);
 
-
-        const programMarinade = new Marinade(connection, provider);
-
-
+        // (1) Generate the solbond provider
+        // Will send some instructions to our smart contract from here
         const programSolbond: any = solbondProgram(connection, provider);
         // const programMarinade: any = marinadeProgram(connection, provider);
 
@@ -58,6 +56,11 @@ export default function VariableStakeForm(props: any) {
         const _userAccount: Wallet = new Wallet(connection, provider.wallet);
         console.log("Phantom user account is: ", _userAccount);
         const purchaser: Wallet = _userAccount;
+
+        if (!purchaser.publicKey) {
+            alert("Please connect your wallet first!");
+            return
+        }
 
         /**
          * Get a pool signer together
@@ -134,13 +137,23 @@ export default function VariableStakeForm(props: any) {
         await provider.connection.confirmTransaction(initializeInstruction);
         console.log("Your transaction signature", initializeInstruction);
 
+        // (2) Now will create a provider for the marinade SOL account
+        const bondSolanaWallet: AnchorWallet = new AnchorWallet(bondAccount);
+        console.log("Generating bondSolanaProvider with this: ", bondSolanaWallet.publicKey.toBase58());
+        const bondSolanaProvider = new anchor.Provider(connection, bondSolanaWallet, anchor.Provider.defaultOptions());
+        console.log("Resulting provider is this: ", bondSolanaProvider);
+        const programMarinade = new Marinade(connection, bondSolanaProvider);
+
         const transaction = new web3.Transaction()
+
+        // TODO: Might have to create an associated token account first though
 
         const moveToMarinadeInstruction = await programMarinade.depositInstructions(
             // ownerAddress: PublicKey,
             // amountLamports: BN
             // Basically get all the send amount, and send it in
-            provider.wallet.publicKey,
+            bondSolanaWallet,
+            bondSolanaAccount.publicKey,
             new BN(1_000_000_000)
         );
         console.log("Second type of instructions are: ", moveToMarinadeInstruction);

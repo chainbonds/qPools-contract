@@ -27,14 +27,12 @@ const wallets = [getPhantomWallet()];
 
 function App() {
 
-    const [showBuyBonds, setShowBuyBonds] = useState<boolean>(true);
-
     return (
         <div className="App mx-auto bg-gray-400">
 
             <div className={"min-h-full flex items-center px-6 lg:px-32 bg-purple-900 text-white relative"}>
 
-                <header className="w-full absolute left-0 top-0 p-6 lg:p-28 lg:pt-12">
+                <header id={"idBuyBonds"} className="w-full absolute left-0 top-0 p-6 lg:p-28 lg:pt-12">
                     <div className="flex justify-between">
                         <div>
                             <h1 className="text-3xl font-bold">
@@ -51,7 +49,7 @@ function App() {
                             <ul className="flex">
 
                                 <li className="ml-24">
-                                    <a onClick={() => setShowBuyBonds((_: boolean) => true)}>
+                                    <a href={"#idBuyBonds"}>
                                         <div className="flex items-center justify-end">
                                             <div className="w-10 border-b border-solid border-white"></div>
                                             <h1 className="ml-3 text-3xl font-bold">1</h1>
@@ -61,7 +59,7 @@ function App() {
                                 </li>
 
                                 <li className="ml-24">
-                                    <a onClick={() => setShowBuyBonds((_: boolean) => false)}>
+                                    <a href={"#idPoolList"}>
                                         <div className="flex items-center justify-end">
                                             <div className="w-10 border-b border-solid border-white"></div>
                                             <h1 className="ml-3 text-3xl font-bold">2</h1>
@@ -112,8 +110,7 @@ function App() {
                 <div className={"m-auto w-4/12"}>
 
                     <div className="mt-10 sm:mt-0">
-                        {showBuyBonds && <VariableStakeForm />}
-                        {!showBuyBonds && <ListPools />}
+                        <VariableStakeForm />
                     </div>
 
                     {/*<VariableStakeForm*/}
@@ -130,7 +127,7 @@ function App() {
 
             </div>
 
-            <div className={"min-h-full px-6 lg:px-32 bg-purple-900"}>
+            <div id={"idPoolList"} className={"min-h-full px-6 lg:px-32 bg-purple-900"}>
                 <ListPools />
             </div>
 

@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import {PROGRAM_ID_MARINADE, PROGRAM_ID_SOLBOND} from "../const";
 import {clusterApiUrl, Connection, PublicKey} from "@solana/web3.js";
-import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
+import {BN, Idl, Program, Provider, Wallet, web3} from "@project-serum/anchor";
 import { MarinadeConfig } from "./marinade/modules/marinade-config";
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { MarinadeState } from './marinade/marinade-state/marinade-state';
@@ -49,20 +49,24 @@ export class Marinade {
      * Deposit SOL and get mSOL Marina Logic
      */
     // Promise<MarinadeResult.Deposit>
-    async depositInstructions (ownerAddress: PublicKey, amountLamports: BN): Promise<any[]> {
+    async depositInstructions (owner: Wallet, ownerAddress: PublicKey, amountLamports: BN): Promise<any[]> {
 
         const marinadeState = await this.getMarinadeState()
         let transactionInstructions: any = [];
 
+        console.log("Creating associated token account: ");
         const {
             associatedTokenAccountAddress: associatedMSolTokenAccountAddress,
             createAssociateTokenInstruction,
         } = await getOrCreateAssociatedTokenAccount(this.provider, marinadeState.mSolMintAddress, ownerAddress)
 
+        console.log("Created associated token account: ");
+
         if (createAssociateTokenInstruction) {
             transactionInstructions.push(createAssociateTokenInstruction)
         }
 
+        console.log("Creating mSOL transaction: ");
         const depositInstruction = await this.marinadeProgram.instruction.deposit(
             amountLamports,
             {
@@ -79,8 +83,10 @@ export class Marinade {
                     systemProgram: SYSTEM_PROGRAM_ID,
                     tokenProgram: TOKEN_PROGRAM_ID,
                 },
+                signers: [owner.payer]
             }
         )
+        console.log("Done mSOL transaction: ");
 
         transactionInstructions.push(depositInstruction)
 

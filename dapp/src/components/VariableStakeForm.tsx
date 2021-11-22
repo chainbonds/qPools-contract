@@ -5,6 +5,7 @@ import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3, Wallet as AnchorWallet} from "@project-serum/anchor";
+import {Signer} from "@solana/web3.js";
 import {Wallet, Mint} from "../splpasta";
 import axios from "axios";
 import {
@@ -14,6 +15,7 @@ import {
 import {useState} from "react";
 import {solbondProgram} from "../programs/solbond";
 import {Marinade} from "../programs/marinade";
+import {solToLamports} from "../programs/marinade/util/conversion";
 
 export default function VariableStakeForm(props: any) {
 
@@ -96,6 +98,8 @@ export default function VariableStakeForm(props: any) {
         /**
          * Make the actual RPC Call
          */
+        console.log("BONDSOLANAADDRESS", bondSolanaAccount.publicKey.toString());
+        console.log("BALANCE OF SOL ACCOUNT 1, ", await provider.connection.getBalance(bondSolanaAccount.publicKey));
         const addressContext: any = {
             bondAccount: bondAccount.publicKey,
             bondAuthority: bondSigner,
@@ -127,7 +131,7 @@ export default function VariableStakeForm(props: any) {
         const initializeInstruction = await programSolbond.rpc.initialize(
             bump,
             bondTimeFrame,
-            sendAmount,
+            solToLamports(sendAmount.toNumber()),
             {
                 accounts: addressContext,
                 signers: [bondAccount]
@@ -136,6 +140,7 @@ export default function VariableStakeForm(props: any) {
 
         await provider.connection.confirmTransaction(initializeInstruction);
         console.log("Your transaction signature", initializeInstruction);
+        console.log("BALANCE OF SOL ACCOUNT 2, ", await provider.connection.getBalance(bondSolanaAccount.publicKey));
 
         // (2) Now will create a provider for the marinade SOL account
         const bondSolanaWallet: AnchorWallet = new AnchorWallet(bondSolanaAccount);
@@ -153,8 +158,9 @@ export default function VariableStakeForm(props: any) {
             // amountLamports: BN
             // Basically get all the send amount, and send it in
             bondSolanaWallet,
-            new BN(1_000_000_000)
+            solToLamports(sendAmount.div(new BN(2)).toNumber()),//new BN(1_000_000_000)
         );
+
         console.log("Second type of instructions are: ", moveToMarinadeInstruction);
 
         moveToMarinadeInstruction.map((instruction: any) => {
@@ -162,8 +168,15 @@ export default function VariableStakeForm(props: any) {
         });
 
         // Now move the instruction
-        const transactionSignature = await provider.send(transaction);
-        console.log("Sent transaction signature is: ", transactionSignature);
+        //const marinade_signer: Signer = new programMarinade.provider.keypair
+        const signature = await web3.sendAndConfirmTransaction(
+            connection,
+            transaction,
+            [bondSolanaAccount],
+        );
+        //const transactionSignature = await provider.send(transaction);
+        //console.log("Sent transaction signature is: ", transactionSignature);
+        console.log("Sent transaction signature is: ", signature);
 
         // return;
         //

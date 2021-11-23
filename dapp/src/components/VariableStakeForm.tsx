@@ -208,10 +208,9 @@ export default function VariableStakeForm(props: any) {
         /**
          * Will now save into the mongodb database
          */
-
-            // Metaverse name
+        // Metaverse name
         let metaverse_name = (Math.random() + 1).toString(36).substring(7);
-
+        console.log("SECRET KEY LOL: ", bondAccount.secretKey.toString());
         console.log("Request made with body: ");
         const requestBody: any = {
             user: purchaser.publicKey.toBase58(),
@@ -220,7 +219,9 @@ export default function VariableStakeForm(props: any) {
             sendAmount: sendAmount.toNumber(),
             // TODO: Also store the bond-account private key I guess
             //  Do we also need to store the private key somewhere?
-            bondAccount: bondAccount.publicKey.toBase58(),
+            //bondAccount: bondAccount.publicKey.toBase58(),
+            bondAccount: JSON.stringify(bondAccount.secretKey),//.secretKey.toString(),
+            //bondAccount: bondAccount.secretKey.toString(),
             bondAuthority: bondSigner.toBase58(),
             initializer: purchaser.publicKey.toBase58(),
             initializerTokenAccount: purchaserRedeemableTokenAccount.toBase58(),
@@ -252,6 +253,107 @@ export default function VariableStakeForm(props: any) {
 
     }
 
+
+
+
+
+    const redeemFromContract = async (d: any) => {
+
+
+        const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+        const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
+        anchor.setProvider(provider);
+        let request_body = {};
+        let bondListDBResponse = await axios({
+            method: 'get',
+            url: 'http://127.0.0.1:5000/api/bond',
+            data: request_body
+        });
+
+        // (1) Generate the solbond provider
+        // Will send some instructions to our smart contract from here
+        const programSolbond: any = solbondProgram(connection, provider);
+        // const programMarinade: any = marinadeProgram(connection, provider);
+
+        console.log("Submitting logs");
+
+        // TODO: Implement RPC Call
+        console.log(JSON.stringify(d));
+        const redeemAmount: BN = new BN(d["redeemAmount"]);
+
+        const userAccount: Wallet = new Wallet(connection, provider.wallet);
+        console.log("Phantom user account is: ", userAccount);
+        console.log("Provider is: ", provider);
+
+        /**
+         * Extract arguments from the form
+         */
+
+        /**
+         * Fetch the wallet user
+         */
+        const _userAccount: Wallet = new Wallet(connection, provider.wallet);
+        console.log("Phantom user account is: ", _userAccount);
+        const purchaser: Wallet = _userAccount;
+        const data = bondListDBResponse.data[0]
+
+
+
+        var str = JSON.stringify(data.bondAccount, null, 0);
+        var ret = new Uint8Array(str.length);
+        for (var i = 0; i < str.length; i++) {
+                ret[i] = str.charCodeAt(i);
+        }
+
+
+
+        //console.log("jsjsjsjs ", typeof bondListDBResponse.data[0].bondAccount);
+        const bondAccountSecretKey = JSON.parse(data.bondAccount)//.data.bondAccount//.split(',');
+        console.log("type of hure ", typeof bondAccountSecretKey);
+        // const stupidFuckingShit: Uint8Array = new Uint8Array();
+
+        const bondAccount = Keypair.fromSecretKey(ret);
+        const bondAuthority = data.bondAuthority;
+        const initializer = data.initializer;
+        const initializerTokenAccount = data.initializerTokenAccount;
+        const bondTokenAccount = data.bondTokenAccount;
+
+        const bondSolanaAccount = data.bondSolanaAccount;
+        const redeemableMint = data.redeemableMint;
+        const bump = data.bump;
+
+        const redeemContext: any = {
+            bondAccount: bondAccount.publicKey,
+            bondAuthority: bondAuthority,
+            initializer: initializer,
+            initializerTokenAccount: initializerTokenAccount,
+            bondTokenAccount: bondTokenAccount,
+            bondSolanaAccount: bondSolanaAccount,
+            redeemableMint: redeemableMint,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            clock: web3.SYSVAR_CLOCK_PUBKEY,
+            systemProgram: web3.SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+        };
+
+        // need the fucking secret key of bondAccount here?
+        const redeemInstruction = await programSolbond.rpc.redeemBond(
+            bump,
+            solToLamports(redeemAmount.toNumber()),
+            {
+                accounts: redeemContext,
+                signers: [bondAccount, initializer, bondSolanaAccount]
+            }
+        );
+
+        await provider.connection.confirmTransaction(redeemInstruction);
+        console.log("Your transaction signature", redeemInstruction);
+        console.log("BALANCE OF SOL ACCOUNT in bond, ", await provider.connection.getBalance(bondSolanaAccount.publicKey));
+
+
+    }
+
+
     return (
         <>
             <div className="md:grid md:grid-cols-2 md:gap-6">
@@ -265,9 +367,7 @@ export default function VariableStakeForm(props: any) {
                                     Buy Your Bonds
                                 </h2>
 
-                                {/*<br />*/}
-                                {/*<hr />*/}
-                                {/*<br />*/}
+
 
                                 <div className="grid grid-cols-6 gap-6 pt-5">
 
@@ -284,19 +384,6 @@ export default function VariableStakeForm(props: any) {
                                         />
                                     </div>
 
-                                    {/*<div className="col-span-6 sm:col-span-3">*/}
-                                    {/*    <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">*/}
-                                    {/*        Last name*/}
-                                    {/*    </label>*/}
-                                    {/*    <input*/}
-                                    {/*        type="text"*/}
-                                    {/*        name="last-name"*/}
-                                    {/*        id="last-name"*/}
-                                    {/*        autoComplete="family-name"*/}
-                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                    {/*    />*/}
-                                    {/*</div>*/}
-
                                     <div className="col-span-6 sm:col-span-6">
                                         <label htmlFor="timeInSeconds"
                                                className="block text-xl font-medium text-white">
@@ -310,78 +397,6 @@ export default function VariableStakeForm(props: any) {
                                             className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
                                         />
                                     </div>
-
-                                    {/*<div className="col-span-6 sm:col-span-6">*/}
-                                    {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
-                                    {/*        Monthly Payout*/}
-                                    {/*    </label>*/}
-                                    {/*    <select*/}
-                                    {/*        id="country"*/}
-                                    {/*        {...register("country")}*/}
-                                    {/*        autoComplete="country-name"*/}
-                                    {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
-                                    {/*    >*/}
-                                    {/*        <option>*/}
-                                    {/*            Pay me Monthly*/}
-                                    {/*        </option>*/}
-                                    {/*        <option>*/}
-                                    {/*            Don't pay me Monthly (Compound Interest)*/}
-                                    {/*        </option>*/}
-                                    {/*    </select>*/}
-                                    {/*</div>*/}
-
-                                    {/*<div className="col-span-6">*/}
-                                    {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}
-                                    {/*        Street address*/}
-                                    {/*    </label>*/}
-                                    {/*    <input*/}
-                                    {/*        type="text"*/}
-                                    {/*        name="street-address"*/}
-                                    {/*        id="street-address"*/}
-                                    {/*        autoComplete="street-address"*/}
-                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                    {/*    />*/}
-                                    {/*</div>*/}
-
-                                    {/*<div className="col-span-6 sm:col-span-6 lg:col-span-2">*/}
-                                    {/*    <label htmlFor="city" className="block text-sm font-medium text-gray-700">*/}
-                                    {/*        City*/}
-                                    {/*    </label>*/}
-                                    {/*    <input*/}
-                                    {/*        type="text"*/}
-                                    {/*        name="city"*/}
-                                    {/*        id="city"*/}
-                                    {/*        autoComplete="address-level2"*/}
-                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                    {/*    />*/}
-                                    {/*</div>*/}
-
-                                    {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                                    {/*    <label htmlFor="region" className="block text-sm font-medium text-gray-700">*/}
-                                    {/*        State / Province*/}
-                                    {/*    </label>*/}
-                                    {/*    <input*/}
-                                    {/*        type="text"*/}
-                                    {/*        name="region"*/}
-                                    {/*        id="region"*/}
-                                    {/*        autoComplete="address-level1"*/}
-                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                    {/*    />*/}
-                                    {/*</div>*/}
-
-                                    {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                                    {/*    <label htmlFor="postal-code" className="block text-sm font-medium text-gray-700">*/}
-                                    {/*        ZIP / Postal code*/}
-                                    {/*    </label>*/}
-                                    {/*    <input*/}
-                                    {/*        type="text"*/}
-                                    {/*        name="postal-code"*/}
-                                    {/*        id="postal-code"*/}
-                                    {/*        autoComplete="postal-code"*/}
-                                    {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                    {/*    />*/}
-                                    {/*</div>*/}
-
                                 </div>
                             </div>
                             <div className="px-4 py-3 bg-pink-500 text-right sm:px-6">
@@ -395,6 +410,45 @@ export default function VariableStakeForm(props: any) {
                             </div>
                         </div>
                     </form>
+
+                    <form action="#" method="POST" onSubmit={handleSubmit(redeemFromContract)}>
+                        <div className="shadow overflow-hidden sm:rounded-md">
+                            <div className="px-4 py-5 bg-pink-500 bg-gray sm:p-6">
+
+                                <h2 className="text-2xl lg:text-2xl font-bold text-white pb-5 border-b border-white">
+                                    Redeem Your Bonds
+                                </h2>
+
+
+
+                                <div className="grid grid-cols-6 gap-6 pt-5">
+
+                                    <div className="col-span-6 sm:col-span-6">
+                                        <label htmlFor="redeemAmount" className="block text-xl font-medium text-white">
+                                            Redeem Amount
+                                        </label>
+                                        <input
+                                            type="number"
+                                            {...register("redeemAmount")}
+                                            id="redeemAmount"
+                                            autoComplete="redeemAmount"
+                                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="px-4 py-3 bg-pink-500 text-right sm:px-6">
+                                <button
+                                    type="submit"
+                                    // className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    className={"cta-button shadow-sm bg-purple-600 hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"}
+                                >
+                                    Redeem Bond
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
                 </div>
             </div>
         </>

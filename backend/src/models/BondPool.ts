@@ -42,6 +42,7 @@ const schema = new Schema<IBondPool>({
 
     // Accounts
     bondAccount: { type: String, required: true, unique: true },
+
     bondAuthority: { type: String, required: true },
     initializer: { type: String, required: true },
     initializerTokenAccount: { type: String, required: true },

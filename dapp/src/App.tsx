@@ -16,6 +16,7 @@ import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
 import {useWallet, WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
 import ListPools from "./components/ListPools";
+import {BACKEND_URL} from "./const";
 
 const idl: any = _idl;
 const kp: any = _kp;
@@ -29,6 +30,15 @@ const network = clusterApiUrl("devnet");
 const wallets = [getPhantomWallet()];
 
 function App() {
+
+    useEffect(() => {
+        if (!BACKEND_URL) {
+            alert("Backend URL not found!");
+            console.log("Backend URL not found!");
+        } else {
+            console.log("Backend URL is: ", BACKEND_URL);
+        }
+    }, []);
 
     return (
         <div className="App mx-auto bg-gray-400">
@@ -84,10 +94,10 @@ function App() {
                 </section>
 
                 <div className={"m-auto w-4/12"}>
-                    {/*<VariableStakeForm*/}
-                    {/*    idl={idl}*/}
-                    {/*    // initializeRpcCall={initializeRpcCall}*/}
-                    {/*/>*/}
+                    <VariableStakeForm
+                        idl={idl}
+                        // initializeRpcCall={initializeRpcCall}
+                    />
                 </div>
 
                 {/* Replace this by Twitter, Discord, Telegram */}

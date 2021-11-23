@@ -3,7 +3,7 @@ import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
 import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
-import {PROGRAM_ID} from "../const";
+import {BACKEND_URL, PROGRAM_ID} from "../const";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, web3} from "@project-serum/anchor";
 import {Wallet, Mint} from "../splpasta";
@@ -131,7 +131,6 @@ export default function VariableStakeForm(props: any) {
          * All created items are:
          */
         console.log("RPC Call is: ");
-
         // props.initializeRpcCall(d);
 
         console.log("Address context is: ", addressContext);
@@ -172,9 +171,12 @@ export default function VariableStakeForm(props: any) {
         // Finally make a post request with this data
         // numIdoTokensWatermelons
         try {
+
+            console.log("Backend URL was not found!");
+
             let save_db_response = await axios({
                 method: 'post',
-                url: 'http://127.0.0.1:5000/api/bond',
+                url: BACKEND_URL + '/api/bond',
                 data: requestBody
             });
             console.log("Response from saving pool in the database is: ", save_db_response);
@@ -211,19 +213,6 @@ export default function VariableStakeForm(props: any) {
                                             />
                                         </div>
 
-                                        {/*<div className="col-span-6 sm:col-span-3">*/}
-                                        {/*    <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        Last name*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="last-name"*/}
-                                        {/*        id="last-name"*/}
-                                        {/*        autoComplete="family-name"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
                                         <div className="col-span-6 sm:col-span-6">
                                             <label htmlFor="timeInSeconds"
                                                    className="block text-sm font-medium text-gray-700">
@@ -237,77 +226,6 @@ export default function VariableStakeForm(props: any) {
                                                 className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
                                             />
                                         </div>
-
-                                        {/*<div className="col-span-6 sm:col-span-6">*/}
-                                        {/*    <label htmlFor="compounding_boolean" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        Monthly Payout*/}
-                                        {/*    </label>*/}
-                                        {/*    <select*/}
-                                        {/*        id="country"*/}
-                                        {/*        {...register("country")}*/}
-                                        {/*        autoComplete="country-name"*/}
-                                        {/*        className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"*/}
-                                        {/*    >*/}
-                                        {/*        <option>*/}
-                                        {/*            Pay me Monthly*/}
-                                        {/*        </option>*/}
-                                        {/*        <option>*/}
-                                        {/*            Don't pay me Monthly (Compound Interest)*/}
-                                        {/*        </option>*/}
-                                        {/*    </select>*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6">*/}
-                                        {/*    <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        Street address*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="street-address"*/}
-                                        {/*        id="street-address"*/}
-                                        {/*        autoComplete="street-address"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6 sm:col-span-6 lg:col-span-2">*/}
-                                        {/*    <label htmlFor="city" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        City*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="city"*/}
-                                        {/*        id="city"*/}
-                                        {/*        autoComplete="address-level2"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                                        {/*    <label htmlFor="region" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        State / Province*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="region"*/}
-                                        {/*        id="region"*/}
-                                        {/*        autoComplete="address-level1"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
-
-                                        {/*<div className="col-span-6 sm:col-span-3 lg:col-span-2">*/}
-                                        {/*    <label htmlFor="postal-code" className="block text-sm font-medium text-gray-700">*/}
-                                        {/*        ZIP / Postal code*/}
-                                        {/*    </label>*/}
-                                        {/*    <input*/}
-                                        {/*        type="text"*/}
-                                        {/*        name="postal-code"*/}
-                                        {/*        id="postal-code"*/}
-                                        {/*        autoComplete="postal-code"*/}
-                                        {/*        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"*/}
-                                        {/*    />*/}
-                                        {/*</div>*/}
 
                                     </div>
                                 </div>

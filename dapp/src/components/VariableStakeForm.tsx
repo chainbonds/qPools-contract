@@ -12,15 +12,12 @@ import {
     createAssociatedTokenAccountSend,
     createAssociatedTokenAccountSendUnsigned
 } from "../splpasta/tx/associated-token-account";
-import {WalletI} from "../splpasta/types";
-import {useState} from "react";
 
 export default function VariableStakeForm(props: any) {
 
     // TODO: Implement Solana input field
     const {register, handleSubmit} = useForm();
     const walletContext: any = useWallet();
-    const [accountInfo, setAccountInfo] = useState({});
 
     const submitToContract = async (d: any) => {
 
@@ -135,17 +132,11 @@ export default function VariableStakeForm(props: any) {
 
         console.log("Address context is: ", addressContext);
 
-        setAccountInfo((_prev: any) => {
-            return addressContext
-        })
-
         /**
          * Will now save into the mongodb database
          */
 
             // Metaverse name
-        let metaverse_name = (Math.random() + 1).toString(36).substring(7);
-
         console.log("Request made with body: ");
         const requestBody: any = {
             user: purchaser.publicKey.toBase58(),

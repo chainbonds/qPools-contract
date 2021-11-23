@@ -2,11 +2,11 @@
  * Incredibly good tutorial to copy and paste lol
  * https://blog.prototypr.io/design-a-landing-page-using-tailwind-css-3a1a68166c47
  */
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import './App.css';
 import {SocialIcon} from 'react-social-icons';
-import {Connection, PublicKey, SystemProgram, clusterApiUrl, Keypair} from '@solana/web3.js';
-import {Program, Provider, web3} from '@project-serum/anchor'
+import {clusterApiUrl, Keypair} from '@solana/web3.js';
+import {web3} from '@project-serum/anchor'
 //@ts-ignore
 import _idl from './idl.json';
 //@ts-ignore
@@ -14,7 +14,7 @@ import _kp from './keypair.json';
 import VariableStakeForm from "./components/VariableStakeForm";
 import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
-import {useWallet, WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
+import {WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
 import ListPools from "./components/ListPools";
 import {BACKEND_URL} from "./const";
 
@@ -110,7 +110,7 @@ function App() {
             </div>
 
             <div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>
-                {/*<ListPools />*/}
+                <ListPools />
             </div>
 
         </div>

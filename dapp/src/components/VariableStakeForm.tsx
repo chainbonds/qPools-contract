@@ -131,7 +131,6 @@ export default function VariableStakeForm(props: any) {
          * All created items are:
          */
         console.log("RPC Call is: ");
-
         // props.initializeRpcCall(d);
 
         console.log("Address context is: ", addressContext);

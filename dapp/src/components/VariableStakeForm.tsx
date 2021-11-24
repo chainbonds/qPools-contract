@@ -313,7 +313,7 @@ export default function VariableStakeForm(props: any) {
         // const stupidFuckingShit: Uint8Array = new Uint8Array();
         const bondAccount = Keypair.fromSecretKey(bondAccountSecretKey);
         console.log("SecretKey was read: ", bondAccount);
-        const bondAuthority = data.bondAuthority;
+        const bondAuthority = new PublicKey(data.bondAuthority);
         // const initializer = data.initializer;
 
 
@@ -326,14 +326,16 @@ export default function VariableStakeForm(props: any) {
 
 
         // TODO: Only allow initializer if he also submitted the request
-        const initializer = purchaser.publicKey.toBase58();
-        const initializerTokenAccount = data.initializerTokenAccount;
+        const initializer = purchaser.publicKey;
+        const initializerTokenAccount = new PublicKey(data.initializerTokenAccount);
 
         // TODO: Gotta do an assert, that the initializer owns this token-account
 
-        const bondTokenAccount = data.bondTokenAccount;
-        const redeemableMint = data.redeemableMint;
-        const bump = data.bump;
+        const bondTokenAccount = new PublicKey(data.bondTokenAccount);
+        const redeemableMint = new PublicKey(data.redeemableMint);
+        const bump = new BN(data.bump);
+
+        console.log("Generating request status: ");
 
         const redeemContext: any = {
             bondAccount: bondAccount.publicKey,
@@ -341,7 +343,7 @@ export default function VariableStakeForm(props: any) {
             initializer: initializer,
             initializerTokenAccount: initializerTokenAccount,
             bondTokenAccount: bondTokenAccount,
-            bondSolanaAccount: bondSolanaAccount,
+            bondSolanaAccount: bondSolanaAccount.publicKey,
             redeemableMint: redeemableMint,
             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
             clock: web3.SYSVAR_CLOCK_PUBKEY,
@@ -349,15 +351,20 @@ export default function VariableStakeForm(props: any) {
             tokenProgram: TOKEN_PROGRAM_ID,
         };
 
+        console.log("Defined requests..", redeemContext);
+
         // need the fucking secret key of bondAccount here?
+        console.log("Three accounts are: ", bondAccount, purchaser, bondSolanaAccount);
         const redeemInstruction = await programSolbond.rpc.redeemBond(
             bump,
             solToLamports(redeemAmount.toNumber()),
             {
                 accounts: redeemContext,
-                signers: [bondAccount, initializer, bondSolanaAccount]
+                signers: [bondAccount, purchaser, bondSolanaAccount]
             }
         );
+
+        console.log("Sent off requests..");
 
         await provider.connection.confirmTransaction(redeemInstruction);
         console.log("Your transaction signature", redeemInstruction);

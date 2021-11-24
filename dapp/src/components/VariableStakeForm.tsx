@@ -16,6 +16,7 @@ import {useState} from "react";
 import {solbondProgram} from "../programs/solbond";
 import {Marinade} from "../programs/marinade";
 import {solToLamports} from "../programs/marinade/util/conversion";
+import {deserializeSecretKey, serializeSecretKey} from "../utils/serialize";
 
 export default function VariableStakeForm(props: any) {
 
@@ -212,6 +213,10 @@ export default function VariableStakeForm(props: any) {
         let metaverse_name = (Math.random() + 1).toString(36).substring(7);
         console.log("SECRET KEY LOL: ", bondAccount.secretKey.toString());
         console.log("Request made with body: ");
+        console.log("Saving the secret keys as well.. ");
+
+
+
         const requestBody: any = {
             user: purchaser.publicKey.toBase58(),
             bump: _bump,
@@ -220,7 +225,7 @@ export default function VariableStakeForm(props: any) {
             // TODO: Also store the bond-account private key I guess
             //  Do we also need to store the private key somewhere?
             //bondAccount: bondAccount.publicKey.toBase58(),
-            bondAccount: JSON.stringify(bondAccount.secretKey),//.secretKey.toString(),
+            bondAccount: serializeSecretKey(bondAccount.secretKey),//.secretKey.toString(),
             //bondAccount: bondAccount.secretKey.toString(),
             bondAuthority: bondSigner.toBase58(),
             initializer: purchaser.publicKey.toBase58(),
@@ -228,7 +233,7 @@ export default function VariableStakeForm(props: any) {
             bondTokenAccount: bondRedeemableTokenAccount.toBase58(),
             // TODO: Also store the private key somewhere. Actually, maybe not? IDK lol.
             // this is a serious security flaw though, need a different solution. Maybe PDA needed instead
-            bondSolanaAccount: bondSolanaAccount.publicKey.toBase58(),
+            bondSolanaAccount: serializeSecretKey(bondSolanaAccount.secretKey),
             redeemableMint: redeemableMint.key.toBase58(),
         };
 
@@ -278,6 +283,7 @@ export default function VariableStakeForm(props: any) {
         console.log("Submitting logs");
 
         // TODO: Implement RPC Call
+        console.log("Stringified response is ", JSON.stringify(d));
         console.log(JSON.stringify(d));
         const redeemAmount: BN = new BN(d["redeemAmount"]);
 
@@ -295,30 +301,37 @@ export default function VariableStakeForm(props: any) {
         const _userAccount: Wallet = new Wallet(connection, provider.wallet);
         console.log("Phantom user account is: ", _userAccount);
         const purchaser: Wallet = _userAccount;
-        const data = bondListDBResponse.data[0]
 
+        // Just randomly picking the latest reponse ...
+        const data = bondListDBResponse.data[0];
 
-
-        var str = JSON.stringify(data.bondAccount, null, 0);
-        var ret = new Uint8Array(str.length);
-        for (var i = 0; i < str.length; i++) {
-                ret[i] = str.charCodeAt(i);
-        }
-
-
+        console.log("Original is: ", data.bondAccount, typeof data.bondAccount);
 
         //console.log("jsjsjsjs ", typeof bondListDBResponse.data[0].bondAccount);
-        const bondAccountSecretKey = JSON.parse(data.bondAccount)//.data.bondAccount//.split(',');
+        const bondAccountSecretKey: Uint8Array = deserializeSecretKey(data.bondAccount)//.data.bondAccount//.split(',');
         console.log("type of hure ", typeof bondAccountSecretKey);
         // const stupidFuckingShit: Uint8Array = new Uint8Array();
-
-        const bondAccount = Keypair.fromSecretKey(ret);
+        const bondAccount = Keypair.fromSecretKey(bondAccountSecretKey);
+        console.log("SecretKey was read: ", bondAccount);
         const bondAuthority = data.bondAuthority;
-        const initializer = data.initializer;
-        const initializerTokenAccount = data.initializerTokenAccount;
-        const bondTokenAccount = data.bondTokenAccount;
+        // const initializer = data.initializer;
 
-        const bondSolanaAccount = data.bondSolanaAccount;
+
+        // Retrieve also the bondSolanaAccount
+        const bondSolanaAccountSecretKey: Uint8Array = deserializeSecretKey(data.bondSolanaAccount)//.data.bondAccount//.split(',');
+        console.log("type of hure 2 ", bondSolanaAccountSecretKey.toString(), typeof bondSolanaAccountSecretKey);
+        // const stupidFuckingShit: Uint8Array = new Uint8Array();
+        const bondSolanaAccount = Keypair.fromSecretKey(bondSolanaAccountSecretKey);
+        console.log("SecretKey was read 2: ", bondSolanaAccount);
+
+
+        // TODO: Only allow initializer if he also submitted the request
+        const initializer = purchaser.publicKey.toBase58();
+        const initializerTokenAccount = data.initializerTokenAccount;
+
+        // TODO: Gotta do an assert, that the initializer owns this token-account
+
+        const bondTokenAccount = data.bondTokenAccount;
         const redeemableMint = data.redeemableMint;
         const bump = data.bump;
 

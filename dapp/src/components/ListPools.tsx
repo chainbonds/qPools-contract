@@ -51,61 +51,56 @@ const ListPools = (props: any) => {
                         Redeem Your Bonds
                     </h2>
 
-                    <div className="p-2 w-full">
+                    <table className="table-auto p-2 w-full">
+                        <thead>
+                        {/*<div >*/}
+                        <th className={"ml-5 px-2"}> Bond Pool Addresses</th>
+                        <th className={"ml-5 px-2"}> Bond Time Frame</th>
+                        <th className={"ml-5 px-2"}> SOL bound</th>
+                        <th className={"ml-5 px-2"}> Bond Address</th>
+                        <th className={"ml-5 px-2"}> Redeem Bond</th>
+                        {/*</div>*/}
+                        </thead>
 
-                        <div
-                            className={"items-center bg-white leading-none text-indigo-600 rounded-full p-2 shadow text-teal text-sm w-full"}>
-                            <span
-                                className="inline-flex bg-indigo-300 text- rounded-full h-6 px-3 justify-center items-center">
-                                    Bond Pool Addresses
-                            </span>
-                            <span className="ml-5 inline-flex px-2"> Bond Time Frame </span>
-                            <span className="ml-5 inline-flex px-2"> SOL bound</span>
-                            <span className="ml-5 inline-flex px-2"> Bond Address </span>
-                            <span
-                                className="ml-5 inline-flex bg-indigo-600 text-white rounded-full h-6 px-3 justify-center items-center">
-                                    Redeem Bond
-                            </span>
-                        </div>
-                    </div>
+                        <hr />
 
                     {
                         bondList.map((bondItem: Bond) => {
                             // if (bondItem.user === )
                             let bondText = JSON.stringify(bondItem);
                             return (
-                                <div className="p-2 w-full">
-                                    <div
-                                        className="items-center bg-white text-indigo-600 rounded-full p-2 shadow text-teal text-sm w-full">
-                                            <span
-                                                className="inline-flex bg-indigo-300 text- rounded-full h-6 px-3 justify-center items-center">
-                                                Bond Pool Addresss
-                                            </span>
-                                        <span className="ml-5 inline-flex px-2">
-                                                {
-                                                    // bondItem.bondAccount
-                                                    bondItem.bondTimeFrame
-                                                }
-                                            </span>
-                                        <span className="ml-5 inline-flex px-2">
-                                                {
-                                                    bondItem.sendAmount
-                                                }
-                                            </span>
-                                        <span className="ml-5 inline-flex px-2">
-                                                {
-                                                    bondItem.bondAccount
-                                                }
-                                            </span>
-                                        <span
-                                            className="ml-5 inline-flex bg-indigo-600 text-white rounded-full h-6 px-3 justify-center items-center">
-                                                Redeem Bond
-                                            </span>
-                                    </div>
-                                </div>
+                                <tr className="p-2 w-full">
+                                    <td
+                                        className="bg-indigo-300 text- rounded-full h-6 px-3 justify-center items-center">
+                                        Bond Pool Addresss
+                                    </td>
+                                    <td className="ml-5 px-2">
+                                            {
+                                                // bondItem.bondAccount
+                                                bondItem.bondTimeFrame
+                                            }
+                                    </td>
+                                    <td className="ml-5 px-2">
+                                            {
+                                                bondItem.sendAmount
+                                            }
+                                    </td>
+                                    <td className="ml-5 px-2">
+                                            {
+                                                bondItem.bondAccount.toString().substring(0, 15)
+                                            }
+                                    </td>
+                                    <td
+                                        className={"ml-5 px-2"}>
+                                        <button className={"bg-indigo-600 text-white rounded-full h-6 px-3 justify-center items-center"}>
+                                            Redeem Bond
+                                        </button>
+                                    </td>
+                                </tr>
                             )
                         })
                     }
+                    </table>
                 </div>
             </div>
         </>

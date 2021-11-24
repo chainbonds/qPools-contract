@@ -129,7 +129,8 @@ function App() {
                 {/* Replace this by Twitter, Discord, Telegram */}
                 <footer className="absolute right-0 bottom-0 p-3 lg:p-10">
                     {/*<p>*/}
-                    <SocialIcon url={"https://twitter.com/chain_crunch"}></SocialIcon>
+                    <SocialIcon url={"https://discord.gg/ThFgTPs6t3"} className={"mx-5"}/>
+                    <SocialIcon url={"https://twitter.com/chainbonds"} className={"mx-5"} />
                     {/*</p>*/}
                 </footer>
 

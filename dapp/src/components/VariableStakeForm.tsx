@@ -17,6 +17,7 @@ import {solbondProgram} from "../programs/solbond";
 import {Marinade} from "../programs/marinade";
 import {solToLamports} from "../programs/marinade/util/conversion";
 import {deserializeSecretKey, serializeSecretKey} from "../utils/serialize";
+import {sign} from "crypto";
 
 export default function VariableStakeForm(props: any) {
 
@@ -326,7 +327,6 @@ export default function VariableStakeForm(props: any) {
 
 
         // TODO: Only allow initializer if he also submitted the request
-        const initializer = purchaser.publicKey;
         const initializerTokenAccount = new PublicKey(data.initializerTokenAccount);
 
         // TODO: Gotta do an assert, that the initializer owns this token-account
@@ -337,10 +337,14 @@ export default function VariableStakeForm(props: any) {
 
         console.log("Generating request status: ");
 
+        /**
+         * TODO: Do the Marinade unwrapping first (?)
+         */
+
         const redeemContext: any = {
             bondAccount: bondAccount.publicKey,
             bondAuthority: bondAuthority,
-            initializer: initializer,
+            initializer: purchaser.publicKey,
             initializerTokenAccount: initializerTokenAccount,
             bondTokenAccount: bondTokenAccount,
             bondSolanaAccount: bondSolanaAccount.publicKey,
@@ -355,16 +359,32 @@ export default function VariableStakeForm(props: any) {
 
         // need the fucking secret key of bondAccount here?
         console.log("Three accounts are: ", bondAccount, purchaser, bondSolanaAccount);
+
+        // Try to sign the transactions separately?
+        const transaction = new web3.Transaction()
+
         const redeemInstruction = await programSolbond.rpc.redeemBond(
             bump,
             solToLamports(redeemAmount.toNumber()),
             {
                 accounts: redeemContext,
-                signers: [bondAccount, purchaser, bondSolanaAccount]
+                signers: [bondAccount, bondSolanaAccount, purchaser]
             }
         );
 
-        console.log("Sent off requests..");
+        // transaction.add(redeemInstruction);
+        //
+        // console.log("Sent off requests..");
+        //
+        // await purchaser.signer.signTransaction(transaction);
+        //
+        // const signature = await web3.sendAndConfirmTransaction(
+        //     connection,
+        //     transaction,
+        //     [bondAccount, bondSolanaAccount],
+        // );
+        //
+        // console.log("Signature is: ", signature);
 
         await provider.connection.confirmTransaction(redeemInstruction);
         console.log("Your transaction signature", redeemInstruction);

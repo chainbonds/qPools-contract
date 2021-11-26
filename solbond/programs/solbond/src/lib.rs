@@ -34,10 +34,13 @@ pub mod solbond {
     }
 
     pub fn purchase_bond_instance(
-        ctx: Context<PurchaseBondInstance>
+        ctx: Context<PurchaseBondInstance>,
+        amount: u64,
+        start_time: u64,
+        end_time: u64,
+        _bump_bond_pool_account: u8,
+        _bump_bond_instance_account: u8
     ) -> ProgramResult {
-
-
 
         Ok(())
     }
@@ -89,23 +92,41 @@ pub struct InitializeBondPool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-// #[derive(Accounts)]
-// pub struct PurchaseBond<'info> {
-//
-//     // Assume this is the purchaser, who goes into a contract with himself
-//     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
-//     pub purchaser_token_account: Account<'info, TokenAccount>,
-//
-//     // Assume this is the bond instance account, which represents the bond which is "purchased"
-//     #[account(init, payer = purchaser, space = 8 + BondAccount::LEN)]
-//     pub bond_instance_account: Account<'info, BondInstanceAccount>,
-//
-//     // The standard accounts
-//     pub rent: Sysvar<'info, Rent>,
-//     pub clock: Sysvar<'info, Clock>,
-//     pub system_program: Program<'info, System>,
-//     pub token_program: Program<'info, Token>,
-// }
+#[derive(Accounts)]
+#[instruction(
+    _bump_bond_pool_account: u8,
+    _bump_bond_instance_account: u8
+)]
+pub struct PurchaseBondInstance<'info> {
+
+    #[account(
+        mut,
+        seeds = [purchaser.key.as_ref()], bump = _bump_bond_pool_account
+    )]
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
+
+    // Assume this is the purchaser, who goes into a contract with himself
+    #[account(signer, mut)]
+    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+    // #[account(mut)]
+    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
+    pub purchaser_token_account: Account<'info, TokenAccount>,
+
+    // Assume this is the bond instance account, which represents the bond which is "purchased"
+    #[account(
+        init,
+        payer = purchaser,
+        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8,
+        seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"], bump = _bump_bond_instance_account
+    )]
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
+
+    // The standard accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
 //
 // #[derive(Accounts)]
 // pub struct RedeemBond<'info> {
@@ -132,25 +153,26 @@ pub struct BondPoolAccount {
     pub bump_bond_pool_solana_account: u8,
 
 }
-//
-// #[account]
-// pub struct BondInstanceAccount {
-//
-//     // Accounts for the initializer
-//     pub purchaser: Pubkey,
-//     pub purchaser_token_account: Pubkey,
-//
-//     // Accounts for the bond
-//     pub bond_solana_account: Pubkey,
-//     pub bond_token_account: Pubkey,
-//
-//     // Amount is probably not needed, because we track everything with tokens ...!
-//     pub amount: u64,
-//     pub start_time: u64,
-//     pub end_time: u64
-//
-//     // Include also any bumps, etc.
-// }
+
+#[account]
+pub struct BondInstanceAccount {
+
+    // Accounts for the initializer
+    pub purchaser: Pubkey,
+    pub purchaser_token_account: Pubkey,
+
+    // Accounts for the bond
+    pub bond_solana_account: Pubkey,
+    pub bond_token_account: Pubkey,
+
+    // Amount is probably not needed, because we track everything with tokens ...!
+    pub amount: u64,
+    pub start_time: u64,
+    pub end_time: u64,
+
+    // Include also any bumps, etc.
+    pub bump_bond_instance_account: u8,
+}
 
 
 /**

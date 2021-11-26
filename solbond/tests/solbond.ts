@@ -6,6 +6,7 @@ import {createMint, getBlockchainEpoch, getPayer} from "./utils";
 import {Keypair, PublicKey} from "@solana/web3.js";
 import {expect} from "chai";
 import {endianness} from "os";
+import {Mint} from "../../dapp/src/splpasta";
 
 const BOND_LOCKUP_DURACTION_IN_SECONDS = 3;
 const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
@@ -30,12 +31,12 @@ describe('solbond', () => {
         // Otherwise good to keep this as a sanity-check
     });
 
-    let bondPoolRedeemableMint: any = null;
-    let bondPoolRedeemableTokenAccount: any = null;
-    let bondPoolAccount: any = null;
-    let bumpBondPoolAccount: any = null;
-    let bondPoolSolanaAccount: any = null;
-    let bumpBondPoolSolanaAccount: any = null;
+    let bondPoolRedeemableMint: Token | null = null;
+    let bondPoolRedeemableTokenAccount: PublicKey | null = null;
+    let bondPoolAccount: PublicKey | null = null;
+    let bumpBondPoolAccount: number | null = null;
+    let bondPoolSolanaAccount: PublicKey | null = null;
+    let bumpBondPoolSolanaAccount: number | null = null;
 
     it('run function: initializeBondPool', async () => {
         console.log("Running initializeBondPool");
@@ -84,6 +85,67 @@ describe('solbond', () => {
                 signers: [payer]
             }
         );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
+
+    });
+
+    let bondInstanceAccount: PublicKey | null = null;
+    let bumpBondInstanceAccount: number | null = null;
+    let purchaserRedeemableTokenAccount: PublicKey | null = null;
+
+    let amount: number = 1_000_000_000;
+    let startTime: BN = new BN(0.);
+    let endTime: BN = new BN(0.);
+    let purchaser: PublicKey | null = null;
+
+    it('run function: purchaseBondInstance', async () => {
+
+        // TODO: We should probably assume two different users for purchaser, and user (and also go with the case, that it is the same person ...)
+
+        console.log("Purchasing a bond...");
+
+        // Generate a random, new PDA
+        console.log("Needs to be a different PDA!");
+        [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
+            [payer.publicKey.toBuffer(), Buffer.from("bondInstanceAccount")],
+            program.programId
+        );
+        console.log("Third PDA is: ", bondInstanceAccount.toString());
+
+        purchaser = payer.publicKey;
+        purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
+
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
+            purchaser: payer.publicKey.toString(),
+            purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
+            bondInstanceAccount: bondInstanceAccount.toString(),
+        })
+
+        const initializeTx = await program.rpc.purchaseBondInstance(
+            new BN(amount),
+            new BN(startTime),
+            new BN(endTime),
+            bumpBondPoolSolanaAccount,
+            bumpBondInstanceAccount,
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    purchaser: purchaser,
+                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
+                    bondInstanceAccount: bondInstanceAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
 
     });
 

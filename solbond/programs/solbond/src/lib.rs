@@ -65,11 +65,11 @@ pub struct InitializeBondPool<'info> {
         init,
         payer = initializer,
         space = 8 + 64 + 64 + 64,
-        seeds = [initializer.key.as_ref()], bump = _bump_bond_pool_account
+        seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
     )]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
     #[account(
-        seeds = [bond_pool_account.key().as_ref()], bump = _bump_bond_pool_solana_account
+        seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
     )]
     pub bond_pool_solana_account: AccountInfo<'info>,
     #[account(

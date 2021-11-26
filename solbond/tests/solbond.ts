@@ -43,11 +43,11 @@ describe('solbond', () => {
 
         // Generate a PDA
         [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer()],
+            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
             program.programId
         );
         [bondPoolSolanaAccount, bumpBondPoolSolanaAccount] = await PublicKey.findProgramAddress(
-            [bondPoolAccount.toBuffer()],
+            [bondPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolSolanaAccount"))],
             program.programId
         );
 
@@ -108,7 +108,7 @@ describe('solbond', () => {
         // Generate a random, new PDA
         console.log("Needs to be a different PDA!");
         [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer(), Buffer.from("bondInstanceAccount")],
+            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceAccount"))],
             program.programId
         );
         console.log("Third PDA is: ", bondInstanceAccount.toString());

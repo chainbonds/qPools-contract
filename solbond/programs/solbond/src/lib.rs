@@ -39,8 +39,34 @@ pub mod solbond {
         start_time: u64,
         end_time: u64,
         _bump_bond_pool_account: u8,
-        _bump_bond_instance_account: u8
+        _bump_bond_instance_account: u8,
+        _bump_bond_instance_solana_account: u8,
     ) -> ProgramResult {
+
+        // Write everything to the PDA
+
+
+        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+
+        // Accounts for the initializer
+        bond_instance_account.purchaser = ctx.accounts.purchaser.key();
+        bond_instance_account.purchaser_token_account = ctx.accounts.purchaser_token_account.key();
+
+        // Accounts for the bond
+        bond_instance_account.bond_pool_account = ctx.accounts.bond_pool_account.key();
+        // TODO: Generate these accounts!
+        bond_instance_account.bond_instance_solana_account = ctx.accounts.bond_instance_solana_account.key();
+        bond_instance_account.bond_instance_token_account = ctx.accounts.bond_instance_token_account.key();
+
+        // Amount is probably not needed, because we track everything with tokens ...!
+        bond_instance_account.amount = amount;
+        bond_instance_account.start_time = start_time;
+        bond_instance_account.end_time = end_time;
+
+        // Include also any bumps, etc.
+        bond_instance_account.bump_bond_pool_account = _bump_bond_pool_account;
+        bond_instance_account.bump_bond_instance_account = _bump_bond_instance_account;
+        bond_instance_account.bump_bond_instance_solana_account = _bump_bond_instance_solana_account;
 
         Ok(())
     }
@@ -100,7 +126,8 @@ pub struct InitializeBondPool<'info> {
     start_time: u64,
     end_time: u64,
     _bump_bond_pool_account: u8,
-    _bump_bond_instance_account: u8
+    _bump_bond_instance_account: u8,
+    _bump_bond_instance_solana_account: u8,
 )]
 pub struct PurchaseBondInstance<'info> {
 
@@ -114,11 +141,19 @@ pub struct PurchaseBondInstance<'info> {
     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
     pub purchaser_token_account: Account<'info, TokenAccount>,
 
+    // Any bond-instance specific accounts
+    #[account(
+        seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
+    )]
+    pub bond_instance_solana_account: AccountInfo<'info>,
+    #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
+    pub bond_instance_token_account: Account<'info, TokenAccount>,
+
     // Assume this is the bond instance account, which represents the bond which is "purchased"
     #[account(
         init,
         payer = purchaser,
-        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8,
+        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
         seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
         bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
     )]
@@ -164,9 +199,12 @@ pub struct BondInstanceAccount {
     pub purchaser: Pubkey,
     pub purchaser_token_account: Pubkey,
 
-    // Accounts for the bond
-    pub bond_solana_account: Pubkey,
-    pub bond_token_account: Pubkey,
+    // Accounts for the "parenting" bond pool
+    pub bond_pool_account: Pubkey,
+
+    // Accounts for the bond instance
+    pub bond_instance_solana_account: Pubkey,
+    pub bond_instance_token_account: Pubkey,
 
     // Amount is probably not needed, because we track everything with tokens ...!
     pub amount: u64,
@@ -175,6 +213,8 @@ pub struct BondInstanceAccount {
 
     // Include also any bumps, etc.
     pub bump_bond_instance_account: u8,
+    pub bump_bond_pool_account: u8,
+    pub bump_bond_instance_solana_account: u8,
 }
 
 

@@ -93,6 +93,9 @@ describe('solbond', () => {
     let bondInstanceAccount: PublicKey | null = null;
     let bumpBondInstanceAccount: number | null = null;
     let purchaserRedeemableTokenAccount: PublicKey | null = null;
+    let bondInstanceRedeemableTokenAccount: PublicKey | null = null;
+    let bondInstanceSolanaAccount: PublicKey | null = null;
+    let bumpBondInstanceSolanaAccount: number | null = null;
 
     let amount: number = 1_000_000_000;
     let startTime: BN = new BN(0);
@@ -114,6 +117,16 @@ describe('solbond', () => {
         );
         console.log("Third PDA is: ", bondInstanceAccount.toString());
 
+        // Create a token account for the bond instance
+        bondInstanceRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondInstanceAccount);
+
+        // Create a PDA which stores all the (excess) solana for this account
+        [bondInstanceSolanaAccount, bumpBondInstanceSolanaAccount] = await PublicKey.findProgramAddress(
+            [bondInstanceAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceSolanaAccount"))],
+            program.programId
+        );
+
+
         purchaser = payer.publicKey;
         purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
 
@@ -122,11 +135,13 @@ describe('solbond', () => {
             purchaser: payer.publicKey.toString(),
             purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
             bondInstanceAccount: bondInstanceAccount.toString(),
+            bondInstanceRedeemableTokenAccount: bondInstanceRedeemableTokenAccount.toString()
         })
 
         console.log("Bumps are: ");
         console.log(new BN(bumpBondPoolSolanaAccount).toString());
         console.log(new BN(bumpBondInstanceAccount).toString());
+        console.log(new BN(bumpBondInstanceSolanaAccount).toString());
 
         const initializeTx = await program.rpc.purchaseBondInstance(
             new BN(amount),
@@ -134,12 +149,15 @@ describe('solbond', () => {
             new BN(endTime),
             new BN(bumpBondPoolSolanaAccount),
             new BN(bumpBondInstanceAccount),
+            new BN(bumpBondInstanceSolanaAccount),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
                     purchaser: purchaser,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
                     bondInstanceAccount: bondInstanceAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    bondInstanceSolanaAccount: bondInstanceSolanaAccount,
 
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,

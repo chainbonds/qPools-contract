@@ -11,320 +11,138 @@ declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 pub mod solbond {
     use super::*;
 
-    const BOND_ACCOUNT_SEED: &[u8] = b"bond_account_seed";
-    const BOND_SOLANA_ACCOUNT_SEED: &[u8] = b"bond_solana_account_seed";
-    const BOND_AUTHORITY_SEED: &[u8] = b"bond_authority_seed";
-
-
-    /**
-        TODO:
-            Instead of this,
-            we should initialize a "bond-pool" / "bond-bag".
-            any then issue new bonds
-    */
-    pub fn initialize(
-        ctx: Context<InitializeBond>,
-        _bump_bond_account: u8,
-        _bump_bond_solana_account: u8,
-        _bump_bond_authority: u8,
-        _time_frame: u64,
-        _initializer_amount: u64,
+    // Has to create a Keypair
+    pub fn initialize_bond_pool(
+        ctx: Context<InitializeBondPool>,
+        _bump_bond_pool_account: u8,
+        _bump_bond_pool_solana_account: u8,
     ) -> ProgramResult {
 
-        if _initializer_amount <= 0 {
-            return Err(ErrorCode::LowBondSolAmount.into());
-        }
+        // Generate the following
 
-        /**
-         * Transfer SOL from user to bond account
-         */
-        let res = anchor_lang::solana_program::system_instruction::transfer(
-            ctx.accounts.initializer.to_account_info().key,
-            ctx.accounts.bond_solana_account.to_account_info().key,
-            _initializer_amount,
-        );
-        invoke(&res, &[ctx.accounts.initializer.to_account_info(), ctx.accounts.bond_solana_account.to_account_info()]);
-
-        /**
-         * Track transferred SOL with redeemable tokens
-         */
-        let seeds = &[
-            ctx.accounts.initializer.to_account_info().key.as_ref(),
-            // BOND_PDA_SEED,
-            &[_bump_bond_authority]
-        ];
-        let signer = &[&seeds[..]];
-        let cpi_accounts = MintTo {
-            mint: ctx.accounts.redeemable_mint.to_account_info(),
-            to: ctx.accounts.initializer_token_account.to_account_info(),
-            authority: ctx.accounts.bond_authority.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(
-            cpi_program,
-            cpi_accounts,
-            signer,
-        );
-        token::mint_to(cpi_ctx, _initializer_amount)?;
-
-        msg!("MSG 1");
-
-        /**
-         * Assign Variables to the Bond Pool
-         */
-        let bond_account = &mut ctx.accounts.bond_account;
-
-        // Arguments
-        bond_account.bump_bond_account = _bump_bond_account;
-        bond_account.bump_bond_solana_account = _bump_bond_solana_account;
-        bond_account.bump_bond_authority = _bump_bond_authority;
-
-        bond_account.initializer_amount = _initializer_amount;
-        bond_account.bond_time = _time_frame;
-        // Created-on timestamp team here
-        bond_account.created_timestamp = (ctx.accounts.clock.unix_timestamp) as u64;
-
-        msg!("MSG 2");
-        // Accounts
-        bond_account.initializer = *ctx.accounts.initializer.key;
-        bond_account.initializer_token_account = *ctx.accounts.initializer_token_account.to_account_info().key;
-        bond_account.bond_token_account = *ctx.accounts.bond_token_account.to_account_info().key;
-        msg!("MSG 3");
-        bond_account.redeemable_mint = *ctx.accounts.redeemable_mint.to_account_info().key;
-        bond_account.bond_authority = *ctx.accounts.bond_authority.to_account_info().key;
-        bond_account.bond_solana_account = *ctx.accounts.bond_solana_account.to_account_info().key;
-
-        msg!("MSG 4");
-        // let amount = bond_account.initializer_amount;
-        // let bump = bond_account.bump;
-
-        Ok(())
-    }
-
-    pub fn redeem_bond(
-        ctx: Context<RedeemBond>,
-        _bump_bond_account: u8,
-        _bump_bond_solana_account: u8,
-        _bump_bond_authority: u8,
-        _redeemable_amount: u64,
-    ) -> ProgramResult {
-        msg!("REDEEM BOND");
-
-        let bond_account = &mut ctx.accounts.bond_account;
-
-        // let current_timestamp: u64 = ctx.accounts.clock.unix_timestamp as
-
-        // TODO: Have a bunch of constraints across bondAccount
-        if bond_account.initializer_amount < _redeemable_amount {
-            return Err(ErrorCode::RedeemCapacity.into());
-        }
-
-        // TODO: Replace all this with safe operations
-        // u64::from
-        let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
-        if bond_account.created_timestamp + bond_account.bond_time > current_timestamp {
-            return Err(ErrorCode::TimeFrameNotPassed.into());
-        }
-
-        /**
-         * Burn Bond Token
-         */
-        // Needs to be the initializer for whoever writes the bonds ...
-        // The mint should be owned by the bump_bond_account
-        // actually, it should be owned by this program
-
-        // TODO: How to actually make this work (...)
-        // TODO: I guess, the mint should be owned by the program ...?
-        let seeds = &[
-            ctx.accounts.initializer.to_account_info().key.as_ref(),
-            &[bond_account.bump_bond_account]
-        ];
-        let signer = &[&seeds[..]];
-        let cpi_accounts = Burn {
-            mint: ctx.accounts.redeemable_mint.to_account_info(),
-            to: ctx.accounts.initializer_token_account.to_account_info(),
-            authority: ctx.accounts.initializer.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        token::burn(cpi_ctx, _redeemable_amount)?;
-
-        /**
-         * Pay out Solana
-         */
-        let res = anchor_lang::solana_program::system_instruction::transfer(
-            ctx.accounts.bond_solana_account.to_account_info().key,
-            ctx.accounts.initializer.to_account_info().key,
-            _redeemable_amount,
-        );
-        invoke(&res, &[ctx.accounts.bond_solana_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
-
+        // tokenMint
+        // bondPoolTokenAccount
+        // bondPoolSolanaAccount
         Ok(())
     }
 
 }
+
+/**
+ * Contexts
+ */
+
+#[derive(Accounts)]
+#[instruction(
+    _bump_bond_pool_account: u8,
+    _bump_bond_pool_solana_account: u8
+)]
+pub struct InitializeBondPool<'info> {
+    // The account which represents the bond pool account
+    #[account(
+        init,
+        payer = initializer,
+        space = 8 + 64 + 64 + 64,
+        seeds = [initializer.key.as_ref()], bump = _bump_bond_pool_account
+    )]
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    #[account(
+        seeds = [bond_pool_account.key().as_ref()], bump = _bump_bond_pool_solana_account
+    )]
+    pub bond_pool_solana_account: AccountInfo<'info>,
+    pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
+
+    // The account which generate the bond pool
+    pub initializer: AccountInfo<'info>,  // TODO: Make him signer
+
+
+    // The standards accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
+// #[derive(Accounts)]
+// pub struct PurchaseBond<'info> {
+//
+//     // Assume this is the purchaser, who goes into a contract with himself
+//     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+//     pub purchaser_token_account: Account<'info, TokenAccount>,
+//
+//     // Assume this is the bond instance account, which represents the bond which is "purchased"
+//     #[account(init, payer = purchaser, space = 8 + BondAccount::LEN)]
+//     pub bond_instance_account: Account<'info, BondInstanceAccount>,
+//
+//     // The standard accounts
+//     pub rent: Sysvar<'info, Rent>,
+//     pub clock: Sysvar<'info, Clock>,
+//     pub system_program: Program<'info, System>,
+//     pub token_program: Program<'info, Token>,
+// }
+//
+// #[derive(Accounts)]
+// pub struct RedeemBond<'info> {
+//     pub bond_instance_account: Account<'info, BondInstanceAccount>,
+//
+//     // The standard accounts
+//     pub rent: Sysvar<'info, Rent>,
+//     pub clock: Sysvar<'info, Clock>,
+//     pub system_program: Program<'info, System>,
+//     pub token_program: Program<'info, Token>,
+// }
+
+/**
+* State
+*/
+#[account]
+pub struct BondPoolAccount {
+    pub bond_pool_token_mint: Pubkey,
+    pub bond_pool_token_account: Pubkey,
+    pub bond_pool_solana_account: Pubkey,
+
+    // Include also any bumps, etc.
+    pub _bump_bond_pool_account: u8,
+}
+//
+// #[account]
+// pub struct BondInstanceAccount {
+//
+//     // Accounts for the initializer
+//     pub purchaser: Pubkey,
+//     pub purchaser_token_account: Pubkey,
+//
+//     // Accounts for the bond
+//     pub bond_solana_account: Pubkey,
+//     pub bond_token_account: Pubkey,
+//
+//     // Amount is probably not needed, because we track everything with tokens ...!
+//     pub amount: u64,
+//     pub start_time: u64,
+//     pub end_time: u64
+//
+//     // Include also any bumps, etc.
+// }
+
 
 /**
  * Input Accounts
  */
-// BOND_ACCOUNT_SEED
-// BOND_SOLANA_ACCOUNT_SEED
-// BOND_AUTHORITY_SEED
-// _time_frame: u64,
-#[derive(Accounts)]
-#[instruction(
-_bump_bond_account: u8,
-_bump_bond_solana_account: u8,
-_bump_bond_authority: u8,
-_time_frame: u64,
-_initializer_amount: u64
-)]
-pub struct InitializeBond<'info> {
-    /// @bond_account
-    /// used to save the bond I guess the initializer will pay for the fees of calling this program
-    #[account(
-        init,
-        seeds = [initializer.key.as_ref(), BOND_ACCOUNT_SEED],
-        bump = _bump_bond_account,
-        payer = initializer,
-        space = 8 + BondAccount::LEN
-    )]
-    pub bond_account: Account<'info, BondAccount>,
-
-    /// @bond_signer
-    /// PDA that signs all transactions by bond-account
-    // #[account(mut)]
-    #[account(
-        mut,
-        seeds = [initializer.key.as_ref(), BOND_AUTHORITY_SEED],
-        bump = _bump_bond_authority
-    )]
-    pub bond_authority: AccountInfo<'info>,
-
-    /// @distribution_authority
-    /// authority that pays for all transactions
-    #[account(signer, mut)]
-    pub initializer: AccountInfo<'info>,
-
-    /// @initializer_token_account
-    /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
-    /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
-    #[account(mut, constraint = initializer_token_account.amount == 0)]
-    pub initializer_token_account: Account<'info, TokenAccount>,
-
-    #[account(mut, constraint = bond_token_account.amount == 0)]
-    pub bond_token_account: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        seeds = [initializer.key.as_ref(), BOND_SOLANA_ACCOUNT_SEED],
-        bump = _bump_bond_solana_account
-    )]
-    pub bond_solana_account: AccountInfo<'info>,
-
-    // TODO: Define who owns this mint, it should be the bond-account
-    #[account(mut)]
-    pub redeemable_mint: Account<'info, Mint>,
-
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
-#[instruction(
-_bump_bond_account: u8,
-_bump_bond_solana_account: u8,
-_bump_bond_authority: u8,
-_redeemable_amount: u64
-)]
-pub struct RedeemBond<'info> {
-    /// @bond_account
-    /// used to save the bond I guess the initializer will pay for the fees of calling this program
-    #[account(
-        signer,
-        mut,
-        seeds = [initializer.key.as_ref(), BOND_ACCOUNT_SEED],
-        bump = _bump_bond_account,
-    )]
-    pub bond_account: Account<'info, BondAccount>,
-
-    /// @bond_signer
-    /// PDA that signs all transactions by bond-account
-    // #[account(mut)]
-    // seeds = [initializer.key.as_ref()], bump = _bump
-    // #[account(mut)]
-    #[account(
-        seeds = [initializer.key.as_ref(), BOND_AUTHORITY_SEED],
-        bump = {msg!("bump be {}", _bump_bond_authority); _bump_bond_authority})
-    ]
-    pub bond_authority: AccountInfo<'info>,
-
-    /// @distribution_authority
-    /// authority that pays for all transactions
-    #[account(signer)]
-    pub initializer: AccountInfo<'info>,
-
-    /// @initializer_token_account
-    /// the account holding the tokens the user will receive in exchange for the deposit has to be zero
-    /// at initializiation what if multiple bonds? (multiple accounts, should be handled automatically? idk..)
-    #[account(mut, constraint = initializer_token_account.amount > 0)]
-    pub initializer_token_account: Account<'info, TokenAccount>,
-
-    #[account(mut, constraint = bond_token_account.amount == 0)]
-    pub bond_token_account: Account<'info, TokenAccount>,
-
-    #[account(
-        signer,
-        mut,
-        seeds = [initializer.key.as_ref(), BOND_SOLANA_ACCOUNT_SEED],
-        bump = _bump_bond_solana_account
-    )]
-    pub bond_solana_account: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub redeemable_mint: Account<'info, Mint>,
-
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-}
-
-
-/**
- * Structs used as data structures
- */
-#[account]
-pub struct BondAccount {
-    pub initializer: Pubkey,
-    pub bond_authority: Pubkey,
-    pub initializer_token_account: Pubkey,
-    pub bond_token_account: Pubkey,
-    pub bond_solana_account: Pubkey,
-    pub redeemable_mint: Pubkey,
-    pub initializer_amount: u64,
-    pub bond_time: u64,
-    pub created_timestamp: u64,
-    pub bump_bond_account: u8,
-    pub bump_bond_solana_account: u8,
-    pub bump_bond_authority: u8
-}
-
-impl BondAccount {
-    pub const LEN: usize = 32   // initializer_key
-        + 32   // initializer_token_account
-        + 32   // initializer_solana_account
-        + 32   // bond solana account
-        + 32   // redeemable_mint
-        + 64   // amount
-        + 64   // time_frame
-        + 8 // bump_bond_solana_account
-        + 8 // bump_bond_authority
-        + 8 // bump_bond_account
-        ;
-}
+// #[account]
+// impl BondAccount {
+//     pub const LEN: usize = 32   // initializer_key
+//         + 32   // initializer_token_account
+//         + 32   // initializer_solana_account
+//         + 32   // bond solana account
+//         + 32   // redeemable_mint
+//         + 64   // amount
+//         + 64   // time_frame
+//         + 8 // bump_bond_solana_account
+//         + 8 // bump_bond_authority
+//         + 8 // bump_bond_account
+//     ;
+// }
 
 
 /**
@@ -339,29 +157,3 @@ pub enum ErrorCode {
     #[msg("Bond has not gone past timeframe yet")]
     TimeFrameNotPassed,
 }
-
-
-
-
-
-
-
-#[account]
-pub struct BondInitialAccount {
-    pub unspentRedeemableTokenAccount: Pubkey
-}
-
-#[account]
-pub struct BondAccount {
-    pub redeemableTokensMint: Pubkey
-}
-
-==> Call
-
-
-redeemableTokensMint.getAllAccounts()
-// => https://explorer.solana.com/address/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/largest
-// filter by user
-// retrieve the following account
-unspentRedeemableTokenAccount
-type(unspentRedeemableTokenAccount.owner) = BondInitialAccount

@@ -3,7 +3,7 @@ use solana_program::program::invoke;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
 
-const DECIMALS: u8 = 9;
+const DECIMALS: u8 = 1;
 
 declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 
@@ -11,11 +11,22 @@ declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 pub mod solbond {
     use super::*;
 
-    const BOND_PDA_SEED: &[u8] = b"bond";
+    const BOND_ACCOUNT_SEED: &[u8] = b"bond_account_seed";
+    const BOND_SOLANA_ACCOUNT_SEED: &[u8] = b"bond_solana_account_seed";
+    const BOND_AUTHORITY_SEED: &[u8] = b"bond_authority_seed";
 
+
+    /**
+        TODO:
+            Instead of this,
+            we should initialize a "bond-pool" / "bond-bag".
+            any then issue new bonds
+    */
     pub fn initialize(
         ctx: Context<InitializeBond>,
-        _bump: u8,
+        _bump_bond_account: u8,
+        _bump_bond_solana_account: u8,
+        _bump_bond_authority: u8,
         _time_frame: u64,
         _initializer_amount: u64,
     ) -> ProgramResult {
@@ -40,7 +51,7 @@ pub mod solbond {
         let seeds = &[
             ctx.accounts.initializer.to_account_info().key.as_ref(),
             // BOND_PDA_SEED,
-            &[_bump]
+            &[_bump_bond_authority]
         ];
         let signer = &[&seeds[..]];
         let cpi_accounts = MintTo {
@@ -64,7 +75,10 @@ pub mod solbond {
         let bond_account = &mut ctx.accounts.bond_account;
 
         // Arguments
-        bond_account.bump = _bump;
+        bond_account.bump_bond_account = _bump_bond_account;
+        bond_account.bump_bond_solana_account = _bump_bond_solana_account;
+        bond_account.bump_bond_authority = _bump_bond_authority;
+
         bond_account.initializer_amount = _initializer_amount;
         bond_account.bond_time = _time_frame;
         // Created-on timestamp team here
@@ -89,7 +103,9 @@ pub mod solbond {
 
     pub fn redeem_bond(
         ctx: Context<RedeemBond>,
-        _bump: u8,
+        _bump_bond_account: u8,
+        _bump_bond_solana_account: u8,
+        _bump_bond_authority: u8,
         _redeemable_amount: u64,
     ) -> ProgramResult {
         msg!("REDEEM BOND");
@@ -113,9 +129,15 @@ pub mod solbond {
         /**
          * Burn Bond Token
          */
+        // Needs to be the initializer for whoever writes the bonds ...
+        // The mint should be owned by the bump_bond_account
+        // actually, it should be owned by this program
+
+        // TODO: How to actually make this work (...)
+        // TODO: I guess, the mint should be owned by the program ...?
         let seeds = &[
             ctx.accounts.initializer.to_account_info().key.as_ref(),
-            &[bond_account.bump]
+            &[bond_account.bump_bond_account]
         ];
         let signer = &[&seeds[..]];
         let cpi_accounts = Burn {
@@ -145,23 +167,38 @@ pub mod solbond {
 /**
  * Input Accounts
  */
+// BOND_ACCOUNT_SEED
+// BOND_SOLANA_ACCOUNT_SEED
+// BOND_AUTHORITY_SEED
 // _time_frame: u64,
 #[derive(Accounts)]
 #[instruction(
-_bump: u8,
+_bump_bond_account: u8,
+_bump_bond_solana_account: u8,
+_bump_bond_authority: u8,
 _time_frame: u64,
 _initializer_amount: u64
 )]
 pub struct InitializeBond<'info> {
     /// @bond_account
     /// used to save the bond I guess the initializer will pay for the fees of calling this program
-    #[account(init, payer = initializer, space = 8 + BondAccount::LEN)]
+    #[account(
+        init,
+        seeds = [initializer.key.as_ref(), BOND_ACCOUNT_SEED],
+        bump = _bump_bond_account,
+        payer = initializer,
+        space = 8 + BondAccount::LEN
+    )]
     pub bond_account: Account<'info, BondAccount>,
 
     /// @bond_signer
     /// PDA that signs all transactions by bond-account
     // #[account(mut)]
-    #[account(mut, seeds = [initializer.key.as_ref()], bump = _bump)]
+    #[account(
+        mut,
+        seeds = [initializer.key.as_ref(), BOND_AUTHORITY_SEED],
+        bump = _bump_bond_authority
+    )]
     pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority
@@ -178,9 +215,14 @@ pub struct InitializeBond<'info> {
     #[account(mut, constraint = bond_token_account.amount == 0)]
     pub bond_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [initializer.key.as_ref(), BOND_SOLANA_ACCOUNT_SEED],
+        bump = _bump_bond_solana_account
+    )]
     pub bond_solana_account: AccountInfo<'info>,
 
+    // TODO: Define who owns this mint, it should be the bond-account
     #[account(mut)]
     pub redeemable_mint: Account<'info, Mint>,
 
@@ -192,13 +234,20 @@ pub struct InitializeBond<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-_bump: u8,
+_bump_bond_account: u8,
+_bump_bond_solana_account: u8,
+_bump_bond_authority: u8,
 _redeemable_amount: u64
 )]
 pub struct RedeemBond<'info> {
     /// @bond_account
     /// used to save the bond I guess the initializer will pay for the fees of calling this program
-    #[account(signer, mut)]
+    #[account(
+        signer,
+        mut,
+        seeds = [initializer.key.as_ref(), BOND_ACCOUNT_SEED],
+        bump = _bump_bond_account,
+    )]
     pub bond_account: Account<'info, BondAccount>,
 
     /// @bond_signer
@@ -206,7 +255,10 @@ pub struct RedeemBond<'info> {
     // #[account(mut)]
     // seeds = [initializer.key.as_ref()], bump = _bump
     // #[account(mut)]
-    #[account(seeds = [initializer.key.as_ref()], bump = {msg!("bump be {}",_bump); _bump})]
+    #[account(
+        seeds = [initializer.key.as_ref(), BOND_AUTHORITY_SEED],
+        bump = {msg!("bump be {}", _bump_bond_authority); _bump_bond_authority})
+    ]
     pub bond_authority: AccountInfo<'info>,
 
     /// @distribution_authority
@@ -223,7 +275,12 @@ pub struct RedeemBond<'info> {
     #[account(mut, constraint = bond_token_account.amount == 0)]
     pub bond_token_account: Account<'info, TokenAccount>,
 
-    #[account(signer, mut)]
+    #[account(
+        signer,
+        mut,
+        seeds = [initializer.key.as_ref(), BOND_SOLANA_ACCOUNT_SEED],
+        bump = _bump_bond_solana_account
+    )]
     pub bond_solana_account: AccountInfo<'info>,
 
     #[account(mut)]
@@ -250,7 +307,9 @@ pub struct BondAccount {
     pub initializer_amount: u64,
     pub bond_time: u64,
     pub created_timestamp: u64,
-    pub bump: u8,
+    pub bump_bond_account: u8,
+    pub bump_bond_solana_account: u8,
+    pub bump_bond_authority: u8
 }
 
 impl BondAccount {
@@ -261,7 +320,10 @@ impl BondAccount {
         + 32   // redeemable_mint
         + 64   // amount
         + 64   // time_frame
-        + 8;   // bump
+        + 8 // bump_bond_solana_account
+        + 8 // bump_bond_authority
+        + 8 // bump_bond_account
+        ;
 }
 
 
@@ -277,3 +339,29 @@ pub enum ErrorCode {
     #[msg("Bond has not gone past timeframe yet")]
     TimeFrameNotPassed,
 }
+
+
+
+
+
+
+
+#[account]
+pub struct BondInitialAccount {
+    pub unspentRedeemableTokenAccount: Pubkey
+}
+
+#[account]
+pub struct BondAccount {
+    pub redeemableTokensMint: Pubkey
+}
+
+==> Call
+
+
+redeemableTokensMint.getAllAccounts()
+// => https://explorer.solana.com/address/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/largest
+// filter by user
+// retrieve the following account
+unspentRedeemableTokenAccount
+type(unspentRedeemableTokenAccount.owner) = BondInitialAccount

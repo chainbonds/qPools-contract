@@ -60,6 +60,9 @@ describe('solbond', () => {
             [payer.publicKey.toBuffer()],
             program.programId
         );
+
+        // const [poolSolana]
+
         bondSigner = _poolSigner;
 
         // This is the bond account which will have control over the entire logic.

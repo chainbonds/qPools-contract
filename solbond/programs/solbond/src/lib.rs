@@ -21,9 +21,15 @@ pub mod solbond {
 
         // Generate the following
 
-        // tokenMint
-        // bondPoolTokenAccount
-        // bondPoolSolanaAccount
+        // Bind all items to the bond-account
+        let bond_account = &mut ctx.accounts.bond_pool_account;
+
+        bond_account.bond_pool_redeemable_mint = ctx.accounts.bond_pool_redeemable_mint.key();
+        bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
+        bond_account.bond_pool_solana_account = ctx.accounts.bond_pool_solana_account.key();
+        bond_account.bump_bond_pool_account = _bump_bond_pool_account;
+        bond_account.bump_bond_pool_solana_account = _bump_bond_pool_solana_account;
+
         Ok(())
     }
 
@@ -108,12 +114,14 @@ pub struct InitializeBondPool<'info> {
 */
 #[account]
 pub struct BondPoolAccount {
-    pub bond_pool_token_mint: Pubkey,
-    pub bond_pool_token_account: Pubkey,
+    pub bond_pool_redeemable_mint: Pubkey,
+    pub bond_pool_redeemable_token_account: Pubkey,
     pub bond_pool_solana_account: Pubkey,
 
     // Include also any bumps, etc.
-    pub _bump_bond_pool_account: u8,
+    pub bump_bond_pool_account: u8,
+    pub bump_bond_pool_solana_account: u8,
+
 }
 //
 // #[account]

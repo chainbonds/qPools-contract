@@ -1,6 +1,7 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
 use solana_program::program::invoke;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
 
 const DECIMALS: u8 = 1;
@@ -38,6 +39,9 @@ pub mod solbond {
     _bump_bond_pool_solana_account: u8
 )]
 pub struct InitializeBondPool<'info> {
+
+    // TODO: Add a couple constraints, etc.
+
     // The account which represents the bond pool account
     #[account(
         init,
@@ -50,10 +54,16 @@ pub struct InitializeBondPool<'info> {
         seeds = [bond_pool_account.key().as_ref()], bump = _bump_bond_pool_solana_account
     )]
     pub bond_pool_solana_account: AccountInfo<'info>,
+    #[account(
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
+        constraint = bond_pool_redeemable_mint.supply == 0
+    )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(mut, constraint = bond_pool_redeemable_token_account.owner == bond_pool_account.key())]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
     // The account which generate the bond pool
+    #[account(signer)]
     pub initializer: AccountInfo<'info>,  // TODO: Make him signer
 
 

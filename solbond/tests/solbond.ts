@@ -95,8 +95,8 @@ describe('solbond', () => {
     let purchaserRedeemableTokenAccount: PublicKey | null = null;
 
     let amount: number = 1_000_000_000;
-    let startTime: BN = new BN(0.);
-    let endTime: BN = new BN(0.);
+    let startTime: BN = new BN(0);
+    let endTime: BN = new BN(0);
     let purchaser: PublicKey | null = null;
 
     it('run function: purchaseBondInstance', async () => {
@@ -107,6 +107,7 @@ describe('solbond', () => {
 
         // Generate a random, new PDA
         console.log("Needs to be a different PDA!");
+        // TODO: Generate a PDA, with a different seed!
         [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
             [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceAccount"))],
             program.programId
@@ -123,12 +124,16 @@ describe('solbond', () => {
             bondInstanceAccount: bondInstanceAccount.toString(),
         })
 
+        console.log("Bumps are: ");
+        console.log(new BN(bumpBondPoolSolanaAccount).toString());
+        console.log(new BN(bumpBondInstanceAccount).toString());
+
         const initializeTx = await program.rpc.purchaseBondInstance(
             new BN(amount),
             new BN(startTime),
             new BN(endTime),
-            bumpBondPoolSolanaAccount,
-            bumpBondInstanceAccount,
+            new BN(bumpBondPoolSolanaAccount),
+            new BN(bumpBondInstanceAccount),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,

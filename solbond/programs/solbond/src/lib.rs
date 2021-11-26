@@ -92,17 +92,19 @@ pub struct InitializeBondPool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+// seeds = [purchaser.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
+// we don't have access to the seeds of the bond pool account anymore, so shouldn't use this anymore ...
 #[derive(Accounts)]
 #[instruction(
+    amount: u64,
+    start_time: u64,
+    end_time: u64,
     _bump_bond_pool_account: u8,
     _bump_bond_instance_account: u8
 )]
 pub struct PurchaseBondInstance<'info> {
 
-    #[account(
-        mut,
-        seeds = [purchaser.key.as_ref()], bump = _bump_bond_pool_account
-    )]
+    #[account(mut)]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
 
     // Assume this is the purchaser, who goes into a contract with himself
@@ -117,7 +119,8 @@ pub struct PurchaseBondInstance<'info> {
         init,
         payer = purchaser,
         space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8,
-        seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"], bump = _bump_bond_instance_account
+        seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
+        bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
     )]
     pub bond_instance_account: Account<'info, BondInstanceAccount>,
 

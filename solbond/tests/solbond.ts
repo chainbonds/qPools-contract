@@ -30,15 +30,22 @@ describe('solbond', () => {
         // Otherwise good to keep this as a sanity-check
     });
 
+    let bondPoolRedeemableMint: any = null;
+    let bondPoolRedeemableTokenAccount: any = null;
+    let bondPoolAccount: any = null;
+    let bumpBondPoolAccount: any = null;
+    let bondPoolSolanaAccount: any = null;
+    let bumpBondPoolSolanaAccount: any = null;
+
     it('run function: initializeBondPool', async () => {
         console.log("Running initializeBondPool");
 
         // Generate a PDA
-        const [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
+        [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
             [payer.publicKey.toBuffer()],
             program.programId
         );
-        const [bondPoolSolanaAccount, bumpBondPoolSolanaAccount] = await PublicKey.findProgramAddress(
+        [bondPoolSolanaAccount, bumpBondPoolSolanaAccount] = await PublicKey.findProgramAddress(
             [bondPoolAccount.toBuffer()],
             program.programId
         );
@@ -48,11 +55,11 @@ describe('solbond', () => {
         console.log(bondPoolSolanaAccount.toString());
 
         // Create a Mint that is owned by the bondPoolAccount
-        const bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
+        bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
 
         // Create the corresponding accounts
         // TODO Should this be owned by `bondPoolAccount` or `bondPoolSolanaAccount`
-        const bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
+        bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
 
         /**
          * Run the RPC Call here
@@ -77,10 +84,6 @@ describe('solbond', () => {
                 signers: [payer]
             }
         );
-
-
-
-
 
     });
 

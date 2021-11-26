@@ -33,6 +33,15 @@ pub mod solbond {
         Ok(())
     }
 
+    pub fn purchase_bond_instance(
+        ctx: Context<PurchaseBondInstance>
+    ) -> ProgramResult {
+
+
+
+        Ok(())
+    }
+
 }
 
 /**

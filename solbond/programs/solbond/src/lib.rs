@@ -8,6 +8,10 @@ const DECIMALS: u8 = 1;
 
 declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 
+fn print_type_of<T>(_: &T) {
+    msg!("{}", std::any::type_name::<T>())
+}
+
 #[program]
 pub mod solbond {
     use super::*;
@@ -44,7 +48,9 @@ pub mod solbond {
     ) -> ProgramResult {
 
         // Write everything to the PDA
-
+        if amount <= 0 {
+            return Err(ErrorCode::LowBondSolAmount.into());
+        }
 
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
 
@@ -67,6 +73,33 @@ pub mod solbond {
         bond_instance_account.bump_bond_pool_account = _bump_bond_pool_account;
         bond_instance_account.bump_bond_instance_account = _bump_bond_instance_account;
         bond_instance_account.bump_bond_instance_solana_account = _bump_bond_instance_solana_account;
+
+
+        /*
+            Buy mSOL, track total supply with redeemable-tokens ...
+        */
+
+        /**
+        * Step 1: Transfer SOL to the bond's reserve ...
+        */
+        // Gotta get the account info ...
+        // let mut bond_pool_solana_account: () = ctx.accounts.purchaser;
+
+        // let bond_pool_solana_account = AccountInfo::new(ctx.accounts.bond_pool_account.account.bond_pool_solana_account);
+        let res = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.purchaser.to_account_info().key,
+            &ctx.accounts.bond_pool_account.bond_pool_solana_account,
+            amount,
+        );
+        // invoke(&res, &[ctx.accounts.purchaser.to_account_info()]);
+
+        /**
+        * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
+        */
+
+
+
+
 
         Ok(())
     }

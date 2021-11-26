@@ -26,9 +26,11 @@ describe('solbond', () => {
     const program = anchor.workspace.Solbond as Program<Solbond>;
     const payer = getPayer();
 
+    // Do some airdrop before we start the tests ...
     it('Initialize the state-of-the-world', async () => {
         // Let's see if we even need to add anything into this.
         // Otherwise good to keep this as a sanity-check
+        await provider.connection.requestAirdrop(payer.publicKey, 10_000_000_000);
     });
 
     let bondPoolRedeemableMint: Token | null = null;
@@ -97,7 +99,7 @@ describe('solbond', () => {
     let bondInstanceSolanaAccount: PublicKey | null = null;
     let bumpBondInstanceSolanaAccount: number | null = null;
 
-    let amount: number = 1_000_000_000;
+    let amount: number = 2_000_000_000;
     let startTime: BN = new BN(0);
     let endTime: BN = new BN(0);
     let purchaser: PublicKey | null = null;
@@ -125,7 +127,6 @@ describe('solbond', () => {
             [bondInstanceAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceSolanaAccount"))],
             program.programId
         );
-
 
         purchaser = payer.publicKey;
         purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);

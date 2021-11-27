@@ -179,6 +179,10 @@ describe('solbond', () => {
     it('run function: purchaseBond', async () => {
         console.log("Puraching bond...");
 
+        // Solana Account Before
+        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+
         const initializeTx = await program.rpc.purchaseBondInstance(
             new BN(amount),
             // new BN(bumpBondPoolAccount),
@@ -187,11 +191,11 @@ describe('solbond', () => {
             // new BN(bumpBondInstanceSolanaAccount),
             {
                 accounts: {
-                    // bondPoolAccount: bondPoolAccount,
-                    // bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
                     // bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-                    //
-                    // purchaser: purchaser,
+
+                    purchaser: purchaser,
                     // purchaserTokenAccount: purchaserRedeemableTokenAccount,
                     // bondInstanceAccount: bondInstanceAccount,
                     // bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
@@ -207,6 +211,15 @@ describe('solbond', () => {
         );
         await provider.connection.confirmTransaction(initializeTx);
         console.log("initializeTx signature", initializeTx);
+
+        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Final Payer SOL", finalPayerSol.toString());
+        console.log("Final Bond SOL (reserve)", finalBondSol.toString());
 
     });
 

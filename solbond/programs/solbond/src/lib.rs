@@ -29,6 +29,7 @@ pub mod solbond {
         let bond_account = &mut ctx.accounts.bond_pool_account;
 
         // bond_account.initializer = ctx.accounts.initializer.key();
+        bond_account.generator = ctx.accounts.initializer.key();
         bond_account.bond_pool_redeemable_mint = ctx.accounts.bond_pool_redeemable_mint.key();
         bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
         bond_account.bond_pool_solana_account = ctx.accounts.bond_pool_solana_account.key();
@@ -78,6 +79,7 @@ pub mod solbond {
         Ok(())
     }
 
+    // Should probably also include logic to remove how much you want to put into the bond...
     pub fn purchase_bond_instance(
         ctx: Context<PurchaseBondInstance>,
         amount: u64,
@@ -92,46 +94,47 @@ pub mod solbond {
             Buy mSOL, track total supply with redeemable-tokens ...
         */
 
-    //     /**
-    //     * Step 1: Transfer SOL to the bond's reserve ...
-    //     */
-    //     // Gotta get the account info ...
-    //     // let mut bond_pool_solana_account: () = ctx.accounts.bond_pool_account;
-    //
-    //     // let bond_pool_solana_account = AccountInfo::new(ctx.accounts.bond_pool_account.account.bond_pool_solana_account);
-    //     let res = anchor_lang::solana_program::system_instruction::transfer(
-    //         ctx.accounts.purchaser.to_account_info().key,
-    //         ctx.accounts.bond_pool_solana_account.to_account_info().key,
-    //         amount,
-    //     );
-    //     invoke(&res, &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]);
-    //
-    //     /**
-    //     * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
-    //     */
-    //     // We need to have seeds, and a signer, because this operation is invoked through a PDA
-    //     // But does this mean that anyone can invoke this command?
-    //     // let seeds = &[
-    //     //     [ctx.bond_pool_account.initializer.key.as_ref(), b"bondPoolAccount"],
-    //     //     // BOND_PDA_SEED,
-    //     //     &[_bump]
-    //     // ];
-    //     // let signer = &[&seeds[..]];
-    //     //
-    //     // let cpi_accounts = MintTo {
-    //     //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-    //     //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
-    //     //     authority: ctx.accounts.bond_pool_account.to_account_info(),
-    //     // };
-    //     // let cpi_program = ctx.accounts.token_program.to_account_info();
-    //     // let cpi_ctx = CpiContext::new_with_signer(
-    //     //     cpi_program,
-    //     //     cpi_accounts,
-    //     //     signer,
-    //     // );
-    //     // // `amount` tracks 1-to-1 how much solana was already paid in ...
-    //     // token::mint_to(cpi_ctx, amount)?;
-    //
+        /**
+        * Step 1: Transfer SOL to the bond's reserve ...
+        */
+        // Gotta get the account info ...
+        // let mut bond_pool_solana_account: () = ctx.accounts.bond_pool_account;
+
+        // let bond_pool_solana_account = AccountInfo::new(ctx.accounts.bond_pool_account.account.bond_pool_solana_account);
+        let res = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.purchaser.to_account_info().key,
+            ctx.accounts.bond_pool_solana_account.to_account_info().key,
+            amount,
+        );
+        invoke(&res, &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]);
+
+        /**
+        * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
+        */
+
+        // We need to have seeds, and a signer, because this operation is invoked through a PDA
+        // But does this mean that anyone can invoke this command?
+        // let seeds = &[
+        //     [ctx.accounts.bond_pool_account.initializer.key.as_ref(), b"bondPoolAccount"],
+        //     // BOND_PDA_SEED,
+        //     &[_bump]
+        // ];
+        // let signer = &[&seeds[..]];
+        //
+        // let cpi_accounts = MintTo {
+        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
+        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
+        // };
+        // let cpi_program = ctx.accounts.token_program.to_account_info();
+        // let cpi_ctx = CpiContext::new_with_signer(
+        //     cpi_program,
+        //     cpi_accounts,
+        //     signer,
+        // );
+        // // `amount` tracks 1-to-1 how much solana was already paid in ...
+        // token::mint_to(cpi_ctx, amount)?;
+
         Ok(())
     }
 
@@ -154,7 +157,7 @@ pub struct InitializeBondPool<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 8 + 64 + 64 + 64,
+        space = 8 + 64 + 64 + 64 + 64,
         seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
     )]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
@@ -208,7 +211,7 @@ pub struct InitializeBondInstance<'info> {
     #[account(
         init,
         payer = purchaser,
-        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
+        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
         seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
         bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
     )]
@@ -240,21 +243,21 @@ pub struct InitializeBondInstance<'info> {
 )]
 pub struct PurchaseBondInstance<'info> {
 
-    // #[account(mut)]
-    // pub bond_pool_account: Account<'info, BondPoolAccount>,
-    // #[account(
-    //     mut,
-    //     seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
-    // )]
-    // pub bond_pool_solana_account: AccountInfo<'info>,
+    #[account(mut)]
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
+
+    // Checking for seeds here is probably overkill honestly... right?
+    // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
+    #[account(mut)]
+    pub bond_pool_solana_account: AccountInfo<'info>,
     // #[account(
     //     constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
     // )]
     // pub bond_pool_redeemable_mint: Account<'info, Mint>,
-    //
-    // // Assume this is the purchaser, who goes into a contract with himself
-    // #[account(signer, mut)]
-    // pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+
+    // Assume this is the purchaser, who goes into a contract with himself
+    #[account(signer, mut)]
+    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
     // // #[account(mut)]
     // #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
     // pub purchaser_token_account: Account<'info, TokenAccount>,
@@ -301,6 +304,8 @@ pub struct PurchaseBondInstance<'info> {
 */
 #[account]
 pub struct BondPoolAccount {
+    pub generator: Pubkey,
+
     pub bond_pool_redeemable_mint: Pubkey,
     pub bond_pool_redeemable_token_account: Pubkey,
     pub bond_pool_solana_account: Pubkey,
@@ -326,7 +331,6 @@ pub struct BondInstanceAccount {
     pub bond_instance_token_account: Pubkey,
 
     // Amount is probably not needed, because we track everything with tokens ...!
-    pub amount: u64,
     pub start_time: u64,
     pub end_time: u64,
 

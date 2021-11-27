@@ -282,6 +282,7 @@ describe('solbond', () => {
                     purchaser: payer.publicKey,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
 
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID

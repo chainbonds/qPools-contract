@@ -408,7 +408,7 @@ pub struct RedeemBondInstance<'info> {
 
     // Any Bond Pool Accounts
     #[account(mut)]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
     #[account(
         mut,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
@@ -428,6 +428,7 @@ pub struct RedeemBondInstance<'info> {
     pub purchaser_token_account: Account<'info, TokenAccount>,
 
     // The standard accounts
+    pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -449,6 +450,9 @@ pub struct BondPoolAccount {
     pub bump_bond_pool_solana_account: u8,
 
 }
+
+// 64 * 4 + 2 * 8 + 7 * 64 + 3 * 8 = 744 / 64
+// 12 * 64 = 768 / 64
 
 #[account]
 pub struct BondInstanceAccount {

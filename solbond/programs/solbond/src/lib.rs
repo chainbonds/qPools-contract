@@ -78,27 +78,20 @@ pub mod solbond {
         Ok(())
     }
 
-    // pub fn purchase_bond_instance(
-    //     ctx: Context<PurchaseBondInstance>,
-    //     amount: u64,
-    //     start_time: u64,
-    //     end_time: u64,
-    //     _bump_bond_pool_account: u8,
-    //     _bump_bond_pool_solana_account: u8,
-    //     _bump_bond_instance_account: u8,
-    //     _bump_bond_instance_solana_account: u8,
-    // ) -> ProgramResult {
-    //
-    //     // Write everything to the PDA
-    //     if amount <= 0 {
-    //         return Err(ErrorCode::LowBondSolAmount.into());
-    //     }
-    //
-    //
-    //     /*
-    //         Buy mSOL, track total supply with redeemable-tokens ...
-    //     */
-    //
+    pub fn purchase_bond_instance(
+        ctx: Context<PurchaseBondInstance>,
+        amount: u64,
+    ) -> ProgramResult {
+
+        // Write everything to the PDA
+        if amount <= 0 {
+            return Err(ErrorCode::LowBondSolAmount.into());
+        }
+
+        /*
+            Buy mSOL, track total supply with redeemable-tokens ...
+        */
+
     //     /**
     //     * Step 1: Transfer SOL to the bond's reserve ...
     //     */
@@ -139,8 +132,8 @@ pub mod solbond {
     //     // // `amount` tracks 1-to-1 how much solana was already paid in ...
     //     // token::mint_to(cpi_ctx, amount)?;
     //
-    //     Ok(())
-    // }
+        Ok(())
+    }
 
 }
 
@@ -236,61 +229,60 @@ pub struct InitializeBondInstance<'info> {
 
 }
 
-// #[derive(Accounts)]
-// #[instruction(
-//     amount: u64,
-//     start_time: u64,
-//     end_time: u64,
-//     _bump_bond_pool_account: u8,
-//     _bump_bond_pool_solana_account: u8,
-//     _bump_bond_instance_account: u8,
-//     _bump_bond_instance_solana_account: u8,
-// )]
-// pub struct PurchaseBondInstance<'info> {
-//
-//     #[account(mut)]
-//     pub bond_pool_account: Account<'info, BondPoolAccount>,
-//     #[account(
-//         mut,
-//         seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
-//     )]
-//     pub bond_pool_solana_account: AccountInfo<'info>,
-//     #[account(
-//         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
-//     )]
-//     pub bond_pool_redeemable_mint: Account<'info, Mint>,
-//
-//     // Assume this is the purchaser, who goes into a contract with himself
-//     #[account(signer, mut)]
-//     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
-//     // #[account(mut)]
-//     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-//     pub purchaser_token_account: Account<'info, TokenAccount>,
-//
-//     // Any bond-instance specific accounts
-//     // Assume this is the bond instance account, which represents the bond which is "purchased"
-//     #[account(
-//         init,
-//         payer = purchaser,
-//         space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
-//         seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
-//         bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
-//     )]
-//     pub bond_instance_account: Account<'info, BondInstanceAccount>,
-//
-//     #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
-//     pub bond_instance_token_account: Account<'info, TokenAccount>,
-//     #[account(
-//         seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
-//     )]
-//     pub bond_instance_solana_account: AccountInfo<'info>,
-//
-//     // The standard accounts
-//     pub rent: Sysvar<'info, Rent>,
-//     pub clock: Sysvar<'info, Clock>,
-//     pub system_program: Program<'info, System>,
-//     pub token_program: Program<'info, Token>,
-// }
+// _bump_bond_pool_account: u8,
+// _bump_bond_pool_solana_account: u8,
+// _bump_bond_instance_account: u8,
+// _bump_bond_instance_solana_account: u8,
+
+#[derive(Accounts)]
+#[instruction(
+    amount: u64,
+)]
+pub struct PurchaseBondInstance<'info> {
+
+    // #[account(mut)]
+    // pub bond_pool_account: Account<'info, BondPoolAccount>,
+    // #[account(
+    //     mut,
+    //     seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
+    // )]
+    // pub bond_pool_solana_account: AccountInfo<'info>,
+    // #[account(
+    //     constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
+    // )]
+    // pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    //
+    // // Assume this is the purchaser, who goes into a contract with himself
+    // #[account(signer, mut)]
+    // pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+    // // #[account(mut)]
+    // #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
+    // pub purchaser_token_account: Account<'info, TokenAccount>,
+    //
+    // // Any bond-instance specific accounts
+    // // Assume this is the bond instance account, which represents the bond which is "purchased"
+    // #[account(
+    //     init,
+    //     payer = purchaser,
+    //     space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
+    //     seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
+    //     bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
+    // )]
+    // pub bond_instance_account: Account<'info, BondInstanceAccount>,
+    //
+    // #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
+    // pub bond_instance_token_account: Account<'info, TokenAccount>,
+    // #[account(
+    //     seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
+    // )]
+    // pub bond_instance_solana_account: AccountInfo<'info>,
+
+    // The standard accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
 
 //
 // #[derive(Accounts)]

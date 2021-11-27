@@ -114,25 +114,25 @@ pub mod solbond {
 
         // We need to have seeds, and a signer, because this operation is invoked through a PDA
         // But does this mean that anyone can invoke this command?
-        // let seeds = &[
-        //     [ctx.accounts.bond_pool_account.initializer.key.as_ref(), b"bondPoolAccount"],
-        //     // BOND_PDA_SEED,
-        //     &[_bump]
-        // ];
-        // let signer = &[&seeds[..]];
         //
-        // let cpi_accounts = MintTo {
-        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
-        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
-        // };
-        // let cpi_program = ctx.accounts.token_program.to_account_info();
-        // let cpi_ctx = CpiContext::new_with_signer(
-        //     cpi_program,
-        //     cpi_accounts,
-        //     signer,
-        // );
-        // // `amount` tracks 1-to-1 how much solana was already paid in ...
+        // let seeds = ;
+        // let signer = ;
+
+        let cpi_accounts = MintTo {
+            mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+            to: ctx.accounts.bond_instance_token_account.to_account_info(),
+            authority: ctx.accounts.bond_pool_account.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_ctx = CpiContext::new_with_signer(
+            cpi_program,
+            cpi_accounts,
+            &[&[
+                ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+            ]],
+        );
+        // // // `amount` tracks 1-to-1 how much solana was already paid in ...
         // token::mint_to(cpi_ctx, amount)?;
 
         Ok(())
@@ -250,10 +250,10 @@ pub struct PurchaseBondInstance<'info> {
     // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
     #[account(mut)]
     pub bond_pool_solana_account: AccountInfo<'info>,
-    // #[account(
-    //     constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
-    // )]
-    // pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
+    )]
+    pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
     // Assume this is the purchaser, who goes into a contract with himself
     #[account(signer, mut)]
@@ -264,17 +264,14 @@ pub struct PurchaseBondInstance<'info> {
     //
     // // Any bond-instance specific accounts
     // // Assume this is the bond instance account, which represents the bond which is "purchased"
-    // #[account(
-    //     init,
-    //     payer = purchaser,
-    //     space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
-    //     seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
-    //     bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
-    // )]
+    // TODO: Also include the seeds and bump!
+    // #[account(mut)]
     // pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    //
-    // #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
-    // pub bond_instance_token_account: Account<'info, TokenAccount>,
+
+    // constraint = bond_instance_token_account.owner == bond_instance_account.key()
+    #[account(mut)]
+    pub bond_instance_token_account: Account<'info, TokenAccount>,
+
     // #[account(
     //     seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
     // )]

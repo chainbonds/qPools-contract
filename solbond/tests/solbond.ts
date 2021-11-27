@@ -183,12 +183,12 @@ describe('solbond', () => {
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
 
+        // Mint Before
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+
         const initializeTx = await program.rpc.purchaseBondInstance(
             new BN(amount),
-            // new BN(bumpBondPoolAccount),
-            // new BN(bumpBondPoolSolanaAccount),
-            // new BN(bumpBondInstanceAccount),
-            // new BN(bumpBondInstanceSolanaAccount),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
@@ -196,10 +196,7 @@ describe('solbond', () => {
                     bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
 
                     purchaser: purchaser,
-                    // purchaserTokenAccount: purchaserRedeemableTokenAccount,
-                    // bondInstanceAccount: bondInstanceAccount,
                     bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
-                    // bondInstanceSolanaAccount: bondInstanceSolanaAccount,
 
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
@@ -215,11 +212,16 @@ describe('solbond', () => {
         const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
 
+        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
         console.log("Initial and final are: ");
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
         console.log("Final Payer SOL", finalPayerSol.toString());
         console.log("Final Bond SOL (reserve)", finalBondSol.toString());
+        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
 
     });
 

@@ -114,9 +114,17 @@ pub mod solbond {
 
         // We need to have seeds, and a signer, because this operation is invoked through a PDA
         // But does this mean that anyone can invoke this command?
-        //
-        // let seeds = ;
-        // let signer = ;
+
+        /**
+        * TODO: Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
+        * This is ok for the MVP, will definitely need to do auditing and re-writing this probably ...
+        */
+
+        // let seeds = [
+        //     ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+        //     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+        // ];
+        // let signer = &[seeds.as_ref()];
 
         let cpi_accounts = MintTo {
             mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
@@ -124,16 +132,15 @@ pub mod solbond {
             authority: ctx.accounts.bond_pool_account.to_account_info(),
         };
         let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(
-            cpi_program,
-            cpi_accounts,
-            &[&[
-                ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-                &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
-            ]],
-        );
-        // // // `amount` tracks 1-to-1 how much solana was already paid in ...
-        // token::mint_to(cpi_ctx, amount)?;
+        token::mint_to(
+            CpiContext::new_with_signer(
+                cpi_program,
+                cpi_accounts,
+                &[[
+                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                    &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+                ].as_ref()],
+            ), amount)?;
 
         Ok(())
     }

@@ -258,6 +258,7 @@ pub struct PurchaseBondInstance<'info> {
     #[account(mut)]
     pub bond_pool_solana_account: AccountInfo<'info>,
     #[account(
+        mut,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,

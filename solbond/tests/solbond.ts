@@ -133,10 +133,15 @@ describe('solbond', () => {
 
         console.log({
             bondPoolAccount: bondPoolAccount.toString(),
-            purchaser: payer.publicKey.toString(),
+
+            // Purchaser
+            purchaser: purchaser.toString(),
             purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
+
+            // Bond Instance
             bondInstanceAccount: bondInstanceAccount.toString(),
-            bondInstanceRedeemableTokenAccount: bondInstanceRedeemableTokenAccount.toString()
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+            bondInstanceSolanaAccount: bondInstanceSolanaAccount.toString(),
         })
 
         console.log("Bumps are: ");
@@ -186,6 +191,15 @@ describe('solbond', () => {
         // Mint Before
         const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
+        console.log("Running accounts...");
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
+            bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
+            bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
+
+            purchaser: purchaser.toString(),
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+        });
 
         const initializeTx = await program.rpc.purchaseBondInstance(
             new BN(amount),

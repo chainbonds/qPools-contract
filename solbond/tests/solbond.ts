@@ -250,6 +250,11 @@ describe('solbond', () => {
         const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
         const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
         console.log("Running accounts...");
         console.log({
             bondPoolAccount: bondPoolAccount.toString(),
@@ -260,16 +265,23 @@ describe('solbond', () => {
             bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
         });
 
+        console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
+
+        console.log("Asking for this much SOL");
+        console.log(new BN(amount / 2_000_000_000).toString());
         const initializeTx = await program.rpc.redeemBondInstance(
-            new BN(amount),
+            // Need to assign less than there is ...
+            initialBondRedeemableTok,
             {
                 accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
                     bondInstanceAccount: bondInstanceAccount,
                     bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
                     purchaser: payer.publicKey,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
 
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID

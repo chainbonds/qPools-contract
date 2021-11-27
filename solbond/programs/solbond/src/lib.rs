@@ -184,6 +184,22 @@ pub mod solbond {
         // TODO: Check if timeframe is after the time that the bond ended
         // TODO: Check if amount is less than what was paid in so far
 
+
+        // Calculate how much SOL the redeemable accounts to
+        // let _amount_in_redeemables: f64 = ;
+        // // We call the lamports to sol, because our token also have 9 decimal figures, just like the solana token ...
+        // let token_total_supply: f64 = ;  // as f64;
+        // let pool_total_supply: f64 = ;
+
+        // TODO: Implement some technique, that the user can take out anything that is beyond a specific timestep.
+        // If the user takes out anything, the timeframe then is also updated.
+        let payout_amount_in_lamports: u64 = sol_to_lamports(
+            lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports()) /
+            lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply) *
+            lamports_to_sol(amount_in_redeemables)
+        );
+
+
         // Write everything to the PDA
         if amount_in_redeemables <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
@@ -213,23 +229,25 @@ pub mod solbond {
         /**
          * Burn Bond Token
          */
-        // let seeds = &[
-        //     ctx.accounts.initializer.to_account_info().key.as_ref(),
-        //     &[bond_account.bump]
-        // ];
-        // let signer = &[&seeds[..]];
         // let cpi_accounts = Burn {
-        //     mint: ctx.accounts.redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.initializer_token_account.to_account_info(),
-        //     authority: ctx.accounts.initializer.to_account_info(),
+        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
+        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
         // };
         // let cpi_program = ctx.accounts.token_program.to_account_info();
-        // let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
-        // token::burn(cpi_ctx, _redeemable_amount)?;
-        //
-        // /**
-        //  * Pay out Solana
-        //  */
+        // token::burn(
+        //     CpiContext::new_with_signer(
+        //         cpi_program,
+        //         cpi_accounts,
+        //         &[[
+        //             ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+        //             &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+        //         ].as_ref()]
+        //     ), payout_amount_in_lamports)?;
+
+        /**
+         * Pay out Solana
+         */
         // let res = anchor_lang::solana_program::system_instruction::transfer(
         //     ctx.accounts.bond_solana_account.to_account_info().key,
         //     ctx.accounts.initializer.to_account_info().key,
@@ -388,11 +406,19 @@ pub struct PurchaseBondInstance<'info> {
 )]
 pub struct RedeemBondInstance<'info> {
 
-    /*
-        Any bond-instance owned accounts
-     */
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
+    // Any Bond Pool Accounts
+    #[account(mut)]
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    #[account(
+        mut,
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
+    )]
+    pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub bond_pool_solana_account: AccountInfo<'info>,
 
+    // And Bond Instance Accounts
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
     #[account(mut)]
     pub bond_instance_token_account: Account<'info, TokenAccount>,
 
@@ -402,7 +428,6 @@ pub struct RedeemBondInstance<'info> {
     pub purchaser_token_account: Account<'info, TokenAccount>,
 
     // The standard accounts
-    pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,

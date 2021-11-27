@@ -133,6 +133,7 @@ pub mod solbond {
         let pool_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports());
 
         // Check if these are safe operations ...
+        // TODO: Pattern-match, s.t. we return an error if this did not work out...
         let amount_in_redeemables: u64 = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
 
         // TODO: Make exceptions, for when too much solana is paid in ...
@@ -199,9 +200,15 @@ pub mod solbond {
 
         // TODO: Replace all this with safe operations
         let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
-        if bond_instance_account.end_time < current_timestamp {
-            return Err(ErrorCode::TimeFrameNotPassed.into());
-        }
+        // TODO: Uncomment this after basic functionality is there
+        // if bond_instance_account.end_time < current_timestamp {
+        //     return Err(ErrorCode::TimeFrameNotPassed.into());
+        // }
+
+        // TODO: Figure out a way to calculate the final bond, as well as the stepwise points
+        // you can probably use a simple formula
+        // and keep track of the amount that was already paid in
+        // You can save these variables as part of the state
 
         /**
          * Burn Bond Token

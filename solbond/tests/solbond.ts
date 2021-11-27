@@ -100,6 +100,8 @@ describe('solbond', () => {
     let bumpBondInstanceSolanaAccount: number | null = null;
 
     let amount: number = 2_000_000_000;
+
+    // Get current UTC, or so
     let startTime: BN = new BN(0);
     let endTime: BN = new BN(0);
     let purchaser: PublicKey | null = null;

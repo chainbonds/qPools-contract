@@ -43,6 +43,7 @@ pub mod solbond {
         start_time: u64,
         end_time: u64,
         _bump_bond_pool_account: u8,
+        _bump_bond_pool_solana_account: u8,
         _bump_bond_instance_account: u8,
         _bump_bond_instance_solana_account: u8,
     ) -> ProgramResult {
@@ -83,15 +84,15 @@ pub mod solbond {
         * Step 1: Transfer SOL to the bond's reserve ...
         */
         // Gotta get the account info ...
-        // let mut bond_pool_solana_account: () = ctx.accounts.purchaser;
+        // let mut bond_pool_solana_account: () = ctx.accounts.bond_pool_account;
 
         // let bond_pool_solana_account = AccountInfo::new(ctx.accounts.bond_pool_account.account.bond_pool_solana_account);
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.purchaser.to_account_info().key,
-            &ctx.accounts.bond_pool_account.bond_pool_solana_account,
+            ctx.accounts.bond_pool_solana_account.to_account_info().key,
             amount,
         );
-        // invoke(&res, &[ctx.accounts.purchaser.to_account_info()]);
+        invoke(&res, &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]);
 
         /**
         * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
@@ -159,6 +160,7 @@ pub struct InitializeBondPool<'info> {
     start_time: u64,
     end_time: u64,
     _bump_bond_pool_account: u8,
+    _bump_bond_pool_solana_account: u8,
     _bump_bond_instance_account: u8,
     _bump_bond_instance_solana_account: u8,
 )]
@@ -166,6 +168,11 @@ pub struct PurchaseBondInstance<'info> {
 
     #[account(mut)]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
+    #[account(
+        mut,
+        seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
+    )]
+    pub bond_pool_solana_account: AccountInfo<'info>,
 
     // Assume this is the purchaser, who goes into a contract with himself
     #[account(signer, mut)]

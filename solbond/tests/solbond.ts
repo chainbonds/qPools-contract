@@ -148,12 +148,15 @@ describe('solbond', () => {
             new BN(amount),
             new BN(startTime),
             new BN(endTime),
+            new BN(bumpBondPoolAccount),
             new BN(bumpBondPoolSolanaAccount),
             new BN(bumpBondInstanceAccount),
             new BN(bumpBondInstanceSolanaAccount),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
+
                     purchaser: purchaser,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
                     bondInstanceAccount: bondInstanceAccount,

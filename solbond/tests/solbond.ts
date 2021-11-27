@@ -104,7 +104,7 @@ describe('solbond', () => {
     let endTime: BN = new BN(0);
     let purchaser: PublicKey | null = null;
 
-    it('run function: purchaseBondInstance', async () => {
+    it('run function: initializeBondInstance', async () => {
 
         // TODO: We should probably assume two different users for purchaser, and user (and also go with the case, that it is the same person ...)
 
@@ -144,22 +144,21 @@ describe('solbond', () => {
         console.log(new BN(bumpBondInstanceAccount).toString());
         console.log(new BN(bumpBondInstanceSolanaAccount).toString());
 
-        const initializeTx = await program.rpc.purchaseBondInstance(
-            new BN(amount),
+        const initializeTx = await program.rpc.initializeBondInstance(
             new BN(startTime),
             new BN(endTime),
-            new BN(bumpBondPoolAccount),
-            new BN(bumpBondPoolSolanaAccount),
             new BN(bumpBondInstanceAccount),
             new BN(bumpBondInstanceSolanaAccount),
             {
                 accounts: {
+                    // Pool
                     bondPoolAccount: bondPoolAccount,
-                    bondPoolSolanaAccount: bondPoolSolanaAccount,
-                    bondPoolRedeemableMint: bondPoolRedeemableMint,
 
+                    // Purchaser
                     purchaser: purchaser,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
+
+                    // Bond Instance
                     bondInstanceAccount: bondInstanceAccount,
                     bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
                     bondInstanceSolanaAccount: bondInstanceSolanaAccount,
@@ -176,5 +175,41 @@ describe('solbond', () => {
         console.log("initializeTx signature", initializeTx);
 
     });
+
+    // it("run function: purchaseBondInstance", async => {
+    //     // const initializeTx = await program.rpc.purchaseBondInstance(
+    //     //     new BN(amount),
+    //     //     new BN(startTime),
+    //     //     new BN(endTime),
+    //     //     new BN(bumpBondPoolAccount),
+    //     //     new BN(bumpBondPoolSolanaAccount),
+    //     //     new BN(bumpBondInstanceAccount),
+    //     //     new BN(bumpBondInstanceSolanaAccount),
+    //     //     {
+    //     //         accounts: {
+    //     //             bondPoolAccount: bondPoolAccount,
+    //     //             bondPoolSolanaAccount: bondPoolSolanaAccount,
+    //     //             bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+    //     //
+    //     //             purchaser: purchaser,
+    //     //             purchaserTokenAccount: purchaserRedeemableTokenAccount,
+    //     //             bondInstanceAccount: bondInstanceAccount,
+    //     //             bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+    //     //             bondInstanceSolanaAccount: bondInstanceSolanaAccount,
+    //     //
+    //     //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //     //             clock: web3.SYSVAR_CLOCK_PUBKEY,
+    //     //             systemProgram: web3.SystemProgram.programId,
+    //     //             tokenProgram: TOKEN_PROGRAM_ID
+    //     //         },
+    //     //         signers: [payer]
+    //     //     }
+    //     // );
+    //     // await provider.connection.confirmTransaction(initializeTx);
+    //     // console.log("initializeTx signature", initializeTx);
+    //     console.log("Done!");
+    //     await new Promise(null);
+    //     return;
+    // });
 
 });

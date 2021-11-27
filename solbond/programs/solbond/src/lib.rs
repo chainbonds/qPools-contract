@@ -2,6 +2,7 @@
 use solana_program::program::invoke;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
+use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
 
 const DECIMALS: u8 = 1;
@@ -11,6 +12,8 @@ declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 fn print_type_of<T>(_: &T) {
     msg!("{}", std::any::type_name::<T>())
 }
+
+// TODO: Replace all lamports with how many solana actually should be paid off.
 
 #[program]
 pub mod solbond {
@@ -56,6 +59,9 @@ pub mod solbond {
         _bump_bond_instance_solana_account: u8,
     ) -> ProgramResult {
 
+        // TODO: Check if start timeframe is after Clock::now
+        // TODO: Check if start timeframe is before end timeframe
+
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
 
         // Accounts for the initializer
@@ -82,12 +88,26 @@ pub mod solbond {
     // Should probably also include logic to remove how much you want to put into the bond...
     pub fn purchase_bond_instance(
         ctx: Context<PurchaseBondInstance>,
-        amount: u64,
+        amount_in_lamports: u64,
     ) -> ProgramResult {
 
+        // TODO: Check if timeframe is before the time that the bond started
+
         // Write everything to the PDA
-        if amount <= 0 {
+        if amount_in_lamports <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
+        }
+
+        // TODO: Uncomment once basic functionality is working ...
+        // if ctx.accounts.purchaser.to_account_info().lamports() >= amount {
+        //     return Err(ErrorCode::RedeemCapacity.into());
+        // }
+
+        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+
+        let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
+        if bond_instance_account.start_time > current_timestamp {
+            return Err(ErrorCode::TimeFrameNotPassed.into());
         }
 
         /*
@@ -100,11 +120,28 @@ pub mod solbond {
         // Gotta get the account info ...
         // let mut bond_pool_solana_account: () = ctx.accounts.bond_pool_account;
 
+        // TODO: Calculate market-rate
+        // How many redeemables, per solana to distribute
+        // There might be some truncation errors, that's why we multiple first ...
+        // At the same time, there might be some overflow, that's why we divide first (?)
+
+        // Good article on overflow, underflows in rust
+        // Convert
+        let amount_as_solana: f64 = lamports_to_sol(amount_in_lamports);
+        // We call the lamports to sol, because our token also have 9 decimal figures, just like the solana token ...
+        let token_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply);  // as f64;
+        let pool_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports());
+
+        // Check if these are safe operations ...
+        let amount_in_redeemables: u64 = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
+
+        // TODO: Make exceptions, for when too much solana is paid in ...
+
         // let bond_pool_solana_account = AccountInfo::new(ctx.accounts.bond_pool_account.account.bond_pool_solana_account);
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.purchaser.to_account_info().key,
             ctx.accounts.bond_pool_solana_account.to_account_info().key,
-            amount,
+            amount_in_lamports,
         );
         invoke(&res, &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]);
 
@@ -112,19 +149,12 @@ pub mod solbond {
         * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
         */
 
-        // We need to have seeds, and a signer, because this operation is invoked through a PDA
-        // But does this mean that anyone can invoke this command?
-
         /**
+        * No it is not, because the program is the authority, not the signer ...
+        * Only this program can sign on these things...
         * TODO: Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
         * This is ok for the MVP, will definitely need to do auditing and re-writing this probably ...
         */
-
-        // let seeds = [
-        //     ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-        //     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
-        // ];
-        // let signer = &[seeds.as_ref()];
 
         let cpi_accounts = MintTo {
             mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
@@ -140,7 +170,65 @@ pub mod solbond {
                     ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()],
-            ), amount)?;
+            ), amount_in_redeemables)?;
+
+        Ok(())
+    }
+
+    pub fn redeem_bond_instance(
+        ctx: Context<RedeemBondInstance>,
+        amount_in_redeemables: u64,
+    ) -> ProgramResult {
+
+        // TODO: Check if timeframe is after the time that the bond ended
+        // TODO: Check if amount is less than what was paid in so far
+
+        // Write everything to the PDA
+        if amount_in_redeemables <= 0 {
+            return Err(ErrorCode::LowBondSolAmount.into());
+        }
+
+        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+
+        // let current_timestamp: u64 = ctx.accounts.clock.unix_timestamp as
+
+        // TODO: Have a bunch of constraints across bondAccount
+        if ctx.accounts.purchaser_token_account.to_account_info().lamports() > amount_in_redeemables {
+            return Err(ErrorCode::RedeemCapacity.into());
+        }
+
+        // TODO: Replace all this with safe operations
+        let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
+        if bond_instance_account.end_time < current_timestamp {
+            return Err(ErrorCode::TimeFrameNotPassed.into());
+        }
+
+        /**
+         * Burn Bond Token
+         */
+        // let seeds = &[
+        //     ctx.accounts.initializer.to_account_info().key.as_ref(),
+        //     &[bond_account.bump]
+        // ];
+        // let signer = &[&seeds[..]];
+        // let cpi_accounts = Burn {
+        //     mint: ctx.accounts.redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.initializer_token_account.to_account_info(),
+        //     authority: ctx.accounts.initializer.to_account_info(),
+        // };
+        // let cpi_program = ctx.accounts.token_program.to_account_info();
+        // let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+        // token::burn(cpi_ctx, _redeemable_amount)?;
+        //
+        // /**
+        //  * Pay out Solana
+        //  */
+        // let res = anchor_lang::solana_program::system_instruction::transfer(
+        //     ctx.accounts.bond_solana_account.to_account_info().key,
+        //     ctx.accounts.initializer.to_account_info().key,
+        //     _redeemable_amount,
+        // );
+        // invoke(&res, &[ctx.accounts.bond_solana_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
 
         Ok(())
     }
@@ -239,11 +327,6 @@ pub struct InitializeBondInstance<'info> {
 
 }
 
-// _bump_bond_pool_account: u8,
-// _bump_bond_pool_solana_account: u8,
-// _bump_bond_instance_account: u8,
-// _bump_bond_instance_solana_account: u8,
-
 #[derive(Accounts)]
 #[instruction(
     amount: u64,
@@ -259,7 +342,7 @@ pub struct PurchaseBondInstance<'info> {
     pub bond_pool_solana_account: AccountInfo<'info>,
     #[account(
         mut,
-        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
@@ -273,8 +356,7 @@ pub struct PurchaseBondInstance<'info> {
     // // Any bond-instance specific accounts
     // // Assume this is the bond instance account, which represents the bond which is "purchased"
     // TODO: Also include the seeds and bump!
-    // #[account(mut)]
-    // pub bond_instance_account: Account<'info, BondInstanceAccount>,
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
 
     // constraint = bond_instance_token_account.owner == bond_instance_account.key()
     #[account(mut)]
@@ -292,17 +374,32 @@ pub struct PurchaseBondInstance<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-//
-// #[derive(Accounts)]
-// pub struct RedeemBond<'info> {
-//     pub bond_instance_account: Account<'info, BondInstanceAccount>,
-//
-//     // The standard accounts
-//     pub rent: Sysvar<'info, Rent>,
-//     pub clock: Sysvar<'info, Clock>,
-//     pub system_program: Program<'info, System>,
-//     pub token_program: Program<'info, Token>,
-// }
+
+#[derive(Accounts)]
+#[instruction(
+    amount_in_redeemables: u64
+)]
+pub struct RedeemBondInstance<'info> {
+
+    /*
+        Any bond-instance owned accounts
+     */
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
+
+    #[account(mut)]
+    pub bond_instance_token_account: Account<'info, TokenAccount>,
+
+    #[account(signer, mut)]
+    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
+    pub purchaser_token_account: Account<'info, TokenAccount>,
+
+    // The standard accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
 
 /**
 * State
@@ -347,25 +444,6 @@ pub struct BondInstanceAccount {
 
 
 /**
- * Input Accounts
- */
-// #[account]
-// impl BondAccount {
-//     pub const LEN: usize = 32   // initializer_key
-//         + 32   // initializer_token_account
-//         + 32   // initializer_solana_account
-//         + 32   // bond solana account
-//         + 32   // redeemable_mint
-//         + 64   // amount
-//         + 64   // time_frame
-//         + 8 // bump_bond_solana_account
-//         + 8 // bump_bond_authority
-//         + 8 // bump_bond_account
-//     ;
-// }
-
-
-/**
  * Error definitions
  */
 #[error]
@@ -376,4 +454,8 @@ pub enum ErrorCode {
     RedeemCapacity,
     #[msg("Bond has not gone past timeframe yet")]
     TimeFrameNotPassed,
+    #[msg("There was an issue computing the market rate. MarketRateOverflow")]
+    MarketRateOverflow,
+    #[msg("There was an issue computing the market rate. MarketRateUnderflow")]
+    MarketRateUnderflow,
 }

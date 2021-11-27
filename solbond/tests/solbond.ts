@@ -193,12 +193,12 @@ describe('solbond', () => {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
                     bondPoolSolanaAccount: bondPoolSolanaAccount,
-                    // bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
 
                     purchaser: purchaser,
                     // purchaserTokenAccount: purchaserRedeemableTokenAccount,
                     // bondInstanceAccount: bondInstanceAccount,
-                    // bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
                     // bondInstanceSolanaAccount: bondInstanceSolanaAccount,
 
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,

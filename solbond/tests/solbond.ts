@@ -156,6 +156,7 @@ describe('solbond', () => {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
                     bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint,
 
                     purchaser: purchaser,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,

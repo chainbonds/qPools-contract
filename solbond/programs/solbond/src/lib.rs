@@ -28,6 +28,7 @@ pub mod solbond {
         // Bind all items to the bond-account
         let bond_account = &mut ctx.accounts.bond_pool_account;
 
+        // bond_account.initializer = ctx.accounts.initializer.key();
         bond_account.bond_pool_redeemable_mint = ctx.accounts.bond_pool_redeemable_mint.key();
         bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
         bond_account.bond_pool_solana_account = ctx.accounts.bond_pool_solana_account.key();
@@ -97,10 +98,28 @@ pub mod solbond {
         /**
         * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
         */
-
-
-
-
+        // We need to have seeds, and a signer, because this operation is invoked through a PDA
+        // But does this mean that anyone can invoke this command?
+        // let seeds = &[
+        //     [ctx.bond_pool_account.initializer.key.as_ref(), b"bondPoolAccount"],
+        //     // BOND_PDA_SEED,
+        //     &[_bump]
+        // ];
+        // let signer = &[&seeds[..]];
+        //
+        // let cpi_accounts = MintTo {
+        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
+        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
+        // };
+        // let cpi_program = ctx.accounts.token_program.to_account_info();
+        // let cpi_ctx = CpiContext::new_with_signer(
+        //     cpi_program,
+        //     cpi_accounts,
+        //     signer,
+        // );
+        // // `amount` tracks 1-to-1 how much solana was already paid in ...
+        // token::mint_to(cpi_ctx, amount)?;
 
         Ok(())
     }
@@ -124,7 +143,7 @@ pub struct InitializeBondPool<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 8 + 64 + 64 + 64,
+        space = 8 + 64 + 64 + 64 + 64,
         seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
     )]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
@@ -173,6 +192,10 @@ pub struct PurchaseBondInstance<'info> {
         seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
     )]
     pub bond_pool_solana_account: AccountInfo<'info>,
+    #[account(
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
+    )]
+    pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
     // Assume this is the purchaser, who goes into a contract with himself
     #[account(signer, mut)]
@@ -182,13 +205,6 @@ pub struct PurchaseBondInstance<'info> {
     pub purchaser_token_account: Account<'info, TokenAccount>,
 
     // Any bond-instance specific accounts
-    #[account(
-        seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
-    )]
-    pub bond_instance_solana_account: AccountInfo<'info>,
-    #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
-
     // Assume this is the bond instance account, which represents the bond which is "purchased"
     #[account(
         init,
@@ -198,6 +214,13 @@ pub struct PurchaseBondInstance<'info> {
         bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
     )]
     pub bond_instance_account: Account<'info, BondInstanceAccount>,
+
+    #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
+    pub bond_instance_token_account: Account<'info, TokenAccount>,
+    #[account(
+        seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
+    )]
+    pub bond_instance_solana_account: AccountInfo<'info>,
 
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
@@ -222,6 +245,8 @@ pub struct PurchaseBondInstance<'info> {
 */
 #[account]
 pub struct BondPoolAccount {
+    pub initializer: Pubkey,
+
     pub bond_pool_redeemable_mint: Pubkey,
     pub bond_pool_redeemable_token_account: Pubkey,
     pub bond_pool_solana_account: Pubkey,

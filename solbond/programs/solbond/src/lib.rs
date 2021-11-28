@@ -1,14 +1,16 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
+mod instructions;
+
 use solana_program::program::{invoke, invoke_signed};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
 
-mod redeem_bond_logic;
-mod purchase_bond_logic;
-use redeem_bond_logic::{redeem_bond_instance_profits_only, redeem_bond_instance_face_value_and_profits};
-use purchase_bond_logic::purchase_bond_instance_logic;
+use instructions::redeem_bond::{redeem_bond_instance_profits_only, redeem_bond_instance_face_value_and_profits};
+use instructions::purchase_bond::purchase_bond_instance_logic;
+use instructions::initialize_bond_pool::initialize_bond_pool_logic;
+use instructions::initialize_bond_instance::initialize_bond_instance_logic;
 
 // const DECIMALS: u8 = 1;
 
@@ -48,15 +50,11 @@ pub mod solbond {
         _bump_bond_pool_solana_account: u8,
     ) -> ProgramResult {
 
-        let bond_account = &mut ctx.accounts.bond_pool_account;
-        bond_account.generator = ctx.accounts.initializer.key();
-        bond_account.bond_pool_redeemable_mint = ctx.accounts.bond_pool_redeemable_mint.key();
-        bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
-        bond_account.bond_pool_solana_account = ctx.accounts.bond_pool_solana_account.key();
-        bond_account.bump_bond_pool_account = _bump_bond_pool_account;
-        bond_account.bump_bond_pool_solana_account = _bump_bond_pool_solana_account;
-
-        Ok(())
+        initialize_bond_pool_logic(
+            ctx,
+            _bump_bond_pool_account,
+            _bump_bond_pool_solana_account,
+        )
     }
 
     /**
@@ -83,39 +81,13 @@ pub mod solbond {
         _bump_bond_instance_solana_account: u8,
     ) -> ProgramResult {
 
-        if start_time >= end_time {
-            return Err(ErrorCode::TimeFrameIsNotAnInterval.into());
-        }
-        msg!("Current timestamp is: {}", ctx.accounts.clock.unix_timestamp);
-        if (ctx.accounts.clock.unix_timestamp as u64) >= start_time {
-            return Err(ErrorCode::TimeFrameIsInThePast.into());
-        }
-
-        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-
-        // Accounts for the initializer
-        bond_instance_account.purchaser = ctx.accounts.purchaser.key();
-        bond_instance_account.purchaser_token_account = ctx.accounts.purchaser_token_account.key();
-
-        // Currently these accounts are generated in the frontend, we should probably generate these here ...
-        // Accounts for the bond
-        bond_instance_account.bond_pool_account = ctx.accounts.bond_pool_account.key();
-        bond_instance_account.bond_instance_solana_account = ctx.accounts.bond_instance_solana_account.key();
-        bond_instance_account.bond_instance_token_account = ctx.accounts.bond_instance_token_account.key();
-
-        // Amount is probably not needed, because we track everything with tokens ...!
-        bond_instance_account.start_time = start_time;
-        bond_instance_account.end_time = end_time;
-
-        // This value will be incremented when adding more to the bond treasury
-        bond_instance_account.initial_payin_amount_in_lamports = 0;
-        bond_instance_account.last_profit_payout = start_time;
-
-        // Include also any bumps, etc.
-        bond_instance_account.bump_bond_instance_account = _bump_bond_instance_account;
-        bond_instance_account.bump_bond_instance_solana_account = _bump_bond_instance_solana_account;
-
-        Ok(())
+        initialize_bond_instance_logic(
+            ctx,
+            start_time,
+            end_time,
+            _bump_bond_instance_account,
+            _bump_bond_instance_solana_account
+        )
     }
 
     // Should probably also include logic to remove how much you want to put into the bond...
@@ -127,6 +99,7 @@ pub mod solbond {
         ctx: Context<PurchaseBondInstance>,
         amount_in_lamports: u64,
     ) -> ProgramResult {
+
         purchase_bond_instance_logic(ctx, amount_in_lamports)
     }
 

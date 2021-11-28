@@ -133,14 +133,18 @@ pub mod solbond {
         if amount_in_lamports <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
         }
-        if ctx.accounts.purchaser.to_account_info().lamports() >= amount_in_lamports {
+        if ctx.accounts.purchaser.to_account_info().lamports() < amount_in_lamports {
             return Err(ErrorCode::RedeemCapacity.into());
         }
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
         bond_instance_account.initial_payin_amount_in_lamports += amount_in_lamports;
+        msg!("Current timestep is: {}", (ctx.accounts.clock.unix_timestamp as u64));
+        msg!("Start time is: {}", bond_instance_account.start_time);
         if (ctx.accounts.clock.unix_timestamp as u64) >= bond_instance_account.start_time  {
+            msg!("Boolean becomes: {}", (ctx.accounts.clock.unix_timestamp as u64) >= bond_instance_account.start_time);
             return Err(ErrorCode::TimeFrameCannotPurchaseAdditionalBondAmount.into());
         }
+        msg!("Passing..");
 
         /*
         * Step 1: Transfer SOL to the bond's reserve ...
@@ -219,8 +223,8 @@ pub mod solbond {
         }
 
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-        if bond_instance_account.end_time > (ctx.accounts.clock.unix_timestamp as u64) {
-            return Err(ErrorCode::TimeFrameCannotPurchaseAdditionalBondAmount.into());
+        if (ctx.accounts.clock.unix_timestamp as u64) < bond_instance_account.end_time {
+            return Err(ErrorCode::TimeFrameNotPassed.into());
         }
         // Maybe: Check if amount is less than what was paid in so far
         // I don't think this is possible just with the key.

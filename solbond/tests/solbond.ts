@@ -2,16 +2,12 @@ import * as anchor from '@project-serum/anchor';
 import {BN, Program, web3} from '@project-serum/anchor';
 import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
-import {createMint, getBlockchainEpoch, getPayer} from "./utils";
-import {Keypair, PublicKey} from "@solana/web3.js";
-import {expect} from "chai";
-import {endianness} from "os";
-import {Mint} from "../../dapp/src/splpasta";
+import {createMint, getPayer} from "./utils";
+import {PublicKey} from "@solana/web3.js";
 
-const BOND_LOCKUP_DURACTION_IN_SECONDS = 3;
-const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
-const REDEEM_AMOUNT = 2 * web3.LAMPORTS_PER_SOL;
-const RENT = new BN("2784000");
+const BOND_LOCKUP_DURACTION_IN_MILLISECONDS = 5_000;
+const ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS = 10_000;
+const AMOUNT = 10_000_000_000;
 
 function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
@@ -99,13 +95,14 @@ describe('solbond', () => {
     let bondInstanceSolanaAccount: PublicKey | null = null;
     let bumpBondInstanceSolanaAccount: number | null = null;
 
-    let amount: number = 2_000_000_000;
-
     // Get current UTC, or so
-    let bondTimeInSeconds = 10;
-    let elapseTimeBeforeBondBuyCloses = 10;
-    let startTime = Date.now() + elapseTimeBeforeBondBuyCloses;
-    let endTime = Date.now() + elapseTimeBeforeBondBuyCloses + bondTimeInSeconds;
+    let startTime = Date.now() + ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS;
+    let endTime = Date.now() + ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS + BOND_LOCKUP_DURACTION_IN_MILLISECONDS;
+    // Must convert these into seconds now
+    startTime = Math.ceil(startTime / 1_000);
+    endTime = Math.ceil(endTime / 1_000);
+
+
     // let startTime: BN = new BN(startTimeJS);
     // let endTime: BN = new BN(endTimeJS);
     let purchaser: PublicKey | null = null;
@@ -189,7 +186,7 @@ describe('solbond', () => {
     });
 
     it('run function: purchaseBond', async () => {
-        console.log("Puraching bond...");
+        console.log("Pursaching bond...");
 
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
@@ -209,7 +206,7 @@ describe('solbond', () => {
         });
 
         const initializeTx = await program.rpc.purchaseBondInstance(
-            new BN(amount),
+            new BN(AMOUNT),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
@@ -236,7 +233,6 @@ describe('solbond', () => {
         const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
-        console.log("Total bond redeemable Mint supply is: ", bondPoolRedeemableMint);
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
         console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
@@ -249,6 +245,9 @@ describe('solbond', () => {
 
     it('run function: redeemBondInstance', async () => {
         console.log("Redeeming bond...");
+
+        console.log("Sleeping for a bit...");
+        await delay(BOND_LOCKUP_DURACTION_IN_MILLISECONDS + ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS + 1_000);
 
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));

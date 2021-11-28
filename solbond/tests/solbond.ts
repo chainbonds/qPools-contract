@@ -243,6 +243,8 @@ describe('solbond', () => {
 
     });
 
+    // TODO: Do two tests where the interest is paid out
+
     it('run function: redeemBondInstance', async () => {
         console.log("Redeeming bond...");
 

@@ -34,12 +34,161 @@ declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
 /**
 * Calculate how many of the profits to pay out
 */
-// pub fn redeem_bond_instance(
-//     ctx: Context<RedeemBondInstance>,
-//     amount_in_redeemables: u64) -> f64 {
+// pub fn redeem_bond_instance_profits_only(ctx: Context<RedeemBondInstance>) -> Result {
 //
-//     return 0.0
+//     let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+//
+//     if (ctx.accounts.clock.unix_timestamp as u64) < bond_instance_account.end_time {
+//         return Err(ErrorCode::TimeFrameNotPassed.into());
+//     }
+//     // Maybe: Check if amount is less than what was paid in so far
+//     // I don't think this is possible just with the key.
+//     // It might make more sense to write another token into this
+//
+//     /*
+//     * Step 1: Calculate market rate
+//     */
+//     // If the user takes out anything, the timeframe then is also updated.
+//     let payout_amount_in_lamports: u64 = sol_to_lamports(
+//         lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports()) /
+//             lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply) *
+//             // TODO: Be careful here, make sure the redeemables' decimals are maybe recorded somewhere, right now we can do this because our token has 9 decimals
+//             lamports_to_sol(amount_in_redeemables)
+//     );
+//
+//     if amount_in_redeemables <= 0 {
+//         return Err(ErrorCode::LowBondSolAmount.into());
+//     }
+//
+//     // let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+//     if ctx.accounts.purchaser_token_account.to_account_info().lamports() > amount_in_redeemables {
+//         return Err(ErrorCode::RedeemCapacity.into());
+//     }
+//
+//     /*
+//      * Step 2: Burn Bond Token
+//      */
+//     let cpi_accounts = Burn {
+//         mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+//         to: ctx.accounts.bond_instance_token_account.to_account_info(),
+//         authority: ctx.accounts.bond_instance_account.to_account_info(),
+//     };
+//     let cpi_program = ctx.accounts.token_program.to_account_info();
+//     token::burn(
+//         CpiContext::new_with_signer(
+//             cpi_program,
+//             cpi_accounts,
+//             &[
+//                 [
+//                     ctx.accounts.bond_instance_account.purchaser.key().as_ref(), b"bondInstanceAccount",
+//                     &[ctx.accounts.bond_instance_account.bump_bond_instance_account]
+//                 ].as_ref(),
+//                 [
+//                     ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+//                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+//                 ].as_ref()
+//             ]
+//         ), amount_in_redeemables)?;
+//
+//     /*
+//      * Step 3: Pay out Solana
+//      *     Can later on replace this with paying out redeemables,
+//      *      and the user can call another function to replace the redeemables with the bond
+//      */
+//     let res = anchor_lang::solana_program::system_instruction::transfer(
+//         ctx.accounts.bond_pool_solana_account.to_account_info().key,
+//         ctx.accounts.purchaser.to_account_info().key,
+//         payout_amount_in_lamports,
+//     );
+//     invoke_signed(
+//         &res,
+//         &[ctx.accounts.bond_pool_solana_account.to_account_info(), ctx.accounts.purchaser.to_account_info()],
+//         &[[
+//             ctx.accounts.bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount",
+//             &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
+//         ].as_ref()]
+//     )?;
+//
+//     Ok(())
 // }
+
+/**
+* Returns everything that is owned as redeemables.
+* Account will not include any more redeemables after this!
+*/
+pub fn redeem_bond_instance_face_value_and_profits(ctx: Context<RedeemBondInstance>) -> ProgramResult {
+
+    let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+    // Update when the last payout happened ...
+    bond_instance_account.last_profit_payout = ctx.accounts.clock.unix_timestamp as u64;
+
+    // We can finally delete this account-data!
+    if (ctx.accounts.clock.unix_timestamp as u64) < bond_instance_account.end_time {
+        return Err(ErrorCode::TimeFrameNotPassed.into());
+    }
+
+    /*
+    * Step 1: Calculate market rate
+    */
+    let full_amount_in_redeemables = ctx.accounts.bond_instance_token_account.amount;
+    // If the user takes out anything, the timeframe then is also updated.
+
+    // Calculate current worth,
+    // minus initial pay-in-amount
+    let payout_amount_in_lamports: u64 = sol_to_lamports(
+        lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports()) /
+            lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply) *
+            // TODO: Be careful here, make sure the redeemables' decimals are maybe recorded somewhere, right now we can do this because our token has 9 decimals
+            lamports_to_sol(full_amount_in_redeemables)
+    );
+
+    /*
+     * Step 2: Burn Bond Token
+     */
+    let cpi_accounts = Burn {
+        mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+        to: ctx.accounts.bond_instance_token_account.to_account_info(),
+        authority: ctx.accounts.bond_instance_account.to_account_info(),
+    };
+    let cpi_program = ctx.accounts.token_program.to_account_info();
+    token::burn(
+        CpiContext::new_with_signer(
+            cpi_program,
+            cpi_accounts,
+            &[
+                [
+                    ctx.accounts.bond_instance_account.purchaser.key().as_ref(), b"bondInstanceAccount",
+                    &[ctx.accounts.bond_instance_account.bump_bond_instance_account]
+                ].as_ref(),
+                [
+                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                    &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+                ].as_ref()
+            ]
+        ), full_amount_in_redeemables)?;
+
+    /*
+     * Step 3: Pay out Solana
+     *     Can later on replace this with paying out redeemables,
+     *      and the user can call another function to replace the redeemables with the bond
+     */
+    let res = anchor_lang::solana_program::system_instruction::transfer(
+        ctx.accounts.bond_pool_solana_account.to_account_info().key,
+        ctx.accounts.purchaser.to_account_info().key,
+        payout_amount_in_lamports,
+    );
+    invoke_signed(
+        &res,
+        &[ctx.accounts.bond_pool_solana_account.to_account_info(), ctx.accounts.purchaser.to_account_info()],
+        &[[
+            ctx.accounts.bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount",
+            &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
+        ].as_ref()]
+    )?;
+
+    Ok(())
+
+}
 
 #[program]
 pub mod solbond {
@@ -214,87 +363,22 @@ pub mod solbond {
     *     then you should pay out all the profits, and the initial pay-in amount (face-value / par-value) that was paid in
     */
     pub fn redeem_bond_instance(
-        ctx: Context<RedeemBondInstance>,
-        amount_in_redeemables: u64,
+        ctx: Context<RedeemBondInstance>
     ) -> ProgramResult {
 
-        if amount_in_redeemables <= 0 {
-            return Err(ErrorCode::LowBondRedeemableAmount.into());
-        }
-
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-        if (ctx.accounts.clock.unix_timestamp as u64) < bond_instance_account.end_time {
-            return Err(ErrorCode::TimeFrameNotPassed.into());
+
+        // Don't have this as an error, but instead as an if-statement
+        let return_profit_and_par_value: bool = (ctx.accounts.clock.unix_timestamp as u64) >= bond_instance_account.end_time;
+        match return_profit_and_par_value {
+            true => {
+                redeem_bond_instance_face_value_and_profits(ctx)
+            },
+            false => {
+                // redeem_bond_instance_profits_only(ctx)?;
+                Ok(())
+            }
         }
-        // Maybe: Check if amount is less than what was paid in so far
-        // I don't think this is possible just with the key.
-        // It might make more sense to write another token into this
-
-        /*
-        * Step 1: Calculate market rate
-        */
-        // If the user takes out anything, the timeframe then is also updated.
-        let payout_amount_in_lamports: u64 = sol_to_lamports(
-            lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports()) /
-            lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply) *
-            // TODO: Be careful here, make sure the redeemables' decimals are maybe recorded somewhere, right now we can do this because our token has 9 decimals
-            lamports_to_sol(amount_in_redeemables)
-        );
-
-        if amount_in_redeemables <= 0 {
-            return Err(ErrorCode::LowBondSolAmount.into());
-        }
-
-        // let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-        if ctx.accounts.purchaser_token_account.to_account_info().lamports() > amount_in_redeemables {
-            return Err(ErrorCode::RedeemCapacity.into());
-        }
-
-        /*
-         * Step 2: Burn Bond Token
-         */
-        let cpi_accounts = Burn {
-            mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-            to: ctx.accounts.bond_instance_token_account.to_account_info(),
-            authority: ctx.accounts.bond_instance_account.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        token::burn(
-            CpiContext::new_with_signer(
-                cpi_program,
-                cpi_accounts,
-                &[
-                    [
-                        ctx.accounts.bond_instance_account.purchaser.key().as_ref(), b"bondInstanceAccount",
-                        &[ctx.accounts.bond_instance_account.bump_bond_instance_account]
-                    ].as_ref(),
-                    [
-                        ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-                        &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
-                    ].as_ref()
-                ]
-            ), amount_in_redeemables)?;
-
-        /*
-         * Step 3: Pay out Solana
-         *     Can later on replace this with paying out redeemables,
-         *      and the user can call another function to replace the redeemables with the bond
-         */
-        let res = anchor_lang::solana_program::system_instruction::transfer(
-            ctx.accounts.bond_pool_solana_account.to_account_info().key,
-            ctx.accounts.purchaser.to_account_info().key,
-            payout_amount_in_lamports,
-        );
-        invoke_signed(
-            &res,
-            &[ctx.accounts.bond_pool_solana_account.to_account_info(), ctx.accounts.purchaser.to_account_info()],
-            &[[
-                ctx.accounts.bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount",
-                &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
-            ].as_ref()]
-        )?;
-
-        Ok(())
     }
 
 }
@@ -435,9 +519,6 @@ pub struct PurchaseBondInstance<'info> {
 
 
 #[derive(Accounts)]
-#[instruction(
-    amount_in_redeemables: u64
-)]
 pub struct RedeemBondInstance<'info> {
 
     // Any Bond Pool Accounts
@@ -505,6 +586,8 @@ pub struct BondInstanceAccount {
     pub initial_payin_amount_in_lamports: u64,
     // Is a unix-timestamp, which records when the last payout was made
     pub last_profit_payout: u64,
+
+    // TODO: Perhaps include a boolean to mark if a bond was already consumer
 
     // Include also any bumps, etc.
     pub bump_bond_instance_account: u8,

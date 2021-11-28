@@ -5,13 +5,9 @@ use anchor_lang::solana_program::program_option::COption;
 use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
 use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
 
-const DECIMALS: u8 = 1;
+// const DECIMALS: u8 = 1;
 
 declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
-
-fn print_type_of<T>(_: &T) {
-    msg!("{}", std::any::type_name::<T>())
-}
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
@@ -34,6 +30,16 @@ fn print_type_of<T>(_: &T) {
     I guess this is also where our own profit-account comes in ...
 
 */
+
+/**
+* Calculate how many of the profits to pay out
+*/
+// pub fn redeem_bond_instance(
+//     ctx: Context<RedeemBondInstance>,
+//     amount_in_redeemables: u64) -> f64 {
+//
+//     return 0.0
+// }
 
 #[program]
 pub mod solbond {
@@ -83,7 +89,8 @@ pub mod solbond {
         if start_time >= end_time {
             return Err(ErrorCode::TimeFrameIsNotAnInterval.into());
         }
-        if ctx.accounts.clock.unix_timestamp <= start_time {
+        msg!("Current timestamp is: {}", ctx.accounts.clock.unix_timestamp);
+        if (ctx.accounts.clock.unix_timestamp as u64) >= start_time {
             return Err(ErrorCode::TimeFrameIsInThePast.into());
         }
 
@@ -102,6 +109,10 @@ pub mod solbond {
         // Amount is probably not needed, because we track everything with tokens ...!
         bond_instance_account.start_time = start_time;
         bond_instance_account.end_time = end_time;
+
+        // This value will be incremented when adding more to the bond treasury
+        bond_instance_account.initial_payin_amount_in_lamports = 0;
+        bond_instance_account.last_profit_payout = start_time;
 
         // Include also any bumps, etc.
         bond_instance_account.bump_bond_instance_account = _bump_bond_instance_account;
@@ -126,7 +137,8 @@ pub mod solbond {
             return Err(ErrorCode::RedeemCapacity.into());
         }
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-        if bond_instance_account.start_time > (ctx.accounts.clock.unix_timestamp as u64) {
+        bond_instance_account.initial_payin_amount_in_lamports += amount_in_lamports;
+        if (ctx.accounts.clock.unix_timestamp as u64) >= bond_instance_account.start_time  {
             return Err(ErrorCode::TimeFrameCannotPurchaseAdditionalBondAmount.into());
         }
 
@@ -142,23 +154,27 @@ pub mod solbond {
         let pool_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports());
 
         let amount_in_redeemables: u64;
-        if ctx.accounts.bond_pool_redeemable_mint.supply > 0 && pool_total_supply > 0 {
+        if (token_total_supply > 0.0) && (pool_total_supply > 0.0) {
             amount_in_redeemables = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
         } else {
-            amount_in_redeemables = sol_to_lamports(1.0);
+            msg!("Initiating a new pool TokenSupply: {}, PoolReserve: {}, Amount: {}", token_total_supply, pool_total_supply, amount_as_solana);
+            amount_in_redeemables = sol_to_lamports(1.0 * amount_as_solana);
         }
 
         // Checking if there was an infinite amount
-        if amount_in_redeemables.is_infinite() {
-            return Err(Error::MarketRateOverflow.into());
-        }
+        // if amount_in_redeemables.is_infinite() {
+        //     return Err(Error::MarketRateOverflow.into());
+        // }
 
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.purchaser.to_account_info().key,
             ctx.accounts.bond_pool_solana_account.to_account_info().key,
             amount_in_lamports,
         );
-        invoke(&res, &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]);
+        invoke(
+            &res,
+            &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]
+        )?;
 
         /*
         * Step 2: Mint new redeemables to the middleware escrow to keep track of this input
@@ -185,6 +201,14 @@ pub mod solbond {
         Ok(())
     }
 
+    /**
+    * Redeem the bond, at and point in time
+    *
+    *   If it is before the bond runs out,
+    +     then you should pay out part of the profits that were generated so far
+    *   If it is after the bond runs out,
+    *     then you should pay out all the profits, and the initial pay-in amount (face-value / par-value) that was paid in
+    */
     pub fn redeem_bond_instance(
         ctx: Context<RedeemBondInstance>,
         amount_in_redeemables: u64,
@@ -217,7 +241,7 @@ pub mod solbond {
             return Err(ErrorCode::LowBondSolAmount.into());
         }
 
-        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+        // let bond_instance_account = &mut ctx.accounts.bond_instance_account;
         if ctx.accounts.purchaser_token_account.to_account_info().lamports() > amount_in_redeemables {
             return Err(ErrorCode::RedeemCapacity.into());
         }
@@ -264,7 +288,7 @@ pub mod solbond {
                 ctx.accounts.bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount",
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
             ].as_ref()]
-        );
+        )?;
 
         Ok(())
     }
@@ -337,7 +361,7 @@ pub struct InitializeBondInstance<'info> {
     #[account(
         init,
         payer = purchaser,
-        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
+        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
         seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
         bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
     )]
@@ -454,7 +478,6 @@ pub struct BondPoolAccount {
     // Include also any bumps, etc.
     pub bump_bond_pool_account: u8,
     pub bump_bond_pool_solana_account: u8,
-
 }
 
 #[account]
@@ -474,6 +497,10 @@ pub struct BondInstanceAccount {
     // Amount is probably not needed, because we track everything with tokens ...!
     pub start_time: u64,
     pub end_time: u64,
+
+    pub initial_payin_amount_in_lamports: u64,
+    // Is a unix-timestamp, which records when the last payout was made
+    pub last_profit_payout: u64,
 
     // Include also any bumps, etc.
     pub bump_bond_instance_account: u8,

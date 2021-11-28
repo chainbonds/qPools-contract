@@ -102,19 +102,24 @@ describe('solbond', () => {
     let amount: number = 2_000_000_000;
 
     // Get current UTC, or so
-    let startTime: BN = new BN(0);
-    let endTime: BN = new BN(0);
+    let bondTimeInSeconds = 10;
+    let elapseTimeBeforeBondBuyCloses = 10;
+    let startTime = Date.now() + elapseTimeBeforeBondBuyCloses;
+    let endTime = Date.now() + elapseTimeBeforeBondBuyCloses + bondTimeInSeconds;
+    // let startTime: BN = new BN(startTimeJS);
+    // let endTime: BN = new BN(endTimeJS);
     let purchaser: PublicKey | null = null;
 
     it('run function: initializeBondInstance', async () => {
 
         // TODO: We should probably assume two different users for purchaser, and user (and also go with the case, that it is the same person ...)
-
         console.log("Purchasing a bond...");
+        console.log("Bond starts on: ", startTime);
+        console.log("And ends on: ", endTime);
+        // console.log("Bond starts on: ", new Date(startTime.toNumber()).getUTCDate());
+        // console.log("And ends on: ", new Date(endTime.toNumber()).getUTCDate());
 
         // Generate a random, new PDA
-        console.log("Needs to be a different PDA!");
-        // TODO: Generate a PDA, with a different seed!
         [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
             [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceAccount"))],
             program.programId

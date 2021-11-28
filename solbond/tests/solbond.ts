@@ -228,10 +228,10 @@ describe('solbond', () => {
 
         const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
-
         const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
+        console.log("Total bond redeemable Mint supply is: ", bondPoolRedeemableMint);
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
         console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
@@ -268,7 +268,6 @@ describe('solbond', () => {
         console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
 
         console.log("Asking for this much SOL");
-        console.log(new BN(amount / 2_000_000_000).toString());
         const initializeTx = await program.rpc.redeemBondInstance(
             // Need to assign less than there is ...
             initialBondRedeemableTok,

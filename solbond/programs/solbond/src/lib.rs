@@ -131,10 +131,18 @@ pub mod solbond {
         // We call the lamports to sol, because our token also have 9 decimal figures, just like the solana token ...
         let token_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply);  // as f64;
         let pool_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports());
+        msg!("These are the token stats: SOL Amount {}, Token Supply {}, Pool Supply {}", amount_as_solana, token_total_supply, pool_total_supply);
 
+        // Gotta make a case-distinction. If nothing was paid-in, define the difference as 1Token = 1SOL
         // Check if these are safe operations ...
+        let amount_in_redeemables: u64;
+        if ctx.accounts.bond_pool_redeemable_mint.supply > 0 {
+            amount_in_redeemables = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
+        } else {
+            amount_in_redeemables = sol_to_lamports(1.0);
+        }
+        msg!("Transferring this many tokens: {}", amount_in_redeemables);
         // TODO: Pattern-match, s.t. we return an error if this did not work out...
-        let amount_in_redeemables: u64 = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
 
         // TODO: Make exceptions, for when too much solana is paid in ...
 
@@ -156,6 +164,7 @@ pub mod solbond {
         * TODO: Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
         * This is ok for the MVP, will definitely need to do auditing and re-writing this probably ...
         */
+
 
         let cpi_accounts = MintTo {
             mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
@@ -229,21 +238,21 @@ pub mod solbond {
         /**
          * Burn Bond Token
          */
-        // let cpi_accounts = Burn {
-        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
-        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
-        // };
-        // let cpi_program = ctx.accounts.token_program.to_account_info();
-        // token::burn(
-        //     CpiContext::new_with_signer(
-        //         cpi_program,
-        //         cpi_accounts,
-        //         &[[
-        //             ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-        //             &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
-        //         ].as_ref()]
-        //     ), payout_amount_in_lamports)?;
+        let cpi_accounts = Burn {
+            mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+            to: ctx.accounts.bond_instance_token_account.to_account_info(),
+            authority: ctx.accounts.bond_pool_account.to_account_info(),
+        };
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        token::burn(
+            CpiContext::new_with_signer(
+                cpi_program,
+                cpi_accounts,
+                &[[
+                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                    &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+                ].as_ref()]
+            ), amount_in_redeemables)?;
 
         /**
          * Pay out Solana
@@ -251,7 +260,7 @@ pub mod solbond {
         // let res = anchor_lang::solana_program::system_instruction::transfer(
         //     ctx.accounts.bond_solana_account.to_account_info().key,
         //     ctx.accounts.initializer.to_account_info().key,
-        //     _redeemable_amount,
+        //     payout_amount_in_lamports,
         // );
         // invoke(&res, &[ctx.accounts.bond_solana_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
 

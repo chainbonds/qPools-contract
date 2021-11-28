@@ -8,11 +8,13 @@ use crate::{
     ErrorCode,
     BondInstanceAccount,
     BondPoolAccount,
-    RedeemBondInstance,
-    PurchaseBondInstance,
-    InitializeBondInstance,
-    InitializeBondPool
+    RedeemBondInstance
 };
+
+/*
+    TODO 1:
+        Move some of the profits in both cases to the generator / initiator of the bond_pool_account (owner)
+ */
 
 /**
  * Calculate how many of the profits to pay out

@@ -16,9 +16,23 @@ fn print_type_of<T>(_: &T) {
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
 /*
-    TODO:
+    TODO: 1
     We should probably have a separate function to do the portfolio (re-)distribuction
     Buy mSOL, track total supply with redeemable-tokens ...
+
+    TODO: 2
+    Figure out a way to calculate the final bond, as well as the stepwise points
+    you can probably use a simple formula
+    and keep track of the amount that was already paid in
+    You can save these variables as part of the state
+
+    TODO: 3
+    Have a bunch of constraints across bondAccount
+
+    TODO: 4
+    Have another function to pay out profits ...
+    I guess this is also where our own profit-account comes in ...
+
 */
 
 #[program]
@@ -105,7 +119,6 @@ pub mod solbond {
         ctx: Context<PurchaseBondInstance>,
         amount_in_lamports: u64,
     ) -> ProgramResult {
-
         if amount_in_lamports <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
         }
@@ -177,55 +190,41 @@ pub mod solbond {
         amount_in_redeemables: u64,
     ) -> ProgramResult {
 
-        // TODO: Check if timeframe is after the time that the bond ended
-        // TODO: Check if amount is less than what was paid in so far
+        if amount_in_redeemables <= 0 {
+            return Err(ErrorCode::LowBondRedeemableAmount.into());
+        }
 
+        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
+        if bond_instance_account.end_time > (ctx.accounts.clock.unix_timestamp as u64) {
+            return Err(ErrorCode::TimeFrameCannotPurchaseAdditionalBondAmount.into());
+        }
+        // Maybe: Check if amount is less than what was paid in so far
+        // I don't think this is possible just with the key.
+        // It might make more sense to write another token into this
 
-        // Calculate how much SOL the redeemable accounts to
-        // let _amount_in_redeemables: f64 = ;
-        // // We call the lamports to sol, because our token also have 9 decimal figures, just like the solana token ...
-        // let token_total_supply: f64 = ;  // as f64;
-        // let pool_total_supply: f64 = ;
-
-        // TODO: Implement some technique, that the user can take out anything that is beyond a specific timestep.
+        /*
+        * Step 1: Calculate market rate
+        */
         // If the user takes out anything, the timeframe then is also updated.
         let payout_amount_in_lamports: u64 = sol_to_lamports(
             lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports()) /
             lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply) *
+            // TODO: Be careful here, make sure the redeemables' decimals are maybe recorded somewhere, right now we can do this because our token has 9 decimals
             lamports_to_sol(amount_in_redeemables)
         );
 
-
-        // Write everything to the PDA
         if amount_in_redeemables <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
         }
 
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-
-        // let current_timestamp: u64 = ctx.accounts.clock.unix_timestamp as
-
-        // TODO: Have a bunch of constraints across bondAccount
         if ctx.accounts.purchaser_token_account.to_account_info().lamports() > amount_in_redeemables {
             return Err(ErrorCode::RedeemCapacity.into());
         }
 
-        // TODO: Replace all this with safe operations
-        let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
-        // TODO: Uncomment this after basic functionality is there
-        // if bond_instance_account.end_time < current_timestamp {
-        //     return Err(ErrorCode::TimeFrameNotPassed.into());
-        // }
-
-        // TODO: Figure out a way to calculate the final bond, as well as the stepwise points
-        // you can probably use a simple formula
-        // and keep track of the amount that was already paid in
-        // You can save these variables as part of the state
-
-        /**
-         * Burn Bond Token
+        /*
+         * Step 2: Burn Bond Token
          */
-        // Maybe signer is also purchaser (?)
         let cpi_accounts = Burn {
             mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
             to: ctx.accounts.bond_instance_token_account.to_account_info(),
@@ -240,8 +239,6 @@ pub mod solbond {
                     [
                         ctx.accounts.bond_instance_account.purchaser.key().as_ref(), b"bondInstanceAccount",
                         &[ctx.accounts.bond_instance_account.bump_bond_instance_account]
-                        // ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-                        // &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                     ].as_ref(),
                     [
                         ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
@@ -250,9 +247,10 @@ pub mod solbond {
                 ]
             ), amount_in_redeemables)?;
 
-        /**
-         * Pay out Solana
-         * Can later on replace this with paying out redeemables, and the user can call another function to replace the redeemables with the bond
+        /*
+         * Step 3: Pay out Solana
+         *     Can later on replace this with paying out redeemables,
+         *      and the user can call another function to replace the redeemables with the bond
          */
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.bond_pool_solana_account.to_account_info().key,
@@ -267,15 +265,6 @@ pub mod solbond {
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
             ].as_ref()]
         );
-
-        // let res = anchor_lang::solana_program::system_instruction::transfer_with_seed(
-        //     from_pubkey: ctx.accounts.bond_pool_solana_account.to_account_info().key,
-        //     from_base: &Pubkey,
-        //     from_seed: String,
-        //     from_owner: ctx.accounts.bond_pool_account.to_account_info().key,
-        //     to_pubkey: ctx.accounts.purchaser.to_account_info().key,
-        //     lamports: payout_amount_in_lamports
-        // );
 
         Ok(())
     }
@@ -292,8 +281,6 @@ pub mod solbond {
     _bump_bond_pool_solana_account: u8
 )]
 pub struct InitializeBondPool<'info> {
-
-    // TODO: Add a couple constraints, etc.
 
     // The account which represents the bond pool account
     #[account(
@@ -317,8 +304,7 @@ pub struct InitializeBondPool<'info> {
 
     // The account which generate the bond pool
     #[account(signer)]
-    pub initializer: AccountInfo<'info>,  // TODO: Make him signer
-
+    pub initializer: AccountInfo<'info>,
 
     // The standards accounts
     pub rent: Sysvar<'info, Rent>,
@@ -327,8 +313,6 @@ pub struct InitializeBondPool<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-// seeds = [purchaser.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
-// we don't have access to the seeds of the bond pool account anymore, so shouldn't use this anymore ...
 #[derive(Accounts)]
 #[instruction(
     start_time: u64,
@@ -343,7 +327,7 @@ pub struct InitializeBondInstance<'info> {
 
     // Assume this is the purchaser, who goes into a contract with himself
     #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+    pub purchaser: AccountInfo<'info>,
     // #[account(mut)]
     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
     pub purchaser_token_account: Account<'info, TokenAccount>,
@@ -358,7 +342,6 @@ pub struct InitializeBondInstance<'info> {
         bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
     )]
     pub bond_instance_account: Account<'info, BondInstanceAccount>,
-
     #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
     pub bond_instance_token_account: Account<'info, TokenAccount>,
     #[account(
@@ -380,9 +363,9 @@ pub struct InitializeBondInstance<'info> {
 )]
 pub struct PurchaseBondInstance<'info> {
 
+    // All Bond Pool Accounts
     #[account(mut)]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
-
     // Checking for seeds here is probably overkill honestly... right?
     // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_accounz
     #[account(
@@ -393,7 +376,7 @@ pub struct PurchaseBondInstance<'info> {
     #[account(mut)]
     pub bond_pool_solana_account: AccountInfo<'info>,
 
-    // Assume this is the purchaser, who goes into a contract with himself
+    // All Purchaser Accounts
     #[account(signer, mut)]
     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
     // // #[account(mut)]
@@ -403,8 +386,9 @@ pub struct PurchaseBondInstance<'info> {
     // // Any bond-instance specific accounts
     // // Assume this is the bond instance account, which represents the bond which is "purchased"
     // TODO: Also include the seeds and bump!
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
 
+    // All bond instance accounts
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
     // constraint = bond_instance_token_account.owner == bond_instance_account.key()
     #[account(mut)]
     pub bond_instance_token_account: Account<'info, TokenAccount>,
@@ -473,9 +457,6 @@ pub struct BondPoolAccount {
 
 }
 
-// 64 * 4 + 2 * 8 + 7 * 64 + 3 * 8 = 744 / 64
-// 12 * 64 = 768 / 64
-
 #[account]
 pub struct BondInstanceAccount {
 
@@ -506,6 +487,8 @@ pub struct BondInstanceAccount {
  */
 #[error]
 pub enum ErrorCode {
+    #[msg("Redeemables to be paid out are somehow zero!")]
+    LowBondRedeemableAmount,
     #[msg("SOL to be paid into the bond should not be zero")]
     LowBondSolAmount,
     #[msg("Asking for too much SOL when redeeming!")]

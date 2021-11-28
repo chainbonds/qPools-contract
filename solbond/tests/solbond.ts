@@ -270,7 +270,7 @@ describe('solbond', () => {
         console.log("Asking for this much SOL");
         const initializeTx = await program.rpc.redeemBondInstance(
             // Need to assign less than there is ...
-            initialBondRedeemableTok,
+            initialBondRedeemableTok.div(new BN(2)),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,

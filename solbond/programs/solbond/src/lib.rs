@@ -135,6 +135,7 @@ pub mod solbond {
 
         // Gotta make a case-distinction. If nothing was paid-in, define the difference as 1Token = 1SOL
         // Check if these are safe operations ...
+        // TODO: Check if NaN or
         let amount_in_redeemables: u64;
         if ctx.accounts.bond_pool_redeemable_mint.supply > 0 {
             amount_in_redeemables = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
@@ -238,21 +239,58 @@ pub mod solbond {
         /**
          * Burn Bond Token
          */
+        // Maybe signer is also purchaser (?)
         let cpi_accounts = Burn {
             mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
             to: ctx.accounts.bond_instance_token_account.to_account_info(),
-            authority: ctx.accounts.bond_pool_account.to_account_info(),
+            authority: ctx.accounts.bond_instance_account.to_account_info(),
         };
         let cpi_program = ctx.accounts.token_program.to_account_info();
         token::burn(
             CpiContext::new_with_signer(
                 cpi_program,
                 cpi_accounts,
-                &[[
-                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-                    &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
-                ].as_ref()]
+                &[
+                    [
+                        ctx.accounts.bond_instance_account.purchaser.key().as_ref(), b"bondInstanceAccount",
+                        &[ctx.accounts.bond_instance_account.bump_bond_instance_account]
+                        // ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                        // &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+                    ].as_ref(),
+                    [
+                        ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                        &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+                    ].as_ref()
+                ]
             ), amount_in_redeemables)?;
+
+        // let cpi_accounts = Burn {
+        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
+        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
+        // };
+        // let cpi_program = ctx.accounts.token_program.to_account_info();
+        // token::burn(
+        //     CpiContext::new(
+        //         cpi_program,
+        //         cpi_accounts
+        //     ), amount_in_redeemables)?;
+
+        // let cpi_accounts = Burn {
+        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
+        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
+        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
+        // };
+        // let cpi_program = ctx.accounts.token_program.to_account_info();
+        // token::burn(
+        //     CpiContext::new_with_signer(
+        //         cpi_program,
+        //         cpi_accounts,
+        //         &[[
+        //             ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+        //             &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+        //         ].as_ref()]
+        //     ), amount_in_redeemables)?;
 
         /**
          * Pay out Solana
@@ -371,14 +409,14 @@ pub struct PurchaseBondInstance<'info> {
     pub bond_pool_account: Account<'info, BondPoolAccount>,
 
     // Checking for seeds here is probably overkill honestly... right?
-    // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
-    #[account(mut)]
-    pub bond_pool_solana_account: AccountInfo<'info>,
+    // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_accounz
     #[account(
         mut,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub bond_pool_solana_account: AccountInfo<'info>,
 
     // Assume this is the purchaser, who goes into a contract with himself
     #[account(signer, mut)]

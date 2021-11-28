@@ -1,5 +1,5 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
-use solana_program::program::invoke;
+use solana_program::program::{invoke, invoke_signed};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
@@ -264,43 +264,32 @@ pub mod solbond {
                 ]
             ), amount_in_redeemables)?;
 
-        // let cpi_accounts = Burn {
-        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
-        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
-        // };
-        // let cpi_program = ctx.accounts.token_program.to_account_info();
-        // token::burn(
-        //     CpiContext::new(
-        //         cpi_program,
-        //         cpi_accounts
-        //     ), amount_in_redeemables)?;
-
-        // let cpi_accounts = Burn {
-        //     mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-        //     to: ctx.accounts.bond_instance_token_account.to_account_info(),
-        //     authority: ctx.accounts.bond_pool_account.to_account_info(),
-        // };
-        // let cpi_program = ctx.accounts.token_program.to_account_info();
-        // token::burn(
-        //     CpiContext::new_with_signer(
-        //         cpi_program,
-        //         cpi_accounts,
-        //         &[[
-        //             ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
-        //             &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
-        //         ].as_ref()]
-        //     ), amount_in_redeemables)?;
-
         /**
          * Pay out Solana
+         * Can later on replace this with paying out redeemables, and the user can call another function to replace the redeemables with the bond
          */
-        // let res = anchor_lang::solana_program::system_instruction::transfer(
-        //     ctx.accounts.bond_solana_account.to_account_info().key,
-        //     ctx.accounts.initializer.to_account_info().key,
-        //     payout_amount_in_lamports,
+        let res = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.bond_pool_solana_account.to_account_info().key,
+            ctx.accounts.purchaser.to_account_info().key,
+            payout_amount_in_lamports,
+        );
+        invoke_signed(
+            &res,
+            &[ctx.accounts.bond_pool_solana_account.to_account_info(), ctx.accounts.purchaser.to_account_info()],
+            &[[
+                ctx.accounts.bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount",
+                &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
+            ].as_ref()]
+        );
+
+        // let res = anchor_lang::solana_program::system_instruction::transfer_with_seed(
+        //     from_pubkey: ctx.accounts.bond_pool_solana_account.to_account_info().key,
+        //     from_base: &Pubkey,
+        //     from_seed: String,
+        //     from_owner: ctx.accounts.bond_pool_account.to_account_info().key,
+        //     to_pubkey: ctx.accounts.purchaser.to_account_info().key,
+        //     lamports: payout_amount_in_lamports
         // );
-        // invoke(&res, &[ctx.accounts.bond_solana_account.to_account_info(), ctx.accounts.initializer.to_account_info()]);
 
         Ok(())
     }

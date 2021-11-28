@@ -15,23 +15,23 @@ fn print_type_of<T>(_: &T) {
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
+/*
+    TODO:
+    We should probably have a separate function to do the portfolio (re-)distribuction
+    Buy mSOL, track total supply with redeemable-tokens ...
+*/
+
 #[program]
 pub mod solbond {
     use super::*;
 
-    // Has to create a Keypair
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
         _bump_bond_pool_account: u8,
         _bump_bond_pool_solana_account: u8,
     ) -> ProgramResult {
 
-        // Generate the following
-
-        // Bind all items to the bond-account
         let bond_account = &mut ctx.accounts.bond_pool_account;
-
-        // bond_account.initializer = ctx.accounts.initializer.key();
         bond_account.generator = ctx.accounts.initializer.key();
         bond_account.bond_pool_redeemable_mint = ctx.accounts.bond_pool_redeemable_mint.key();
         bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
@@ -43,13 +43,20 @@ pub mod solbond {
     }
 
     /**
-    * We need to make two separate functions,
+    *  We need to make two separate functions,
         one to create the bond,
         and one to make the "pay-in, redeem-token" transaction
         otherwise, the program just keeps growing, which is a problem
 
         Defines start and end time for the bond,
         basically requires the front-end to adhere to these times & dates ...
+
+        All times are provided as unix timestamps,
+            start_time: u64,
+            end_time: u64,
+        You can use the solana https://docs.rs/solana-program/1.8.5/solana_program/clock/struct.Clock.html
+        Clock::unix_timestamp to compare items to
+
     */
     pub fn initialize_bond_instance(
         ctx: Context<InitializeBondInstance>,
@@ -59,8 +66,12 @@ pub mod solbond {
         _bump_bond_instance_solana_account: u8,
     ) -> ProgramResult {
 
-        // TODO: Check if start timeframe is after Clock::now
-        // TODO: Check if start timeframe is before end timeframe
+        if start_time >= end_time {
+            return Err(ErrorCode::TimeFrameIsNotAnInterval.into());
+        }
+        if ctx.accounts.clock.unix_timestamp <= start_time {
+            return Err(ErrorCode::TimeFrameIsInThePast.into());
+        }
 
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
 
@@ -68,9 +79,9 @@ pub mod solbond {
         bond_instance_account.purchaser = ctx.accounts.purchaser.key();
         bond_instance_account.purchaser_token_account = ctx.accounts.purchaser_token_account.key();
 
+        // Currently these accounts are generated in the frontend, we should probably generate these here ...
         // Accounts for the bond
         bond_instance_account.bond_pool_account = ctx.accounts.bond_pool_account.key();
-        // TODO: Generate these accounts!
         bond_instance_account.bond_instance_solana_account = ctx.accounts.bond_instance_solana_account.key();
         bond_instance_account.bond_instance_token_account = ctx.accounts.bond_instance_token_account.key();
 
@@ -86,68 +97,49 @@ pub mod solbond {
     }
 
     // Should probably also include logic to remove how much you want to put into the bond...
+    /**
+    * Pay in some SOL into the bond that way created with initialize_bond_context.
+    * amount_in_lamports is how much solana to pay in, provided in lampots (i.e. 10e-9 of 1SOL)
+    */
     pub fn purchase_bond_instance(
         ctx: Context<PurchaseBondInstance>,
         amount_in_lamports: u64,
     ) -> ProgramResult {
 
-        // TODO: Check if timeframe is before the time that the bond started
-
-        // Write everything to the PDA
         if amount_in_lamports <= 0 {
             return Err(ErrorCode::LowBondSolAmount.into());
         }
-
-        // TODO: Uncomment once basic functionality is working ...
-        // if ctx.accounts.purchaser.to_account_info().lamports() >= amount {
-        //     return Err(ErrorCode::RedeemCapacity.into());
-        // }
-
+        if ctx.accounts.purchaser.to_account_info().lamports() >= amount_in_lamports {
+            return Err(ErrorCode::RedeemCapacity.into());
+        }
         let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-
-        let current_timestamp: u64 = (ctx.accounts.clock.unix_timestamp) as u64;
-        if bond_instance_account.start_time > current_timestamp {
-            return Err(ErrorCode::TimeFrameNotPassed.into());
+        if bond_instance_account.start_time > (ctx.accounts.clock.unix_timestamp as u64) {
+            return Err(ErrorCode::TimeFrameCannotPurchaseAdditionalBondAmount.into());
         }
 
         /*
-            Buy mSOL, track total supply with redeemable-tokens ...
-        */
-
-        /**
         * Step 1: Transfer SOL to the bond's reserve ...
+        *    How many redeemables, per solana to distribute
+        *    If the reserve is empty as of now, fixate 1 Token to be equal to 1 SOL
+        *    Gotta make a case-distinction. If nothing was paid-in, define the difference as 1Token = 1SOL
         */
-        // Gotta get the account info ...
-        // let mut bond_pool_solana_account: () = ctx.accounts.bond_pool_account;
-
-        // TODO: Calculate market-rate
-        // How many redeemables, per solana to distribute
-        // There might be some truncation errors, that's why we multiple first ...
-        // At the same time, there might be some overflow, that's why we divide first (?)
-
-        // Good article on overflow, underflows in rust
-        // Convert
         let amount_as_solana: f64 = lamports_to_sol(amount_in_lamports);
         // We call the lamports to sol, because our token also have 9 decimal figures, just like the solana token ...
         let token_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_redeemable_mint.supply);  // as f64;
         let pool_total_supply: f64 = lamports_to_sol(ctx.accounts.bond_pool_solana_account.lamports());
-        msg!("These are the token stats: SOL Amount {}, Token Supply {}, Pool Supply {}", amount_as_solana, token_total_supply, pool_total_supply);
 
-        // Gotta make a case-distinction. If nothing was paid-in, define the difference as 1Token = 1SOL
-        // Check if these are safe operations ...
-        // TODO: Check if NaN or
         let amount_in_redeemables: u64;
-        if ctx.accounts.bond_pool_redeemable_mint.supply > 0 {
+        if ctx.accounts.bond_pool_redeemable_mint.supply > 0 && pool_total_supply > 0 {
             amount_in_redeemables = sol_to_lamports(token_total_supply * amount_as_solana / pool_total_supply);
         } else {
             amount_in_redeemables = sol_to_lamports(1.0);
         }
-        msg!("Transferring this many tokens: {}", amount_in_redeemables);
-        // TODO: Pattern-match, s.t. we return an error if this did not work out...
 
-        // TODO: Make exceptions, for when too much solana is paid in ...
+        // Checking if there was an infinite amount
+        if amount_in_redeemables.is_infinite() {
+            return Err(Error::MarketRateOverflow.into());
+        }
 
-        // let bond_pool_solana_account = AccountInfo::new(ctx.accounts.bond_pool_account.account.bond_pool_solana_account);
         let res = anchor_lang::solana_program::system_instruction::transfer(
             ctx.accounts.purchaser.to_account_info().key,
             ctx.accounts.bond_pool_solana_account.to_account_info().key,
@@ -155,18 +147,12 @@ pub mod solbond {
         );
         invoke(&res, &[ctx.accounts.purchaser.to_account_info(), ctx.accounts.bond_pool_solana_account.to_account_info()]);
 
-        /**
-        * Step 2: Mint new redeemables to the middleware escrow to keep track of this input ...
+        /*
+        * Step 2: Mint new redeemables to the middleware escrow to keep track of this input
+        *      Only this program can sign on these things, because all accounts are owned by the program
+        *      Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
+        *      This is ok for the MVP, will definitely need to do auditing and re-writing this probably
         */
-
-        /**
-        * No it is not, because the program is the authority, not the signer ...
-        * Only this program can sign on these things...
-        * TODO: Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
-        * This is ok for the MVP, will definitely need to do auditing and re-writing this probably ...
-        */
-
-
         let cpi_accounts = MintTo {
             mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
             to: ctx.accounts.bond_instance_token_account.to_account_info(),
@@ -524,6 +510,12 @@ pub enum ErrorCode {
     LowBondSolAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
+    #[msg("Provided times are not an interval (end-time before start-time!)")]
+    TimeFrameIsNotAnInterval,
+    #[msg("Provided starting time is not in the future. You should make it in such a way that it is slightly in the future, s.t. you have the ability to pay in some amounts.")]
+    TimeFrameIsInThePast,
+    #[msg("Bond is already locked, you cannot pay in more into this bond!")]
+    TimeFrameCannotPurchaseAdditionalBondAmount,
     #[msg("Bond has not gone past timeframe yet")]
     TimeFrameNotPassed,
     #[msg("There was an issue computing the market rate. MarketRateOverflow")]

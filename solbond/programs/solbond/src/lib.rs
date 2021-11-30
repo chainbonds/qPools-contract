@@ -63,28 +63,15 @@ pub mod solbond {
         and one to make the "pay-in, redeem-token" transaction
         otherwise, the program just keeps growing, which is a problem
 
-        Defines start and end time for the bond,
-        basically requires the front-end to adhere to these times & dates ...
-
-        All times are provided as unix timestamps,
-            start_time: u64,
-            end_time: u64,
-        You can use the solana https://docs.rs/solana-program/1.8.5/solana_program/clock/struct.Clock.html
-        Clock::unix_timestamp to compare items to
-
     */
     pub fn initialize_bond_instance(
         ctx: Context<InitializeBondInstance>,
-        start_time: u64,
-        end_time: u64,
         _bump_bond_instance_account: u8,
         _bump_bond_instance_solana_account: u8,
     ) -> ProgramResult {
 
         initialize_bond_instance_logic(
             ctx,
-            start_time,
-            end_time,
             _bump_bond_instance_account,
             _bump_bond_instance_solana_account
         )
@@ -104,7 +91,7 @@ pub mod solbond {
     }
 
     /**
-    * Redeem the bond, at and point in time
+    * Redeem the bond,
     *
     *   If it is before the bond runs out,
     +     then you should pay out part of the profits that were generated so far
@@ -112,21 +99,11 @@ pub mod solbond {
     *     then you should pay out all the profits, and the initial pay-in amount (face-value / par-value) that was paid in
     */
     pub fn redeem_bond_instance(
-        ctx: Context<RedeemBondInstance>
+        ctx: Context<RedeemBondInstance>,
+        redeemable_amount_in_lamports: u64
     ) -> ProgramResult {
 
-        let bond_instance_account = &mut ctx.accounts.bond_instance_account;
-
-        // Don't have this as an error, but instead as an if-statement
-        let return_profit_and_par_value: bool = (ctx.accounts.clock.unix_timestamp as u64) >= bond_instance_account.end_time;
-        match return_profit_and_par_value {
-            true => {
-                redeem_bond_instance_face_value_and_profits(ctx)
-            },
-            false => {
-                redeem_bond_instance_profits_only(ctx)
-            }
-        }
+        redeem_bond_instance_logic(ctx, redeemable_amount_in_lamports)
     }
 
 }
@@ -175,8 +152,6 @@ pub struct InitializeBondPool<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    start_time: u64,
-    end_time: u64,
     _bump_bond_instance_account: u8,
     _bump_bond_instance_solana_account: u8,
 )]
@@ -219,7 +194,7 @@ pub struct InitializeBondInstance<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-amount_in_lamports: u64,
+    amount_in_lamports: u64,
 )]
 pub struct PurchaseBondInstance<'info> {
 
@@ -267,6 +242,9 @@ pub struct PurchaseBondInstance<'info> {
 
 
 #[derive(Accounts)]
+#[instruction(
+    reedemable_amount_in_lamports: u64,
+)]
 pub struct RedeemBondInstance<'info> {
 
     // Any Bond Pool Accounts
@@ -326,16 +304,6 @@ pub struct BondInstanceAccount {
     // Accounts for the bond instance
     pub bond_instance_solana_account: Pubkey,
     pub bond_instance_token_account: Pubkey,
-
-    // Amount is probably not needed, because we track everything with tokens ...!
-    pub start_time: u64,
-    pub end_time: u64,
-
-    pub initial_payin_amount_in_lamports: u64,
-    // Is a unix-timestamp, which records when the last payout was made
-    pub last_profit_payout: u64,
-
-    // TODO: Perhaps include a boolean to mark if a bond was already consumer
 
     // Include also any bumps, etc.
     pub bump_bond_instance_account: u8,

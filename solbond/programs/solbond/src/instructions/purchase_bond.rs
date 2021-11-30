@@ -1,21 +1,14 @@
-use solana_program::program::{invoke, invoke_signed};
+use solana_program::program::invoke;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
-use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
-use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
+use anchor_spl::token::{self, MintTo};
 
 use crate::{
     ErrorCode,
-    BondInstanceAccount,
-    BondPoolAccount,
-    PurchaseBondInstance,
+    PurchaseBondInstance
 };
 
 use crate::utils::functional::{
-    calculate_market_rate_redeemables_per_solana,
-    calculate_redeemables_to_be_distributed,
-    calculate_solana_to_be_distributed,
-    calculate_profits_and_carry
+    calculate_redeemables_to_be_distributed
 };
 
 pub fn purchase_bond_instance_logic(
@@ -23,13 +16,12 @@ pub fn purchase_bond_instance_logic(
     solana_amount_in_lamports: u64
 ) -> ProgramResult {
 
-    if amount_in_lamports <= 0 {
+    if solana_amount_in_lamports <= 0 {
         return Err(ErrorCode::LowBondSolAmount.into());
     }
-    if ctx.accounts.purchaser.to_account_info().lamports() < amount_in_lamports {
+    if ctx.accounts.purchaser.to_account_info().lamports() < solana_amount_in_lamports {
         return Err(ErrorCode::RedeemCapacity.into());
     }
-    let bond_instance_account = &mut ctx.accounts.bond_instance_account;
 
     /*
     * Step 1: Calculate Market Rate

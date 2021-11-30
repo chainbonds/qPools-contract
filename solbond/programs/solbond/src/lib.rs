@@ -1,13 +1,12 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
 mod instructions;
+mod utils;
 
-use solana_program::program::{invoke, invoke_signed};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
-use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
-use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
+use anchor_spl::token::{Mint, TokenAccount, Token};
 
-use instructions::redeem_bond::{redeem_bond_instance_profits_only, redeem_bond_instance_face_value_and_profits};
+use instructions::redeem_bond::redeem_bond_instance_logic;
 use instructions::purchase_bond::purchase_bond_instance_logic;
 use instructions::initialize_bond_pool::initialize_bond_pool_logic;
 use instructions::initialize_bond_instance::initialize_bond_instance_logic;

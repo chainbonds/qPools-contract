@@ -1,3 +1,4 @@
+use anchor_lang::prelude::*;
 use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
 
 /**
@@ -23,7 +24,7 @@ const CUT_PERCENTAGE: f64 = 0.15;
 * We shouldn't really ever have to calculate this formula
 */
 // Should probably calculate everything lamports
-fn calculate_market_rate_redeemables_per_solana(
+pub fn calculate_market_rate_redeemables_per_solana(
     reserve_total_supply_in_lamports: u64,
     token_total_supply_in_lamports: u64
 ) -> f64 {
@@ -39,7 +40,7 @@ fn calculate_market_rate_redeemables_per_solana(
 *
 *
 */
-fn calculate_redeemables_to_be_distributed(
+pub fn calculate_redeemables_to_be_distributed(
     solana_total_supply_in_lamports: u64,
     token_total_supply_in_lamports: u64,
     delta_solana_added_in_lamports: u64
@@ -58,14 +59,14 @@ fn calculate_redeemables_to_be_distributed(
 
     // Double-check this formula!
     let market_rate_t0: f64 = token_total_supply / solana_total_supply;
-    let out: f64 =  market_rate_t0 * (solana_total_supply + delta_solana_added);
-    out -= token_total_supply;
+    let _out: f64 =  market_rate_t0 * (solana_total_supply + delta_solana_added);
+    let out = _out - token_total_supply;
     // R_T / S_T = ( R_T + R_delta )/ ( S_T + S_delta )
     // Convert back to lamports
     return sol_to_lamports(out);
 }
 
-fn calculate_solana_to_be_distributed(
+pub fn calculate_solana_to_be_distributed(
     solana_total_supply_in_lamports: u64,
     token_total_supply_in_lamports: u64,
     delta_redeemables_burned_in_lamports: u64
@@ -76,8 +77,8 @@ fn calculate_solana_to_be_distributed(
     let delta_redeemables_burned = lamports_to_sol(delta_redeemables_burned_in_lamports);
 
     let market_rate_t0: f64 = solana_total_supply / token_total_supply;
-    let out = market_rate_t0 * (token_total_supply - delta_redeemables_burned);
-    out -= token_total_supply;
+    let _out: f64 = market_rate_t0 * (token_total_supply - delta_redeemables_burned);
+    let out: f64 = _out - token_total_supply;
 
     // Convert back to lamports
     return sol_to_lamports(out);
@@ -96,14 +97,15 @@ fn calculate_solana_to_be_distributed(
 *   We can use sol_to_lamports also for our token, because it has 9 decimal figures, just like the solana native token
 *   Maybe Replace "initial" by "last". The "initial" will just be a subcase of "last"
 */
-fn calculate_profits_and_carry(
+pub fn calculate_profits_and_carry(
     solana_to_be_distributed_in_lamports: u64,
     solana_initially_paid_in_lamports: u64
 ) -> (u64, u64) {
 
     let profits: u64 = solana_to_be_distributed_in_lamports - solana_initially_paid_in_lamports;
     // Gotta make this checked
-    let carry: u64 = profits * CUT_PERCENTAGE;
+    // TODO: Do proper casting and multiplication
+    let carry: u64 = ( (profits as f64) * CUT_PERCENTAGE) as u64;
     let profits_after_carry: u64 = profits - carry;
 
     return (profits_after_carry, carry);

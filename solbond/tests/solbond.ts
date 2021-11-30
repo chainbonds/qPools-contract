@@ -5,13 +5,7 @@ import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
 import {PublicKey} from "@solana/web3.js";
 
-const BOND_LOCKUP_DURACTION_IN_MILLISECONDS = 5_000;
-const ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS = 10_000;
 const AMOUNT = 10_000_000_000;
-
-function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
-}
 
 describe('solbond', () => {
 
@@ -96,12 +90,6 @@ describe('solbond', () => {
     let bumpBondInstanceSolanaAccount: number | null = null;
 
     // Get current UTC, or so
-    let startTime = Date.now() + ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS;
-    let endTime = Date.now() + ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS + BOND_LOCKUP_DURACTION_IN_MILLISECONDS;
-    // Must convert these into seconds now
-    startTime = Math.ceil(startTime / 1_000);
-    endTime = Math.ceil(endTime / 1_000);
-
 
     // let startTime: BN = new BN(startTimeJS);
     // let endTime: BN = new BN(endTimeJS);
@@ -111,10 +99,6 @@ describe('solbond', () => {
 
         // TODO: We should probably assume two different users for purchaser, and user (and also go with the case, that it is the same person ...)
         console.log("Purchasing a bond...");
-        console.log("Bond starts on: ", startTime);
-        console.log("And ends on: ", endTime);
-        // console.log("Bond starts on: ", new Date(startTime.toNumber()).getUTCDate());
-        // console.log("And ends on: ", new Date(endTime.toNumber()).getUTCDate());
 
         // Generate a random, new PDA
         [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
@@ -154,10 +138,8 @@ describe('solbond', () => {
         console.log(new BN(bumpBondInstanceSolanaAccount).toString());
 
         const initializeTx = await program.rpc.initializeBondInstance(
-            new BN(startTime),
-            new BN(endTime),
-            new BN(bumpBondInstanceAccount),
-            new BN(bumpBondInstanceSolanaAccount),
+            bumpBondInstanceAccount,
+            bumpBondInstanceSolanaAccount,
             {
                 accounts: {
                     // Pool
@@ -318,9 +300,6 @@ describe('solbond', () => {
 
     it('run function: redeemBondInstance (after interest was paid out)', async () => {
         console.log("Redeeming bond...");
-
-        console.log("Sleeping for a bit...");
-        await delay(BOND_LOCKUP_DURACTION_IN_MILLISECONDS + ELAPSE_TIME_BEFORE_BOND_BUY_CLOSES_IN_MILLISECONDS + 1_000);
 
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));

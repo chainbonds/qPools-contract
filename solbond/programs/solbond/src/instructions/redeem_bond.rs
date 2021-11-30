@@ -1,21 +1,14 @@
-use solana_program::program::{invoke, invoke_signed};
+use solana_program::program::invoke_signed;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
-use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
-use anchor_spl::token::{self, Burn, Mint, TokenAccount, Token, MintTo};
+use anchor_spl::token::{self, Burn};
 
 use crate::{
     ErrorCode,
-    BondInstanceAccount,
-    BondPoolAccount,
     RedeemBondInstance
 };
 
 use crate::utils::functional::{
-    calculate_market_rate_redeemables_per_solana,
-    calculate_redeemables_to_be_distributed,
-    calculate_solana_to_be_distributed,
-    calculate_profits_and_carry
+    calculate_solana_to_be_distributed
 };
 
 /*
@@ -41,6 +34,10 @@ pub fn redeem_bond_instance_logic(
     ctx: Context<RedeemBondInstance>,
     reedemable_amount_in_lamports: u64
 ) -> ProgramResult {
+
+    if reedemable_amount_in_lamports <= 0 {
+        return Err(ErrorCode::LowBondRedeemableAmount.into());
+    }
 
     // Get token and solana total supply
     let bond_instance_account = &mut ctx.accounts.bond_instance_account;
@@ -91,7 +88,7 @@ pub fn redeem_bond_instance_logic(
     let res = anchor_lang::solana_program::system_instruction::transfer(
         ctx.accounts.bond_pool_solana_account.to_account_info().key,
         ctx.accounts.purchaser.to_account_info().key,
-        payout_amount_in_lamports,
+        solana_to_be_distributed,
     );
     invoke_signed(
         &res,

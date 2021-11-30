@@ -6,14 +6,14 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, TokenAccount, Token};
 
-use instructions::redeem_bond::redeem_bond_instance_logic;
-use instructions::purchase_bond::purchase_bond_instance_logic;
+use instructions::redeem_bond::redeem_bond_logic;
+use instructions::purchase_bond::purchase_bond_logic;
 use instructions::initialize_bond_pool::initialize_bond_pool_logic;
-use instructions::initialize_bond_instance::initialize_bond_instance_logic;
+//use instructions::initialize_bond_instance::initialize_bond_instance_logic;
 
 // const DECIMALS: u8 = 1;
 
-declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
+declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
@@ -56,37 +56,17 @@ pub mod solbond {
         )
     }
 
-    /**
-    *  We need to make two separate functions,
-        one to create the bond,
-        and one to make the "pay-in, redeem-token" transaction
-        otherwise, the program just keeps growing, which is a problem
-
-    */
-    pub fn initialize_bond_instance(
-        ctx: Context<InitializeBondInstance>,
-        _bump_bond_instance_account: u8,
-        _bump_bond_instance_solana_account: u8,
-    ) -> ProgramResult {
-
-        initialize_bond_instance_logic(
-            ctx,
-            _bump_bond_instance_account,
-            _bump_bond_instance_solana_account
-        )
-    }
-
     // Should probably also include logic to remove how much you want to put into the bond...
     /**
     * Pay in some SOL into the bond that way created with initialize_bond_context.
     * amount_in_lamports is how much solana to pay in, provided in lampots (i.e. 10e-9 of 1SOL)
     */
-    pub fn purchase_bond_instance(
-        ctx: Context<PurchaseBondInstance>,
+    pub fn purchase_bond(
+        ctx: Context<PurchaseBond>,
         amount_in_lamports: u64,
     ) -> ProgramResult {
 
-        purchase_bond_instance_logic(ctx, amount_in_lamports)
+        purchase_bond_logic(ctx, amount_in_lamports)
     }
 
     /**
@@ -97,12 +77,12 @@ pub mod solbond {
     *   If it is after the bond runs out,
     *     then you should pay out all the profits, and the initial pay-in amount (face-value / par-value) that was paid in
     */
-    pub fn redeem_bond_instance(
-        ctx: Context<RedeemBondInstance>,
+    pub fn redeem_bond(
+        ctx: Context<RedeemBond>,
         redeemable_amount_in_lamports: u64
     ) -> ProgramResult {
 
-        redeem_bond_instance_logic(ctx, redeemable_amount_in_lamports)
+        redeem_bond_logic(ctx, redeemable_amount_in_lamports)
     }
 
 }
@@ -127,7 +107,8 @@ pub struct InitializeBondPool<'info> {
     )]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
     #[account(
-        seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
+        seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"],
+        bump = _bump_bond_pool_solana_account
     )]
     pub bond_pool_solana_account: AccountInfo<'info>,
     #[account(
@@ -151,51 +132,9 @@ pub struct InitializeBondPool<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_bond_instance_account: u8,
-    _bump_bond_instance_solana_account: u8,
-)]
-pub struct InitializeBondInstance<'info> {
-
-    #[account(mut)]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
-
-    // Assume this is the purchaser, who goes into a contract with himself
-    #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,
-    // #[account(mut)]
-    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    pub purchaser_token_account: Account<'info, TokenAccount>,
-
-    // Any bond-instance specific accounts
-    // Assume this is the bond instance account, which represents the bond which is "purchased"
-    #[account(
-        init,
-        payer = purchaser,
-        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
-        seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
-        bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
-    )]
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
-    #[account(
-    seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
-    )]
-    pub bond_instance_solana_account: AccountInfo<'info>,
-
-    // The standard accounts
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-
-}
-
-#[derive(Accounts)]
-#[instruction(
     amount_in_lamports: u64,
 )]
-pub struct PurchaseBondInstance<'info> {
+pub struct PurchaseBond<'info> {
 
     // All Bond Pool Accounts
     #[account(mut)]
@@ -217,15 +156,8 @@ pub struct PurchaseBondInstance<'info> {
     // #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
     // pub purchaser_token_account: Account<'info, TokenAccount>,
     //
-    // // Any bond-instance specific accounts
-    // // Assume this is the bond instance account, which represents the bond which is "purchased"
-    // TODO: Also include the seeds and bump!
-
-    // All bond instance accounts
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    // constraint = bond_instance_token_account.owner == bond_instance_account.key()
     #[account(mut)]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
+    pub purchaser_token_account: Account<'info, TokenAccount>,
 
     // #[account(
     //     seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
@@ -240,15 +172,16 @@ pub struct PurchaseBondInstance<'info> {
 }
 
 
+// lol this is identical to BuyBond :P
 #[derive(Accounts)]
 #[instruction(
     reedemable_amount_in_lamports: u64,
 )]
-pub struct RedeemBondInstance<'info> {
+pub struct RedeemBond<'info> {
 
     // Any Bond Pool Accounts
     #[account(mut)]
-    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
     #[account(
         mut,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
@@ -256,11 +189,6 @@ pub struct RedeemBondInstance<'info> {
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
     #[account(mut)]
     pub bond_pool_solana_account: AccountInfo<'info>,
-
-    // And Bond Instance Accounts
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    #[account(mut)]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
 
     #[account(signer, mut)]
     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
@@ -290,27 +218,6 @@ pub struct BondPoolAccount {
     pub bump_bond_pool_solana_account: u8,
 }
 
-#[account]
-pub struct BondInstanceAccount {
-
-    // Accounts for the initializer
-    pub purchaser: Pubkey,
-    pub purchaser_token_account: Pubkey,
-
-    // Accounts for the "parenting" bond pool
-    pub bond_pool_account: Pubkey,
-
-    // Accounts for the bond instance
-    pub bond_instance_solana_account: Pubkey,
-    pub bond_instance_token_account: Pubkey,
-
-    // Include also any bumps, etc.
-    pub bump_bond_instance_account: u8,
-    pub bump_bond_pool_account: u8,
-    pub bump_bond_instance_solana_account: u8,
-}
-
-
 /**
  * Error definitions
  */
@@ -322,6 +229,8 @@ pub enum ErrorCode {
     LowBondSolAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
+    #[msg("Need to send more than 0 SOL!")]
+    MinPurchaseAmount,
     #[msg("Provided times are not an interval (end-time before start-time!)")]
     TimeFrameIsNotAnInterval,
     #[msg("Provided starting time is not in the future. You should make it in such a way that it is slightly in the future, s.t. you have the ability to pay in some amounts.")]

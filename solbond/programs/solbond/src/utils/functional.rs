@@ -80,6 +80,7 @@ pub fn calculate_solana_to_be_distributed(
     let _out: f64 = market_rate_t0 * (token_total_supply - delta_redeemables_burned);
     let out: f64 = _out - token_total_supply;
 
+
     // Convert back to lamports
     return sol_to_lamports(out);
 }

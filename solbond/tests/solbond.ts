@@ -20,7 +20,7 @@ describe('solbond', () => {
     it('Initialize the state-of-the-world', async () => {
         // Let's see if we even need to add anything into this.
         // Otherwise good to keep this as a sanity-check
-        await provider.connection.requestAirdrop(payer.publicKey, 10_000_000_000);
+        await provider.connection.requestAirdrop(payer.publicKey, 30_000_000_000);
     });
 
     let bondPoolRedeemableMint: Token | null = null;
@@ -29,6 +29,7 @@ describe('solbond', () => {
     let bumpBondPoolAccount: number | null = null;
     let bondPoolSolanaAccount: PublicKey | null = null;
     let bumpBondPoolSolanaAccount: number | null = null;
+
 
     it('run function: initializeBondPool', async () => {
         console.log("Running initializeBondPool");
@@ -82,12 +83,12 @@ describe('solbond', () => {
 
     });
 
-    let bondInstanceAccount: PublicKey | null = null;
-    let bumpBondInstanceAccount: number | null = null;
+    //let bondInstanceAccount: PublicKey | null = null;
+    //let bumpBondInstanceAccount: number | null = null;
     let purchaserRedeemableTokenAccount: PublicKey | null = null;
-    let bondInstanceRedeemableTokenAccount: PublicKey | null = null;
-    let bondInstanceSolanaAccount: PublicKey | null = null;
-    let bumpBondInstanceSolanaAccount: number | null = null;
+    //let bondInstanceRedeemableTokenAccount: PublicKey | null = null;
+    //let bondInstanceSolanaAccount: PublicKey | null = null;
+    //let bumpBondInstanceSolanaAccount: number | null = null;
 
     // Get current UTC, or so
 
@@ -95,99 +96,29 @@ describe('solbond', () => {
     // let endTime: BN = new BN(endTimeJS);
     let purchaser: PublicKey | null = null;
 
-    it('run function: initializeBondInstance', async () => {
-
-        // TODO: We should probably assume two different users for purchaser, and user (and also go with the case, that it is the same person ...)
-        console.log("Purchasing a bond...");
-
-        // Generate a random, new PDA
-        [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceAccount"))],
-            program.programId
-        );
-        console.log("Third PDA is: ", bondInstanceAccount.toString());
-
-        // Create a token account for the bond instance
-        bondInstanceRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondInstanceAccount);
-
-        // Create a PDA which stores all the (excess) solana for this account
-        [bondInstanceSolanaAccount, bumpBondInstanceSolanaAccount] = await PublicKey.findProgramAddress(
-            [bondInstanceAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceSolanaAccount"))],
-            program.programId
-        );
-
-        purchaser = payer.publicKey;
-        purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
-
-        console.log({
-            bondPoolAccount: bondPoolAccount.toString(),
-
-            // Purchaser
-            purchaser: purchaser.toString(),
-            purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
-
-            // Bond Instance
-            bondInstanceAccount: bondInstanceAccount.toString(),
-            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
-            bondInstanceSolanaAccount: bondInstanceSolanaAccount.toString(),
-        })
-
-        console.log("Bumps are: ");
-        console.log(new BN(bumpBondPoolSolanaAccount).toString());
-        console.log(new BN(bumpBondInstanceAccount).toString());
-        console.log(new BN(bumpBondInstanceSolanaAccount).toString());
-
-        const initializeTx = await program.rpc.initializeBondInstance(
-            bumpBondInstanceAccount,
-            bumpBondInstanceSolanaAccount,
-            {
-                accounts: {
-                    // Pool
-                    bondPoolAccount: bondPoolAccount,
-
-                    // Purchaser
-                    purchaser: purchaser,
-                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
-
-                    // Bond Instance
-                    bondInstanceAccount: bondInstanceAccount,
-                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
-                    bondInstanceSolanaAccount: bondInstanceSolanaAccount,
-
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [payer]
-            }
-        );
-        await provider.connection.confirmTransaction(initializeTx);
-        console.log("initializeTx signature", initializeTx);
-
-    });
-
+    purchaser = payer.publicKey;
     it('run function: purchaseBond', async () => {
         console.log("Purchasin bond...");
+        purchaser = payer.publicKey;
+        purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
 
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
 
         // Mint Before
-        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
-
+        //const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
         console.log("Running accounts...");
         console.log({
             bondPoolAccount: bondPoolAccount.toString(),
             bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
             bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
-
             purchaser: purchaser.toString(),
-            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+            purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
+
         });
 
-        const initializeTx = await program.rpc.purchaseBondInstance(
+        const initializeTx = await program.rpc.purchaseBond(
             new BN(AMOUNT),
             {
                 accounts: {
@@ -196,8 +127,9 @@ describe('solbond', () => {
                     bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
 
                     purchaser: purchaser,
-                    bondInstanceAccount: bondInstanceAccount,
-                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
+                    //bondInstanceAccount: bondInstanceAccount,
+                    //bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
 
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
@@ -212,16 +144,16 @@ describe('solbond', () => {
 
         const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
-        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+        //const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
-        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+        //console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
 
         console.log("Final Payer SOL", finalPayerSol.toString());
         console.log("Final Bond SOL (reserve)", finalBondSol.toString());
-        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+        //console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
 
     });
 
@@ -238,37 +170,37 @@ describe('solbond', () => {
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
-        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(purchaserRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
-        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+        //console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
 
         console.log("Running accounts...");
         console.log({
             bondPoolAccount: bondPoolAccount.toString(),
             bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
             bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
+            purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
 
             purchaser: purchaser.toString(),
-            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+            //bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
         });
 
         console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
 
         console.log("Asking for this much SOL");
-        const initializeTx = await program.rpc.redeemBondInstance(
+        const initializeTx = await program.rpc.redeemBond(
             // Need to assign less than there is ...
-            // initialBondRedeemableTok.div(new BN(2)),
+            initialBondRedeemableTok.div(new BN(2)),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
-                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
                     bondPoolSolanaAccount: bondPoolSolanaAccount,
-                    bondInstanceAccount: bondInstanceAccount,
-                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
-                    purchaser: payer.publicKey,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+
+                    purchaser: purchaser,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
 
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -285,16 +217,16 @@ describe('solbond', () => {
         const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
 
-        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+        //const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
-        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+        //console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
 
         console.log("Final Payer SOL", finalPayerSol.toString());
         console.log("Final Bond SOL (reserve)", finalBondSol.toString());
-        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+        //console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
 
     });
 
@@ -304,7 +236,7 @@ describe('solbond', () => {
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
-        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(purchaserRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
         console.log("Initial Payer SOL", initialPayerSol.toString());
@@ -318,22 +250,22 @@ describe('solbond', () => {
             bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
 
             purchaser: purchaser.toString(),
-            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+            // bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
         });
 
-        console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
+        // console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
 
         console.log("Asking for this much SOL");
-        const initializeTx = await program.rpc.redeemBondInstance(
+        const initializeTx = await program.rpc.redeemBond(
             // Need to assign less than there is ...
-            // initialBondRedeemableTok.div(new BN(2)),
+            initialBondRedeemableTok.div(new BN(2)),
             {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
                     bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
                     bondPoolSolanaAccount: bondPoolSolanaAccount,
-                    bondInstanceAccount: bondInstanceAccount,
-                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    //bondInstanceAccount: bondInstanceAccount,
+                    //bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
                     purchaser: payer.publicKey,
                     purchaserTokenAccount: purchaserRedeemableTokenAccount,
 
@@ -351,16 +283,16 @@ describe('solbond', () => {
         const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
         const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
 
-        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+        //const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
 
         console.log("Initial and final are: ");
         console.log("Initial Payer SOL", initialPayerSol.toString());
         console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
-        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+        //console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
 
         console.log("Final Payer SOL", finalPayerSol.toString());
         console.log("Final Bond SOL (reserve)", finalBondSol.toString());
-        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+        //console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
 
     });
 

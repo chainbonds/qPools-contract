@@ -4,7 +4,7 @@ use anchor_spl::token::{self, Burn};
 
 use crate::{
     ErrorCode,
-    RedeemBondInstance
+    RedeemBond
 };
 
 use crate::utils::functional::{
@@ -30,8 +30,8 @@ use crate::utils::functional::{
  * There is no need to update the redeemables after this, because of this
  */
 
-pub fn redeem_bond_instance_logic(
-    ctx: Context<RedeemBondInstance>,
+pub fn redeem_bond_logic(
+    ctx: Context<RedeemBond>,
     reedemable_amount_in_lamports: u64
 ) -> ProgramResult {
 
@@ -39,15 +39,16 @@ pub fn redeem_bond_instance_logic(
         return Err(ErrorCode::LowBondRedeemableAmount.into());
     }
 
-    // Get token and solana total supply
-    let bond_instance_account = &mut ctx.accounts.bond_instance_account;
 
     // TODO: Double check that the user actually has less than this in their amount
     let total_token_supply: u64 = ctx.accounts.bond_pool_redeemable_mint.supply;
     let total_solana_supply: u64 = ctx.accounts.bond_pool_solana_account.lamports();
 
+
     /*
-    * Step 1: Calculate market rate
+    * Step 1: Calculate Market Rate
+    *    How many SOL, per redeemable to distribute
+    *    If the reserve is empty as of now, fixate 1 Token to be equal to 1 SOL
     */
     let solana_to_be_distributed: u64 = calculate_solana_to_be_distributed(
         total_solana_supply,
@@ -60,25 +61,25 @@ pub fn redeem_bond_instance_logic(
      */
     let cpi_accounts = Burn {
         mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),
-        to: ctx.accounts.bond_instance_token_account.to_account_info(),
-        authority: ctx.accounts.bond_instance_account.to_account_info(),
+        to: ctx.accounts.purchaser_token_account.to_account_info(),
+        authority: ctx.accounts.purchaser.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
+
+
     token::burn(
         CpiContext::new_with_signer(
             cpi_program,
             cpi_accounts,
             &[
                 [
-                    ctx.accounts.bond_instance_account.purchaser.key().as_ref(), b"bondInstanceAccount",
-                    &[ctx.accounts.bond_instance_account.bump_bond_instance_account]
-                ].as_ref(),
-                [
                     ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
-            ]
-        ), reedemable_amount_in_lamports)?;
+            ],
+        ),
+        reedemable_amount_in_lamports,
+    )?;
 
     /*
      * Step 3: Pay out Solana

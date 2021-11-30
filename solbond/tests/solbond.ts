@@ -186,7 +186,7 @@ describe('solbond', () => {
     });
 
     it('run function: purchaseBond', async () => {
-        console.log("Pursaching bond...");
+        console.log("Purchasin bond...");
 
         // Solana Account Before
         const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
@@ -245,7 +245,78 @@ describe('solbond', () => {
 
     // TODO: Do two tests where the interest is paid out
 
-    it('run function: redeemBondInstance', async () => {
+    it('run function: redeemBondInstance (before interest was paid out)', async () => {
+        console.log("Redeeming bond...");
+
+        // Do a small airdrop to the solana account ...
+        // Assume it compounds by 2 in the meantime
+        console.log("Airdropping..",  2 * AMOUNT);
+        await provider.connection.requestAirdrop(bondPoolSolanaAccount, 2 * AMOUNT);
+
+        // Solana Account Before
+        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Running accounts...");
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
+            bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
+            bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
+
+            purchaser: purchaser.toString(),
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+        });
+
+        console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
+
+        console.log("Asking for this much SOL");
+        const initializeTx = await program.rpc.redeemBondInstance(
+            // Need to assign less than there is ...
+            // initialBondRedeemableTok.div(new BN(2)),
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondInstanceAccount: bondInstanceAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    purchaser: payer.publicKey,
+                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
+
+        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+
+        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Final Payer SOL", finalPayerSol.toString());
+        console.log("Final Bond SOL (reserve)", finalBondSol.toString());
+        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+
+    });
+
+    it('run function: redeemBondInstance (after interest was paid out)', async () => {
         console.log("Redeeming bond...");
 
         console.log("Sleeping for a bit...");

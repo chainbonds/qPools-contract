@@ -219,7 +219,7 @@ pub struct InitializeBondInstance<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    amount: u64,
+amount_in_lamports: u64,
 )]
 pub struct PurchaseBondInstance<'info> {
 

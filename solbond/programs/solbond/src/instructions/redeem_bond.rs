@@ -72,8 +72,7 @@ pub fn redeem_bond_logic(
             cpi_program,
             cpi_accounts,
             &[
-                [
-                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                [                  ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
             ],

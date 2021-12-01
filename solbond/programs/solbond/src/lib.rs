@@ -109,35 +109,40 @@ pub struct InitializeBondPool<'info> {
     pub bond_pool_account: Account<'info, BondPoolAccount>,
 
 
+    // #[account(
+    //     init,
+    //     payer = initializer,
+    //     mint::decimals = DECIMALS,
+    //     mint::authority = bond_pool_account,
+    //     constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
+    //     constraint = bond_pool_redeemable_mint.supply == 0
+    // )]
     #[account(
-        init,
-        payer = initializer,
-        mint::decimals = DECIMALS,
-        mint::authority = bond_pool_account,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
-        constraint = bond_pool_redeemable_mint.supply == 0
+         constraint = bond_pool_redeemable_mint.supply == 0
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
     #[account(
-        constraint = bond_pool_token_mint.decimals == DECIMALS,
+        mut,
     )]
     pub bond_pool_token_mint: Account<'info, Mint>,
 
     #[account(mut, constraint = bond_pool_redeemable_token_account.owner == bond_pool_account.key())]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
-    #[account(init,
-    payer = initializer,
-    token::mint = bond_pool_token_mint,
-    token::authority = bond_pool_account,
-    seeds = [bond_pool_account.key().as_ref(), b"bondPoolTokenAccount"],
-    bump = _bump_bond_pool_token_account
+    #[account(
+        init,
+        payer = initializer,
+        token::mint = bond_pool_token_mint,
+        token::authority = bond_pool_account,
+        seeds = [bond_pool_account.key().as_ref(), b"bondPoolTokenAccount"],
+        bump = _bump_bond_pool_token_account
     )]
     pub bond_pool_token_account: Account<'info, TokenAccount>,
 
 
     // The account which generate the bond pool
-    #[account(signer)]
-    pub initializer: AccountInfo<'info>,
+    #[account(mut)]
+    pub initializer: Signer<'info>,
 
     // The standards accounts
     pub rent: Sysvar<'info, Rent>,
@@ -181,9 +186,9 @@ pub struct PurchaseBond<'info> {
     // pub purchaser_token_account: Account<'info, TokenAccount>,
     //
     #[account(mut)]
-    pub purchaser_token_account: Account<'info, TokenAccount>,
+    pub purchaser_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub purchaser_redeemable_token_account: Account<'info, TokenAccount>,
+    pub purchaser_redeemable_token_account: Box<Account<'info, TokenAccount>>,
 
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
@@ -225,9 +230,9 @@ pub struct RedeemBond<'info> {
     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
 
     #[account(mut, constraint = purchaser_redeemable_token_account.owner == purchaser.key())]
-    pub purchaser_redeemable_token_account: Account<'info, TokenAccount>,
+    pub purchaser_redeemable_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    pub purchaser_token_account: Account<'info, TokenAccount>,
+    pub purchaser_token_account: Box<Account<'info, TokenAccount>>,
 
 
     // The standard accounts

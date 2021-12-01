@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports};
+use spl_token::{ui_amount_to_amount, amount_to_ui_amount};
+use super::constants::DECIMALS;
+use super::constants::CUT_PERCENTAGE;
 
 /**
 *
@@ -18,20 +20,9 @@ use anchor_lang::solana_program::native_token::{lamports_to_sol, sol_to_lamports
 *
 */
 
-const CUT_PERCENTAGE: f64 = 0.15;
+// const CUT_PERCENTAGE: f64 = 0.15;
 
-/**
-* We shouldn't really ever have to calculate this formula
-*/
-// Should probably calculate everything lamports
-pub fn calculate_market_rate_redeemables_per_solana(
-    reserve_total_supply_in_lamports: u64,
-    token_total_supply_in_lamports: u64
-) -> f64 {
-    let total_token_supply: f64 = lamports_to_sol(token_total_supply_in_lamports);
-    let total_pool_reserve: f64 = lamports_to_sol(reserve_total_supply_in_lamports);
-    return total_token_supply / total_pool_reserve;
-}
+
 
 /**
 * We follow the following formula to calculate how many more redeemables to add,
@@ -41,48 +32,51 @@ pub fn calculate_market_rate_redeemables_per_solana(
 *
 */
 pub fn calculate_redeemables_to_be_distributed(
-    solana_total_supply_in_lamports: u64,
-    token_total_supply_in_lamports: u64,
-    delta_solana_added_in_lamports: u64
+    token_total_supply_raw: u64,
+    redeemable_total_supply_raw: u64,
+    delta_token_added_raw: u64
 ) -> u64 {
 
-    if (token_total_supply_in_lamports == 0) || (solana_total_supply_in_lamports == 0) {
+    if (token_total_supply_raw == 0) || (redeemable_total_supply_raw == 0) {
         // Return as many tokens as there is solana, if no solana has been paid in already
-        msg!("Initiating a new pool TokenSupply: {}, PoolReserve: {}, Amount: {}", token_total_supply_in_lamports, solana_total_supply_in_lamports, delta_solana_added_in_lamports);
-        return delta_solana_added_in_lamports;
+        msg!("Initiating a new pool TokenSupply: {}, PoolReserve: {}, Amount: {}",
+            redeemable_total_supply_raw,
+            token_total_supply_raw,
+            delta_token_added_raw);
+        return delta_token_added_raw;
     }
 
     // TODO: Make sure there are no weird floatin point operations
-    let solana_total_supply = lamports_to_sol(solana_total_supply_in_lamports);
-    let token_total_supply = lamports_to_sol(token_total_supply_in_lamports);
-    let delta_solana_added = lamports_to_sol(delta_solana_added_in_lamports);
+    let token_total_supply: f64 = amount_to_ui_amount(token_total_supply_raw, DECIMALS);
+    let redeemable_total_supply: f64 = amount_to_ui_amount(redeemable_total_supply_raw, DECIMALS);
+    let delta_token_added: f64 = amount_to_ui_amount(delta_token_added_raw, DECIMALS);
 
     // Double-check this formula!
-    let market_rate_t0: f64 = token_total_supply / solana_total_supply;
-    let _out: f64 =  market_rate_t0 * (solana_total_supply + delta_solana_added);
-    let out = _out - token_total_supply;
+    let market_rate_t0: f64 = redeemable_total_supply / token_total_supply;
+    let _out: f64 =  market_rate_t0 * (token_total_supply + delta_token_added);
+    let out = _out - redeemable_total_supply;
     // R_T / S_T = ( R_T + R_delta )/ ( S_T + S_delta )
     // Convert back to lamports
-    return sol_to_lamports(out);
+    return ui_amount_to_amount(out, DECIMALS);
 }
 
-pub fn calculate_solana_to_be_distributed(
-    solana_total_supply_in_lamports: u64,
-    token_total_supply_in_lamports: u64,
-    delta_redeemables_burned_in_lamports: u64
+pub fn calculate_token_to_be_distributed(
+    token_total_supply_raw: u64,
+    redeemable_total_supply_raw: u64,
+    delta_redeemables_burned_raw: u64
 ) -> u64 {
     // TODO: Make sure there are no weird floatin point operations
-    let solana_total_supply = lamports_to_sol(solana_total_supply_in_lamports);
-    let token_total_supply = lamports_to_sol(token_total_supply_in_lamports);
-    let delta_redeemables_burned = lamports_to_sol(delta_redeemables_burned_in_lamports);
+    let token_total_supply: f64 = amount_to_ui_amount(token_total_supply_raw, DECIMALS);
+    let redeemable_total_supply: f64 = amount_to_ui_amount(redeemable_total_supply_raw, DECIMALS);
+    let delta_redeemables_burned: f64 = amount_to_ui_amount(delta_redeemables_burned_raw, DECIMALS);
 
-    let market_rate_t0: f64 = solana_total_supply / token_total_supply;
-    let _out: f64 = market_rate_t0 * (token_total_supply - delta_redeemables_burned);
-    let out: f64 = _out - token_total_supply;
+    let market_rate_t0: f64 = token_total_supply / redeemable_total_supply;
+    let _out: f64 = market_rate_t0 * (redeemable_total_supply - delta_redeemables_burned);
+    let out: f64 = _out - redeemable_total_supply;
 
 
     // Convert back to lamports
-    return sol_to_lamports(out);
+    return ui_amount_to_amount(out, DECIMALS);
 }
 
 /**
@@ -99,11 +93,11 @@ pub fn calculate_solana_to_be_distributed(
 *   Maybe Replace "initial" by "last". The "initial" will just be a subcase of "last"
 */
 pub fn calculate_profits_and_carry(
-    solana_to_be_distributed_in_lamports: u64,
-    solana_initially_paid_in_lamports: u64
+    token_to_be_distributed_raw: u64,
+    token_initially_paid_raw: u64
 ) -> (u64, u64) {
 
-    let profits: u64 = solana_to_be_distributed_in_lamports - solana_initially_paid_in_lamports;
+    let profits: u64 = token_to_be_distributed_raw - token_initially_paid_raw;
     // Gotta make this checked
     // TODO: Do proper casting and multiplication
     let carry: u64 = ( (profits as f64) * CUT_PERCENTAGE) as u64;

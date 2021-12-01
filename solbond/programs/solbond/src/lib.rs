@@ -9,8 +9,8 @@ use anchor_spl::token::{Mint, TokenAccount, Token};
 use instructions::redeem_bond::redeem_bond_logic;
 use instructions::purchase_bond::purchase_bond_logic;
 use instructions::initialize_bond_pool::initialize_bond_pool_logic;
-//use instructions::initialize_bond_instance::initialize_bond_instance_logic;
 
+use utils::constants::DECIMALS;
 // const DECIMALS: u8 = 1;
 
 declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
@@ -46,13 +46,13 @@ pub mod solbond {
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
         _bump_bond_pool_account: u8,
-        _bump_bond_pool_solana_account: u8,
+        _bump_bond_pool_token_account: u8,
     ) -> ProgramResult {
 
         initialize_bond_pool_logic(
             ctx,
             _bump_bond_pool_account,
-            _bump_bond_pool_solana_account,
+            _bump_bond_pool_token_account,
         )
     }
 
@@ -63,10 +63,10 @@ pub mod solbond {
     */
     pub fn purchase_bond(
         ctx: Context<PurchaseBond>,
-        amount_in_lamports: u64,
+        amount_raw: u64,
     ) -> ProgramResult {
 
-        purchase_bond_logic(ctx, amount_in_lamports)
+        purchase_bond_logic(ctx, amount_raw)
     }
 
     /**
@@ -79,22 +79,23 @@ pub mod solbond {
     */
     pub fn redeem_bond(
         ctx: Context<RedeemBond>,
-        redeemable_amount_in_lamports: u64
+        redeemable_amount_raw: u64
     ) -> ProgramResult {
 
-        redeem_bond_logic(ctx, redeemable_amount_in_lamports)
+        redeem_bond_logic(ctx, redeemable_amount_raw)
     }
 
 }
 
 /**
  * Contexts
+ * change everything to use token accounts instead of SOL
  */
 
 #[derive(Accounts)]
 #[instruction(
     _bump_bond_pool_account: u8,
-    _bump_bond_pool_solana_account: u8
+    _bump_bond_pool_token_account: u8
 )]
 pub struct InitializeBondPool<'info> {
 
@@ -102,22 +103,37 @@ pub struct InitializeBondPool<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 8 + 64 + 64 + 64 + 64,
+        space = 8 + BondPoolAccount::LEN,
         seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
     )]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
+
+
     #[account(
-        seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"],
-        bump = _bump_bond_pool_solana_account
-    )]
-    pub bond_pool_solana_account: AccountInfo<'info>,
-    #[account(
+        init,
+        payer = initializer,
+        mint::decimals = DECIMALS,
+        mint::authority = bond_pool_account,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
         constraint = bond_pool_redeemable_mint.supply == 0
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(
+        constraint = bond_pool_token_mint.decimals == DECIMALS,
+    )]
+    pub bond_pool_token_mint: Account<'info, Mint>,
+
     #[account(mut, constraint = bond_pool_redeemable_token_account.owner == bond_pool_account.key())]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
+    #[account(init,
+    payer = initializer,
+    token::mint = bond_pool_token_mint,
+    token::authority = bond_pool_account,
+    seeds = [bond_pool_account.key().as_ref(), b"bondPoolTokenAccount"],
+    bump = _bump_bond_pool_token_account
+    )]
+    pub bond_pool_token_account: Account<'info, TokenAccount>,
+
 
     // The account which generate the bond pool
     #[account(signer)]
@@ -146,8 +162,16 @@ pub struct PurchaseBond<'info> {
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
+
+    #[account(
+        mut
+    )]
+    pub bond_pool_token_mint: Account<'info, Mint>,
+
     #[account(mut)]
-    pub bond_pool_solana_account: AccountInfo<'info>,
+    pub bond_pool_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
     // All Purchaser Accounts
     #[account(signer, mut)]
@@ -158,11 +182,8 @@ pub struct PurchaseBond<'info> {
     //
     #[account(mut)]
     pub purchaser_token_account: Account<'info, TokenAccount>,
-
-    // #[account(
-    //     seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
-    // )]
-    // pub bond_instance_solana_account: AccountInfo<'info>,
+    #[account(mut)]
+    pub purchaser_redeemable_token_account: Account<'info, TokenAccount>,
 
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
@@ -187,13 +208,27 @@ pub struct RedeemBond<'info> {
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
+
+    // not sure right now if this has to be mutable
+    // inspired by the ido_pool program
+    #[account(
+        mut
+    )]
+    pub bond_pool_token_mint: Account<'info, Mint>,
+
     #[account(mut)]
-    pub bond_pool_solana_account: AccountInfo<'info>,
+    pub bond_pool_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
     #[account(signer, mut)]
     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+
+    #[account(mut, constraint = purchaser_redeemable_token_account.owner == purchaser.key())]
+    pub purchaser_redeemable_token_account: Account<'info, TokenAccount>,
     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
     pub purchaser_token_account: Account<'info, TokenAccount>,
+
 
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
@@ -210,12 +245,25 @@ pub struct BondPoolAccount {
     pub generator: Pubkey,
 
     pub bond_pool_redeemable_mint: Pubkey,
+    pub bond_pool_token_mint: Pubkey,
     pub bond_pool_redeemable_token_account: Pubkey,
-    pub bond_pool_solana_account: Pubkey,
+    pub bond_pool_token_account: Pubkey,
 
     // Include also any bumps, etc.
     pub bump_bond_pool_account: u8,
-    pub bump_bond_pool_solana_account: u8,
+    pub bump_bond_pool_token_account: u8,
+}
+
+impl BondPoolAccount {
+    pub const LEN: usize =
+          32   // generator
+        + 32   // bond_pool_redeemable_mint
+        + 32   // bond_pool_token_mint
+        + 32   // bond_pool_redeemable_token_account
+        + 32   // bond_pool_token_account
+        + 8   // bump_bond_pool_account
+        + 8;   // bump_bond_pool_token_account
+
 }
 
 /**
@@ -225,8 +273,8 @@ pub struct BondPoolAccount {
 pub enum ErrorCode {
     #[msg("Redeemables to be paid out are somehow zero!")]
     LowBondRedeemableAmount,
-    #[msg("SOL to be paid into the bond should not be zero")]
-    LowBondSolAmount,
+    #[msg("Token to be paid into the bond should not be zero")]
+    LowBondTokAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
     #[msg("Need to send more than 0 SOL!")]

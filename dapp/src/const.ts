@@ -1,7 +1,17 @@
 
 import {PublicKey} from "@solana/web3.js";
+import {Token} from "@solana/spl-token";
 
 // TODO: Need to have a switch between devnet and mainnet
+
+export interface TokenInfo {
+    readonly chainId: number;
+    readonly address: string;
+    readonly name: string;
+    readonly decimals: number;
+    readonly symbol: string;
+    readonly logoURI?: string;
+}
 
 export const PROGRAM_ID_SOLBOND: PublicKey = new PublicKey(
     'GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g'
@@ -16,22 +26,40 @@ export const SERUM_TOKEN_LIST_URL = "https://github.com/project-serum/spl-token-
 
 export const TOKEN_LIST_MAINNET = [
     {
-        tokenSymbol: 'USDC',
-        mintAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-        tokenName: 'USD Coin',
-        icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+        chainId: 101,
+        address: "So11111111111111111111111111111111111111112",
+        name: "Wrapped SOL",
+        decimals: 9,
+        symbol: "SOL",
+        logoURI: "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png",
     },
+    {
+        chainId: 102,
+        address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        name: "USD Coin",
+        decimals: 9,
+        symbol: "USDC",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
+    }
 ];
 
-export const TOKEN_LIST_DEVNET = [
+export const TOKEN_LIST_DEVNET: TokenInfo[] = [
     {
-        tokenSymbol: 'USDC',
-        mintAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-        tokenName: 'USD Coin',
-        icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+        chainId: 101,
+        address: "So11111111111111111111111111111111111111112",
+        name: "Wrapped SOL",
+        decimals: 9,
+        symbol: "SOL",
+        logoURI: "https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png",
     },
+    {
+        chainId: 102,
+        address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        name: "USD Coin",
+        decimals: 9,
+        symbol: "USDC",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
+    }
 ]
 
 /**

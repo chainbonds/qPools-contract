@@ -7,6 +7,7 @@ import {BN, web3, Wallet as AnchorWallet} from "@project-serum/anchor";
 import {Wallet} from "../splpasta";
 import {useState} from "react";
 import {solbondProgram} from "../programs/solbond";
+import {getTokenList} from "../const";
 
 export default function StakeForm(props: any) {
 
@@ -68,6 +69,8 @@ export default function StakeForm(props: any) {
             <div className="md:grid md:grid-cols-2 md:gap-6">
                 <div className="mt-5 md:mt-0 md:col-span-2">
 
+                    {/*<Swap provider={provider} tokenList={getTokenList()} />*/}
+
                     <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
                         <div className="shadow overflow-hidden sm:rounded-md">
                             <div className="px-4 py-5 bg-pink-600 bg-gray sm:p-6">
@@ -80,8 +83,10 @@ export default function StakeForm(props: any) {
 
                                     <div className="col-span-6 sm:col-span-6">
 
-                                        <label htmlFor="stake_amount" className="block text-xl font-medium text-white">
-                                            Stake Amount
+                                        <label htmlFor="stake_amount" className="
+                                            text-left text-sm font-medium text-gray-100 mx-autoblock text-xl font-medium text-white mx-auto pl-0 ml-0
+                                        ">
+                                            Stake Amount in SOL
                                         </label>
                                         <input
                                             type="number"

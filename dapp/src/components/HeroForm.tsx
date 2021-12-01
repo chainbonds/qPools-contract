@@ -1,5 +1,6 @@
 import {useState} from "react";
 import StakeForm from "./StakeForm";
+import {Typography} from "@material-ui/core";
 
 enum HeroFormState {
     Stake,
@@ -65,6 +66,13 @@ export default function HeroForm(props: any) {
 
     return (
         <>
+
+            Please select your wallet to connect
+            You have 0 Chain-Bond Tokens, worth currently worth 0.0 SOL.
+            {/* Perhaps calculat initially paid-in amount, also to calculate profits (?) */}
+
+            <br />
+
             <div className={"min-h-full -mb-2"}>
                 { stakingFormNavbar() }
             </div>

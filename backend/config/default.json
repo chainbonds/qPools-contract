@@ -1,5 +1,0 @@
-{
-  "mongoURI": "mongodb+srv://chainbonds:hXs6CpkgQEGoAjfzPk@cluster0.zp55c.mongodb.net/bonds?retryWrites=true&w=majority",
-  "jwtSecret": "jwtSecretToken",
-  "jwtExpiration": 360000
-}

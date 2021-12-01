@@ -4,7 +4,7 @@ import {clusterApiUrl, Connection} from "@solana/web3.js";
 import {useWallet} from "@solana/wallet-adapter-react";
 
 //@ts-ignore
-import _idl from './../solbond-idl.json';
+import _idl from './../idl/solbond.json';
 import {Provider} from "@project-serum/anchor";
 const idl: any = _idl;
 

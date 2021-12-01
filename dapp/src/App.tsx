@@ -2,18 +2,18 @@
  * Incredibly good tutorial to copy and paste lol
  * https://blog.prototypr.io/design-a-landing-page-using-tailwind-css-3a1a68166c47
  */
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import './App.css';
 import {SocialIcon} from 'react-social-icons';
-import {Connection, PublicKey, SystemProgram, clusterApiUrl, Keypair} from '@solana/web3.js';
-import {Program, Provider, web3} from '@project-serum/anchor'
+import {clusterApiUrl, Keypair} from '@solana/web3.js';
+import {web3} from '@project-serum/anchor'
 //@ts-ignore
 import _kp from './keypair.json';
-import VariableStakeForm from "./components/VariableStakeForm";
+import StakeForm from "./components/StakeForm";
 import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
-import {useWallet, WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
-import ListPools from "./components/ListPools";
+import {WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
+import HeroForm from "./components/HeroForm";
 
 const kp: any = _kp;
 
@@ -25,6 +25,7 @@ console.log("Imported keypair is: ", baseAccount.publicKey.toBase58());
 const network = clusterApiUrl("devnet");
 const wallets = [getPhantomWallet()];
 
+// Define which items can be displayed lol
 function App() {
 
     return (
@@ -100,45 +101,69 @@ function App() {
                     </div>
                 </header>
 
-                <section className="text-left w-full md:w-7/12 xl:w-6/12">
-                    <span className="font-bold uppercase tracking-widest">Solana</span>
+                <section className="text-left w-full h-full md:w-7/12 xl:w-6/12">
+                    {/*<span className="font-bold uppercase tracking-widest">ChainBonds</span>*/}
                     <h1 className="text-3xl lg:text-7xl font-bold text-pink-500">
-                        Bonds On
+                        High Yield
                         <br/>
-                        Solana
+                        Low Risk
                     </h1>
-                    <p className="font-bold mb-1 text-xl">
-                        Predictable and sustainable income streams while making sure you dimaond-hand your investment.
+                    <br />
+                    <p className="font-bold mb-1 text-xl leading-10">
+                        {/*Predictable and sustainable income streams while making sure you dimaond-hand your investment.*/}
+                        {/*or USDC*/}
+                        Stake your Solana and generate high passive yields.
+                        <br />
+                        Automatically minimize risk exposure to stable-coins.
+                        <br />
+                        Chainbonds brings safety to the highly volatile DeFi space.
                     </p>
-                    <p>
-                        SolBond is the first and largest provider of Bonds on Solana.
-                    </p>
+                    {/*<p>*/}
+                    {/*    Our algorithms are optimized to minimize risk exposure to stable-coins.*/}
+                    {/*    so you can lean back, and make money even during your sleep.*/}
+                    {/*    /!*SolBond is the first and largest provider of Bonds on Solana.*!/*/}
+                    {/*</p>*/}
                 </section>
 
                 <div className={"m-auto w-4/12"}>
 
+                    {/*<div className={"text-left"}>*/}
+                    {/*    /!* TODO: We gotta have a section which covers some basic statics (how much is staked, etc.)*!/*/}
+                    {/*    <p className="align-bottom mb-0 text-pink-500 mb-1 text-2xl leading-10 font-bold">*/}
+                    {/*        /!*Predictable and sustainable income streams while making sure you dimaond-hand your investment.*!/*/}
+                    {/*        /!*or USDC*!/*/}
+                    {/*        Last week's APR: 6.5%*/}
+                    {/*    </p>*/}
+                    {/*    <p className="align-bottom mb-0 text-pink-500 mb-1 text-2xl leading-10 font-bold">*/}
+                    {/*        /!*Predictable and sustainable income streams while making sure you dimaond-hand your investment.*!/*/}
+                    {/*        /!*or USDC*!/*/}
+                    {/*        TVL: 13,000.00 USDC*/}
+                    {/*    </p>*/}
+                    {/*</div>*/}
+
                     <div className="mt-10 sm:mt-0">
-                        <VariableStakeForm />
+                        <br />
+                        <HeroForm />
                     </div>
 
-                    {/*<VariableStakeForm*/}
-                    {/*    // initializeRpcCall={initializeRpcCall}*/}
-                    {/*/>*/}
                 </div>
 
-                {/* Replace this by Twitter, Discord, Telegram */}
-                <footer className="absolute right-0 bottom-0 p-3 lg:p-10">
+            </div>
+
+
+            {/* Replace this by Twitter, Discord, Telegram */}
+            <footer>
+                {/*className="absolute right-0 bottom-0 p-3 lg:p-10"*/}
+                {/*<div className="absolute px-auto mx-auto bottom-0">*/}
+                {/*    Hello*/}
+                {/*</div>*/}
+                <div className="absolute right-0 bottom-0 p-3 lg:p-10">
                     {/*<p>*/}
                     <SocialIcon url={"https://discord.gg/ThFgTPs6t3"} className={"mx-5"}/>
                     <SocialIcon url={"https://twitter.com/chainbonds"} className={"mx-5"} />
                     {/*</p>*/}
-                </footer>
-
-            </div>
-
-            <div id={"idPoolList"} className={"min-h-full px-6 lg:px-32 bg-purple-900"}>
-                <ListPools />
-            </div>
+                </div>
+            </footer>
 
             {/*<div className={"flex mx-auto items-center px-6 lg:px-32 bg-purple-900 text-white"}>*/}
             {/*</div>*/}

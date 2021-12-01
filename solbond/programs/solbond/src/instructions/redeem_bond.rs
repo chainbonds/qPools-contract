@@ -48,7 +48,6 @@ pub fn redeem_bond_logic(
     /*
     * Step 1: Calculate Market Rate
     *    How many SOL, per redeemable to distribute
-    *    If the reserve is empty as of now, fixate 1 Token to be equal to 1 SOL
     */
     let solana_to_be_distributed: u64 = calculate_solana_to_be_distributed(
         total_solana_supply,

@@ -2,19 +2,10 @@ import * as anchor from '@project-serum/anchor';
 import {BN, Program, web3} from '@project-serum/anchor';
 import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
-import {createMint, getBlockchainEpoch, getPayer} from "./utils";
-import {Keypair, PublicKey} from "@solana/web3.js";
-import {expect} from "chai";
-import {endianness} from "os";
+import {createMint, getPayer} from "./utils";
+import {PublicKey} from "@solana/web3.js";
 
-const BOND_LOCKUP_DURACTION_IN_SECONDS = 3;
-const INITIALIZER_AMOUNT = 5 * web3.LAMPORTS_PER_SOL;
-const REDEEM_AMOUNT = 2 * web3.LAMPORTS_PER_SOL;
-const RENT = new BN("2784000");
-
-function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
-}
+const AMOUNT = 10_000_000_000;
 
 describe('solbond', () => {
 
@@ -25,231 +16,360 @@ describe('solbond', () => {
     const program = anchor.workspace.Solbond as Program<Solbond>;
     const payer = getPayer();
 
+    // Do some airdrop before we start the tests ...
     it('Initialize the state-of-the-world', async () => {
         // Let's see if we even need to add anything into this.
         // Otherwise good to keep this as a sanity-check
+        await provider.connection.requestAirdrop(payer.publicKey, 10_000_000_000);
     });
 
-    // These are all variables the client will have to create to initialize the bond logic.
-    // Practically, the client goes into a contract with himself, and locking it up in the time-domain
-    let bondSigner: PublicKey | null = null;
-    let redeemableMint: Token | null = null;
-    let bondAccount: Keypair | null = null;
-    // TODO: I think this should be a PDA instead (?) Otherwise people can just steal this I guess (?). Maybe not needed to look into right now
-    let bondSolanaAccount: Keypair | null = null;
-    let initializerSolanaAccount: PublicKey | null = null;
-    let initializerTokenAccount: PublicKey | null = null;
-    let bondTokenAccount: PublicKey | null = null;
+    let bondPoolRedeemableMint: Token | null = null;
+    let bondPoolRedeemableTokenAccount: PublicKey | null = null;
+    let bondPoolAccount: PublicKey | null = null;
+    let bumpBondPoolAccount: number | null = null;
+    let bondPoolSolanaAccount: PublicKey | null = null;
+    let bumpBondPoolSolanaAccount: number | null = null;
 
-    let initializerAmount: BN | null = null;
-    let sendAmount: BN | null = null;
+    it('runs the function to invest into a single pool', async () => {
+        console.log("testing of the saber pool ");
 
-    let bondTimeFrame: BN | null = null;
 
-    it('Buying Bonds!', async () => {
 
-        // Request 1000 solana to be airdropped
-        let airdropSignature = await provider.connection.requestAirdrop(
-            payer.publicKey,
-            web3.LAMPORTS_PER_SOL * 1000
-        );
-        await provider.connection.confirmTransaction(airdropSignature);
 
-        console.log("Getting bond signer");
-        const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer()],
+    });
+
+    it('run function: initializeBondPool', async () => {
+        console.log("Running initializeBondPool");
+
+        // Generate a PDA
+        [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
+            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
             program.programId
         );
-        bondSigner = _poolSigner;
+        [bondPoolSolanaAccount, bumpBondPoolSolanaAccount] = await PublicKey.findProgramAddress(
+            [bondPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolSolanaAccount"))],
+            program.programId
+        );
 
-        // This is the bond account which will have control over the entire logic.
-        // This is ultimately the 'program' account
-        console.log("Generating bond account");
-        bondAccount = Keypair.generate();
+        console.log("The two PDAs are: ");
+        console.log(bondPoolAccount.toString());
+        console.log(bondPoolSolanaAccount.toString());
 
-        // All these will be controlled fully by the client
-        console.log("Creating redeemable Mint");
-        console.log("Provider is: ", provider);
-        console.log("Payer is: ", payer);
-        console.log("Bond Signer is: ", bondSigner);
+        // Create a Mint that is owned by the bondPoolAccount
+        bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
 
-        redeemableMint = await createMint(provider, payer, bondSigner, 9);
-        console.log("Done creating redeemable Mint");
-        // We need to create an associated token account for the guy who has instantiated the redeemableMint
+        // Create the corresponding accounts
+        // TODO Should this be owned by `bondPoolAccount` or `bondPoolSolanaAccount`
+        bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
 
-        initializerSolanaAccount = payer.publicKey;
-        console.log("Getting initializer token account");
-
-        initializerTokenAccount = await redeemableMint!.createAccount(initializerSolanaAccount);
-        bondTokenAccount = await redeemableMint!.createAccount(bondAccount.publicKey);
-        console.log("Generating bond solana account");
-        bondSolanaAccount = Keypair.generate();
-
-        // Get latest Blockchain Epoch. Lock up the bond accordingly
-        console.log("Getting Blockchain Epoch");
-        const time = await getBlockchainEpoch(provider);
-        console.log("Getting BN Sum");
-        const nowBn = new BN(time);
-        // bondTimeFrame = nowBn.add(new BN(BOND_LOCKUP_DURACTION_IN_SECONDS));
-        initializerAmount = new BN(INITIALIZER_AMOUNT);
-        console.log("Bump before BN: ", _bump);
-        const bump = new BN(_bump);
-        sendAmount = initializerAmount;
-        bondTimeFrame = new BN(BOND_LOCKUP_DURACTION_IN_SECONDS);
-        // new BN(_bump, );
-        // const bump = _bump;
-        console.log("Bump after BN: ", bump.toString());
-
-        // Save how much SOL the payer had first
-        const initialPayerAmount: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
-        // Super hacky, makes no sense why we first need to convert this to a string
-        const initialBondSignerAmount: BN = new BN(String(await provider.connection.getBalance(bondSigner)));
-        const initialBondAmount: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
-        const delta: BN = initializerAmount;
-
-        const addressContext: any = {
-            bondAccount: bondAccount.publicKey,
-            bondAuthority: bondSigner,
-            initializer: payer.publicKey,
-            initializerTokenAccount: initializerTokenAccount,
-            bondTokenAccount: bondTokenAccount,
-            bondSolanaAccount: bondSolanaAccount.publicKey,
-            redeemableMint: redeemableMint.publicKey,
-            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            clock: web3.SYSVAR_CLOCK_PUBKEY,
-            systemProgram: web3.SystemProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-        };
-
-        console.log("\n");
-        console.log("Bond Account: ", bondAccount.publicKey.toString())
-        console.log("bondAuthority: ", bondSigner.toString());
-        console.log("initializer: ", payer.publicKey.toString());
-        console.log("initializerTokenAccount: ", initializerTokenAccount.toString());
-        console.log("redeemableMint: ", redeemableMint.publicKey.toString());
-        console.log("\n");
-
-        // console.log("Getting RPC Call", addressContext);
-        console.log("Arguments are: ", bump.toString(), bondTimeFrame.toString(), sendAmount.toString())
-        const initializeTx = await program.rpc.initialize(
-            bump,
-            bondTimeFrame,
-            sendAmount,
+        /**
+         * Run the RPC Call here
+         */
+        const initializeTx = await program.rpc.initializeBondPool(
+            bumpBondPoolAccount,
+            bumpBondPoolSolanaAccount,
             {
-                accounts: addressContext,
-                signers: [bondAccount]
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
+
+                    initializer: payer.publicKey,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
             }
         );
         await provider.connection.confirmTransaction(initializeTx);
-        console.log("Your transaction signature", initializeTx);
-
-        const finalPayerAmount: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
-        const finalBondSignerAmount: BN = new BN(String(await provider.connection.getBalance(bondSigner)));
-        const finalBondAmount: BN = new BN(String(await provider.connection.getBalance(bondSolanaAccount.publicKey)));
-
-        console.log("\n");
-        console.log("Delta is: ", delta.toString());
-        console.log("Lamports per sol are: ", web3.LAMPORTS_PER_SOL);
-        console.log("Initial Payer Amount is: ", initialPayerAmount.toString());
-        console.log("Initial Bond Authority Amount is: ", initialBondSignerAmount.toString());
-        console.log("Initial Bond Amount is: ", initialBondAmount.toString());
-
-        console.log("Final Payer Amount is: ", finalPayerAmount.toString());
-        console.log("Final Bond Authority Amount is: ", finalBondSignerAmount.toString());
-        console.log("Final Bond Amount is: ", finalBondAmount.toString());
-        console.log("\n");
-        // print these two items (initialPayerAmount, finalPayerAmount)
-
-        // expect(initialPayerAmount.eq(finalPayerAmount.add(delta.add(RENT)))).to.be.true;
-        // expect(initialBondAmount.add(delta.add(RENT)).eq(finalBondAmount)).to.be.true;
-        // expect(finalBondAmount.eq(delta.add(RENT))).to.be.true;
-
-        expect(finalBondAmount.eq(delta)).to.be.true;
-        expect(sendAmount.eq(finalBondAmount)).to.be.true;
-
-        console.log("I feel like jordan.");
-
-
-        // Check if the redeemables have been successfully minted
-        const redeemableAccountInfo = await redeemableMint.getAccountInfo(initializerTokenAccount);
-        console.log("RedeemableAccountInfo ", redeemableAccountInfo.amount.toString());
-        expect(redeemableAccountInfo.amount.eq(delta)).to.be.true;
+        console.log("initializeTx signature", initializeTx);
 
     });
 
-    it('Redeeming Bonds!', async () => {
+    let bondInstanceAccount: PublicKey | null = null;
+    let bumpBondInstanceAccount: number | null = null;
+    let purchaserRedeemableTokenAccount: PublicKey | null = null;
+    let bondInstanceRedeemableTokenAccount: PublicKey | null = null;
+    let bondInstanceSolanaAccount: PublicKey | null = null;
+    let bumpBondInstanceSolanaAccount: number | null = null;
 
-        console.log("Getting bond signer");
-        await delay(BOND_LOCKUP_DURACTION_IN_SECONDS * 1000);
-        const [_poolSigner, _bump] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer()],
+    // Get current UTC, or so
+
+    // let startTime: BN = new BN(startTimeJS);
+    // let endTime: BN = new BN(endTimeJS);
+    let purchaser: PublicKey | null = null;
+
+    it('run function: initializeBondInstance', async () => {
+
+        // TODO: We should probably assume two different users for purchaser, and user (and also go with the case, that it is the same person ...)
+        console.log("Purchasing a bond...");
+
+        // Generate a random, new PDA
+        [bondInstanceAccount, bumpBondInstanceAccount] = await PublicKey.findProgramAddress(
+            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceAccount"))],
             program.programId
         );
-        bondSigner = _poolSigner;
+        console.log("Third PDA is: ", bondInstanceAccount.toString());
 
-        const redeemableAmount = new BN(REDEEM_AMOUNT);
+        // Create a token account for the bond instance
+        bondInstanceRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondInstanceAccount);
 
-        // Send the transaction to redeem the bond
-        const addressContext: any = {
-            bondAccount: bondAccount.publicKey,
-            bondAuthority: bondSigner,
-            bondSolanaAccount: bondSolanaAccount.publicKey,
-            initializer: payer.publicKey,
-            initializerTokenAccount: initializerTokenAccount,
-            bondTokenAccount: bondTokenAccount,
-            redeemableMint: redeemableMint.publicKey,
-            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            clock: web3.SYSVAR_CLOCK_PUBKEY,
-            systemProgram: web3.SystemProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-        };
-
-        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
-        const initialPayerRedeemables = new BN((await redeemableMint.getAccountInfo(initializerTokenAccount)).amount);
-        const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondSolanaAccount.publicKey)));
-
-        console.log("\n");
-        console.log("Bond Account: ", bondAccount.publicKey.toString());
-        console.log("bondAuthority: ", bondSigner.toString());
-        console.log("initializer: ", payer.publicKey.toString());
-        console.log("initializerTokenAccount: ", initializerTokenAccount.toString());
-        console.log("redeemableMint: ", redeemableMint.publicKey.toString());
-        console.log("\n");
-
-        // console.log("Getting RPC Call", addressContext);
-        console.log("Arguments are: ", _bump.toString(), redeemableAmount.toString())
-        const redeemTx = await program.rpc.redeemBond(
-            _bump,
-            redeemableAmount,
-            {
-                accounts: addressContext,
-                signers: [bondAccount, bondSolanaAccount]
-            }
+        // Create a PDA which stores all the (excess) solana for this account
+        [bondInstanceSolanaAccount, bumpBondInstanceSolanaAccount] = await PublicKey.findProgramAddress(
+            [bondInstanceAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondInstanceSolanaAccount"))],
+            program.programId
         );
 
-        await provider.connection.confirmTransaction(redeemTx);
-        console.log("Your transaction signature", redeemTx);
+        purchaser = payer.publicKey;
+        purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
 
-        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(bondAccount.publicKey)));
-        const finalPayerRedeemables = new BN((await redeemableMint.getAccountInfo(initializerTokenAccount)).amount);
-        const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondSolanaAccount.publicKey)));
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
 
-        console.log("\n");
-        console.log("initialPayerSol ", initialPayerSol.toString());
-        console.log("initialPayerRedeemables ", initialPayerRedeemables.toString());
-        console.log("initialBondSol ", initialBondSol.toString());
+            // Purchaser
+            purchaser: purchaser.toString(),
+            purchaserTokenAccount: purchaserRedeemableTokenAccount.toString(),
 
-        console.log("finalPayerSol: ", finalPayerSol.toString());
-        console.log("finalPayerRedeemables: ", finalPayerRedeemables.toString());
-        console.log("finalBondSol: ", finalBondSol.toString());
+            // Bond Instance
+            bondInstanceAccount: bondInstanceAccount.toString(),
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+            bondInstanceSolanaAccount: bondInstanceSolanaAccount.toString(),
+        })
 
-        console.log("\n");
+        console.log("Bumps are: ");
+        console.log(new BN(bumpBondPoolSolanaAccount).toString());
+        console.log(new BN(bumpBondInstanceAccount).toString());
+        console.log(new BN(bumpBondInstanceSolanaAccount).toString());
 
-        expect(initialPayerRedeemables.eq(finalPayerRedeemables.add(redeemableAmount)));
-        expect(initialBondSol.eq(finalBondSol.add(redeemableAmount)));
-        expect(finalPayerSol.eq(initialPayerSol.add(redeemableAmount)));
+        const initializeTx = await program.rpc.initializeBondInstance(
+            bumpBondInstanceAccount,
+            bumpBondInstanceSolanaAccount,
+            {
+                accounts: {
+                    // Pool
+                    bondPoolAccount: bondPoolAccount,
+
+                    // Purchaser
+                    purchaser: purchaser,
+                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
+
+                    // Bond Instance
+                    bondInstanceAccount: bondInstanceAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    bondInstanceSolanaAccount: bondInstanceSolanaAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
 
     });
 
+    it('run function: purchaseBond', async () => {
+        console.log("Purchasin bond...");
+
+        // Solana Account Before
+        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+
+        // Mint Before
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Running accounts...");
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
+            bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
+            bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
+
+            purchaser: purchaser.toString(),
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+        });
+
+        const initializeTx = await program.rpc.purchaseBondInstance(
+            new BN(AMOUNT),
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+
+                    purchaser: purchaser,
+                    bondInstanceAccount: bondInstanceAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
+
+        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Final Payer SOL", finalPayerSol.toString());
+        console.log("Final Bond SOL (reserve)", finalBondSol.toString());
+        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+
+    });
+
+    // TODO: Do two tests where the interest is paid out
+
+    it('run function: redeemBondInstance (before interest was paid out)', async () => {
+        console.log("Redeeming bond...");
+
+        // Do a small airdrop to the solana account ...
+        // Assume it compounds by 2 in the meantime
+        console.log("Airdropping..",  2 * AMOUNT);
+        await provider.connection.requestAirdrop(bondPoolSolanaAccount, 2 * AMOUNT);
+
+        // Solana Account Before
+        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Running accounts...");
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
+            bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
+            bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
+
+            purchaser: purchaser.toString(),
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+        });
+
+        console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
+
+        console.log("Asking for this much SOL");
+        const initializeTx = await program.rpc.redeemBondInstance(
+            // Need to assign less than there is ...
+            // initialBondRedeemableTok.div(new BN(2)),
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondInstanceAccount: bondInstanceAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    purchaser: payer.publicKey,
+                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
+
+        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+
+        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Final Payer SOL", finalPayerSol.toString());
+        console.log("Final Bond SOL (reserve)", finalBondSol.toString());
+        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+
+    });
+
+    it('run function: redeemBondInstance (after interest was paid out)', async () => {
+        console.log("Redeeming bond...");
+
+        // Solana Account Before
+        const initialPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const initialBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+        const initialBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Running accounts...");
+        console.log({
+            bondPoolAccount: bondPoolAccount.toString(),
+            bondPoolSolanaAccount: bondPoolSolanaAccount.toString(),
+            bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey.toString(),
+
+            purchaser: purchaser.toString(),
+            bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount.toString(),
+        });
+
+        console.log("Taking out all the redeemables that were paid in so far...", initialBondRedeemableTok.toString());
+
+        console.log("Asking for this much SOL");
+        const initializeTx = await program.rpc.redeemBondInstance(
+            // Need to assign less than there is ...
+            // initialBondRedeemableTok.div(new BN(2)),
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolSolanaAccount: bondPoolSolanaAccount,
+                    bondInstanceAccount: bondInstanceAccount,
+                    bondInstanceTokenAccount: bondInstanceRedeemableTokenAccount,
+                    purchaser: payer.publicKey,
+                    purchaserTokenAccount: purchaserRedeemableTokenAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
+
+        const finalPayerSol: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        const finalBondSol: BN = new BN(String(await provider.connection.getBalance(bondPoolSolanaAccount)));
+
+        const finalBondRedeemableTok = new BN((await bondPoolRedeemableMint.getAccountInfo(bondInstanceRedeemableTokenAccount)).amount);
+
+        console.log("Initial and final are: ");
+        console.log("Initial Payer SOL", initialPayerSol.toString());
+        console.log("Initial Bond SOL (reserve)", initialBondSol.toString());
+        console.log("Initial Bond Redeemable", initialBondRedeemableTok.toString());
+
+        console.log("Final Payer SOL", finalPayerSol.toString());
+        console.log("Final Bond SOL (reserve)", finalBondSol.toString());
+        console.log("Final Bond Redeemable", finalBondRedeemableTok.toString());
+
+    });
 
 });

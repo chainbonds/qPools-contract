@@ -67,9 +67,8 @@ describe('solbond', () => {
         */
     });
 
-
-
     const send_toke_amount = new anchor.BN(5000000);
+
     it('run function: initializeBondPool', async () => {
         console.log("Running initializeBondPool");
 

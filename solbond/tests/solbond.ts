@@ -30,6 +30,14 @@ describe('solbond', () => {
     let bondPoolSolanaAccount: PublicKey | null = null;
     let bumpBondPoolSolanaAccount: number | null = null;
 
+    it('runs the function to invest into a single pool', async () => {
+        console.log("testing of the saber pool ");
+
+
+
+
+    });
+
     it('run function: initializeBondPool', async () => {
         console.log("Running initializeBondPool");
 

@@ -39,9 +39,40 @@ declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
     Include epochs (potentially), to decide how often something can be paid out as well.
 */
 
+#[derive(Accounts)]
+#[instruction(
+_bump_bond_pool_account: u8,
+_bump_bond_pool_solana_account: u8
+)]
+pub struct BalancePools<'info> {
+
+    // The standards accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
 #[program]
 pub mod solbond {
     use super::*;
+
+    pub fn example_reserve_solana_to_liquidity_pools(
+        ctx: Context<BalancePools>,
+        solana_in_lamports: u8,
+    ) -> ProgramResult {
+
+        /*
+            (Step 1: Transfer from user to reserve)
+        */
+
+        /*
+            (Step 2: Transfer from us to user)
+        */
+
+        Ok(())
+
+    }
 
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,

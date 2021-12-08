@@ -5,7 +5,7 @@ mod state;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{Mint, TokenAccount, Token};
+use anchor_spl::token::{Token};
 
 use instructions::*;
 use state::*;

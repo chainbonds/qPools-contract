@@ -1,6 +1,6 @@
 [provider]
 cluster = "localnet"
-wallet = "/Users/davidal/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
 solbond = "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A"

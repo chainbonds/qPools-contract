@@ -91,7 +91,7 @@ pub fn handler(
     // if amount_in_redeemables.is_infinite() {
     //     return Err(Error::MarketRateOverflow.into());
     // }
-    /// this needs to become a normal token transfer now.
+    // this needs to become a normal token transfer now.
 
     // Transfer user's token to pool token account.
     let cpi_accounts = Transfer {
@@ -109,7 +109,7 @@ pub fn handler(
     *      Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
     *      This is ok for the MVP, will definitely need to do auditing and re-writing this probably
     */
-    /**
+    /*
       We just mint to the user now lol
      */
     let cpi_accounts = MintTo {

@@ -4,14 +4,14 @@ mod utils;
 mod state;
 
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-use state::*;
 
-
-declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
+// declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
+declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
+// static KEY: &str = env!("PROGRAM_ID");
+// declare_id!(KEY);
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 

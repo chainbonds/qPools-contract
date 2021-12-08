@@ -1,17 +1,15 @@
 //! Use docstrings as specified here: https://doc.rust-lang.org/rustdoc/how-to-write-documentation.html
 mod instructions;
 mod utils;
+mod state;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, TokenAccount, Token};
 
-use instructions::redeem_bond::redeem_bond_logic;
-use instructions::purchase_bond::purchase_bond_logic;
-use instructions::initialize_bond_pool::initialize_bond_pool_logic;
+use instructions::*;
+use state::*;
 
-use utils::constants::DECIMALS;
-// const DECIMALS: u8 = 1;
 
 declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
 
@@ -94,22 +92,22 @@ pub struct BalancePools<'info> {
 pub mod solbond {
     use super::*;
 
-    pub fn example_reserve_solana_to_liquidity_pools(
-        ctx: Context<BalancePools>,
-        solana_in_lamports: u8,
-    ) -> ProgramResult {
-
-        /*
-            (Step 1: Transfer from user to reserve)
-        */
-
-        /*
-            (Step 2: Transfer from us to user)
-        */
-
-        Ok(())
-
-    }
+    // pub fn example_reserve_solana_to_liquidity_pools(
+    //     ctx: Context<BalancePools>,
+    //     solana_in_lamports: u8,
+    // ) -> ProgramResult {
+    //
+    //     /*
+    //         (Step 1: Transfer from user to reserve)
+    //     */
+    //
+    //     /*
+    //         (Step 2: Transfer from us to user)
+    //     */
+    //
+    //     Ok(())
+    //
+    // }
 
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
@@ -117,7 +115,7 @@ pub mod solbond {
         _bump_bond_pool_token_account: u8,
     ) -> ProgramResult {
 
-        initialize_bond_pool_logic(
+        instructions::initialize_bond_pool::handler(
             ctx,
             _bump_bond_pool_account,
             _bump_bond_pool_token_account,
@@ -134,7 +132,7 @@ pub mod solbond {
         amount_raw: u64,
     ) -> ProgramResult {
 
-        purchase_bond_logic(ctx, amount_raw)
+        instructions::purchase_bond::handler(ctx, amount_raw)
     }
 
     /**
@@ -150,39 +148,11 @@ pub mod solbond {
         redeemable_amount_raw: u64
     ) -> ProgramResult {
 
-        redeem_bond_logic(ctx, redeemable_amount_raw)
+        instructions::redeem_bond::handler(ctx, redeemable_amount_raw)
     }
 
 }
 
-/**
-* State
-*/
-#[account]
-pub struct BondPoolAccount {
-    pub generator: Pubkey,
-
-    pub bond_pool_redeemable_mint: Pubkey,
-    pub bond_pool_token_mint: Pubkey,
-    pub bond_pool_redeemable_token_account: Pubkey,
-    pub bond_pool_token_account: Pubkey,
-
-    // Include also any bumps, etc.
-    pub bump_bond_pool_account: u8,
-    pub bump_bond_pool_token_account: u8,
-}
-
-impl BondPoolAccount {
-    pub const LEN: usize =
-          32   // generator
-        + 32   // bond_pool_redeemable_mint
-        + 32   // bond_pool_token_mint
-        + 32   // bond_pool_redeemable_token_account
-        + 32   // bond_pool_token_account
-        + 8   // bump_bond_pool_account
-        + 8;   // bump_bond_pool_token_account
-
-}
 
 /**
  * Error definitions

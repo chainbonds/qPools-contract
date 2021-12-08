@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use spl_token::{ui_amount_to_amount, amount_to_ui_amount};
-use super::constants::DECIMALS;
-use super::constants::CUT_PERCENTAGE;
+use crate::utils::constants::DECIMALS;
+use crate::utils::constants::CUT_PERCENTAGE;
 
 /**
 *

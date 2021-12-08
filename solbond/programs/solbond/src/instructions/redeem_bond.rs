@@ -1,16 +1,13 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Transfer};
+use anchor_lang::solana_program::program_option::COption;
+use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
-use crate::{
-    ErrorCode,
-    RedeemBond
-};
-
-use crate::utils::functional::{
-    calculate_token_to_be_distributed
-};
+use crate::ErrorCode;
+use crate::state::BondPoolAccount;
+use crate::utils::functional::calculate_token_to_be_distributed;
 
 /*
+
     TODO 1:
         Move some of the profits in both cases to the generator / initiator of the bond_pool_account (owner)
 
@@ -29,32 +26,42 @@ use crate::utils::functional::{
  * There is no need to update the redeemables after this, because of this
  */
 
+// lol this is identical to BuyBond :P
 #[derive(Accounts)]
 #[instruction(
 reedemable_amount_in_lamports: u64,
 )]
-pub struct RedeemBondInstance<'info> {
+pub struct RedeemBond<'info> {
 
     // Any Bond Pool Accounts
     #[account(mut)]
-    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
     #[account(
     mut,
     constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub bond_pool_solana_account: AccountInfo<'info>,
 
-    // And Bond Instance Accounts
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
+    // not sure right now if this has to be mutable
+    // inspired by the ido_pool program
+    #[account(
+    mut
+    )]
+    pub bond_pool_token_mint: Account<'info, Mint>,
+
     #[account(mut)]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
+    pub bond_pool_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
     #[account(signer, mut)]
     pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+
+    #[account(mut, constraint = purchaser_redeemable_token_account.owner == purchaser.key())]
+    pub purchaser_redeemable_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    pub purchaser_token_account: Account<'info, TokenAccount>,
+    pub purchaser_token_account: Box<Account<'info, TokenAccount>>,
+
 
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
@@ -63,9 +70,9 @@ pub struct RedeemBondInstance<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle(
-    ctx: Context<RedeemBondInstance>,
-    reedemable_amount_in_lamports: u64
+pub fn handler(
+    ctx: Context<RedeemBond>,
+    redeemable_amount_raw: u64
 ) -> ProgramResult {
 
     if redeemable_amount_raw <= 0 {

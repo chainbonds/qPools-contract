@@ -39,6 +39,43 @@ declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
     Include epochs (potentially), to decide how often something can be paid out as well.
 */
 
+/**
+    The relevant RPC endpoints from the amm program are:
+    (in chronological order)
+
+    - create_position
+    - remove_position
+    - withdraw_protocol_fee
+        => what is the difference to the claim_fee?
+
+    The RPC endpoints that are optional
+    - swap
+        => We can also use the frontend to do swaps over serum, or similar
+
+
+    The RPC endpoints we are unsure about
+    - create_fee_tier
+    - create_position_list
+
+    The RPC endpoints that we _probably_ will not need
+    - transfer_position_ownership
+        => probably not needed in the first MVP, could be interesting later
+    - claim_fee
+        => I think this will be used not from this, but separately
+
+    The RPC endpoints that we will not use
+    - create_pool
+        => This is only called to create the pool, once the pool is created, no more is needed
+    - create_state
+        => I think this is only used when initializing the pool to define fees and admin,
+            once the pool is initialized, we don't need this anymore
+    - create_tick
+        => this will already be created before we can use the pool,
+            we have to use this before calling the pool
+
+
+*/
+
 #[derive(Accounts)]
 #[instruction(
 _bump_bond_pool_account: u8,
@@ -136,173 +173,6 @@ pub mod solbond {
         redeem_bond_instance_logic(ctx, redeemable_amount_in_lamports)
     }
 
-}
-
-/**
- * Contexts
- */
-
-#[derive(Accounts)]
-#[instruction(
-    _bump_bond_pool_account: u8,
-    _bump_bond_pool_solana_account: u8
-)]
-pub struct InitializeBondPool<'info> {
-
-    // The account which represents the bond pool account
-    #[account(
-        init,
-        payer = initializer,
-        space = 8 + 64 + 64 + 64 + 64,
-        seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
-    )]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
-    #[account(
-        seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_account
-    )]
-    pub bond_pool_solana_account: AccountInfo<'info>,
-    #[account(
-        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key()),
-        constraint = bond_pool_redeemable_mint.supply == 0
-    )]
-    pub bond_pool_redeemable_mint: Account<'info, Mint>,
-    #[account(mut, constraint = bond_pool_redeemable_token_account.owner == bond_pool_account.key())]
-    pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
-
-    // The account which generate the bond pool
-    #[account(signer)]
-    pub initializer: AccountInfo<'info>,
-
-    // The standards accounts
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
-#[instruction(
-    _bump_bond_instance_account: u8,
-    _bump_bond_instance_solana_account: u8,
-)]
-pub struct InitializeBondInstance<'info> {
-
-    #[account(mut)]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
-
-    // Assume this is the purchaser, who goes into a contract with himself
-    #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,
-    // #[account(mut)]
-    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    pub purchaser_token_account: Account<'info, TokenAccount>,
-
-    // Any bond-instance specific accounts
-    // Assume this is the bond instance account, which represents the bond which is "purchased"
-    #[account(
-        init,
-        payer = purchaser,
-        space = 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 64 + 8 + 8 + 8,
-        seeds = [purchaser.key.as_ref(), b"bondInstanceAccount"],
-        bump = {msg!("bump be {}", _bump_bond_instance_account); _bump_bond_instance_account}
-    )]
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    #[account(mut, constraint = bond_instance_token_account.owner == bond_instance_account.key())]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
-    #[account(
-    seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
-    )]
-    pub bond_instance_solana_account: AccountInfo<'info>,
-
-    // The standard accounts
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-
-}
-
-#[derive(Accounts)]
-#[instruction(
-    amount_in_lamports: u64,
-)]
-pub struct PurchaseBondInstance<'info> {
-
-    // All Bond Pool Accounts
-    #[account(mut)]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
-    // Checking for seeds here is probably overkill honestly... right?
-    // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_accounz
-    #[account(
-        mut,
-        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
-    )]
-    pub bond_pool_redeemable_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub bond_pool_solana_account: AccountInfo<'info>,
-
-    // All Purchaser Accounts
-    #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
-    // // #[account(mut)]
-    // #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    // pub purchaser_token_account: Account<'info, TokenAccount>,
-    //
-    // // Any bond-instance specific accounts
-    // // Assume this is the bond instance account, which represents the bond which is "purchased"
-    // TODO: Also include the seeds and bump!
-
-    // All bond instance accounts
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    // constraint = bond_instance_token_account.owner == bond_instance_account.key()
-    #[account(mut)]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
-
-    // #[account(
-    //     seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
-    // )]
-    // pub bond_instance_solana_account: AccountInfo<'info>,
-
-    // The standard accounts
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-}
-
-
-#[derive(Accounts)]
-#[instruction(
-    reedemable_amount_in_lamports: u64,
-)]
-pub struct RedeemBondInstance<'info> {
-
-    // Any Bond Pool Accounts
-    #[account(mut)]
-    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
-    #[account(
-        mut,
-        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
-    )]
-    pub bond_pool_redeemable_mint: Account<'info, Mint>,
-    #[account(mut)]
-    pub bond_pool_solana_account: AccountInfo<'info>,
-
-    // And Bond Instance Accounts
-    pub bond_instance_account: Account<'info, BondInstanceAccount>,
-    #[account(mut)]
-    pub bond_instance_token_account: Account<'info, TokenAccount>,
-
-    #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
-    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    pub purchaser_token_account: Account<'info, TokenAccount>,
-
-    // The standard accounts
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
 }
 
 /**

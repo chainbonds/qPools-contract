@@ -30,7 +30,41 @@ use crate::utils::functional::{
  * There is no need to update the redeemables after this, because of this
  */
 
-pub fn redeem_bond_instance_logic(
+#[derive(Accounts)]
+#[instruction(
+reedemable_amount_in_lamports: u64,
+)]
+pub struct RedeemBondInstance<'info> {
+
+    // Any Bond Pool Accounts
+    #[account(mut)]
+    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
+    #[account(
+    mut,
+    constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
+    )]
+    pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub bond_pool_solana_account: AccountInfo<'info>,
+
+    // And Bond Instance Accounts
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
+    #[account(mut)]
+    pub bond_instance_token_account: Account<'info, TokenAccount>,
+
+    #[account(signer, mut)]
+    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
+    pub purchaser_token_account: Account<'info, TokenAccount>,
+
+    // The standard accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
+pub fn handle(
     ctx: Context<RedeemBondInstance>,
     reedemable_amount_in_lamports: u64
 ) -> ProgramResult {

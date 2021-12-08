@@ -11,7 +11,55 @@ use crate::utils::functional::{
     calculate_redeemables_to_be_distributed
 };
 
-pub fn purchase_bond_instance_logic(
+#[derive(Accounts)]
+#[instruction(
+amount_in_lamports: u64,
+)]
+pub struct PurchaseBondInstance<'info> {
+
+    // All Bond Pool Accounts
+    #[account(mut)]
+    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    // Checking for seeds here is probably overkill honestly... right?
+    // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_accounz
+    #[account(
+    mut,
+    constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
+    )]
+    pub bond_pool_redeemable_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub bond_pool_solana_account: AccountInfo<'info>,
+
+    // All Purchaser Accounts
+    #[account(signer, mut)]
+    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
+    // // #[account(mut)]
+    // #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
+    // pub purchaser_token_account: Account<'info, TokenAccount>,
+    //
+    // // Any bond-instance specific accounts
+    // // Assume this is the bond instance account, which represents the bond which is "purchased"
+    // TODO: Also include the seeds and bump!
+
+    // All bond instance accounts
+    pub bond_instance_account: Account<'info, BondInstanceAccount>,
+    // constraint = bond_instance_token_account.owner == bond_instance_account.key()
+    #[account(mut)]
+    pub bond_instance_token_account: Account<'info, TokenAccount>,
+
+    // #[account(
+    //     seeds = [bond_instance_account.key().as_ref(), b"bondInstanceSolanaAccount"], bump = _bump_bond_instance_solana_account
+    // )]
+    // pub bond_instance_solana_account: AccountInfo<'info>,
+
+    // The standard accounts
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+}
+
+pub fn handle(
     ctx: Context<PurchaseBondInstance>,
     solana_amount_in_lamports: u64
 ) -> ProgramResult {

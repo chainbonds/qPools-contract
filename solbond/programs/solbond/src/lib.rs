@@ -6,14 +6,14 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, TokenAccount, Token};
 
-use instructions::redeem_bond::redeem_bond_instance_logic;
-use instructions::purchase_bond::purchase_bond_instance_logic;
+use instructions::redeem_bond::redeem_bond_logic;
+use instructions::purchase_bond::purchase_bond_logic;
 use instructions::initialize_bond_pool::initialize_bond_pool_logic;
-use instructions::initialize_bond_instance::initialize_bond_instance_logic;
 
+use utils::constants::DECIMALS;
 // const DECIMALS: u8 = 1;
 
-declare_id!("Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A");
+declare_id!("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
@@ -114,33 +114,13 @@ pub mod solbond {
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
         _bump_bond_pool_account: u8,
-        _bump_bond_pool_solana_account: u8,
+        _bump_bond_pool_token_account: u8,
     ) -> ProgramResult {
 
         initialize_bond_pool_logic(
             ctx,
             _bump_bond_pool_account,
-            _bump_bond_pool_solana_account,
-        )
-    }
-
-    /**
-    *  We need to make two separate functions,
-        one to create the bond,
-        and one to make the "pay-in, redeem-token" transaction
-        otherwise, the program just keeps growing, which is a problem
-
-    */
-    pub fn initialize_bond_instance(
-        ctx: Context<InitializeBondInstance>,
-        _bump_bond_instance_account: u8,
-        _bump_bond_instance_solana_account: u8,
-    ) -> ProgramResult {
-
-        initialize_bond_instance_logic(
-            ctx,
-            _bump_bond_instance_account,
-            _bump_bond_instance_solana_account
+            _bump_bond_pool_token_account,
         )
     }
 
@@ -149,12 +129,12 @@ pub mod solbond {
     * Pay in some SOL into the bond that way created with initialize_bond_context.
     * amount_in_lamports is how much solana to pay in, provided in lampots (i.e. 10e-9 of 1SOL)
     */
-    pub fn purchase_bond_instance(
-        ctx: Context<PurchaseBondInstance>,
-        amount_in_lamports: u64,
+    pub fn purchase_bond(
+        ctx: Context<PurchaseBond>,
+        amount_raw: u64,
     ) -> ProgramResult {
 
-        purchase_bond_instance_logic(ctx, amount_in_lamports)
+        purchase_bond_logic(ctx, amount_raw)
     }
 
     /**
@@ -165,12 +145,12 @@ pub mod solbond {
     *   If it is after the bond runs out,
     *     then you should pay out all the profits, and the initial pay-in amount (face-value / par-value) that was paid in
     */
-    pub fn redeem_bond_instance(
-        ctx: Context<RedeemBondInstance>,
-        redeemable_amount_in_lamports: u64
+    pub fn redeem_bond(
+        ctx: Context<RedeemBond>,
+        redeemable_amount_raw: u64
     ) -> ProgramResult {
 
-        redeem_bond_instance_logic(ctx, redeemable_amount_in_lamports)
+        redeem_bond_logic(ctx, redeemable_amount_raw)
     }
 
 }
@@ -183,34 +163,26 @@ pub struct BondPoolAccount {
     pub generator: Pubkey,
 
     pub bond_pool_redeemable_mint: Pubkey,
+    pub bond_pool_token_mint: Pubkey,
     pub bond_pool_redeemable_token_account: Pubkey,
-    pub bond_pool_solana_account: Pubkey,
+    pub bond_pool_token_account: Pubkey,
 
     // Include also any bumps, etc.
     pub bump_bond_pool_account: u8,
-    pub bump_bond_pool_solana_account: u8,
+    pub bump_bond_pool_token_account: u8,
 }
 
-#[account]
-pub struct BondInstanceAccount {
+impl BondPoolAccount {
+    pub const LEN: usize =
+          32   // generator
+        + 32   // bond_pool_redeemable_mint
+        + 32   // bond_pool_token_mint
+        + 32   // bond_pool_redeemable_token_account
+        + 32   // bond_pool_token_account
+        + 8   // bump_bond_pool_account
+        + 8;   // bump_bond_pool_token_account
 
-    // Accounts for the initializer
-    pub purchaser: Pubkey,
-    pub purchaser_token_account: Pubkey,
-
-    // Accounts for the "parenting" bond pool
-    pub bond_pool_account: Pubkey,
-
-    // Accounts for the bond instance
-    pub bond_instance_solana_account: Pubkey,
-    pub bond_instance_token_account: Pubkey,
-
-    // Include also any bumps, etc.
-    pub bump_bond_instance_account: u8,
-    pub bump_bond_pool_account: u8,
-    pub bump_bond_instance_solana_account: u8,
 }
-
 
 /**
  * Error definitions
@@ -219,10 +191,12 @@ pub struct BondInstanceAccount {
 pub enum ErrorCode {
     #[msg("Redeemables to be paid out are somehow zero!")]
     LowBondRedeemableAmount,
-    #[msg("SOL to be paid into the bond should not be zero")]
-    LowBondSolAmount,
+    #[msg("Token to be paid into the bond should not be zero")]
+    LowBondTokAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
+    #[msg("Need to send more than 0 SOL!")]
+    MinPurchaseAmount,
     #[msg("Provided times are not an interval (end-time before start-time!)")]
     TimeFrameIsNotAnInterval,
     #[msg("Provided starting time is not in the future. You should make it in such a way that it is slightly in the future, s.t. you have the ability to pay in some amounts.")]

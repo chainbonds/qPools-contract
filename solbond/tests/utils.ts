@@ -1,11 +1,27 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {PublicKey, Keypair} from "@solana/web3.js";
+const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
 
+
+
+export async function createMint2(provider) {
+    let authority = provider.wallet.publicKey;
+
+    const mint = await spl.Token.createMint(
+        provider.connection,
+        provider.wallet.payer,
+        authority,
+        null,
+        9,
+        TOKEN_PROGRAM_ID
+    );
+    return mint;
+}
 export async function createMint(
     provider: Provider, 
     payer: Keypair, 
@@ -42,6 +58,17 @@ export function getPayer(): Keypair {
         )
     );
     return _payer;
+}
+
+export async function createTokenAccount(provider, mint, owner) {
+    const token = new spl.Token(
+        provider.connection,
+        mint,
+        TOKEN_PROGRAM_ID,
+        provider.wallet.payer
+    );
+    let vault = await token.createAccount(owner);
+    return vault;
 }
 
 export async function waitForEpoch(epoch: BN, provider: Provider): Promise<void> {

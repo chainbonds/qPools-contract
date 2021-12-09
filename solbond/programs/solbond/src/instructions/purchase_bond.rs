@@ -18,8 +18,8 @@ pub struct PurchaseBond<'info> {
     // Checking for seeds here is probably overkill honestly... right?
     // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_accounz
     #[account(
-    mut,
-    constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
+        mut,
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
 

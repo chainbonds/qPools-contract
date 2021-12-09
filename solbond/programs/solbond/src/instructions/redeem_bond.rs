@@ -37,16 +37,14 @@ pub struct RedeemBond<'info> {
     #[account(mut)]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
     #[account(
-    mut,
-    constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
+        mut,
+        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
     // not sure right now if this has to be mutable
     // inspired by the ido_pool program
-    #[account(
-    mut
-    )]
+    #[account(mut)]
     pub bond_pool_token_mint: Account<'info, Mint>,
 
     #[account(mut)]
@@ -111,7 +109,8 @@ pub fn handler(
             cpi_program,
             cpi_accounts,
             &[
-                [      ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                [
+                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
             ],

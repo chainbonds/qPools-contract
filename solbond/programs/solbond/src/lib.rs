@@ -111,14 +111,12 @@ pub mod solbond {
 
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
-        _bump_bond_pool_account: u8,
-        _bump_bond_pool_token_account: u8,
+        _bump_bond_pool_account: u8
     ) -> ProgramResult {
 
         instructions::initialize_bond_pool::handler(
             ctx,
-            _bump_bond_pool_account,
-            _bump_bond_pool_token_account,
+            _bump_bond_pool_account
         )
     }
 

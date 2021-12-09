@@ -2,13 +2,14 @@ import * as anchor from "@project-serum/anchor";
 import {Program, Provider} from "@project-serum/anchor";
 import {getPayer} from "./utils";
 import {Connection, Keypair} from "@solana/web3.js";
-import { Network, SEED, Market, Pair } from '@invariant-labs/sdk'
+import {Network, SEED, Market, Pair, tou64} from '@invariant-labs/sdk'
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {createPoolWithLiquidity, createTokensAndPool} from "./invariant-utils";
 import BN from "bn.js";
 import {Decimal} from "@invariant-labs/sdk/lib/market";
 import {fromFee} from "@invariant-labs/sdk/lib/utils";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {toDecimal} from "../sdk/lib/utils";
 
 /*
     TODO 1: Figure out how to import different external_programs into the tests here
@@ -86,7 +87,7 @@ describe('solbond-yield-farming', () => {
     /*
         Implement a swapping mechanism, once there was a swap happening
      */
-    it("Provide some liquidity into the AMM, front-end only", async () => {
+    it("Prepare to provide some liquidity into the AMM, front-end only, by minting and exchanging the tokens", async () => {
         console.log("Now a third party provides liquidity...");
 
         // Create some tokens for the liquidity-pair to be provided
@@ -95,16 +96,35 @@ describe('solbond-yield-farming', () => {
         const amount = new BN(1000);
 
         console.log(pair.tokenX, typeof pair.tokenX);
-        const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-        const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-        const accountX = await tokenX.createAccount(owner.publicKey)
-        const accountY = await tokenY.createAccount(owner.publicKey)
+        // The user will always pay for all operations with this (and if he allowed to, is a different question!)
+        const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet);
+        const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet);
+        const accountX = await tokenX.createAccount(owner.publicKey);
+        const accountY = await tokenY.createAccount(owner.publicKey);
 
+        // Assume we have a bunch of tokenX
+        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
-
-
+        // We now need to swap tokenX to tokenY before we can possible provide liquidity
+        // Apparently, this one allows us to receive the price information
+        const poolDataBefore = await market.get(pair)
+        await market.swap(
+            {
+                pair,
+                XtoY: true,
+                amount,
+                knownPrice: poolDataBefore.sqrtPrice,
+                slippage: toDecimal(1, 2),
+                accountX,
+                accountY,
+                byAmountIn: true
+            },
+            owner
+        )
 
     });
+
+
 
 
 });

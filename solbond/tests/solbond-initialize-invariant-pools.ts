@@ -8,6 +8,7 @@ import {createPoolWithLiquidity, createTokensAndPool} from "./invariant-utils";
 import BN from "bn.js";
 import {Decimal} from "@invariant-labs/sdk/lib/market";
 import {fromFee} from "@invariant-labs/sdk/lib/utils";
+import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 
 /*
     TODO 1: Figure out how to import different external_programs into the tests here
@@ -40,7 +41,6 @@ describe('solbond-yield-farming', () => {
 
     // @ts-expect-error
     const wallet = provider.wallet.payer as Keypair;
-    const mintAuthority = Keypair.generate();
     const positionOwner = Keypair.generate();
     const admin = Keypair.generate();
     const market = new Market(
@@ -51,11 +51,17 @@ describe('solbond-yield-farming', () => {
     );
     const protocolFee: Decimal = { v: fromFee(new BN(10000))};
 
+    // let pair: Pair;
+    // let mintAuthority: Keypair;
+
 
     // Initialize a third party who owns the pool
     before(async () => {
         console.log("Before ok")
     })
+
+    let pair: Pair;
+    let mintAuthority: Keypair;
 
 
     it("Initialize the state of the world", async () => {
@@ -68,15 +74,37 @@ describe('solbond-yield-farming', () => {
         console.log("Created the state!");
 
         // Initialize pools, including token, feeTier, pair, including a lot of liquidity
-        await createPoolWithLiquidity(
+         ({pair, mintAuthority} = (await createPoolWithLiquidity(
             market,
             connection,
             wallet
-        );
+        )));
         console.log("Created a pool with liquidity!");
 
     });
 
+    /*
+        Implement a swapping mechanism, once there was a swap happening
+     */
+    it("Provide some liquidity into the AMM, front-end only", async () => {
+        console.log("Now a third party provides liquidity...");
+
+        // Create some tokens for the liquidity-pair to be provided
+        const owner = Keypair.generate();
+        await connection.requestAirdrop(owner.publicKey, 1e9);
+        const amount = new BN(1000);
+
+        console.log(pair.tokenX, typeof pair.tokenX);
+        const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+        const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+        const accountX = await tokenX.createAccount(owner.publicKey)
+        const accountY = await tokenY.createAccount(owner.publicKey)
+
+
+
+
+
+    });
 
 
 });

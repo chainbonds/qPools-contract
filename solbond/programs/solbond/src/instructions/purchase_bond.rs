@@ -23,11 +23,8 @@ pub struct PurchaseBond<'info> {
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
-    #[account(
-    mut
-    )]
+    #[account(mut)]
     pub bond_pool_token_mint: Account<'info, Mint>,
-
     #[account(mut)]
     pub bond_pool_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -35,11 +32,7 @@ pub struct PurchaseBond<'info> {
 
     // All Purchaser Accounts
     #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
-    // // #[account(mut)]
-    // #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    // pub purchaser_token_account: Account<'info, TokenAccount>,
-    //
+    pub purchaser: AccountInfo<'info>,
     #[account(mut)]
     pub purchaser_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
@@ -85,8 +78,8 @@ pub fn handler(
     );
 
     /*
-    * Step 2: Transfer SOL to the bond's reserve
-    */
+     * Step 2: Transfer SOL to the bond's reserve
+     */
     // Checking if there was an infinite amount
     // if amount_in_redeemables.is_infinite() {
     //     return Err(Error::MarketRateOverflow.into());
@@ -104,13 +97,8 @@ pub fn handler(
     token::transfer(cpi_ctx, token_amount_raw)?;
 
     /*
-    * Step 3: Mint new redeemables to the middleware escrow to keep track of this input
-    *      Only this program can sign on these things, because all accounts are owned by the program
-    *      Are PDAs the solution? isn't it possible to invoke the MintTo command by everyone?
-    *      This is ok for the MVP, will definitely need to do auditing and re-writing this probably
-    */
-    /*
-      We just mint to the user now lol
+     * Step 3: Mint new redeemables to the user to keep track of how much he has paid in in total
+     * We just mint to the user now lol
      */
     let cpi_accounts = MintTo {
         mint: ctx.accounts.bond_pool_redeemable_mint.to_account_info(),

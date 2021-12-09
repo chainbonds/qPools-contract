@@ -53,8 +53,7 @@ pub struct RedeemBond<'info> {
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
     #[account(signer, mut)]
-    pub purchaser: AccountInfo<'info>,  // TODO: Make him signer
-
+    pub purchaser: AccountInfo<'info>,
     #[account(mut, constraint = purchaser_redeemable_token_account.owner == purchaser.key())]
     pub purchaser_redeemable_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
@@ -102,8 +101,6 @@ pub fn handler(
         authority: ctx.accounts.purchaser.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
-
-
     token::burn(
         CpiContext::new_with_signer(
             cpi_program,
@@ -118,36 +115,28 @@ pub fn handler(
         redeemable_amount_raw,
     )?;
 
+    /*
+     * Step 3: Transfer what the reserve generated back
+     */
+    msg!("Helloo");
     let cpi_accounts = Transfer {
         from: ctx.accounts.bond_pool_token_account.to_account_info(),
         to: ctx.accounts.purchaser_token_account.to_account_info(),
-        authority: ctx.accounts.purchaser.to_account_info(),
+        authority: ctx.accounts.bond_pool_account.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    token::transfer(cpi_ctx, token_to_be_distributed)?;
+    token::transfer(
+        CpiContext::new_with_signer(
+            cpi_program,
+            cpi_accounts,
+            &[
+                [
+                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                    &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
+                ].as_ref()
+            ]
+        ), token_to_be_distributed)?;
 
-
-
-    /*
-     * Step 3: Pay out Solana
-     *     Can later on replace this with paying out redeemables,
-     *      and the user can call another function to replace the redeemables with the bond
-     */
-
-    /* let res = anchor_lang::solana_program::system_instruction::transfer(
-        ctx.accounts.bond_pool_solana_account.to_account_info().key,
-        ctx.accounts.purchaser.to_account_info().key,
-        solana_to_be_distributed,
-    );
-    invoke_signed(
-        &res,
-        &[ctx.accounts.bond_pool_solana_account.to_account_info(), ctx.accounts.purchaser.to_account_info()],
-        &[[
-            ctx.accounts.bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount",
-            &[ctx.accounts.bond_pool_account.bump_bond_pool_solana_account]
-        ].as_ref()]
-    )?;*/
 
     Ok(())
 }

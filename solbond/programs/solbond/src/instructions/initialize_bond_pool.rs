@@ -40,6 +40,7 @@ pub struct InitializeBondPool<'info> {
     // You could also keep this, but then you have to turn this into a PDA
     // #[account(init, payer = initializer, token::mint = bond_pool_token_mint, token::authority = bond_pool_account)]
     // I think this is easier for now, can add constraint checks later
+    #[account(mut, constraint = bond_pool_token_account.owner == bond_pool_account.key())]
     pub bond_pool_token_account: Account<'info, TokenAccount>,
 
     // The account which generate the bond pool

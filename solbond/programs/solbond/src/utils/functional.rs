@@ -74,7 +74,6 @@ pub fn calculate_token_to_be_distributed(
     let _out: f64 = market_rate_t0 * (redeemable_total_supply - delta_redeemables_burned);
     let out: f64 = _out - redeemable_total_supply;
 
-
     // Convert back to lamports
     return ui_amount_to_amount(out, DECIMALS);
 }

@@ -45,6 +45,12 @@ pub struct PurchaseBond<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+/* TODO: Can Implement this once the need is there, and refactoring makes sense
+impl<'info> TakeTokens<'info> for Swap<'info> {
+    fn pay_in_reserve
+}
+*/
+
 pub fn handler(
     ctx: Context<PurchaseBond>,
     token_amount_raw: u64

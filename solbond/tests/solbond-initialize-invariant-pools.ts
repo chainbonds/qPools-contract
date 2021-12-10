@@ -16,6 +16,15 @@ import {assert} from "chai";
     TODO 1: Figure out how to import different external_programs into the tests here
  */
 const DEFAULT_AIRDROP_AMOUNT = 10_000_000;
+const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(23));
+
+const DEFAULT_LIQUIDITY_TO_PROVIDE = 100_000_000;
+const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(12));
+
+const PROTOCOL_FEE = 10000;
+
+const SWAP_AMOUNT = 2_000_000;
+
 describe('solbond-yield-farming', () => {
 
     /*
@@ -51,7 +60,7 @@ describe('solbond-yield-farming', () => {
         connection,
         invariantProgramId
     );
-    const protocolFee: Decimal = { v: fromFee(new BN(10000))};
+    const protocolFee: Decimal = { v: fromFee(new BN(PROTOCOL_FEE))};
 
     // let pair: Pair;
     // let mintAuthority: Keypair;
@@ -80,7 +89,8 @@ describe('solbond-yield-farming', () => {
          ({pair, mintAuthority} = (await createPoolWithLiquidity(
             market,
             connection,
-            wallet
+            wallet,
+             { v: DEFAULT_PROVIDED_LIQUIDITY }
         )));
         console.log("Created a pool with liquidity!");
 
@@ -104,8 +114,8 @@ describe('solbond-yield-farming', () => {
         accountY = await tokenY.createAccount(positionOwner.publicKey);
 
         // Create some tokens for the liquidity-pair to be provided
-        const amount: BN = new BN(10_000_000);
-        const swapAmount: BN = new BN(5_000_000);
+        const amount: BN = new BN(DEFAULT_LIQUIDITY_TO_PROVIDE);
+        const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_TO_PROVIDE / 2);
 
         console.log(pair.tokenX, typeof pair.tokenX);
         // The user will always pay for all operations with this (and if he allowed to, is a different question!)
@@ -175,7 +185,7 @@ describe('solbond-yield-farming', () => {
 
         // TODO: What is this?
         // const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) };
-        const liquidityDelta: Decimal = { v: new BN(10).pow(new BN(12)) }
+        const liquidityDelta: Decimal = { v: DEFAULT_LIQUIDITY_DELTA }
 
         console.log("Lower and upper ticks are");
         // Create tick, if it does not exist already
@@ -221,7 +231,7 @@ describe('solbond-yield-farming', () => {
             const newUserAccountY = await tokenY.createAccount(newUser.publicKey);
 
             // Create some tokens for the liquidity-pair to be provided
-            const amount: BN = new BN(2_000_000);
+            const amount: BN = new BN(SWAP_AMOUNT);
 
             // Assume we have a bunch of tokenX
             await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))

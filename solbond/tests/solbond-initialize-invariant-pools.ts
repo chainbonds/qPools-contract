@@ -170,14 +170,18 @@ describe('solbond-yield-farming', () => {
         // TODO: How do we translate from price to tick?
         // And how do we actually calculate the best ticks,
         // also considering that there is slippage, changes, etc.
-        const upperTick = 10;
-        const lowerTick = -20;
+        const upperTick = 1000;
+        const lowerTick = -1000;
 
         // TODO: What is this?
-        const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) };
+        // const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) };
+        const liquidityDelta: Decimal = { v: new BN(10).pow(new BN(12)) }
 
-        await market.createTick(pair, upperTick, wallet);
-        await market.createTick(pair, lowerTick, wallet);
+        console.log("Lower and upper ticks are");
+        // Create tick, if it does not exist already
+        // TODO: How do i retrieve tick, or create new tick if it does not exist yet?
+        // await market.createTick(pair, upperTick, wallet);
+        // await market.createTick(pair, lowerTick, wallet);
 
         console.log("Position Owner Created");
         await market.createPositionList(positionOwner);
@@ -198,6 +202,8 @@ describe('solbond-yield-farming', () => {
 
         // After that, call change `claim` or `withdraw` maybe
     });
+
+    // TODO: Make the liquidity provider more dominant and bigger tick position
 
     it("Will make multiple swaps, and collect the fees from there ", async () => {
         console.log("Collecting trading fees");
@@ -252,9 +258,50 @@ describe('solbond-yield-farming', () => {
     });
 
     it("Will make multiple swaps, and collect the fees from there ", async () => {
-        console.log("Collect fees...");
+        console.log("Claim fees...");
 
 
+        const poolDataBefore = await market.get(pair);
+        console.log("Pool data before is: ");
+        console.log(poolDataBefore.liquidity.v.toString());
+        console.log(poolDataBefore.sqrtPrice.v.toString());
+        console.log(poolDataBefore.currentTickIndex);
+        console.log(poolDataBefore.feeGrowthGlobalX.v.toString());
+        console.log(poolDataBefore.feeGrowthGlobalY.v.toString());
+        console.log(poolDataBefore.secondsPerLiquidityGlobal.v.toString());
+
+        console.log("BEFORE Owned X and Y are: ");
+        console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
+        console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
+
+        await market.claimFee(
+            {
+                pair,
+                owner: positionOwner.publicKey,
+                userTokenX: accountX,
+                userTokenY: accountY,
+                index: 0
+            },
+            positionOwner
+        );
+
+        const poolDataAfter = await market.get(pair);
+        console.log("Pool data after is: ");
+        console.log(poolDataAfter.liquidity.v.toString());
+        console.log(poolDataAfter.sqrtPrice.v.toString());
+        console.log(poolDataAfter.currentTickIndex);
+        console.log(poolDataAfter.feeGrowthGlobalX.v.toString());
+        console.log(poolDataAfter.feeGrowthGlobalY.v.toString());
+        console.log(poolDataAfter.secondsPerLiquidityGlobal.v.toString());
+
+        console.log("AFTER Owned X and Y are: ");
+        console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
+        console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
+
+    });
+
+    it("Now withdraw the liquidity again ... ", async () => {
+        console.log("Close the position...");
 
 
     });

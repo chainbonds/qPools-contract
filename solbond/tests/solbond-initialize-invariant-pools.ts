@@ -13,7 +13,6 @@ import {toDecimal} from "../sdk/lib/utils";
 import {assert} from "chai";
 
 /*
-    TODO 1: Figure out how to import different external_programs into the tests here
     TODO 2: What is liquidityDelta for? What does it exactly describe?
     TODO 3: What is index in claimFee? Is this the lower bound it collects fees from?
     TODO 4: What is index when claiming fees?
@@ -21,8 +20,8 @@ import {assert} from "chai";
 const DEFAULT_AIRDROP_AMOUNT = 10_000_000;
 const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(23));
 
-const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
-const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(12));
+// const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
+const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(8));
 
 const PROTOCOL_FEE = 10000;
 
@@ -117,8 +116,8 @@ describe('solbond-yield-farming', () => {
         accountY = await tokenY.createAccount(positionOwner.publicKey);
 
         // Create some tokens for the liquidity-pair to be provided
-        const amount: BN = new BN(DEFAULT_LIQUIDITY_TO_PROVIDE);
-        const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_TO_PROVIDE / 2);
+        const amount: BN = new BN(DEFAULT_LIQUIDITY_DELTA);
+        const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_DELTA.div(new BN(2)));
 
         console.log(pair.tokenX, typeof pair.tokenX);
         // The user will always pay for all operations with this (and if he allowed to, is a different question!)
@@ -223,7 +222,7 @@ describe('solbond-yield-farming', () => {
 
         let i = 0;
         while (i < 10) {
-            console.log("User is swapping...", i);
+            console.log("\n\nUser is swapping...", i);
 
             // Need a new user, who has some solana to do the transactions
             const newUser = Keypair.generate();
@@ -271,7 +270,7 @@ describe('solbond-yield-farming', () => {
     });
 
     it("Will make multiple swaps, and collect the fees from there ", async () => {
-        console.log("Claim fees...");
+        console.log("\n\n\n\n\nClaim fees...");
 
 
         const poolDataBefore = await market.get(pair);

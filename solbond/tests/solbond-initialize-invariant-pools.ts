@@ -14,11 +14,14 @@ import {assert} from "chai";
 
 /*
     TODO 1: Figure out how to import different external_programs into the tests here
+    TODO 2: What is liquidityDelta for? What does it exactly describe?
+    TODO 3: What is index in claimFee? Is this the lower bound it collects fees from?
+    TODO 4: What is index when claiming fees?
  */
 const DEFAULT_AIRDROP_AMOUNT = 10_000_000;
 const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(23));
 
-const DEFAULT_LIQUIDITY_TO_PROVIDE = 100_000_000;
+const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
 const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(12));
 
 const PROTOCOL_FEE = 10000;
@@ -275,10 +278,10 @@ describe('solbond-yield-farming', () => {
         console.log("Pool data before is: ");
         console.log(poolDataBefore.liquidity.v.toString());
         console.log(poolDataBefore.sqrtPrice.v.toString());
-        console.log(poolDataBefore.currentTickIndex);
+        // console.log(poolDataBefore.currentTickIndex);
         console.log(poolDataBefore.feeGrowthGlobalX.v.toString());
         console.log(poolDataBefore.feeGrowthGlobalY.v.toString());
-        console.log(poolDataBefore.secondsPerLiquidityGlobal.v.toString());
+        // console.log(poolDataBefore.secondsPerLiquidityGlobal.v.toString());
 
         console.log("BEFORE Owned X and Y are: ");
         console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
@@ -295,14 +298,21 @@ describe('solbond-yield-farming', () => {
             positionOwner
         );
 
+        // await market.withdrawProtocolFee(
+        //     pair,
+        //     accountX,
+        //     accountY,
+        //     positionOwner
+        // )
+
         const poolDataAfter = await market.get(pair);
         console.log("Pool data after is: ");
         console.log(poolDataAfter.liquidity.v.toString());
         console.log(poolDataAfter.sqrtPrice.v.toString());
-        console.log(poolDataAfter.currentTickIndex);
+        // console.log(poolDataAfter.currentTickIndex);
         console.log(poolDataAfter.feeGrowthGlobalX.v.toString());
         console.log(poolDataAfter.feeGrowthGlobalY.v.toString());
-        console.log(poolDataAfter.secondsPerLiquidityGlobal.v.toString());
+        // console.log(poolDataAfter.secondsPerLiquidityGlobal.v.toString());
 
         console.log("AFTER Owned X and Y are: ");
         console.log((await tokenX.getAccountInfo(accountX)).amount.toString());

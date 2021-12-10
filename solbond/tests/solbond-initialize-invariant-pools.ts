@@ -17,14 +17,13 @@ import {assert} from "chai";
     TODO 3: What is index in claimFee? Is this the lower bound it collects fees from?
     TODO 4: What is index when claiming fees?
  */
-const DEFAULT_AIRDROP_AMOUNT = 10_000_000;
 const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(23));
 
 // const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
-const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(9));
+const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(8));
 
-const PROTOCOL_FEE = 10000;
-
+const DEFAULT_SOLANA_AIRDROP_AMOUNT = 2_000_000;
+const PROTOCOL_FEE = 10_000;
 const SWAP_AMOUNT = 2_000_000;
 
 describe('solbond-yield-farming', () => {
@@ -116,8 +115,8 @@ describe('solbond-yield-farming', () => {
         accountY = await tokenY.createAccount(positionOwner.publicKey);
 
         // Create some tokens for the liquidity-pair to be provided
-        const amount: BN = new BN(DEFAULT_LIQUIDITY_DELTA);
-        const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_DELTA.div(new BN(2)));
+        const amount: BN = new BN(DEFAULT_LIQUIDITY_DELTA.mul(new BN(2)));
+        const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_DELTA);
 
         console.log(pair.tokenX, typeof pair.tokenX);
         // The user will always pay for all operations with this (and if he allowed to, is a different question!)
@@ -226,7 +225,7 @@ describe('solbond-yield-farming', () => {
 
             // Need a new user, who has some solana to do the transactions
             const newUser = Keypair.generate();
-            await connection.requestAirdrop(newUser.publicKey, 2_000_000_000);
+            await connection.requestAirdrop(newUser.publicKey, DEFAULT_SOLANA_AIRDROP_AMOUNT);
 
             // User needs some tokens
             const newUserAccountX = await tokenX.createAccount(newUser.publicKey);

@@ -17,14 +17,15 @@ import {assert} from "chai";
     TODO 3: What is index in claimFee? Is this the lower bound it collects fees from?
     TODO 4: What is index when claiming fees?
  */
-const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(23));
+// This is the default value, 22
+const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(22));
 
 // const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
 const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(8));
 
 const DEFAULT_SOLANA_AIRDROP_AMOUNT = 2_000_000;
-const PROTOCOL_FEE = 10_000;
-const SWAP_AMOUNT = 2_000_000;
+const PROTOCOL_FEE = 100_000;
+const SWAP_AMOUNT = 10_000_000;
 
 describe('solbond-yield-farming', () => {
 
@@ -78,7 +79,7 @@ describe('solbond-yield-farming', () => {
 
     it("Initialize the state of the world", async () => {
        console.log("Hello");
-        await connection.requestAirdrop(positionOwner.publicKey, 1e9);
+        await connection.requestAirdrop(positionOwner.publicKey, 100 * 1e9);
 
         // Initialize a third party use who owns the pool
         // const poolOwner = Keypair.generate();
@@ -122,16 +123,18 @@ describe('solbond-yield-farming', () => {
         // The user will always pay for all operations with this (and if he allowed to, is a different question!)
 
         // Assume we have a bunch of tokenX
-        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount.mul(new BN(1.5))));
 
         console.log("BEFORE Owned X and Y are: ");
         console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
         console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
 
-
         // We now need to swap tokenX to tokenY before we can possible provide liquidity
         // Apparently, this one allows us to receive the price information
         const poolDataBefore = await market.get(pair)
+
+        // I guess we gotta slowly swap ...
+
         // I am swapping too much!!
         await market.swap(
             {
@@ -139,7 +142,7 @@ describe('solbond-yield-farming', () => {
                 XtoY: true,
                 amount: swapAmount,
                 knownPrice: poolDataBefore.sqrtPrice,
-                slippage: toDecimal(1, 2),
+                slippage: toDecimal(5, 1),
                 accountX: accountX,
                 accountY: accountY,
                 byAmountIn: true
@@ -181,8 +184,8 @@ describe('solbond-yield-farming', () => {
         // TODO: How do we translate from price to tick?
         // And how do we actually calculate the best ticks,
         // also considering that there is slippage, changes, etc.
-        const upperTick = 1000;
-        const lowerTick = -1000;
+        const upperTick = 10;
+        const lowerTick = -10;
 
         // TODO: What is this?
         // const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) };
@@ -235,7 +238,7 @@ describe('solbond-yield-farming', () => {
             const amount: BN = new BN(SWAP_AMOUNT);
 
             // Assume we have a bunch of tokenX
-            await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+            await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount));
 
             console.log("BEFORE Owned X and Y are: ");
             console.log((await tokenX.getAccountInfo(newUserAccountX)).amount.toString());
@@ -249,7 +252,7 @@ describe('solbond-yield-farming', () => {
                 {
                     pair: pair,
                     XtoY: true,
-                    amount: amount,
+                    amount: amount.sub(new BN(1_000)),
                     knownPrice: poolDataBefore.sqrtPrice,
                     slippage: toDecimal(1, 2),
                     accountX: newUserAccountX,
@@ -295,13 +298,6 @@ describe('solbond-yield-farming', () => {
             },
             positionOwner
         );
-
-        // await market.withdrawProtocolFee(
-        //     pair,
-        //     accountX,
-        //     accountY,
-        //     positionOwner
-        // )
 
         const poolDataAfter = await market.get(pair);
         console.log("Pool data after is: ");

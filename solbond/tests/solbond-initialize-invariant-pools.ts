@@ -1,247 +1,203 @@
-import * as anchor from "@project-serum/anchor";
-import {Program, Provider} from "@project-serum/anchor";
-import {getPayer} from "./utils";
-import {Connection, Keypair, PublicKey} from "@solana/web3.js";
-import {Network, SEED, DENOMINATOR, Market, Pair, tou64} from '@invariant-labs/sdk';
-import {invariantAmmProgram} from "./external_programs/invariant_amm";
-import {createPoolWithLiquidity, createTokensAndPool} from "./invariant-utils";
-import BN from "bn.js";
-import {Decimal} from "@invariant-labs/sdk/lib/market";
-import {fromFee} from "@invariant-labs/sdk/lib/utils";
-import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {toDecimal} from "../sdk/lib/utils";
-import {assert} from "chai";
-import {getTickFromPrice} from "../deps/invariant/sdk/src/tick";
-import {PoolStructure} from "@invariant-labs/sdk/lib/market";
+import * as anchor from '@project-serum/anchor';
+import { Program, Provider, BN } from '@project-serum/anchor';
+import { Keypair, PublicKey } from '@solana/web3.js';
+import { Network, SEED, Market, Pair } from '@invariant-labs/sdk';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createToken } from './invariant-utils';
+import { assert } from 'chai';
+import { DENOMINATOR } from '@invariant-labs/sdk';
+import { TICK_LIMIT } from '@invariant-labs/sdk';
+import { tou64 } from '@invariant-labs/sdk';
+import { fromFee } from '@invariant-labs/sdk/lib/utils';
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market';
+import { toDecimal } from '@invariant-labs/sdk/src/utils';
 
-/*
-    TODO 1: What is liquidityDelta for? What does it exactly describe?
- */
-// The simulated tokens each have 6 decimal points;
-// As such, most of them items about 10^6
-// const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
-const TOKEN_MINT_AMOUNT = new BN(10).pow(new BN(10));
-// This liquidity delta is x * y, because this will still always equal to K,
-// this is the value we provide!!!
-// Thus, it needs to be token amount 1 times token amount 2 (this grows exponentially as it is provided)
-// .pow(new BN(25)).mul(new BN(2.5))
-const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(25));
-// const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(1_000_000));
-
-const DEFAULT_SOLANA_AIRDROP_AMOUNT = 2_000_000;
-// Cannot be too high, otherwise rust panic's
-const PROTOCOL_FEE = 100_000;
-const SWAP_AMOUNT = 1_000_000;
-
-// .div(new BN(1_000_000))
-const printPoolData = async (title, poolData: PoolStructure, tokenAMint, tokenBMint) => {
-    console.log(title);
-    console.log("liquidity: ", poolData.liquidity.v.toString());
-    console.log("sqrtPrice: ", poolData.sqrtPrice.v.toString());
-    console.log("currentTickIndex: ", poolData.currentTickIndex);
-    console.log("feeGrowthGlobalX: ", poolData.feeGrowthGlobalX.v.toString());
-    console.log("feeGrowthGlobalY: ", poolData.feeGrowthGlobalY.v.toString());
-    console.log("token X Reserve", (await tokenAMint.getAccountInfo(poolData.tokenXReserve)).amount.toString());
-    console.log("token Y Reserve", (await tokenBMint.getAccountInfo(poolData.tokenYReserve)).amount.toString());
-}
-
-// .div(new BN(1_000_000))
-const printUserTokens = async (title, userAccountA, userAccountB, tokenAMint, tokenBMint) => {
-    console.log(title);
-    console.log("token X", (await tokenAMint.getAccountInfo(userAccountA)).amount.toString());
-    console.log("token Y", (await tokenBMint.getAccountInfo(userAccountB)).amount.toString());
-}
-
-// This is how we go from price to tick (and there is a similar  function to go vice-versa I guess
-// const poolData = await market.get(pair);
-// const lowPrice = getTickFromPrice(
-//     poolData.currentTickIndex,
-//     poolData.tickSpacing,
-//     poolData.sqrtPrice,
-//     true
-// );
-// const highPrice = getTickFromPrice(
-//     poolData.currentTickIndex,
-//     poolData.tickSpacing,
-//     poolData.sqrtPrice,
-//     true
-// );
-
-
-
-describe('solbond-yield-farming', () => {
-
-    // Configure the client to use the local cluster.
-    const provider = anchor.Provider.env();
-    anchor.setProvider(provider);
-    const connection: Connection = provider.connection;
-
-    // Have one Solbond Program
-    // And have one InvariantAMM Program
-
-    // We need to access another program, the AMM program!
-    const solbondProgram = anchor.workspace.Solbond;
-
-    // This will not change, so we can just import using the IDL
-    const invariantProgramId = new anchor.web3.PublicKey("3f2yCuof5e1MpAC8RNgWVnQuSHpDjUHPGds6jQ1tRphY");
-    const invariantProgram = invariantAmmProgram(connection, provider, invariantProgramId);
-
+describe('claim', () => {
+    const provider = Provider.local()
+    const connection = provider.connection
     // @ts-expect-error
-    const wallet = provider.wallet.payer as Keypair;
-    const positionOwner = Keypair.generate();
-    // Provides majority of the liquidity to the pool
-    const admin: Keypair = Keypair.generate();  // the admin is the wallet
+    const wallet = provider.wallet.payer as Keypair
+    const mintAuthority = Keypair.generate()
+    const positionOwner = Keypair.generate()
+    const admin = Keypair.generate()
     const market = new Market(
         Network.LOCAL,
         provider.wallet,
         connection,
-        invariantProgramId
-    );
-    const protocolFee: Decimal = { v: fromFee(new BN(PROTOCOL_FEE))};
+        anchor.workspace.Amm.programId
+    )
+    const feeTier: FeeTier = {
+        fee: fromFee(new BN(600)),
+        tickSpacing: 10
+    }
+    const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+    let pair: Pair
+    let tokenX: Token
+    let tokenY: Token
+    let programAuthority: PublicKey
+    let nonce: number
 
-    let pair: Pair;
-    let mintAuthority: Keypair;
-    let tokenX: Token;
-    let tokenY: Token;
-
-    // Initialize a third party who owns the pool
     before(async () => {
-        await connection.requestAirdrop(positionOwner.publicKey, 100 * 1e9);
-        await connection.requestAirdrop(admin.publicKey, 100 * 1e9);
-        await market.createState(wallet, protocolFee);
+        await Promise.all([
+            await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+            await connection.requestAirdrop(admin.publicKey, 1e9),
+            await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+        ])
 
-        // Initialize pools, including token, feeTier, pair, including a lot of liquidity
-        // This pool will provide very little liquidity
-        ({pair, mintAuthority} = (await createPoolWithLiquidity(
-            market,
-            connection,
-            admin,
-            { v: new BN(10).pow(new BN(6)) }
-        )));
-    });
+        const tokens = await Promise.all([
+            createToken(connection, wallet, mintAuthority),
+            createToken(connection, wallet, mintAuthority)
+        ])
 
-    let accountX: PublicKey;
-    let accountY: PublicKey;
+        const swaplineProgram = anchor.workspace.Amm as Program
+        const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
+            [Buffer.from(SEED)],
+            swaplineProgram.programId
+        )
+        nonce = _nonce
+        programAuthority = _programAuthority
 
-    it("Test 2: Prepare tokens for liquidity providing", async () => {
-        console.log("\nTest 2: Prepare tokens for liquidity providing");
+        pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+        tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+        tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    })
+    it('#createState()', async () => {
+        await market.createState(admin, protocolFee)
+    })
+    it('#createFeeTier()', async () => {
+        await market.createFeeTier(feeTier, admin)
+    })
+    it('#create()', async () => {
+        // 0.6% / 10
+        await market.create({
+            pair,
+            signer: admin
+        })
+        const createdPool = await market.get(pair)
+        assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
+        assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
+        assert.ok(createdPool.fee.v.eq(feeTier.fee))
+        assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
+        assert.ok(createdPool.liquidity.v.eqn(0))
+        assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+        assert.ok(createdPool.currentTickIndex == 0)
+        assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
+        assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
+        assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
+        assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+        assert.ok(createdPool.authority.equals(programAuthority))
+        assert.ok(createdPool.nonce == nonce)
 
-        tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet);
-        tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet);
-        accountX = await tokenX.createAccount(positionOwner.publicKey);
-        accountY = await tokenY.createAccount(positionOwner.publicKey);
+        const tickmapData = await market.getTickmap(pair)
+        assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
+        assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    })
 
-        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(TOKEN_MINT_AMOUNT));
-        await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(TOKEN_MINT_AMOUNT));
-    });
+    
+    it('#claim', async () => {
+        const upperTick = 10
+        const lowerTick = -20
 
-    it("Test 3: Provide Liquidity: ", async () => {
-        console.log("\nTest 3: Provide Liquidity");
-        const poolDataBefore = await market.get(pair);
-        await printPoolData("(1-): ", poolDataBefore, tokenX, tokenY);
-        await printUserTokens("(1-): ", accountX, accountY, tokenX, tokenY)
+        await market.createTick(pair, upperTick, wallet)
+        await market.createTick(pair, lowerTick, wallet)
 
-        // And how do we actually calculate the best ticks,
-        // also considering that there is slippage, changes, etc.
-        const upperTick = 20;
-        const lowerTick = -20;
-        const liquidityDelta: Decimal = { v: DEFAULT_LIQUIDITY_DELTA };
+        const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+        const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+        const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
-        await market.createPositionList(positionOwner);
+        await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+        await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+
+        const liquidityDelta = { v: new BN(1_000_000).mul(DENOMINATOR) }
+
+        await market.createPositionList(positionOwner)
         await market.initPosition(
             {
                 pair,
                 owner: positionOwner.publicKey,
-                userTokenX: accountX,
-                userTokenY: accountY,
+                userTokenX: userTokenXAccount,
+                userTokenY: userTokenYAccount,
                 lowerTick,
                 upperTick,
                 liquidityDelta
             },
             positionOwner
-        );
+        )
 
-        const poolDataAfter = await market.get(pair);
-        await printPoolData("(1+): ", poolDataAfter, tokenX, tokenY);
-        await printUserTokens("(1+): ", accountX, accountY, tokenX, tokenY)
+        assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
 
-    });
+        const swapper = Keypair.generate()
+        await connection.requestAirdrop(swapper.publicKey, 1e9)
 
+        const amount = new BN(1000)
+        const accountX = await tokenX.createAccount(swapper.publicKey)
+        const accountY = await tokenY.createAccount(swapper.publicKey)
 
-    it("Test 4: Will make multiple swaps, and collect the fees from there ", async () => {
-        console.log("\n\n\nTest 4: Collecting trading fees");
+        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
-        const poolDataBefore = await market.get(pair);
-        await printPoolData("(1-)", poolDataBefore, tokenX, tokenY);
-        await printUserTokens("(1-)", accountX, accountY, tokenX, tokenY)
+        const poolDataBefore = await market.get(pair)
+        const priceLimit = DENOMINATOR.muln(100).divn(110)
+        const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
 
-        /* Run a bunch of swaps */
-        let i = 0;
-        while (i < 5) {
-            console.log("User number who is swapping:", i);
+        await market.swap(
+            {
+                pair,
+                XtoY: true,
+                amount,
+                knownPrice: poolDataBefore.sqrtPrice,
+                slippage: toDecimal(1, 2),
+                accountX,
+                accountY,
+                byAmountIn: true
+            },
+            swapper
+        )
+        const poolDataAfter = await market.get(pair)
+        assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
+        assert.ok(poolDataAfter.currentTickIndex == lowerTick)
+        assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
-            // Need a new user, who has some solana to do the transactions
-            const newUser = Keypair.generate();
-            await connection.requestAirdrop(newUser.publicKey, DEFAULT_SOLANA_AIRDROP_AMOUNT);
+        const amountX = (await tokenX.getAccountInfo(accountX)).amount
+        const amountY = (await tokenY.getAccountInfo(accountY)).amount
+        const reservesAfterSwap = await market.getReserveBalances(pair, wallet)
+        const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
+        const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
 
-            // User needs some tokens
-            const newUserAccountX = await tokenX.createAccount(newUser.publicKey);
-            const newUserAccountY = await tokenY.createAccount(newUser.publicKey);
+        assert.ok(amountX.eqn(0))
+        assert.ok(amountY.eq(amount.subn(7)))
+        assert.ok(reserveXDelta.eq(amount))
+        assert.ok(reserveYDelta.eq(amount.subn(7)))
+        assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
+        assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
+        assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
+        assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
 
-            // Create some tokens for the liquidity-pair to be provided
-            const amount: BN = new BN(SWAP_AMOUNT);
-            await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount));
+        const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
+        const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
 
-            const poolDataBefore = await market.get(pair);
-
-            // We now need to swap tokenX to tokenY before we can possible provide liquidity
-            // Apparently, this one allows us to receive the price information
-            // I am swapping too much!!
-            await market.swap(
-                {
-                    pair: pair,
-                    XtoY: true,
-                    amount: amount,
-                    knownPrice: poolDataBefore.sqrtPrice,
-                    slippage: toDecimal(1, 2),
-                    accountX: newUserAccountX,
-                    accountY: newUserAccountY,
-                    byAmountIn: true
-                },
-                newUser
-            );
-
-            i++;
-        }
-
-        /* Now claim profits */
         await market.claimFee(
             {
                 pair,
                 owner: positionOwner.publicKey,
-                userTokenX: accountX,
-                userTokenY: accountY,
+                userTokenX: userTokenXAccount,
+                userTokenY: userTokenYAccount,
                 index: 0
             },
             positionOwner
-        );
+        )
 
-        const poolDataAfter = await market.get(pair);
-        await printPoolData("(1+): ", poolDataAfter, tokenX, tokenY);
-        await printUserTokens("(1+)", accountX, accountY, tokenX, tokenY);
+        const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+        const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
+        const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
+        const expectedTokensOwedX = new BN(400000000000)
+        const expectedFeeGrowthInsideX = new BN(5400000)
+        const expectedTokensClaimed = 5
 
-        // await market.withdrawProtocolFee(
-        //     pair,
-        //     accountX,
-        //     accountY,
-        //     positionOwner
-        // );
-        //
-        // const poolDataAfter2 = await market.get(pair);
-        // printPoolData("(1++): ", poolDataAfter2);
-        // await printUserTokens("(1++)", accountX, accountY, tokenX, tokenY);
-
-
-    });
-
-});
+        assert.ok(reservesBeforeClaim.x.subn(5).eq(reservesAfterClaim.x))
+        assert.ok(expectedTokensOwedX.eq(positionAfterClaim.tokensOwedX.v))
+        assert.ok(expectedFeeGrowthInsideX.eq(positionAfterClaim.feeGrowthInsideX.v))
+        assert.ok(
+            userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
+        )
+    })
+})

@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct Pool {
     pub token_x: Pubkey,
     pub token_y: Pubkey,

@@ -7,6 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
+use state::*;
 
 // declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
 declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );

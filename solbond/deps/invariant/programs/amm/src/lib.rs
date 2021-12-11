@@ -1,11 +1,11 @@
-mod decimal;
-mod errors;
-mod instructions;
-mod interfaces;
-mod math;
+pub mod decimal;
+pub mod errors;
+pub mod instructions;
+pub mod interfaces;
+pub mod math;
 pub mod structs;
-mod uint;
-mod util;
+pub mod uint;
+pub mod util;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token;

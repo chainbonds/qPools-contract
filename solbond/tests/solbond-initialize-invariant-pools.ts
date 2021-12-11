@@ -79,6 +79,17 @@ describe('claim', () => {
             }
         });
     })
+    it("#just try to call this for the compilin lulz()", async () => {
+        // Call the health-checkpoint
+        await solbondProgram.rpc.register_invariant_pools({
+            accounts: {
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                clock: web3.SYSVAR_CLOCK_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        });
+    })
     it('#createState()', async () => {
         await market.createState(admin, protocolFee)
     })

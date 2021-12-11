@@ -143,15 +143,15 @@ pub mod solbond {
     }
 
     /**
-    * (Re-)Balance the portfolio into multiple pools
-    * Includes multiple invariant-pools
+    * Register all the pools that are defined by invariant
+    *
     */
-    pub fn deploy_portfolio(
-        ctx: Context<DeployPortfolio>
+    pub fn register_invariant_pools(
+        ctx: Context<RegisterInvariantPools>
     ) -> ProgramResult {
 
         // For now assume that our portfolio has an equal weight across all pools
-        instructions::deploy_portfolio::handler(ctx)
+        instructions::register_invariant_pools::handler(ctx)
     }
 
 }

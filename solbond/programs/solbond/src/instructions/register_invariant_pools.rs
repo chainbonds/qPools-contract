@@ -7,7 +7,7 @@ use crate::state::BondPoolAccount;
 
 #[derive(Accounts)]
 // #[instruction()]
-pub struct DeployPortfolio<'info> {
+pub struct RegisterInvariantPools<'info> {
 
     // pub invariant_pools
 
@@ -18,7 +18,7 @@ pub struct DeployPortfolio<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handler(ctx: Context<DeployPortfolio>) -> ProgramResult {
+pub fn handler(ctx: Context<RegisterInvariantPools>) -> ProgramResult {
 
 
     // Initialize a position in all of the pools

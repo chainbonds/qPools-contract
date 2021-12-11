@@ -17,15 +17,31 @@ import {assert} from "chai";
     TODO 3: What is index in claimFee? Is this the lower bound it collects fees from?
     TODO 4: What is index when claiming fees?
  */
-// This is the default value, 22
-const DEFAULT_PROVIDED_LIQUIDITY = new BN(10).pow(new BN(22));
-
 // const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
-const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(8));
+const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(9));
 
 const DEFAULT_SOLANA_AIRDROP_AMOUNT = 2_000_000;
-const PROTOCOL_FEE = 100_000;
-const SWAP_AMOUNT = 10_000_000;
+const PROTOCOL_FEE = 10_000;
+const SWAP_AMOUNT = 1_000_000;
+
+const printPoolData = (title, poolData) => {
+    console.log("\n")
+    console.log(title);
+    console.log("liquidity: ", poolData.liquidity.v.toString());
+    console.log("sqrtPrice: ", poolData.sqrtPrice.v.toString());
+    console.log("currentTickIndex: ", poolData.currentTickIndex);
+    console.log("feeGrowthGlobalX: ", poolData.feeGrowthGlobalX.v.toString());
+    console.log("feeGrowthGlobalY: ", poolData.feeGrowthGlobalY.v.toString());
+    console.log("secondsPerLiquidityGlobal: ", poolData.secondsPerLiquidityGlobal.v.toString());
+}
+
+const printUserTokens = async (title, userAccountA, userAccountB, tokenAMint, tokenBMint) => {
+    console.log("\n")
+    console.log(title);
+    console.log("token X", (await tokenAMint.getAccountInfo(userAccountA)).amount.toString());
+    console.log("token Y", (await tokenBMint.getAccountInfo(userAccountB)).amount.toString());
+
+}
 
 describe('solbond-yield-farming', () => {
 
@@ -55,7 +71,7 @@ describe('solbond-yield-farming', () => {
     // @ts-expect-error
     const wallet = provider.wallet.payer as Keypair;
     const positionOwner = Keypair.generate();
-    const admin = Keypair.generate();  // the admin is the wallet
+    const admin: Keypair = Keypair.generate();  // the admin is the wallet
     const market = new Market(
         Network.LOCAL,
         provider.wallet,
@@ -64,51 +80,39 @@ describe('solbond-yield-farming', () => {
     );
     const protocolFee: Decimal = { v: fromFee(new BN(PROTOCOL_FEE))};
 
-    // let pair: Pair;
-    // let mintAuthority: Keypair;
-
-
-    // Initialize a third party who owns the pool
-    before(async () => {
-        console.log("Before ok")
-    })
-
     let pair: Pair;
     let mintAuthority: Keypair;
 
+    let tokenX: Token;
+    let tokenY: Token;
 
-    it("Initialize the state of the world", async () => {
-       console.log("Hello");
+    // Initialize a third party who owns the pool
+    before(async () => {
         await connection.requestAirdrop(positionOwner.publicKey, 100 * 1e9);
+        await connection.requestAirdrop(admin.publicKey, 100 * 1e9);
 
         // Initialize a third party use who owns the pool
         // const poolOwner = Keypair.generate();
         // await provider.connection.requestAirdrop(poolOwner.publicKey, DEFAULT_AIRDROP_AMOUNT);
         await market.createState(wallet, protocolFee);
-        console.log("Created the state!");
 
         // Initialize pools, including token, feeTier, pair, including a lot of liquidity
-         ({pair, mintAuthority} = (await createPoolWithLiquidity(
+        ({pair, mintAuthority} = (await createPoolWithLiquidity(
             market,
             connection,
-            wallet,
-             { v: DEFAULT_PROVIDED_LIQUIDITY }
+            admin
         )));
-        console.log("Created a pool with liquidity!");
-
     });
 
-    // Generate the tokens now
-    let tokenX: Token;
-    let tokenY: Token;
+    // Generate the token accounts now
     let accountX: PublicKey;
     let accountY: PublicKey;
 
     /*
         Implement a swapping mechanism, once there was a swap happening
      */
-    it("Prepare to provide some liquidity into the AMM, front-end only, by minting and exchanging the tokens", async () => {
-        console.log("Now a third party swaps his single token to get equal proportions of tokens for liquidity provisioning...");
+    it("Test 2: Prepare to provide some liquidity into the AMM, front-end only, by minting and exchanging the tokens", async () => {
+        console.log("\n\n\nTest 2: Now a third party swaps his single token to get equal proportions of tokens for liquidity provisioning...");
 
         tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet);
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet);
@@ -116,64 +120,55 @@ describe('solbond-yield-farming', () => {
         accountY = await tokenY.createAccount(positionOwner.publicKey);
 
         // Create some tokens for the liquidity-pair to be provided
-        const amount: BN = new BN(DEFAULT_LIQUIDITY_DELTA.mul(new BN(2)));
-        const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_DELTA);
-
-        console.log(pair.tokenX, typeof pair.tokenX);
-        // The user will always pay for all operations with this (and if he allowed to, is a different question!)
+        const amount: BN = new BN(DEFAULT_LIQUIDITY_DELTA);
+        // const swapAmount: BN = new BN(DEFAULT_LIQUIDITY_DELTA.div(new BN(2)));
 
         // Assume we have a bunch of tokenX
-        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount.mul(new BN(1.5))));
+        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount.mul(new BN(1))));
+        await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount.mul(new BN(1))));
 
-        console.log("BEFORE Owned X and Y are: ");
-        console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
-        console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
-
-        // We now need to swap tokenX to tokenY before we can possible provide liquidity
-        // Apparently, this one allows us to receive the price information
-        const poolDataBefore = await market.get(pair)
-
-        // I guess we gotta slowly swap ...
-
-        // I am swapping too much!!
-        await market.swap(
-            {
-                pair: pair,
-                XtoY: true,
-                amount: swapAmount,
-                knownPrice: poolDataBefore.sqrtPrice,
-                slippage: toDecimal(5, 1),
-                accountX: accountX,
-                accountY: accountY,
-                byAmountIn: true
-            },
-            positionOwner
-        );
-
-        // We can now double-check that liquidity was indeed provided!
-        // Check pool
-        const poolData = await market.get(pair);
-        assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v));
-        assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v));
-
-        console.log("Pool data is: ");
-        console.log(poolData.liquidity.v.toString());
-        console.log(poolData.sqrtPrice.v.toString());
-        console.log(poolData.currentTickIndex);
-        console.log(poolData.feeGrowthGlobalX.v.toString());
-        console.log(poolData.feeGrowthGlobalY.v.toString());
-        console.log(poolData.secondsPerLiquidityGlobal.v.toString());
-
-        console.log("AFTER Owned X and Y are: ");
-        console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
-        console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
+        // await printUserTokens("Before prepare Swap", accountX, accountY, tokenX, tokenY)
+        //
+        // // We now need to swap tokenX to tokenY before we can possible provide liquidity
+        // // Apparently, this one allows us to receive the price information
+        // const poolDataBefore = await market.get(pair)
+        //
+        // // I guess we gotta slowly swap ...
+        // printPoolData("Pool data before is: ", poolDataBefore);
+        //
+        // // I am swapping too much!!
+        // console.log("Swapping ...", swapAmount.toString());
+        //
+        // await market.swap(
+        //     {
+        //         pair: pair,
+        //         XtoY: true,
+        //         amount: swapAmount,
+        //         knownPrice: poolDataBefore.sqrtPrice,
+        //         slippage: toDecimal(5, 1),
+        //         accountX: accountX,
+        //         accountY: accountY,
+        //         byAmountIn: true
+        //     },
+        //     positionOwner
+        // );
+        //
+        // // We can now double-check that liquidity was indeed provided!
+        // // Check pool
+        // const poolDataAfter = await market.get(pair);
+        // assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v));
+        // assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v));
+        //
+        // printPoolData("Pool data after is: ", poolDataAfter);
+        //
+        await printUserTokens("After preparation is: ", accountX, accountY, tokenX, tokenY)
 
         // Now we have enough tokens A and B to provide as liquidity!
 
     });
 
-    it("Provides liquidity to the pool, assuming (almost-)equal amounts of tokens: ", async () => {
-        console.log("Provide liquidity now");
+    it("Test 3: Provides liquidity to the pool, assuming (almost-)equal amounts of tokens: ", async () => {
+        console.log("\n\n\nTest 3: Provide liquidity now");
 
         // Check out how many tokens are there each
 
@@ -184,12 +179,12 @@ describe('solbond-yield-farming', () => {
         // TODO: How do we translate from price to tick?
         // And how do we actually calculate the best ticks,
         // also considering that there is slippage, changes, etc.
-        const upperTick = 10;
-        const lowerTick = -10;
+        const upperTick = 1000;
+        const lowerTick = -1000;
 
         // TODO: What is this?
         // const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) };
-        const liquidityDelta: Decimal = { v: DEFAULT_LIQUIDITY_DELTA }
+        const liquidityDelta: Decimal = { v: DEFAULT_LIQUIDITY_DELTA.sub(new BN(1_000_000)) }
 
         console.log("Lower and upper ticks are");
         // Create tick, if it does not exist already
@@ -219,12 +214,13 @@ describe('solbond-yield-farming', () => {
 
     // TODO: Make the liquidity provider more dominant and bigger tick position
 
-    it("Will make multiple swaps, and collect the fees from there ", async () => {
-        console.log("Collecting trading fees");
+    it("Test 4: Will make multiple swaps, and collect the fees from there ", async () => {
+        console.log("\n\n\nTest 4: Collecting trading fees");
+
 
         let i = 0;
         while (i < 10) {
-            console.log("\n\nUser is swapping...", i);
+            console.log("\nUser number who is swapping:, i);
 
             // Need a new user, who has some solana to do the transactions
             const newUser = Keypair.generate();
@@ -236,25 +232,22 @@ describe('solbond-yield-farming', () => {
 
             // Create some tokens for the liquidity-pair to be provided
             const amount: BN = new BN(SWAP_AMOUNT);
-
-            // Assume we have a bunch of tokenX
             await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount));
 
-            console.log("BEFORE Owned X and Y are: ");
-            console.log((await tokenX.getAccountInfo(newUserAccountX)).amount.toString());
-            console.log((await tokenY.getAccountInfo(newUserAccountY)).amount.toString());
+            const poolDataBefore = await market.get(pair);
+            printPoolData("Pool data before is: ", poolDataBefore);
+            await printUserTokens("Before actual Swap", newUserAccountX, newUserAccountY, tokenX, tokenY)
 
             // We now need to swap tokenX to tokenY before we can possible provide liquidity
             // Apparently, this one allows us to receive the price information
-            const poolDataBefore = await market.get(pair)
             // I am swapping too much!!
             await market.swap(
                 {
                     pair: pair,
                     XtoY: true,
-                    amount: amount.sub(new BN(1_000)),
+                    amount: amount,
                     knownPrice: poolDataBefore.sqrtPrice,
-                    slippage: toDecimal(1, 2),
+                    slippage: toDecimal(1, 5),
                     accountX: newUserAccountX,
                     accountY: newUserAccountY,
                     byAmountIn: true
@@ -262,31 +255,20 @@ describe('solbond-yield-farming', () => {
                 newUser
             );
 
-            console.log("AFTER Owned X and Y are: ");
-            console.log((await tokenX.getAccountInfo(newUserAccountX)).amount.toString());
-            console.log((await tokenY.getAccountInfo(newUserAccountY)).amount.toString());
-
+            const poolDataAfter = await market.get(pair);
+            printPoolData("Pool data after is: ", poolDataAfter);
+            await printUserTokens("After actual Swap", newUserAccountX, newUserAccountY, tokenX, tokenY)
             i++;
         }
 
     });
 
-    it("Will make multiple swaps, and collect the fees from there ", async () => {
-        console.log("\n\n\n\n\nClaim fees...");
-
+    it("Test 5: Will make multiple swaps, and collect the fees from there ", async () => {
+        console.log("\n\n\n\n\nTest 5: Claim fees...");
 
         const poolDataBefore = await market.get(pair);
-        console.log("Pool data before is: ");
-        console.log(poolDataBefore.liquidity.v.toString());
-        console.log(poolDataBefore.sqrtPrice.v.toString());
-        // console.log(poolDataBefore.currentTickIndex);
-        console.log(poolDataBefore.feeGrowthGlobalX.v.toString());
-        console.log(poolDataBefore.feeGrowthGlobalY.v.toString());
-        // console.log(poolDataBefore.secondsPerLiquidityGlobal.v.toString());
-
-        console.log("BEFORE Owned X and Y are: ");
-        console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
-        console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
+        printPoolData("Pool data before is: ", poolDataBefore);
+        await printUserTokens("Before Claim", accountX, accountY, tokenX, tokenY)
 
         await market.claimFee(
             {
@@ -300,23 +282,8 @@ describe('solbond-yield-farming', () => {
         );
 
         const poolDataAfter = await market.get(pair);
-        console.log("Pool data after is: ");
-        console.log(poolDataAfter.liquidity.v.toString());
-        console.log(poolDataAfter.sqrtPrice.v.toString());
-        // console.log(poolDataAfter.currentTickIndex);
-        console.log(poolDataAfter.feeGrowthGlobalX.v.toString());
-        console.log(poolDataAfter.feeGrowthGlobalY.v.toString());
-        // console.log(poolDataAfter.secondsPerLiquidityGlobal.v.toString());
-
-        console.log("AFTER Owned X and Y are: ");
-        console.log((await tokenX.getAccountInfo(accountX)).amount.toString());
-        console.log((await tokenY.getAccountInfo(accountY)).amount.toString());
-
-    });
-
-    it("Now withdraw the liquidity again ... ", async () => {
-        console.log("Close the position...");
-
+        printPoolData("Pool data after is: ", poolDataAfter);
+        await printUserTokens("After Claim", accountX, accountY, tokenX, tokenY)
 
     });
 

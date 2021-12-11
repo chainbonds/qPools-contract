@@ -2,7 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import {Program, Provider} from "@project-serum/anchor";
 import {getPayer} from "./utils";
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
-import {Network, SEED, DENOMINATOR, Market, Pair, tou64} from '@invariant-labs/sdk'
+import {Network, SEED, DENOMINATOR, Market, Pair, tou64} from '@invariant-labs/sdk';
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {createPoolWithLiquidity, createTokensAndPool} from "./invariant-utils";
 import BN from "bn.js";
@@ -12,6 +12,7 @@ import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {toDecimal} from "../sdk/lib/utils";
 import {assert} from "chai";
 import {getTickFromPrice} from "../deps/invariant/sdk/src/tick";
+import {PoolStructure} from "@invariant-labs/sdk/lib/market";
 
 /*
     TODO 1: What is liquidityDelta for? What does it exactly describe?
@@ -19,31 +20,36 @@ import {getTickFromPrice} from "../deps/invariant/sdk/src/tick";
 // The simulated tokens each have 6 decimal points;
 // As such, most of them items about 10^6
 // const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
-const TOKEN_MINT_AMOUNT = new BN(10).pow(new BN(12));
+const TOKEN_MINT_AMOUNT = new BN(10).pow(new BN(10));
 // This liquidity delta is x * y, because this will still always equal to K,
 // this is the value we provide!!!
 // Thus, it needs to be token amount 1 times token amount 2 (this grows exponentially as it is provided)
-const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(25)).mul(new BN(2.5));
+// .pow(new BN(25)).mul(new BN(2.5))
+const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(25));
+// const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(1_000_000));
 
 const DEFAULT_SOLANA_AIRDROP_AMOUNT = 2_000_000;
 // Cannot be too high, otherwise rust panic's
 const PROTOCOL_FEE = 100_000;
-const SWAP_AMOUNT = 100_000_000;
+const SWAP_AMOUNT = 1_000_000;
 
-const printPoolData = (title, poolData) => {
+// .div(new BN(1_000_000))
+const printPoolData = async (title, poolData: PoolStructure, tokenAMint, tokenBMint) => {
     console.log(title);
-    console.log("liquidity: ", poolData.liquidity.v.div(new BN(1_000_000)).toString());
-    console.log("sqrtPrice: ", poolData.sqrtPrice.v.div(new BN(1_000_000)).toString());
+    console.log("liquidity: ", poolData.liquidity.v.toString());
+    console.log("sqrtPrice: ", poolData.sqrtPrice.v.toString());
     console.log("currentTickIndex: ", poolData.currentTickIndex);
-    console.log("feeGrowthGlobalX: ", poolData.feeGrowthGlobalX.v.div(new BN(1_000_000)).toString());
-    console.log("feeGrowthGlobalY: ", poolData.feeGrowthGlobalY.v.div(new BN(1_000_000)).toString());
-    console.log("secondsPerLiquidityGlobal: ", poolData.secondsPerLiquidityGlobal.v.div(new BN(1_000_000)).toString());
+    console.log("feeGrowthGlobalX: ", poolData.feeGrowthGlobalX.v.toString());
+    console.log("feeGrowthGlobalY: ", poolData.feeGrowthGlobalY.v.toString());
+    console.log("token X Reserve", (await tokenAMint.getAccountInfo(poolData.tokenXReserve)).amount.toString());
+    console.log("token Y Reserve", (await tokenBMint.getAccountInfo(poolData.tokenYReserve)).amount.toString());
 }
 
+// .div(new BN(1_000_000))
 const printUserTokens = async (title, userAccountA, userAccountB, tokenAMint, tokenBMint) => {
     console.log(title);
-    console.log("token X", (await tokenAMint.getAccountInfo(userAccountA)).amount.div(new BN(1_000_000)).toString());
-    console.log("token Y", (await tokenBMint.getAccountInfo(userAccountB)).amount.div(new BN(1_000_000)).toString());
+    console.log("token X", (await tokenAMint.getAccountInfo(userAccountA)).amount.toString());
+    console.log("token Y", (await tokenBMint.getAccountInfo(userAccountB)).amount.toString());
 }
 
 // This is how we go from price to tick (and there is a similar  function to go vice-versa I guess
@@ -132,7 +138,7 @@ describe('solbond-yield-farming', () => {
     it("Test 3: Provide Liquidity: ", async () => {
         console.log("\nTest 3: Provide Liquidity");
         const poolDataBefore = await market.get(pair);
-        printPoolData("(1-): ", poolDataBefore);
+        await printPoolData("(1-): ", poolDataBefore, tokenX, tokenY);
         await printUserTokens("(1-): ", accountX, accountY, tokenX, tokenY)
 
         // And how do we actually calculate the best ticks,
@@ -156,7 +162,7 @@ describe('solbond-yield-farming', () => {
         );
 
         const poolDataAfter = await market.get(pair);
-        printPoolData("(1+): ", poolDataAfter);
+        await printPoolData("(1+): ", poolDataAfter, tokenX, tokenY);
         await printUserTokens("(1+): ", accountX, accountY, tokenX, tokenY)
 
     });
@@ -166,12 +172,12 @@ describe('solbond-yield-farming', () => {
         console.log("\n\n\nTest 4: Collecting trading fees");
 
         const poolDataBefore = await market.get(pair);
-        printPoolData("(1-)", poolDataBefore);
+        await printPoolData("(1-)", poolDataBefore, tokenX, tokenY);
         await printUserTokens("(1-)", accountX, accountY, tokenX, tokenY)
 
         /* Run a bunch of swaps */
         let i = 0;
-        while (i < 2) {
+        while (i < 5) {
             console.log("User number who is swapping:", i);
 
             // Need a new user, who has some solana to do the transactions
@@ -209,20 +215,33 @@ describe('solbond-yield-farming', () => {
         }
 
         /* Now claim profits */
-        // await market.claimFee(
-        //     {
-        //         pair,
-        //         owner: positionOwner.publicKey,
-        //         userTokenX: accountX,
-        //         userTokenY: accountY,
-        //         index: 0
-        //     },
-        //     positionOwner
-        // );
+        await market.claimFee(
+            {
+                pair,
+                owner: positionOwner.publicKey,
+                userTokenX: accountX,
+                userTokenY: accountY,
+                index: 0
+            },
+            positionOwner
+        );
 
         const poolDataAfter = await market.get(pair);
-        printPoolData("(1+): ", poolDataAfter);
-        await printUserTokens("(1+)", accountX, accountY, tokenX, tokenY)
+        await printPoolData("(1+): ", poolDataAfter, tokenX, tokenY);
+        await printUserTokens("(1+)", accountX, accountY, tokenX, tokenY);
+
+        // await market.withdrawProtocolFee(
+        //     pair,
+        //     accountX,
+        //     accountY,
+        //     positionOwner
+        // );
+        //
+        // const poolDataAfter2 = await market.get(pair);
+        // printPoolData("(1++): ", poolDataAfter2);
+        // await printUserTokens("(1++)", accountX, accountY, tokenX, tokenY);
+
+
     });
 
 });

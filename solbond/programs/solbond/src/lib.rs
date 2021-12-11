@@ -109,6 +109,10 @@ pub mod solbond {
     //
     // }
 
+    pub fn healthcheck(ctx: Context<Healthcheck>) -> ProgramResult {
+        instructions::healthcheck::handler(ctx)
+    }
+
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
         _bump_bond_pool_account: u8

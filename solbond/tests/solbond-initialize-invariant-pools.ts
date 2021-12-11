@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import { Program, Provider, BN } from '@project-serum/anchor';
+import {Program, Provider, BN, web3} from '@project-serum/anchor';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { Network, SEED, Market, Pair } from '@invariant-labs/sdk';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
@@ -11,10 +11,16 @@ import { tou64 } from '@invariant-labs/sdk';
 import { fromFee } from '@invariant-labs/sdk/lib/utils';
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market';
 import { toDecimal } from '@invariant-labs/sdk/src/utils';
+import {getPayer} from "./utils";
+import {solbondProgram} from "../../dapp/src/programs/solbond";
 
 describe('claim', () => {
     const provider = Provider.local()
     const connection = provider.connection
+
+    const solbondProgram = anchor.workspace.Solbond;
+    const payer = getPayer();
+
     // @ts-expect-error
     const wallet = provider.wallet.payer as Keypair
     const mintAuthority = Keypair.generate()
@@ -38,6 +44,7 @@ describe('claim', () => {
     let nonce: number
 
     before(async () => {
+
         await Promise.all([
             await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
             await connection.requestAirdrop(admin.publicKey, 1e9),
@@ -60,6 +67,17 @@ describe('claim', () => {
         pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
         tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    })
+    it("#connectsToSolbond()", async () => {
+        // Call the health-checkpoint
+        await solbondProgram.rpc.healthcheck({
+            accounts: {
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                clock: web3.SYSVAR_CLOCK_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        });
     })
     it('#createState()', async () => {
         await market.createState(admin, protocolFee)
@@ -93,7 +111,7 @@ describe('claim', () => {
         assert.ok(tickmapData.bitmap.every((v) => v == 0))
     })
 
-    
+
     it('#claim', async () => {
         const upperTick = 10
         const lowerTick = -20
@@ -109,6 +127,12 @@ describe('claim', () => {
         await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
         const liquidityDelta = { v: new BN(1_000_000).mul(DENOMINATOR) }
+
+        /*
+            TODO: This should be replaced and done by our program instead
+         */
+
+        // TODO: Let's just call our function with this
 
         await market.createPositionList(positionOwner)
         await market.initPosition(
@@ -174,6 +198,10 @@ describe('claim', () => {
 
         const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
         const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+
+        /*
+            TODO: This should be replaced and done by our program instead
+         */
 
         await market.claimFee(
             {

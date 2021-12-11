@@ -11,7 +11,7 @@ import { tou64 } from '@invariant-labs/sdk';
 import { fromFee } from '@invariant-labs/sdk/lib/utils';
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market';
 import { toDecimal } from '@invariant-labs/sdk/src/utils';
-import {getPayer} from "./utils";
+import {createMint, getPayer} from "./utils";
 import {solbondProgram} from "../../dapp/src/programs/solbond";
 
 describe('claim', () => {
@@ -110,6 +110,101 @@ describe('claim', () => {
         assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
         assert.ok(tickmapData.bitmap.every((v) => v == 0))
     })
+
+    let bondPoolAccount: PublicKey | null = null;  // The bond pool reserve account
+    let bondPoolRedeemableMint: Token | null = null;
+    let bondPoolCurrencyTokenMint: Token | null = null;
+    let bondPoolRedeemableTokenAccount: PublicKey | null = null;
+    //let bondPoolTokenAccount: PublicKey | null = null;
+    let bumpBondPoolAccount: number | null = null;
+    let bondPoolTokenAccount: PublicKey | null = null;
+
+    it('#initializeSolbondWorld()', async () => {
+
+        // Airdrop some solana for computation purposes
+        await provider.connection.requestAirdrop(payer.publicKey, 1e9);
+
+        // Create the bondPoolAccount as a PDA
+        [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
+            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
+            solbondProgram.programId
+        );
+        // Token account has to be another PDA, I guess
+
+        // Create the Mints that we will be using
+        bondPoolCurrencyTokenMint = await createMint(provider, payer);
+        bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
+
+        bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
+        bondPoolTokenAccount = await bondPoolCurrencyTokenMint.createAccount(bondPoolAccount);
+    });
+
+    it('#initializeSolbondReserve', async () => {
+
+        const initializeTx = await solbondProgram.rpc.initializeBondPool(
+            bumpBondPoolAccount,
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
+                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
+                    bondPoolTokenAccount: bondPoolTokenAccount,
+                    initializer: payer.publicKey,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        const tx = await provider.connection.confirmTransaction(initializeTx);
+        console.log(tx);
+        console.log("initializeTx signature", initializeTx);
+    });
+
+
+    let purchaser: PublicKey | null = null;
+    let purchaserRedeemableTokenAccount: PublicKey | null = null;
+    let purchaserCurrencyTokenAccount: PublicKey | null = null;
+
+    // Make a purchase of the bond / staking
+    it('#buySolbond', async () => {
+
+        let amountToBuy = 10_000_000_000;
+
+        purchaser = payer.publicKey;
+        purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
+        purchaserCurrencyTokenAccount = await bondPoolCurrencyTokenMint!.createAccount(purchaser);
+        await bondPoolCurrencyTokenMint.mintTo(purchaserCurrencyTokenAccount, purchaser, [], amountToBuy);
+
+        const initializeTx = await solbondProgram.rpc.purchaseBond(
+            new BN(amountToBuy),
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
+                    bondPoolTokenAccount: bondPoolTokenAccount,
+                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
+                    purchaser: payer.publicKey,
+                    purchaserTokenAccount: purchaserCurrencyTokenAccount,
+                    purchaserRedeemableTokenAccount: purchaserRedeemableTokenAccount,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        const tx = await provider.connection.confirmTransaction(initializeTx);
+        console.log("initializeTx signature", initializeTx);
+        console.log(tx);
+
+    });
 
 
     it('#claim', async () => {

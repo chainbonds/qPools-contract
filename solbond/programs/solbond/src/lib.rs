@@ -92,27 +92,16 @@ pub struct BalancePools<'info> {
 pub mod solbond {
     use super::*;
 
-    // pub fn example_reserve_solana_to_liquidity_pools(
-    //     ctx: Context<BalancePools>,
-    //     solana_in_lamports: u8,
-    // ) -> ProgramResult {
-    //
-    //     /*
-    //         (Step 1: Transfer from user to reserve)
-    //     */
-    //
-    //     /*
-    //         (Step 2: Transfer from us to user)
-    //     */
-    //
-    //     Ok(())
-    //
-    // }
-
+    /**
+    * A simple health checkpoint which checks if the program is up and running
+    */
     pub fn healthcheck(ctx: Context<Healthcheck>) -> ProgramResult {
         instructions::healthcheck::handler(ctx)
     }
 
+    /**
+    * Initializes the reserve / vault
+    */
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
         _bump_bond_pool_account: u8
@@ -151,6 +140,18 @@ pub mod solbond {
     ) -> ProgramResult {
 
         instructions::redeem_bond::handler(ctx, redeemable_amount_raw)
+    }
+
+    /**
+    * (Re-)Balance the portfolio into multiple pools
+    * Includes multiple invariant-pools
+    */
+    pub fn deploy_portfolio(
+        ctx: Context<DeployPortfolio>
+    ) -> ProgramResult {
+
+        // For now assume that our portfolio has an equal weight across all pools
+        instructions::deploy_portfolio::handler(ctx)
     }
 
 }

@@ -16,6 +16,8 @@ import {getTickFromPrice} from "../deps/invariant/sdk/src/tick";
 /*
     TODO 1: What is liquidityDelta for? What does it exactly describe?
  */
+// The simulated tokens each have 6 decimal points;
+// As such, most of them items about 10^6
 // const DEFAULT_LIQUIDITY_TO_PROVIDE = 10_000_000;
 const TOKEN_MINT_AMOUNT = new BN(10).pow(new BN(12));
 // This liquidity delta is x * y, because this will still always equal to K,
@@ -24,8 +26,9 @@ const TOKEN_MINT_AMOUNT = new BN(10).pow(new BN(12));
 const DEFAULT_LIQUIDITY_DELTA = new BN(10).pow(new BN(25)).mul(new BN(2.5));
 
 const DEFAULT_SOLANA_AIRDROP_AMOUNT = 2_000_000;
-const PROTOCOL_FEE = 10_000;
-const SWAP_AMOUNT = 1_000_000;
+// Cannot be too high, otherwise rust panic's
+const PROTOCOL_FEE = 100_000;
+const SWAP_AMOUNT = 100_000_000;
 
 const printPoolData = (title, poolData) => {
     console.log(title);
@@ -102,10 +105,12 @@ describe('solbond-yield-farming', () => {
         await market.createState(wallet, protocolFee);
 
         // Initialize pools, including token, feeTier, pair, including a lot of liquidity
+        // This pool will provide very little liquidity
         ({pair, mintAuthority} = (await createPoolWithLiquidity(
             market,
             connection,
-            admin
+            admin,
+            { v: new BN(10).pow(new BN(6)) }
         )));
     });
 
@@ -132,8 +137,8 @@ describe('solbond-yield-farming', () => {
 
         // And how do we actually calculate the best ticks,
         // also considering that there is slippage, changes, etc.
-        const upperTick = 1000;
-        const lowerTick = -1000;
+        const upperTick = 20;
+        const lowerTick = -20;
         const liquidityDelta: Decimal = { v: DEFAULT_LIQUIDITY_DELTA };
 
         await market.createPositionList(positionOwner);
@@ -150,85 +155,74 @@ describe('solbond-yield-farming', () => {
             positionOwner
         );
 
-        printPoolData("(1+): ", poolDataBefore);
+        const poolDataAfter = await market.get(pair);
+        printPoolData("(1+): ", poolDataAfter);
         await printUserTokens("(1+): ", accountX, accountY, tokenX, tokenY)
 
     });
 
-    // // TODO: Make the liquidity provider more dominant and bigger tick position
-    // it("Test 4: Will make multiple swaps, and collect the fees from there ", async () => {
-    //     console.log("\n\n\nTest 4: Collecting trading fees");
-    //
-    //
-    //     let i = 0;
-    //     while (i < 2) {
-    //         console.log("User number who is swapping:", i);
-    //
-    //         // Need a new user, who has some solana to do the transactions
-    //         const newUser = Keypair.generate();
-    //         await connection.requestAirdrop(newUser.publicKey, DEFAULT_SOLANA_AIRDROP_AMOUNT);
-    //
-    //         // User needs some tokens
-    //         const newUserAccountX = await tokenX.createAccount(newUser.publicKey);
-    //         const newUserAccountY = await tokenY.createAccount(newUser.publicKey);
-    //
-    //         // Create some tokens for the liquidity-pair to be provided
-    //         const amount: BN = new BN(SWAP_AMOUNT);
-    //         await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount));
-    //
-    //         const poolDataBefore = await market.get(pair);
-    //         // printPoolData("Pool data before is: ", poolDataBefore);
-    //         // await printUserTokens("Before actual Swap", newUserAccountX, newUserAccountY, tokenX, tokenY)
-    //
-    //         // We now need to swap tokenX to tokenY before we can possible provide liquidity
-    //         // Apparently, this one allows us to receive the price information
-    //         // I am swapping too much!!
-    //         await market.swap(
-    //             {
-    //                 pair: pair,
-    //                 XtoY: true,
-    //                 amount: amount,
-    //                 knownPrice: poolDataBefore.sqrtPrice,
-    //                 slippage: toDecimal(1, 2),
-    //                 accountX: newUserAccountX,
-    //                 accountY: newUserAccountY,
-    //                 byAmountIn: true
-    //             },
-    //             newUser
-    //         );
-    //
-    //         // const poolDataAfter = await market.get(pair);
-    //         // printPoolData("Pool data after is: ", poolDataAfter);
-    //         // await printUserTokens("After actual Swap", newUserAccountX, newUserAccountY, tokenX, tokenY)
-    //
-    //         i++;
-    //     }
-    //
-    // });
-    //
-    // it("Test 5: Will make multiple swaps, and collect the fees from there ", async () => {
-    //     console.log("\n\n\n\n\nTest 5: Claim fees...");
-    //
-    //     const poolDataBefore = await market.get(pair);
-    //     printPoolData("Pool data before is: ", poolDataBefore);
-    //     await printUserTokens("Before Claim", accountX, accountY, tokenX, tokenY)
-    //
-    //     await market.claimFee(
-    //         {
-    //             pair,
-    //             owner: positionOwner.publicKey,
-    //             userTokenX: accountX,
-    //             userTokenY: accountY,
-    //             index: 1
-    //         },
-    //         positionOwner
-    //     );
-    //
-    //     const poolDataAfter = await market.get(pair);
-    //     printPoolData("Pool data after is: ", poolDataAfter);
-    //     await printUserTokens("After Claim", accountX, accountY, tokenX, tokenY)
-    //
-    // });
 
+    it("Test 4: Will make multiple swaps, and collect the fees from there ", async () => {
+        console.log("\n\n\nTest 4: Collecting trading fees");
+
+        const poolDataBefore = await market.get(pair);
+        printPoolData("(1-)", poolDataBefore);
+        await printUserTokens("(1-)", accountX, accountY, tokenX, tokenY)
+
+        /* Run a bunch of swaps */
+        let i = 0;
+        while (i < 2) {
+            console.log("User number who is swapping:", i);
+
+            // Need a new user, who has some solana to do the transactions
+            const newUser = Keypair.generate();
+            await connection.requestAirdrop(newUser.publicKey, DEFAULT_SOLANA_AIRDROP_AMOUNT);
+
+            // User needs some tokens
+            const newUserAccountX = await tokenX.createAccount(newUser.publicKey);
+            const newUserAccountY = await tokenY.createAccount(newUser.publicKey);
+
+            // Create some tokens for the liquidity-pair to be provided
+            const amount: BN = new BN(SWAP_AMOUNT);
+            await tokenX.mintTo(newUserAccountX, mintAuthority.publicKey, [mintAuthority], tou64(amount));
+
+            const poolDataBefore = await market.get(pair);
+
+            // We now need to swap tokenX to tokenY before we can possible provide liquidity
+            // Apparently, this one allows us to receive the price information
+            // I am swapping too much!!
+            await market.swap(
+                {
+                    pair: pair,
+                    XtoY: true,
+                    amount: amount,
+                    knownPrice: poolDataBefore.sqrtPrice,
+                    slippage: toDecimal(1, 2),
+                    accountX: newUserAccountX,
+                    accountY: newUserAccountY,
+                    byAmountIn: true
+                },
+                newUser
+            );
+
+            i++;
+        }
+
+        /* Now claim profits */
+        // await market.claimFee(
+        //     {
+        //         pair,
+        //         owner: positionOwner.publicKey,
+        //         userTokenX: accountX,
+        //         userTokenY: accountY,
+        //         index: 0
+        //     },
+        //     positionOwner
+        // );
+
+        const poolDataAfter = await market.get(pair);
+        printPoolData("(1+): ", poolDataAfter);
+        await printUserTokens("(1+)", accountX, accountY, tokenX, tokenY)
+    });
 
 });

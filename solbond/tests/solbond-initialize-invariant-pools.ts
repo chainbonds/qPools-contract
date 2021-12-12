@@ -13,6 +13,7 @@ import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market';
 import { toDecimal } from '@invariant-labs/sdk/src/utils';
 import {createMint, getPayer} from "./utils";
 import {solbondProgram} from "../../dapp/src/programs/solbond";
+import {invariantAmmProgram} from "./external_programs/invariant_amm";
 
 const NUMBER_POOLS = 5;
 
@@ -21,6 +22,7 @@ describe('claim', () => {
     const connection = provider.connection
 
     const solbondProgram = anchor.workspace.Solbond;
+    const invariantProgram = anchor.workspace.Amm;
     const payer = getPayer();
 
     // @ts-expect-error
@@ -136,6 +138,49 @@ describe('claim', () => {
 
     })
 
+    let poolList: PublicKey | null;
+    let poolListBump: number;
+
+    it("#registerInvariantPools()", async () => {
+
+        // Get the addresses of some of the pools that we generated
+        [poolList, poolListBump] = await anchor.web3.PublicKey.findProgramAddress(
+            [wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("poolList"))],
+            invariantProgram.programId
+        );
+
+        let marketAddresses: PublicKey[] = [];
+        // For each pair, get the market addresses
+        for (let i = 0; i < NUMBER_POOLS; i++) {
+
+            let pair = allPairs[i];
+            const [marketAddress, marketAddressBump] = await pair.getAddressAndBump(market.program.programId);
+            marketAddresses.push(marketAddress);
+        }
+
+        // Call the health-checkpoint
+        await solbondProgram.rpc.register_invariant_pools(
+            poolListBump,
+            {
+                accounts: {
+
+                    pool_list: poolList,
+                    pool_list_address_0: marketAddresses[0],
+                    pool_list_address_1: marketAddresses[1],
+                    pool_list_address_2: marketAddresses[2],
+                    pool_list_address_3: marketAddresses[3],
+                    pool_list_address_4: marketAddresses[4],
+                    initializer: wallet.publicKey,
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [wallet]
+        });
+    })
+
     // let bondPoolAccount: PublicKey | null = null;  // The bond pool reserve account
     // let bondPoolRedeemableMint: Token | null = null;
     // let bondPoolCurrencyTokenMint: Token | null = null;
@@ -164,25 +209,6 @@ describe('claim', () => {
     //     bondPoolTokenAccount = await bondPoolCurrencyTokenMint.createAccount(bondPoolAccount);
     // });
 
-
-
-    // it("#just try to call this for the compilin lulz()", async () => {
-    //
-    //     // Get the addresses of some of the pools that we generated
-    //
-    //
-    //     // Call the health-checkpoint
-    //     await solbondProgram.rpc.register_invariant_pools({
-    //         accounts: {
-    //
-    //
-    //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //             clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //             systemProgram: web3.SystemProgram.programId,
-    //             tokenProgram: TOKEN_PROGRAM_ID
-    //         }
-    //     });
-    // })
 
 
     //

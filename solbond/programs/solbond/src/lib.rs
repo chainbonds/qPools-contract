@@ -160,6 +160,20 @@ pub mod solbond {
         )
     }
 
+    /**
+     * Register all the pools that are defined by invariant
+     *
+     */
+    pub fn deposit_reserve_to_pools(
+        ctx: Context<DepositReserveToPools>
+    ) -> ProgramResult {
+
+        // For now assume that our portfolio has an equal weight across all pools
+        instructions::deposit_reserve_to_pools::handler(
+            ctx
+        )
+    }
+
 }
 
 

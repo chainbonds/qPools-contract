@@ -5,9 +5,9 @@ pub struct BondPoolAccount {
     pub generator: Pubkey,
 
     pub bond_pool_redeemable_mint: Pubkey,
-    pub bond_pool_token_mint: Pubkey,
+    pub bond_pool_currency_token_mint: Pubkey,
     pub bond_pool_redeemable_token_account: Pubkey,
-    pub bond_pool_token_account: Pubkey,
+    pub bond_pool_currency_token_account: Pubkey,
 
     // Include also any bumps, etc.
     pub bump_bond_pool_account: u8,

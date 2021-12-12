@@ -2,9 +2,16 @@ use anchor_lang::prelude::*;
 
 use amm::structs::pool::Pool;
 
+// , AnchorSerialize, AnchorDeserialize
+
 #[account]
+#[derive(PartialEq, Default, Debug)]
 pub struct InvariantPoolList {
-    pub pool_list: [Pool; 10]
+    // pub pool_list: [Box<Pool>; 1],
+    pub pool_list: Pool,
+    // pub pool_list: Vec<Pool>
+
+    // pub pool_list: Vec<Pubkey>  // Compiles, runtime crashes
 }
 
 // impl BondPoolAccount {

@@ -44,8 +44,7 @@ declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
 
     - create_position
     - remove_position
-    - withdraw_protocol_fee
-        => what is the difference to the claim_fee?
+    - claim_fee
 
     The RPC endpoints that are optional
     - swap

@@ -147,11 +147,17 @@ pub mod solbond {
     *
     */
     pub fn register_invariant_pools(
-        ctx: Context<RegisterInvariantPools>
+        ctx: Context<RegisterInvariantPools>,
+        _bump_pool_list: u8,
+        weights: [u64; 10]
     ) -> ProgramResult {
 
         // For now assume that our portfolio has an equal weight across all pools
-        instructions::register_invariant_pools::handler(ctx)
+        instructions::register_invariant_pools::handler(
+            ctx,
+            _bump_pool_list,
+            weights
+        )
     }
 
 }

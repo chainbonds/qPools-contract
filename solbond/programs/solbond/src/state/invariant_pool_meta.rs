@@ -10,4 +10,5 @@ pub struct InvariantPoolList {
     // Do we need to add initializer, etc.?
     // I guess it makes sense if we only allow initialize to change this list
     pub initializer: Pubkey,
+    pub _bump_pool_list: u8,
 }

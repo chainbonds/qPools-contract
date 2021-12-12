@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 import {Program, Provider, BN, web3} from '@project-serum/anchor';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import {Keypair, PublicKey, Transaction} from '@solana/web3.js';
 import { Network, SEED, Market, Pair } from '@invariant-labs/sdk';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { createToken } from './invariant-utils';
@@ -13,6 +13,8 @@ import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market';
 import { toDecimal } from '@invariant-labs/sdk/src/utils';
 import {createMint, getPayer} from "./utils";
 import {solbondProgram} from "../../dapp/src/programs/solbond";
+
+const NUMBER_POOLS = 5;
 
 describe('claim', () => {
     const provider = Provider.local()
@@ -37,13 +39,13 @@ describe('claim', () => {
         tickSpacing: 10
     }
     const protocolFee: Decimal = { v: fromFee(new BN(10000))}
-    let pair: Pair
     let tokenX: Token
     let tokenY: Token
     let programAuthority: PublicKey
     let nonce: number
 
     let allPairs: Pair[];
+    let allTokens: Token[];
 
     before(async () => {
 
@@ -53,10 +55,9 @@ describe('claim', () => {
             await connection.requestAirdrop(positionOwner.publicKey, 1e9)
         ])
 
-        const tokens = await Promise.all([
-            createToken(connection, wallet, mintAuthority),
-            createToken(connection, wallet, mintAuthority)
-        ])
+        allTokens = await Promise.all(Array.from({length: 2 * NUMBER_POOLS}).map((_) => {
+            return createToken(connection, wallet, mintAuthority)
+        }));
 
         const swaplineProgram = anchor.workspace.Amm as Program
         const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
@@ -66,10 +67,15 @@ describe('claim', () => {
         nonce = _nonce
         programAuthority = _programAuthority
 
-        pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-        tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-        tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+        let i = 0;
+        allPairs = Array.from({length: NUMBER_POOLS}).map((_) => {
+            let pair = new Pair(allTokens[2*i].publicKey, allTokens[(2*i)+1].publicKey, feeTier);
+            i++;
+            return pair;
+        });
+
     })
+
     it("#connectsToSolbond()", async () => {
         // Call the health-checkpoint
         await solbondProgram.rpc.healthcheck({
@@ -81,265 +87,287 @@ describe('claim', () => {
             }
         });
     })
-    it("#just try to call this for the compilin lulz()", async () => {
 
-        // Get the addresses of some of the pools that we generated
-
-
-        // Call the health-checkpoint
-        await solbondProgram.rpc.register_invariant_pools({
-            accounts: {
-
-
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                clock: web3.SYSVAR_CLOCK_PUBKEY,
-                systemProgram: web3.SystemProgram.programId,
-                tokenProgram: TOKEN_PROGRAM_ID
-            }
-        });
-    })
     it('#createState()', async () => {
         await market.createState(admin, protocolFee)
     })
     it('#createFeeTier()', async () => {
         await market.createFeeTier(feeTier, admin)
     })
+
+    // Create 10 pools, one for each pair
+    // Make this async, maybe
     it('#create()', async () => {
-        // 0.6% / 10
-        await market.create({
-            pair,
-            signer: admin
-        })
-        const createdPool = await market.get(pair)
-        assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-        assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-        assert.ok(createdPool.fee.v.eq(feeTier.fee))
-        assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
-        assert.ok(createdPool.liquidity.v.eqn(0))
-        assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-        assert.ok(createdPool.currentTickIndex == 0)
-        assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
-        assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-        assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-        assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
-        assert.ok(createdPool.authority.equals(programAuthority))
-        assert.ok(createdPool.nonce == nonce)
 
-        const tickmapData = await market.getTickmap(pair)
-        assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-        assert.ok(tickmapData.bitmap.every((v) => v == 0))
+        for (let i = 0; i < NUMBER_POOLS; i++) {
+
+            let pair = allPairs[i];
+
+            // 0.6% / 10
+            await market.create({
+                pair,
+                signer: admin
+            })
+            const createdPool = await market.get(pair)
+
+            const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+            const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
+            assert.ok(createdPool.tokenX.equals(tokenX.publicKey), ("createdPool.tokenX === tokenX.publicKey) " + createdPool.tokenX.toString() + " " + tokenX.publicKey.toString()));
+            assert.ok(createdPool.tokenY.equals(tokenY.publicKey), ("createdPool.tokenY === tokenY.publicKey) " + createdPool.tokenY.toString() + " " + tokenY.publicKey.toString()));
+            assert.ok(createdPool.fee.v.eq(feeTier.fee), ("createdPool.fee.v.eq(feeTier.fee)"));
+            assert.equal(createdPool.tickSpacing, feeTier.tickSpacing, ("createdPool.tickSpacing, feeTier.tickSpacing"));
+            assert.ok(createdPool.liquidity.v.eqn(0), ("createdPool.liquidity.v.eqn(0)"));
+            assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR), ("createdPool.sqrtPrice.v.eq(DENOMINATOR)"));
+            assert.ok(createdPool.currentTickIndex == 0, ("createdPool.currentTickIndex == 0"));
+            assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0), ("createdPool.feeGrowthGlobalX.v.eqn(0)"));
+            assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0), ("createdPool.feeGrowthGlobalY.v.eqn(0)"));
+            assert.ok(createdPool.feeProtocolTokenX.v.eqn(0), ("createdPool.feeProtocolTokenX.v.eqn(0)"));
+            assert.ok(createdPool.feeProtocolTokenY.v.eqn(0), ("createdPool.feeProtocolTokenY.v.eqn(0)"));
+            assert.ok(createdPool.authority.equals(programAuthority), ("createdPool.authority.equals(programAuthority)"));
+            assert.ok(createdPool.nonce == nonce, ("createdPool.nonce == nonce"));
+
+            const tickmapData = await market.getTickmap(pair)
+            assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4, "tickmapData.bitmap.length == TICK_LIMIT / 4")
+            assert.ok(tickmapData.bitmap.every((v) => v == 0), "tickmapData.bitmap.every((v) => v == 0)")
+        }
+
+        return true;
+
     })
 
-    let bondPoolAccount: PublicKey | null = null;  // The bond pool reserve account
-    let bondPoolRedeemableMint: Token | null = null;
-    let bondPoolCurrencyTokenMint: Token | null = null;
-    let bondPoolRedeemableTokenAccount: PublicKey | null = null;
-    //let bondPoolTokenAccount: PublicKey | null = null;
-    let bumpBondPoolAccount: number | null = null;
-    let bondPoolTokenAccount: PublicKey | null = null;
-
-    it('#initializeSolbondWorld()', async () => {
-
-        // Airdrop some solana for computation purposes
-        await provider.connection.requestAirdrop(payer.publicKey, 1e9);
-
-        // Create the bondPoolAccount as a PDA
-        [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
-            solbondProgram.programId
-        );
-        // Token account has to be another PDA, I guess
-
-        // Create the Mints that we will be using
-        bondPoolCurrencyTokenMint = await createMint(provider, payer);
-        bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
-
-        bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
-        bondPoolTokenAccount = await bondPoolCurrencyTokenMint.createAccount(bondPoolAccount);
-    });
-
-    it('#initializeSolbondReserve', async () => {
-
-        const initializeTx = await solbondProgram.rpc.initializeBondPool(
-            bumpBondPoolAccount,
-            {
-                accounts: {
-                    bondPoolAccount: bondPoolAccount,
-                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-                    bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
-                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
-                    bondPoolTokenAccount: bondPoolTokenAccount,
-                    initializer: payer.publicKey,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [payer]
-            }
-        );
-        const tx = await provider.connection.confirmTransaction(initializeTx);
-        console.log(tx);
-        console.log("initializeTx signature", initializeTx);
-    });
+    // let bondPoolAccount: PublicKey | null = null;  // The bond pool reserve account
+    // let bondPoolRedeemableMint: Token | null = null;
+    // let bondPoolCurrencyTokenMint: Token | null = null;
+    // let bondPoolRedeemableTokenAccount: PublicKey | null = null;
+    // //let bondPoolTokenAccount: PublicKey | null = null;
+    // let bumpBondPoolAccount: number | null = null;
+    // let bondPoolTokenAccount: PublicKey | null = null;
+    //
+    // it('#initializeSolbondWorld()', async () => {
+    //
+    //     // Airdrop some solana for computation purposes
+    //     await provider.connection.requestAirdrop(payer.publicKey, 1e9);
+    //
+    //     // Create the bondPoolAccount as a PDA
+    //     [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
+    //         [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
+    //         solbondProgram.programId
+    //     );
+    //     // Token account has to be another PDA, I guess
+    //
+    //     // Create the Mints that we will be using
+    //     bondPoolCurrencyTokenMint = await createMint(provider, payer);
+    //     bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
+    //
+    //     bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
+    //     bondPoolTokenAccount = await bondPoolCurrencyTokenMint.createAccount(bondPoolAccount);
+    // });
 
 
-    let purchaser: PublicKey | null = null;
-    let purchaserRedeemableTokenAccount: PublicKey | null = null;
-    let purchaserCurrencyTokenAccount: PublicKey | null = null;
 
-    // Make a purchase of the bond / staking
-    it('#buySolbond', async () => {
-
-        let amountToBuy = 10_000_000_000;
-
-        purchaser = payer.publicKey;
-        purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
-        purchaserCurrencyTokenAccount = await bondPoolCurrencyTokenMint!.createAccount(purchaser);
-        await bondPoolCurrencyTokenMint.mintTo(purchaserCurrencyTokenAccount, purchaser, [], amountToBuy);
-
-        const initializeTx = await solbondProgram.rpc.purchaseBond(
-            new BN(amountToBuy),
-            {
-                accounts: {
-                    bondPoolAccount: bondPoolAccount,
-                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-                    bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
-                    bondPoolTokenAccount: bondPoolTokenAccount,
-                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
-                    purchaser: payer.publicKey,
-                    purchaserTokenAccount: purchaserCurrencyTokenAccount,
-                    purchaserRedeemableTokenAccount: purchaserRedeemableTokenAccount,
-
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [payer]
-            }
-        );
-        const tx = await provider.connection.confirmTransaction(initializeTx);
-        console.log("initializeTx signature", initializeTx);
-        console.log(tx);
-
-    });
+    // it("#just try to call this for the compilin lulz()", async () => {
+    //
+    //     // Get the addresses of some of the pools that we generated
+    //
+    //
+    //     // Call the health-checkpoint
+    //     await solbondProgram.rpc.register_invariant_pools({
+    //         accounts: {
+    //
+    //
+    //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //             clock: web3.SYSVAR_CLOCK_PUBKEY,
+    //             systemProgram: web3.SystemProgram.programId,
+    //             tokenProgram: TOKEN_PROGRAM_ID
+    //         }
+    //     });
+    // })
 
 
-    it('#claim', async () => {
-        const upperTick = 10
-        const lowerTick = -20
-
-        await market.createTick(pair, upperTick, wallet)
-        await market.createTick(pair, lowerTick, wallet)
-
-        const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-        const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-        const mintAmount = tou64(new BN(10).pow(new BN(10)))
-
-        await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-        await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-
-        const liquidityDelta = { v: new BN(1_000_000).mul(DENOMINATOR) }
-
-        /*
-            TODO: This should be replaced and done by our program instead
-         */
-
-        // TODO: Let's just call our function with this
-
-        await market.createPositionList(positionOwner)
-        await market.initPosition(
-            {
-                pair,
-                owner: positionOwner.publicKey,
-                userTokenX: userTokenXAccount,
-                userTokenY: userTokenYAccount,
-                lowerTick,
-                upperTick,
-                liquidityDelta
-            },
-            positionOwner
-        )
-
-        assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
-
-        const swapper = Keypair.generate()
-        await connection.requestAirdrop(swapper.publicKey, 1e9)
-
-        const amount = new BN(1000)
-        const accountX = await tokenX.createAccount(swapper.publicKey)
-        const accountY = await tokenY.createAccount(swapper.publicKey)
-
-        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-
-        const poolDataBefore = await market.get(pair)
-        const priceLimit = DENOMINATOR.muln(100).divn(110)
-        const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
-
-        await market.swap(
-            {
-                pair,
-                XtoY: true,
-                amount,
-                knownPrice: poolDataBefore.sqrtPrice,
-                slippage: toDecimal(1, 2),
-                accountX,
-                accountY,
-                byAmountIn: true
-            },
-            swapper
-        )
-        const poolDataAfter = await market.get(pair)
-        assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
-        assert.ok(poolDataAfter.currentTickIndex == lowerTick)
-        assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
-
-        const amountX = (await tokenX.getAccountInfo(accountX)).amount
-        const amountY = (await tokenY.getAccountInfo(accountY)).amount
-        const reservesAfterSwap = await market.getReserveBalances(pair, wallet)
-        const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
-        const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
-
-        assert.ok(amountX.eqn(0))
-        assert.ok(amountY.eq(amount.subn(7)))
-        assert.ok(reserveXDelta.eq(amount))
-        assert.ok(reserveYDelta.eq(amount.subn(7)))
-        assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
-        assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-        assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
-        assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
-
-        const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
-        const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
-
-        /*
-            TODO: This should be replaced and done by our program instead
-         */
-
-        await market.claimFee(
-            {
-                pair,
-                owner: positionOwner.publicKey,
-                userTokenX: userTokenXAccount,
-                userTokenY: userTokenYAccount,
-                index: 0
-            },
-            positionOwner
-        )
-
-        const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
-        const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
-        const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
-        const expectedTokensOwedX = new BN(400000000000)
-        const expectedFeeGrowthInsideX = new BN(5400000)
-        const expectedTokensClaimed = 5
-
-        assert.ok(reservesBeforeClaim.x.subn(5).eq(reservesAfterClaim.x))
-        assert.ok(expectedTokensOwedX.eq(positionAfterClaim.tokensOwedX.v))
-        assert.ok(expectedFeeGrowthInsideX.eq(positionAfterClaim.feeGrowthInsideX.v))
-        assert.ok(
-            userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
-        )
-    })
+    //
+    // it('#initializeSolbondReserve', async () => {
+    //
+    //     const initializeTx = await solbondProgram.rpc.initializeBondPool(
+    //         bumpBondPoolAccount,
+    //         {
+    //             accounts: {
+    //                 bondPoolAccount: bondPoolAccount,
+    //                 bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+    //                 bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
+    //                 bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
+    //                 bondPoolTokenAccount: bondPoolTokenAccount,
+    //                 initializer: payer.publicKey,
+    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //                 clock: web3.SYSVAR_CLOCK_PUBKEY,
+    //                 systemProgram: web3.SystemProgram.programId,
+    //                 tokenProgram: TOKEN_PROGRAM_ID
+    //             },
+    //             signers: [payer]
+    //         }
+    //     );
+    //     const tx = await provider.connection.confirmTransaction(initializeTx);
+    //     console.log(tx);
+    //     console.log("initializeTx signature", initializeTx);
+    // });
+    //
+    //
+    // let purchaser: PublicKey | null = null;
+    // let purchaserRedeemableTokenAccount: PublicKey | null = null;
+    // let purchaserCurrencyTokenAccount: PublicKey | null = null;
+    //
+    // // Make a purchase of the bond / staking
+    // it('#buySolbond', async () => {
+    //
+    //     let amountToBuy = 10_000_000_000;
+    //
+    //     purchaser = payer.publicKey;
+    //     purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
+    //     purchaserCurrencyTokenAccount = await bondPoolCurrencyTokenMint!.createAccount(purchaser);
+    //     await bondPoolCurrencyTokenMint.mintTo(purchaserCurrencyTokenAccount, purchaser, [], amountToBuy);
+    //
+    //     const initializeTx = await solbondProgram.rpc.purchaseBond(
+    //         new BN(amountToBuy),
+    //         {
+    //             accounts: {
+    //                 bondPoolAccount: bondPoolAccount,
+    //                 bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+    //                 bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
+    //                 bondPoolTokenAccount: bondPoolTokenAccount,
+    //                 bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
+    //                 purchaser: payer.publicKey,
+    //                 purchaserTokenAccount: purchaserCurrencyTokenAccount,
+    //                 purchaserRedeemableTokenAccount: purchaserRedeemableTokenAccount,
+    //
+    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //                 clock: web3.SYSVAR_CLOCK_PUBKEY,
+    //                 systemProgram: web3.SystemProgram.programId,
+    //                 tokenProgram: TOKEN_PROGRAM_ID
+    //             },
+    //             signers: [payer]
+    //         }
+    //     );
+    //     const tx = await provider.connection.confirmTransaction(initializeTx);
+    //     console.log("initializeTx signature", initializeTx);
+    //     console.log(tx);
+    //
+    // });
+    //
+    //
+    // it('#claim', async () => {
+    //     const upperTick = 10
+    //     const lowerTick = -20
+    //
+    //     await market.createTick(pair, upperTick, wallet)
+    //     await market.createTick(pair, lowerTick, wallet)
+    //
+    //     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    //     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    //     const mintAmount = tou64(new BN(10).pow(new BN(10)))
+    //
+    //     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    //     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    //
+    //     const liquidityDelta = { v: new BN(1_000_000).mul(DENOMINATOR) }
+    //
+    //     /*
+    //         TODO: This should be replaced and done by our program instead
+    //      */
+    //
+    //     // TODO: Let's just call our function with this
+    //
+    //     await market.createPositionList(positionOwner)
+    //     await market.initPosition(
+    //         {
+    //             pair,
+    //             owner: positionOwner.publicKey,
+    //             userTokenX: userTokenXAccount,
+    //             userTokenY: userTokenYAccount,
+    //             lowerTick,
+    //             upperTick,
+    //             liquidityDelta
+    //         },
+    //         positionOwner
+    //     )
+    //
+    //     assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
+    //
+    //     const swapper = Keypair.generate()
+    //     await connection.requestAirdrop(swapper.publicKey, 1e9)
+    //
+    //     const amount = new BN(1000)
+    //     const accountX = await tokenX.createAccount(swapper.publicKey)
+    //     const accountY = await tokenY.createAccount(swapper.publicKey)
+    //
+    //     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    //
+    //     const poolDataBefore = await market.get(pair)
+    //     const priceLimit = DENOMINATOR.muln(100).divn(110)
+    //     const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
+    //
+    //     await market.swap(
+    //         {
+    //             pair,
+    //             XtoY: true,
+    //             amount,
+    //             knownPrice: poolDataBefore.sqrtPrice,
+    //             slippage: toDecimal(1, 2),
+    //             accountX,
+    //             accountY,
+    //             byAmountIn: true
+    //         },
+    //         swapper
+    //     )
+    //     const poolDataAfter = await market.get(pair)
+    //     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
+    //     assert.ok(poolDataAfter.currentTickIndex == lowerTick)
+    //     assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+    //
+    //     const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    //     const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    //     const reservesAfterSwap = await market.getReserveBalances(pair, wallet)
+    //     const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
+    //     const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
+    //
+    //     assert.ok(amountX.eqn(0))
+    //     assert.ok(amountY.eq(amount.subn(7)))
+    //     assert.ok(reserveXDelta.eq(amount))
+    //     assert.ok(reserveYDelta.eq(amount.subn(7)))
+    //     assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
+    //     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
+    //     assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
+    //     assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
+    //
+    //     const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
+    //     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+    //
+    //     /*
+    //         TODO: This should be replaced and done by our program instead
+    //      */
+    //
+    //     await market.claimFee(
+    //         {
+    //             pair,
+    //             owner: positionOwner.publicKey,
+    //             userTokenX: userTokenXAccount,
+    //             userTokenY: userTokenYAccount,
+    //             index: 0
+    //         },
+    //         positionOwner
+    //     )
+    //
+    //     const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+    //     const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
+    //     const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
+    //     const expectedTokensOwedX = new BN(400000000000)
+    //     const expectedFeeGrowthInsideX = new BN(5400000)
+    //     const expectedTokensClaimed = 5
+    //
+    //     assert.ok(reservesBeforeClaim.x.subn(5).eq(reservesAfterClaim.x))
+    //     assert.ok(expectedTokensOwedX.eq(positionAfterClaim.tokensOwedX.v))
+    //     assert.ok(expectedFeeGrowthInsideX.eq(positionAfterClaim.feeGrowthInsideX.v))
+    //     assert.ok(
+    //         userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
+    //     )
+    // })
 })

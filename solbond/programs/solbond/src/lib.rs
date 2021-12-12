@@ -149,7 +149,7 @@ pub mod solbond {
     pub fn register_invariant_pools(
         ctx: Context<RegisterInvariantPools>,
         _bump_pool_list: u8,
-        weights: [u64; 10]
+        weights: [u64; 5]
     ) -> ProgramResult {
 
         // For now assume that our portfolio has an equal weight across all pools

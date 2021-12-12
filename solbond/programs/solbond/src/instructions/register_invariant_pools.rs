@@ -8,7 +8,7 @@ use crate::state::{BondPoolAccount, InvariantPoolList};
 #[derive(Accounts)]
 #[instruction(
     _bump_pool_list: u8,
-    weights: [u64; 10]
+    weights: [u64; 5]
 )]
 pub struct RegisterInvariantPools<'info> {
 
@@ -26,11 +26,6 @@ pub struct RegisterInvariantPools<'info> {
     pub pool_list_address_2: AccountInfo<'info>,
     pub pool_list_address_3: AccountInfo<'info>,
     pub pool_list_address_4: AccountInfo<'info>,
-    pub pool_list_address_5: AccountInfo<'info>,
-    pub pool_list_address_6: AccountInfo<'info>,
-    pub pool_list_address_7: AccountInfo<'info>,
-    pub pool_list_address_8: AccountInfo<'info>,
-    pub pool_list_address_9: AccountInfo<'info>,
 
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
@@ -45,7 +40,7 @@ pub struct RegisterInvariantPools<'info> {
 pub fn handler(
     ctx: Context<RegisterInvariantPools>,
     _bump_pool_list: u8,
-    weights: [u64; 10]
+    weights: [u64; 5]
 ) -> ProgramResult {
 
     /*
@@ -60,11 +55,6 @@ pub fn handler(
     pool_list.pool_addresses[2] = ctx.accounts.pool_list_address_2.key();
     pool_list.pool_addresses[3] = ctx.accounts.pool_list_address_3.key();
     pool_list.pool_addresses[4] = ctx.accounts.pool_list_address_4.key();
-    pool_list.pool_addresses[5] = ctx.accounts.pool_list_address_5.key();
-    pool_list.pool_addresses[6] = ctx.accounts.pool_list_address_6.key();
-    pool_list.pool_addresses[7] = ctx.accounts.pool_list_address_7.key();
-    pool_list.pool_addresses[8] = ctx.accounts.pool_list_address_8.key();
-    pool_list.pool_addresses[9] = ctx.accounts.pool_list_address_9.key();
 
     // Initialize a position in all of the pools
     pool_list.initializer = ctx.accounts.initializer.key();

@@ -146,7 +146,7 @@ describe('claim', () => {
         // Get the addresses of some of the pools that we generated
         [poolList, poolListBump] = await anchor.web3.PublicKey.findProgramAddress(
             [wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("poolList"))],
-            invariantProgram.programId
+            solbondProgram.programId
         );
 
         let marketAddresses: PublicKey[] = [];
@@ -158,18 +158,45 @@ describe('claim', () => {
             marketAddresses.push(marketAddress);
         }
 
-        // Call the health-checkpoint
-        await solbondProgram.rpc.register_invariant_pools(
-            poolListBump,
+        console.log("Pool list not provided: ", poolList);
+
+        console.log(new BN(poolListBump));
+        console.log([new BN(10), new BN(10), new BN(10), new BN(10), new BN(10)]);
+
+        console.log(
             {
                 accounts: {
 
-                    pool_list: poolList,
-                    pool_list_address_0: marketAddresses[0],
-                    pool_list_address_1: marketAddresses[1],
-                    pool_list_address_2: marketAddresses[2],
-                    pool_list_address_3: marketAddresses[3],
-                    pool_list_address_4: marketAddresses[4],
+                    poolList: poolList.toString(),
+                    poolListAddress_0: marketAddresses[0].toString(),
+                    poolListAddress_1: marketAddresses[1].toString(),
+                    poolListAddress_2: marketAddresses[2].toString(),
+                    poolListAddress_3: marketAddresses[3].toString(),
+                    poolListAddress_4: marketAddresses[4].toString(),
+                    initializer: wallet.publicKey.toString(),
+
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY.toString(),
+                    clock: web3.SYSVAR_CLOCK_PUBKEY.toString(),
+                    systemProgram: web3.SystemProgram.programId.toString(),
+                    tokenProgram: TOKEN_PROGRAM_ID.toString()
+                },
+                signers: [wallet]
+            }
+        );
+
+        // Call the health-checkpoint
+        await solbondProgram.rpc.registerInvariantPools(
+            poolListBump,
+            [new BN(10), new BN(10), new BN(10), new BN(10), new BN(10)],
+            {
+                accounts: {
+
+                    poolList: poolList,
+                    poolListAddress0: marketAddresses[0],
+                    poolListAddress1: marketAddresses[1],
+                    poolListAddress2: marketAddresses[2],
+                    poolListAddress3: marketAddresses[3],
+                    poolListAddress4: marketAddresses[4],
                     initializer: wallet.publicKey,
 
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -178,7 +205,8 @@ describe('claim', () => {
                     tokenProgram: TOKEN_PROGRAM_ID
                 },
                 signers: [wallet]
-        });
+            }
+        );
     })
 
     // let bondPoolAccount: PublicKey | null = null;  // The bond pool reserve account

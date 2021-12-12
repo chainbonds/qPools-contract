@@ -15,8 +15,9 @@ pub struct RegisterInvariantPools<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 8 + BondPoolAccount::LEN,
-        seeds = [initializer.key.as_ref(), b"poolList"], bump = _bump_pool_list
+        space = 5 * 32 + 5 * 64 + 32 + 8,
+        seeds = [initializer.key.as_ref(), b"poolList"],
+        bump = _bump_pool_list
     )]
     pub pool_list: Account<'info, InvariantPoolList>,
 
@@ -55,6 +56,8 @@ pub fn handler(
     pool_list.pool_addresses[2] = ctx.accounts.pool_list_address_2.key();
     pool_list.pool_addresses[3] = ctx.accounts.pool_list_address_3.key();
     pool_list.pool_addresses[4] = ctx.accounts.pool_list_address_4.key();
+
+    pool_list.pool_weights = weights;
 
     // Initialize a position in all of the pools
     pool_list.initializer = ctx.accounts.initializer.key();

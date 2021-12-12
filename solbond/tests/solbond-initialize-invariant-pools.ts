@@ -43,6 +43,8 @@ describe('claim', () => {
     let programAuthority: PublicKey
     let nonce: number
 
+    let allPairs: Pair[];
+
     before(async () => {
 
         await Promise.all([
@@ -80,9 +82,15 @@ describe('claim', () => {
         });
     })
     it("#just try to call this for the compilin lulz()", async () => {
+
+        // Get the addresses of some of the pools that we generated
+
+
         // Call the health-checkpoint
         await solbondProgram.rpc.register_invariant_pools({
             accounts: {
+
+
                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                 clock: web3.SYSVAR_CLOCK_PUBKEY,
                 systemProgram: web3.SystemProgram.programId,

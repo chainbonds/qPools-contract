@@ -78,6 +78,57 @@ describe('claim', () => {
 
     })
 
+    let bondPoolRedeemableMint: Token | null = null;
+    let bondPoolCurrencyTokenMint: Token | null = null;
+    let bondPoolRedeemableTokenAccount: PublicKey | null = null;
+    //let bondPoolTokenAccount: PublicKey | null = null;
+    let bondPoolAccount: PublicKey | null = null;
+    let bumpBondPoolAccount: number | null = null;
+    let bondPoolTokenAccount: PublicKey | null = null;
+
+    it('#initializeBondPoolAccounts()', async () => {
+
+        // Airdrop some solana for computation purposes
+        await provider.connection.requestAirdrop(payer.publicKey, 100 * 1e9);
+
+        // Create the bondPoolAccount as a PDA
+        [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
+            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
+            solbondProgram.programId
+        );
+        // Token account has to be another PDA, I guess
+
+        // Create the Mints that we will be using
+        bondPoolCurrencyTokenMint = await createMint(provider, payer);
+        bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
+
+        bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
+        bondPoolTokenAccount = await bondPoolCurrencyTokenMint.createAccount(bondPoolAccount);
+
+    });
+    it('#initializeBondPool()', async () => {
+        const initializeTx = await solbondProgram.rpc.initializeBondPool(
+            bumpBondPoolAccount,
+            {
+                accounts: {
+                    bondPoolAccount: bondPoolAccount,
+                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
+                    bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
+                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
+                    bondPoolTokenAccount: bondPoolTokenAccount,
+                    initializer: payer.publicKey,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [payer]
+            }
+        );
+        await provider.connection.confirmTransaction(initializeTx);
+    });
+
+
     it("#connectsToSolbond()", async () => {
         // Call the health-checkpoint
         await solbondProgram.rpc.healthcheck({
@@ -150,39 +201,24 @@ describe('claim', () => {
         );
 
         let marketAddresses: PublicKey[] = [];
+        let reserveTokenXAddresses: PublicKey[] = [];
+        let reserveTokenYAddresses: PublicKey[] = [];
         // For each pair, get the market addresses
         for (let i = 0; i < NUMBER_POOLS; i++) {
 
             let pair = allPairs[i];
             const [marketAddress, marketAddressBump] = await pair.getAddressAndBump(market.program.programId);
             marketAddresses.push(marketAddress);
+
+            const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet);
+            const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet);
+
+            // For each token, generate an account for the reserve
+            let reserveTokenXAccount = await tokenX!.createAccount(bondPoolAccount);
+            reserveTokenXAddresses.push(reserveTokenXAccount);
+            let reserveTokenYAccount = await tokenY!.createAccount(bondPoolAccount);
+            reserveTokenYAddresses.push(reserveTokenYAccount);
         }
-
-        console.log("Pool list not provided: ", poolList);
-
-        console.log(new BN(poolListBump));
-        console.log([new BN(10), new BN(10), new BN(10), new BN(10), new BN(10)]);
-
-        console.log(
-            {
-                accounts: {
-
-                    poolList: poolList.toString(),
-                    poolListAddress_0: marketAddresses[0].toString(),
-                    poolListAddress_1: marketAddresses[1].toString(),
-                    poolListAddress_2: marketAddresses[2].toString(),
-                    poolListAddress_3: marketAddresses[3].toString(),
-                    poolListAddress_4: marketAddresses[4].toString(),
-                    initializer: wallet.publicKey.toString(),
-
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY.toString(),
-                    clock: web3.SYSVAR_CLOCK_PUBKEY.toString(),
-                    systemProgram: web3.SystemProgram.programId.toString(),
-                    tokenProgram: TOKEN_PROGRAM_ID.toString()
-                },
-                signers: [wallet]
-            }
-        );
 
         // Call the health-checkpoint
         await solbondProgram.rpc.registerInvariantPools(
@@ -199,6 +235,18 @@ describe('claim', () => {
                     poolListAddress4: marketAddresses[4],
                     initializer: wallet.publicKey,
 
+                    reserveTokenXAddress0: reserveTokenXAddresses[0],
+                    reserveTokenXAddress1: reserveTokenXAddresses[1],
+                    reserveTokenXAddress2: reserveTokenXAddresses[2],
+                    reserveTokenXAddress3: reserveTokenXAddresses[3],
+                    reserveTokenXAddress4: reserveTokenXAddresses[4],
+
+                    reserveTokenYAddress0: reserveTokenYAddresses[0],
+                    reserveTokenYAddress1: reserveTokenYAddresses[1],
+                    reserveTokenYAddress2: reserveTokenYAddresses[2],
+                    reserveTokenYAddress3: reserveTokenYAddresses[3],
+                    reserveTokenYAddress4: reserveTokenYAddresses[4],
+
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,
@@ -207,6 +255,13 @@ describe('claim', () => {
                 signers: [wallet]
             }
         );
+    })
+
+    it("#createReserveTokenAccount()", async () => {
+
+        // For each of the pairs, create a reserve-token-account
+
+
     })
 
     // let bondPoolAccount: PublicKey | null = null;  // The bond pool reserve account
@@ -238,8 +293,6 @@ describe('claim', () => {
     // });
 
 
-
-    //
     // it('#initializeSolbondReserve', async () => {
     //
     //     const initializeTx = await solbondProgram.rpc.initializeBondPool(
@@ -264,8 +317,8 @@ describe('claim', () => {
     //     console.log(tx);
     //     console.log("initializeTx signature", initializeTx);
     // });
-    //
-    //
+
+
     // let purchaser: PublicKey | null = null;
     // let purchaserRedeemableTokenAccount: PublicKey | null = null;
     // let purchaserCurrencyTokenAccount: PublicKey | null = null;

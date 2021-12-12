@@ -15,11 +15,11 @@ pub struct RegisterInvariantPools<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 5 * 32 + 5 * 64 + 32 + 8,
+        space = 5 * 32 + 5 * 64 + 32 * 5 + 32 * 5 + 32 + 8,
         seeds = [initializer.key.as_ref(), b"poolList"],
         bump = _bump_pool_list
     )]
-    pub pool_list: Account<'info, InvariantPoolList>,
+    pub pool_list: Box<Account<'info, InvariantPoolList>>,
 
     // Take in a list of pool addresses
     pub pool_list_address_0: AccountInfo<'info>,
@@ -27,6 +27,18 @@ pub struct RegisterInvariantPools<'info> {
     pub pool_list_address_2: AccountInfo<'info>,
     pub pool_list_address_3: AccountInfo<'info>,
     pub pool_list_address_4: AccountInfo<'info>,
+
+    pub reserve_token_X_address_0: AccountInfo<'info>,
+    pub reserve_token_X_address_1: AccountInfo<'info>,
+    pub reserve_token_X_address_2: AccountInfo<'info>,
+    pub reserve_token_X_address_3: AccountInfo<'info>,
+    pub reserve_token_X_address_4: AccountInfo<'info>,
+
+    pub reserve_token_Y_address_0: AccountInfo<'info>,
+    pub reserve_token_Y_address_1: AccountInfo<'info>,
+    pub reserve_token_Y_address_2: AccountInfo<'info>,
+    pub reserve_token_Y_address_3: AccountInfo<'info>,
+    pub reserve_token_Y_address_4: AccountInfo<'info>,
 
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
@@ -46,8 +58,7 @@ pub fn handler(
 
     /*
         As Input, have a list of Pool Accounts
-     */
-
+    */
     let pool_list = &mut ctx.accounts.pool_list;
 
     // Iterate through the pools
@@ -61,6 +72,23 @@ pub fn handler(
 
     // Initialize a position in all of the pools
     pool_list.initializer = ctx.accounts.initializer.key();
+
+    /*
+        Also define the token addresses for the reserve
+    */
+    // Pair.tokenX
+    pool_list.reserve_token_X_addresses[0] = ctx.accounts.reserve_token_X_address_0.key();
+    pool_list.reserve_token_X_addresses[1] = ctx.accounts.reserve_token_X_address_1.key();
+    pool_list.reserve_token_X_addresses[2] = ctx.accounts.reserve_token_X_address_2.key();
+    pool_list.reserve_token_X_addresses[3] = ctx.accounts.reserve_token_X_address_3.key();
+    pool_list.reserve_token_X_addresses[4] = ctx.accounts.reserve_token_X_address_4.key();
+    // Pair.tokenY
+    pool_list.reserve_token_Y_addresses[0] = ctx.accounts.reserve_token_Y_address_0.key();
+    pool_list.reserve_token_Y_addresses[1] = ctx.accounts.reserve_token_Y_address_1.key();
+    pool_list.reserve_token_Y_addresses[2] = ctx.accounts.reserve_token_Y_address_2.key();
+    pool_list.reserve_token_Y_addresses[3] = ctx.accounts.reserve_token_Y_address_3.key();
+    pool_list.reserve_token_Y_addresses[4] = ctx.accounts.reserve_token_Y_address_4.key();
+
 
     Ok(())
 }

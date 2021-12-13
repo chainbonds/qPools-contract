@@ -64,13 +64,14 @@ export class QPoolsAdmin {
 
     constructor(
         wallet: IWallet,
-        connection: Connection
+        connection: Connection,
+        provider: Provider
     ) {
         this.connection = connection;
 
         this.solbondProgram = anchor.workspace.Solbond;
         this.invariantProgram = anchor.workspace.Amm;
-        this.provider = Provider.local();
+        this.provider = provider;
 
         // @ts-expect-error
         this.wallet = provider.wallet.payer as Keypair
@@ -141,10 +142,11 @@ export class MockQPools extends QPoolsAdmin {
 
     // TODO: Number pools should be part of the constructor!
     async createTokens(number_pools: number, mintAuthority: Keypair) {
-        this.tokens = await Promise.all(Array.from({length: 2 * number_pools}).map((_) => {
-            return createToken(this.connection, this.wallet, mintAuthority)
-        }));
-
+        this.tokens = await Promise.all(
+            Array.from({length: 2 * number_pools}).map((_) => {
+                return createToken(this.connection, this.wallet, mintAuthority)
+            })
+        );
     }
 
     async createPairs(number_pools: number) {
@@ -180,24 +182,28 @@ export class MockQPools extends QPoolsAdmin {
         await this.mockMarket.createFeeTier(this.feeTier, admin);
     }
 
+    async createMockMarket(
+        network: Network,
+        wallet: IWallet,
+        ammProgramId: PublicKey,
+    ) {
+        this.mockMarket = new Market(
+            network,
+            wallet,
+            this.connection,
+            ammProgramId
+        );
+    }
+
     async creatMarketsFromPairs(
         numberPools: number,
         admin: Keypair,
-        network: Network,
-        wallet: IWallet,
     ) {
 
         const [programAuthority, nonce] = await anchor.web3.PublicKey.findProgramAddress(
             [Buffer.from(SEED)],
             this.invariantProgram.programId
         )
-
-        this.mockMarket = new Market(
-            network,
-            wallet,
-            this.connection,
-            this.mockMarket.program.programId
-        );
 
         // Now register a bunch of pairs
         for (let i = 0; i < numberPools; i++) {

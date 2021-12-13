@@ -5,6 +5,7 @@ import {Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
 import {MockQPools} from "./qpools-sdk/qpools";
+import {invariantAmmProgram} from "./external_programs/invariant_amm";
 
 const NUMBER_POOLS = 5;
 
@@ -50,10 +51,19 @@ describe('claim', () => {
         market = new MockQPools(
             provider.wallet,
             connection,
+            provider
         );
+        await market.createMockMarket(
+            Network.LOCAL,
+            provider.wallet,
+            invariantProgram.programId
+        )
     });
     it("#createTradedToken()", async () => {
         await market.createTokens(NUMBER_POOLS, mintAuthority);
+    })
+    it("#createFeeTier()", async () => {
+        await market.createFeeTier(admin);
     })
     it("#createTradePairs()", async () => {
         await market.createPairs(NUMBER_POOLS);
@@ -61,33 +71,30 @@ describe('claim', () => {
     it('#createState()', async () => {
         await market.createState(admin);
     })
-    it("#createFeeTier()", async () => {
-        await market.createFeeTier(admin);
-    })
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere
         await market.creatMarketsFromPairs(
             NUMBER_POOLS,
-            admin,
-            Network.LOCAL,
-            provider.wallet,
+            admin
         )
     })
 
     /*
      * Now run our endpoints
      */
-    it("#connectsToSolbond()", async () => {
-        // Call the health-checkpoint
-        await solbondProgram.rpc.healthcheck({
-            accounts: {
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                clock: web3.SYSVAR_CLOCK_PUBKEY,
-                systemProgram: web3.SystemProgram.programId,
-                tokenProgram: TOKEN_PROGRAM_ID
-            }
-        });
-    })
+    // it("#connectsToSolbond()", async () => {
+    //     // Call the health-checkpoint
+    //     await solbondProgram.rpc.healthcheck({
+    //         accounts: {
+    //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //             clock: web3.SYSVAR_CLOCK_PUBKEY,
+    //             systemProgram: web3.SystemProgram.programId,
+    //             tokenProgram: TOKEN_PROGRAM_ID
+    //         }
+    //     });
+    // })
+
+    // Until here should work
 
 
 

@@ -180,7 +180,7 @@ export class MockQPools extends QPoolsAdmin {
         await this.mockMarket.createFeeTier(this.feeTier, admin);
     }
 
-    async creatMarketWithPairs(
+    async creatMarketsFromPairs(
         numberPools: number,
         admin: Keypair,
         network: Network,
@@ -236,38 +236,5 @@ export class MockQPools extends QPoolsAdmin {
         }
 
     }
-
-    async createQPoolAccountPerToken(number_pools: number) {
-
-        let poolList: PublicKey;
-        let poolListBump: number;
-
-        let marketAddresses: PublicKey[] = [];
-        let reserveTokenXAddresses: PublicKey[] = [];
-        let reserveTokenYAddresses: PublicKey[] = [];
-        // For each pair, get the market addresses
-        for (let i = 0; i < number_pools; i++) {
-
-            let pair = this.pairs[i];
-            const [marketAddress, marketAddressBump] = await pair.getAddressAndBump(this.mockMarket.program.programId);
-            marketAddresses.push(marketAddress);
-
-            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, this.wallet);
-            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, this.wallet);
-
-            // For each token, generate an account for the reserve
-            let reserveTokenXAccount = await tokenX!.createAccount(this.qPoolAccount);
-            reserveTokenXAddresses.push(reserveTokenXAccount);
-            let reserveTokenYAccount = await tokenY!.createAccount(this.qPoolAccount);
-            reserveTokenYAddresses.push(reserveTokenYAccount);
-
-            // And now initialize the application
-        }
-
-        // Maybe we shouldn't track state here, but on the online programs ...
-
-    }
-
-
 
 }

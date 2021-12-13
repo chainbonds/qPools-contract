@@ -66,7 +66,7 @@ describe('claim', () => {
     })
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere
-        await market.creatMarketWithPairs(
+        await market.creatMarketsFromPairs(
             NUMBER_POOLS,
             admin,
             Network.LOCAL,

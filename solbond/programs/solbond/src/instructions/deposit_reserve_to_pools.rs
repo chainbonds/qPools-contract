@@ -45,39 +45,39 @@ pub fn calculate_amount_per_pool(x: u64) -> [u64; 5] {
 
 pub fn swap_to_currency() {
 
-    amm::cpi::swap();
-
-    let cpi_program = ctx.accounts.amm.to_account_info();
-    let cpi_accounts = Swap {
-        // State
-        state: ctx.accounts.amm.to_account_info(),
-        // Pool
-        pool: ctx.accounts.amm.to_account_info(),
-        // Tickmap
-        tickmap: ctx.accounts.amm.to_account_info(),
-        // Mints
-        token_x: ctx.accounts.amm.to_account_info(),
-        token_y: ctx.accounts.amm.to_account_info(),
-        // Tokens
-        reserve_x: ctx.accounts.amm.to_account_info(),
-        reserve_y: ctx.accounts.amm.to_account_info(),
-        account_x: ctx.accounts.amm.to_account_info(),
-        account_y: ctx.accounts.amm.to_account_info(),
-        // Accounts
-        owner: ctx.accounts.amm.to_account_info(),
-        // Default / Misc
-        program_authority: ctx.accounts.amm.to_account_info(),
-        token_program: ctx.accounts.amm.to_account_info(),
-    };
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    zero_copy::cpi::update_bar(
-        cpi_ctx,
-       _fee_tier_address: Pubkey,
-       x_to_y: bool,
-       amount: u64,
-       by_amount_in: bool,  // whether amount specifies input or output
-       sqrt_price_limit: u128
-    );
+    // amm::cpi::swap();
+    //
+    // let cpi_program = ctx.accounts.amm.to_account_info();
+    // let cpi_accounts = Swap {
+    //     // State
+    //     state: ctx.accounts.amm.to_account_info(),
+    //     // Pool
+    //     pool: ctx.accounts.amm.to_account_info(),
+    //     // Tickmap
+    //     tickmap: ctx.accounts.amm.to_account_info(),
+    //     // Mints
+    //     token_x: ctx.accounts.amm.to_account_info(),
+    //     token_y: ctx.accounts.amm.to_account_info(),
+    //     // Tokens
+    //     reserve_x: ctx.accounts.amm.to_account_info(),
+    //     reserve_y: ctx.accounts.amm.to_account_info(),
+    //     account_x: ctx.accounts.amm.to_account_info(),
+    //     account_y: ctx.accounts.amm.to_account_info(),
+    //     // Accounts
+    //     owner: ctx.accounts.amm.to_account_info(),
+    //     // Default / Misc
+    //     program_authority: ctx.accounts.amm.to_account_info(),
+    //     token_program: ctx.accounts.amm.to_account_info(),
+    // };
+    // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+    // zero_copy::cpi::update_bar(
+    //     cpi_ctx,
+    //    _fee_tier_address: Pubkey,
+    //    x_to_y: bool,
+    //    amount: u64,
+    //    by_amount_in: bool,  // whether amount specifies input or output
+    //    sqrt_price_limit: u128
+    // );
 
 }
 
@@ -91,17 +91,17 @@ pub fn handler(ctx: Context<DepositReserveToPools>) -> ProgramResult {
 
 
 
-    // Calculate how much currency is in the bond
-    let available_currency: u64 = ctx.accounts.bond_pool_currency_account.amount;
-
-    // For now, assume we provide the same amount of liquidity to all pools
-    // So we don't have to calculate the weightings
-    let fraction_per_pool = calculate_amount_per_pool(available_currency);
-
-    // Make swaps, and deposit this much to the pool
-    for i in 0..fraction_per_pool.len() {
-
-    }
+    // // Calculate how much currency is in the bond
+    // let available_currency: u64 = ctx.accounts.bond_pool_currency_account.amount;
+    //
+    // // For now, assume we provide the same amount of liquidity to all pools
+    // // So we don't have to calculate the weightings
+    // let fraction_per_pool = calculate_amount_per_pool(available_currency);
+    //
+    // // Make swaps, and deposit this much to the pool
+    // for i in 0..fraction_per_pool.len() {
+    //
+    // }
 
     Ok(())
 }

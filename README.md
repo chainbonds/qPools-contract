@@ -54,6 +54,7 @@ program = "./deps/invariant/target/deploy/staker.so"
 test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/solbond-initialize-invariant-pools.ts"
 ```
 
+
 ### (3) Build and integrate the Invariant Programs (AMM and Staker)
 
 You must get the `lib.rs` from a previous commit and then run `anchor build`. 
@@ -62,3 +63,9 @@ Please do if you need this.
 And please add more instructions on how to use it if you know more haha, or if you find stuff unclear.
 
 
+### (4) Update Addresses
+
+Go inside the following folder, and add the AMM program-address (which you received once you ran `anchor build`).
+
+- `solbond/deps/invariant/sdk/src/network.ts`
+- 

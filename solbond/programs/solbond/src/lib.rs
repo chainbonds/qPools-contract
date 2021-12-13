@@ -7,6 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
+use state::*;
 
 // declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
 declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
@@ -43,8 +44,7 @@ declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
 
     - create_position
     - remove_position
-    - withdraw_protocol_fee
-        => what is the difference to the claim_fee?
+    - claim_fee
 
     The RPC endpoints that are optional
     - swap
@@ -92,23 +92,16 @@ pub struct BalancePools<'info> {
 pub mod solbond {
     use super::*;
 
-    // pub fn example_reserve_solana_to_liquidity_pools(
-    //     ctx: Context<BalancePools>,
-    //     solana_in_lamports: u8,
-    // ) -> ProgramResult {
-    //
-    //     /*
-    //         (Step 1: Transfer from user to reserve)
-    //     */
-    //
-    //     /*
-    //         (Step 2: Transfer from us to user)
-    //     */
-    //
-    //     Ok(())
-    //
-    // }
+    /**
+    * A simple health checkpoint which checks if the program is up and running
+    */
+    pub fn healthcheck(ctx: Context<Healthcheck>) -> ProgramResult {
+        instructions::healthcheck::handler(ctx)
+    }
 
+    /**
+    * Initializes the reserve / vault
+    */
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
         _bump_bond_pool_account: u8
@@ -147,6 +140,38 @@ pub mod solbond {
     ) -> ProgramResult {
 
         instructions::redeem_bond::handler(ctx, redeemable_amount_raw)
+    }
+
+    /**
+    * Register all the pools that are defined by invariant
+    *
+    */
+    pub fn register_invariant_pools(
+        ctx: Context<RegisterInvariantPools>,
+        _bump_pool_list: u8,
+        weights: [u64; 5]
+    ) -> ProgramResult {
+
+        // For now assume that our portfolio has an equal weight across all pools
+        instructions::register_invariant_pools::handler(
+            ctx,
+            _bump_pool_list,
+            weights
+        )
+    }
+
+    /**
+     * Register all the pools that are defined by invariant
+     *
+     */
+    pub fn deposit_reserve_to_pools(
+        ctx: Context<DepositReserveToPools>
+    ) -> ProgramResult {
+
+        // For now assume that our portfolio has an equal weight across all pools
+        instructions::deposit_reserve_to_pools::handler(
+            ctx
+        )
     }
 
 }

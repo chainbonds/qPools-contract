@@ -33,15 +33,15 @@ pub struct InitializeBondPool<'info> {
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
     #[account(mut)]
-    pub bond_pool_token_mint: Account<'info, Mint>,
+    pub bond_pool_currency_token_mint: Account<'info, Mint>,
 
     #[account(mut, constraint = bond_pool_redeemable_token_account.owner == bond_pool_account.key())]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
     // You could also keep this, but then you have to turn this into a PDA
     // #[account(init, payer = initializer, token::mint = bond_pool_token_mint, token::authority = bond_pool_account)]
     // I think this is easier for now, can add constraint checks later
-    #[account(mut, constraint = bond_pool_token_account.owner == bond_pool_account.key())]
-    pub bond_pool_token_account: Account<'info, TokenAccount>,
+    #[account(mut, constraint = bond_pool_currency_token_account.owner == bond_pool_account.key())]
+    pub bond_pool_currency_token_account: Account<'info, TokenAccount>,
 
     // The account which generate the bond pool
     #[account(signer, mut)]
@@ -62,9 +62,9 @@ pub fn handler(
     let bond_account = &mut ctx.accounts.bond_pool_account;
     bond_account.generator = ctx.accounts.initializer.key();
     bond_account.bond_pool_redeemable_mint = ctx.accounts.bond_pool_redeemable_mint.key();
-    bond_account.bond_pool_token_mint = ctx.accounts.bond_pool_token_mint.key();
+    bond_account.bond_pool_currency_token_mint = ctx.accounts.bond_pool_currency_token_mint.key();
     bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
-    bond_account.bond_pool_token_account = ctx.accounts.bond_pool_token_account.key();
+    bond_account.bond_pool_currency_token_account = ctx.accounts.bond_pool_currency_token_account.key();
     bond_account.bump_bond_pool_account = _bump_bond_pool_account;
 
     Ok(())

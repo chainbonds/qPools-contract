@@ -45,10 +45,10 @@ pub struct RedeemBond<'info> {
     // not sure right now if this has to be mutable
     // inspired by the ido_pool program
     #[account(mut)]
-    pub bond_pool_token_mint: Account<'info, Mint>,
+    pub bond_pool_currency_token_mint: Account<'info, Mint>,
 
     #[account(mut)]
-    pub bond_pool_token_account: Account<'info, TokenAccount>,
+    pub bond_pool_currency_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
@@ -56,8 +56,8 @@ pub struct RedeemBond<'info> {
     pub purchaser: AccountInfo<'info>,
     #[account(mut, constraint = purchaser_redeemable_token_account.owner == purchaser.key())]
     pub purchaser_redeemable_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut, constraint = purchaser_token_account.owner == purchaser.key())]
-    pub purchaser_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, constraint = purchaser_currency_token_account.owner == purchaser.key())]
+    pub purchaser_currency_token_account: Box<Account<'info, TokenAccount>>,
 
 
     // The standard accounts
@@ -79,15 +79,15 @@ pub fn handler(
 
     // TODO: Double check that the user actually has less than this in their amount
     let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_token_account.amount;
-    let total_token_supply: u64 = ctx.accounts.bond_pool_token_account.amount;
+    let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
 
 
     /*
     * Step 1: Calculate Market Rate
     *    How many SOL, per redeemable to distribute
     */
-    let token_to_be_distributed: u64 = calculate_token_to_be_distributed(
-        total_token_supply,
+    let currency_token_to_be_distributed: u64 = calculate_token_to_be_distributed(
+        total_currency_token_supply,
         total_redeemable_supply,
         redeemable_amount_raw
     );
@@ -120,8 +120,8 @@ pub fn handler(
      */
     msg!("Helloo");
     let cpi_accounts = Transfer {
-        from: ctx.accounts.bond_pool_token_account.to_account_info(),
-        to: ctx.accounts.purchaser_token_account.to_account_info(),
+        from: ctx.accounts.bond_pool_currency_token_account.to_account_info(),
+        to: ctx.accounts.purchaser_currency_token_account.to_account_info(),
         authority: ctx.accounts.bond_pool_account.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -135,7 +135,7 @@ pub fn handler(
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
             ]
-        ), token_to_be_distributed)?;
+        ), currency_token_to_be_distributed)?;
 
 
     Ok(())

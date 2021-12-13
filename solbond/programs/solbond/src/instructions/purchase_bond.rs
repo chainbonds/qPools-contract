@@ -8,7 +8,7 @@ use crate::utils::functional::calculate_redeemables_to_be_distributed;
 
 #[derive(Accounts)]
 #[instruction(
-amount_in_lamports: u64,
+currency_token_amount_raw: u64,
 )]
 pub struct PurchaseBond<'info> {
 
@@ -24,9 +24,9 @@ pub struct PurchaseBond<'info> {
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
     #[account(mut)]
-    pub bond_pool_token_mint: Account<'info, Mint>,
+    pub bond_pool_currency_token_mint: Account<'info, Mint>,
     #[account(mut)]
-    pub bond_pool_token_account: Account<'info, TokenAccount>,
+    pub bond_pool_currency_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
 
@@ -34,7 +34,7 @@ pub struct PurchaseBond<'info> {
     #[account(signer, mut)]
     pub purchaser: AccountInfo<'info>,
     #[account(mut)]
-    pub purchaser_token_account: Box<Account<'info, TokenAccount>>,
+    pub purchaser_currency_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub purchaser_redeemable_token_account: Box<Account<'info, TokenAccount>>,
 
@@ -45,15 +45,21 @@ pub struct PurchaseBond<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+/* TODO: Can Implement this once the need is there, and refactoring makes sense
+impl<'info> TakeTokens<'info> for Swap<'info> {
+    fn pay_in_reserve
+}
+*/
+
 pub fn handler(
     ctx: Context<PurchaseBond>,
-    token_amount_raw: u64
+    currency_token_amount_raw: u64
 ) -> ProgramResult {
 
-    if token_amount_raw <= 0 {
+    if currency_token_amount_raw <= 0 {
         return Err(ErrorCode::LowBondTokAmount.into());
     }
-    if ctx.accounts.purchaser_token_account.amount < token_amount_raw {
+    if ctx.accounts.purchaser_currency_token_account.amount < currency_token_amount_raw {
         return Err(ErrorCode::MinPurchaseAmount.into());
     }
     /*
@@ -68,13 +74,13 @@ pub fn handler(
     */
     // TODO: Double check that the user actually has less than this in their amount
     let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_token_account.amount;
-    let total_token_supply: u64 = ctx.accounts.bond_pool_token_account.amount;
+    let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
 
     // checked in function, looks correct
     let redeemable_to_be_distributed: u64 = calculate_redeemables_to_be_distributed(
-        total_token_supply,
+        total_currency_token_supply,
         total_redeemable_supply,
-        token_amount_raw
+        currency_token_amount_raw
     );
 
     /*
@@ -88,13 +94,13 @@ pub fn handler(
 
     // Transfer user's token to pool token account.
     let cpi_accounts = Transfer {
-        from: ctx.accounts.purchaser_token_account.to_account_info(),
-        to: ctx.accounts.bond_pool_token_account.to_account_info(),
+        from: ctx.accounts.purchaser_currency_token_account.to_account_info(),
+        to: ctx.accounts.bond_pool_currency_token_account.to_account_info(),
         authority: ctx.accounts.purchaser.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    token::transfer(cpi_ctx, token_amount_raw)?;
+    token::transfer(cpi_ctx, currency_token_amount_raw)?;
 
     /*
      * Step 3: Mint new redeemables to the user to keep track of how much he has paid in in total

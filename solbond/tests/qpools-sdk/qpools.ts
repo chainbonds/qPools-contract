@@ -1,15 +1,16 @@
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
-import {BN, Program, Provider} from "@project-serum/anchor";
+import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import {Amm, IDL} from "../../deps/invariant/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
-import {IWallet, Market, Network, Pair} from "@invariant-labs/sdk";
+import {DENOMINATOR, IWallet, Market, Network, Pair, SEED, TICK_LIMIT} from "@invariant-labs/sdk";
 import {CreatePool, Decimal, FeeTier} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
-import {Token} from "@solana/spl-token";
+import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {createToken} from "../invariant-utils";
 import {fromFee} from "@invariant-labs/sdk/lib/utils";
 import {createMint} from "../utils";
 import {Key} from "readline";
+import {assert} from "chai";
 
 export interface Tickmap {
     bitmap: Array<number>
@@ -50,11 +51,16 @@ export class QPoolsAdmin {
     public provider: Provider;
     public wallet: Keypair;
 
+    // All tokens not owned by the protocol
+    public currencyMint: Token | null = null;  // We will only have a single currency across one qPool
+
     // All tokens owned by the protocol
-    public qPoolsTokenMint: Token;
-    public qPoolAccount: PublicKey | null = null;
+    public qPoolAccount: PublicKey | null = null;  // qPool Account
     public bumpQPoolAccount: number | null = null;
-    public currencyTokenMint: Token | null = null;
+
+    public QPTokenMint: Token;  // qPool `redeemable` tokens
+    public qPoolQPAccount: PublicKey;
+    public qPoolCurrencyAccount: PublicKey;
 
     constructor(
         wallet: IWallet,
@@ -74,29 +80,56 @@ export class QPoolsAdmin {
      *
      * @param currencyMint: Will be provided, is the currency that will be used
      */
-    async prepareQPool(currencyMint: Token, payer: Keypair) {
+    async initialize(currencyMint: Token, initializer: Keypair) {
 
-        this.currencyTokenMint = currencyMint;
+        this.currencyMint = currencyMint;
 
         // Generate qPoolAccount
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
+            [initializer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
             this.solbondProgram.programId
         );
 
         // Generate Redeemable Mint
-        this.qPoolsTokenMint = await createMint(
+        this.QPTokenMint = await createMint(
             this.provider,
-            payer,
+            initializer,
             this.qPoolAccount,
             9
         );
+
+        this.qPoolQPAccount = await this.QPTokenMint!.createAccount(this.qPoolAccount);
+        this.qPoolCurrencyAccount = await this.currencyMint.createAccount(this.qPoolAccount);
+
+        /*
+            Now make the RPC call, to initialize a qPool
+         */
+        const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
+            this.bumpQPoolAccount,
+            {
+                accounts: {
+                    bondPoolAccount: this.qPoolAccount,
+                    bondPoolRedeemableMint: this.QPTokenMint.publicKey,
+                    bondPoolCurrencyTokenMint: currencyMint.publicKey,
+                    bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
+                    bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
+                    initializer: initializer.publicKey,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [initializer]
+            }
+        );
+        await this.provider.connection.confirmTransaction(initializeTx);
 
     }
 
 
 }
 
+// Probably put into a separate file, so we can outsource the SDK into a separate set of imports ...
 export class MockQPools extends QPoolsAdmin {
 
     public mockMarket: Market;
@@ -135,20 +168,104 @@ export class MockQPools extends QPoolsAdmin {
         });
     }
 
-    async createFeeTier() {
+    async createState(admin: Keypair) {
+        this.protocolFee = { v: fromFee(new BN(10000))};
+        await this.mockMarket.createState(admin, this.protocolFee);
+    }
+    async createFeeTier(admin: Keypair) {
         this.feeTier = {
             fee: fromFee(new BN(600)),
             tickSpacing: 10
         }
+        await this.mockMarket.createFeeTier(this.feeTier, admin);
     }
 
-    async creatMarkets(
+    async creatMarketWithPairs(
+        numberPools: number,
+        admin: Keypair,
         network: Network,
         wallet: IWallet,
-        connection: Connection,
-        programId?: PublicKey
     ) {
-        this.mockMarket = new Market(network, wallet, connection, programId);
+
+        const [programAuthority, nonce] = await anchor.web3.PublicKey.findProgramAddress(
+            [Buffer.from(SEED)],
+            this.invariantProgram.programId
+        )
+
+        this.mockMarket = new Market(
+            network,
+            wallet,
+            this.connection,
+            this.mockMarket.program.programId
+        );
+
+        // Now register a bunch of pairs
+        for (let i = 0; i < numberPools; i++) {
+            let pair = this.pairs[i];
+
+            // 0.6% / 10
+            await this.mockMarket.create({
+                pair,
+                signer: admin
+            });
+            const createdPool = await this.mockMarket.get(pair);
+            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, admin);
+            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, admin);
+
+            // Run a bunch of tests to make sure the market creation went through successfully
+            assert.ok(createdPool.tokenX.equals(tokenX.publicKey), ("createdPool.tokenX === tokenX.publicKey) " + createdPool.tokenX.toString() + " " + tokenX.publicKey.toString()));
+            assert.ok(createdPool.tokenY.equals(tokenY.publicKey), ("createdPool.tokenY === tokenY.publicKey) " + createdPool.tokenY.toString() + " " + tokenY.publicKey.toString()));
+            // Passed in through the pair
+            assert.ok(createdPool.fee.v.eq(this.feeTier.fee), ("createdPool.fee.v.eq(feeTier.fee)"));
+            assert.equal(createdPool.tickSpacing, this.feeTier.tickSpacing, ("createdPool.tickSpacing, feeTier.tickSpacing"));
+            assert.ok(createdPool.liquidity.v.eqn(0), ("createdPool.liquidity.v.eqn(0)"));
+            assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR), ("createdPool.sqrtPrice.v.eq(DENOMINATOR)"));
+            assert.ok(createdPool.currentTickIndex == 0, ("createdPool.currentTickIndex == 0"));
+            assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0), ("createdPool.feeGrowthGlobalX.v.eqn(0)"));
+            assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0), ("createdPool.feeGrowthGlobalY.v.eqn(0)"));
+            assert.ok(createdPool.feeProtocolTokenX.v.eqn(0), ("createdPool.feeProtocolTokenX.v.eqn(0)"));
+            assert.ok(createdPool.feeProtocolTokenY.v.eqn(0), ("createdPool.feeProtocolTokenY.v.eqn(0)"));
+            // I guess these will be ok?
+            assert.ok(createdPool.authority.equals(programAuthority), ("createdPool.authority.equals(programAuthority)"));
+            assert.ok(createdPool.nonce == nonce, ("createdPool.nonce == nonce"));
+
+            const tickmapData = await this.mockMarket.getTickmap(pair)
+            assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4, "tickmapData.bitmap.length == TICK_LIMIT / 4")
+            assert.ok(tickmapData.bitmap.every((v) => v == 0), "tickmapData.bitmap.every((v) => v == 0)")
+
+        }
+
+    }
+
+    async createQPoolAccountPerToken(number_pools: number) {
+
+        let poolList: PublicKey;
+        let poolListBump: number;
+
+        let marketAddresses: PublicKey[] = [];
+        let reserveTokenXAddresses: PublicKey[] = [];
+        let reserveTokenYAddresses: PublicKey[] = [];
+        // For each pair, get the market addresses
+        for (let i = 0; i < number_pools; i++) {
+
+            let pair = this.pairs[i];
+            const [marketAddress, marketAddressBump] = await pair.getAddressAndBump(this.mockMarket.program.programId);
+            marketAddresses.push(marketAddress);
+
+            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, this.wallet);
+            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, this.wallet);
+
+            // For each token, generate an account for the reserve
+            let reserveTokenXAccount = await tokenX!.createAccount(this.qPoolAccount);
+            reserveTokenXAddresses.push(reserveTokenXAccount);
+            let reserveTokenYAccount = await tokenY!.createAccount(this.qPoolAccount);
+            reserveTokenYAddresses.push(reserveTokenYAccount);
+
+            // And now initialize the application
+        }
+
+        // Maybe we shouldn't track state here, but on the online programs ...
+
     }
 
 

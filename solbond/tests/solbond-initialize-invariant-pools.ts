@@ -1,134 +1,82 @@
 import * as anchor from '@project-serum/anchor';
-import {Program, Provider, BN, web3} from '@project-serum/anchor';
-import {Keypair, PublicKey, Transaction} from '@solana/web3.js';
-import { Network, SEED, Market, Pair } from '@invariant-labs/sdk';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { createToken } from './invariant-utils';
-import { assert } from 'chai';
-import { DENOMINATOR } from '@invariant-labs/sdk';
-import { TICK_LIMIT } from '@invariant-labs/sdk';
-import { tou64 } from '@invariant-labs/sdk';
-import { fromFee } from '@invariant-labs/sdk/lib/utils';
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market';
-import { toDecimal } from '@invariant-labs/sdk/src/utils';
+import {Provider, web3} from '@project-serum/anchor';
+import {Keypair} from '@solana/web3.js';
+import {Network} from '@invariant-labs/sdk';
+import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
-import {solbondProgram} from "../../dapp/src/programs/solbond";
-import {invariantAmmProgram} from "./external_programs/invariant_amm";
+import {MockQPools} from "./qpools-sdk/qpools";
 
 const NUMBER_POOLS = 5;
 
 describe('claim', () => {
+
+    // Connection
     const provider = Provider.local()
     const connection = provider.connection
 
-    const solbondProgram = anchor.workspace.Solbond;
-    const invariantProgram = anchor.workspace.Amm;
     const payer = getPayer();
+    const mintAuthority = Keypair.generate();
+    let currencyMint: Token | null = null;
 
     // @ts-expect-error
     const wallet = provider.wallet.payer as Keypair
-    const mintAuthority = Keypair.generate()
     const positionOwner = Keypair.generate()
     const admin = Keypair.generate()
-    const market = new Market(
-        Network.LOCAL,
-        provider.wallet,
-        connection,
-        anchor.workspace.Amm.programId
-    )
-    const feeTier: FeeTier = {
-        fee: fromFee(new BN(600)),
-        tickSpacing: 10
-    }
-    const protocolFee: Decimal = { v: fromFee(new BN(10000))}
-    let tokenX: Token
-    let tokenY: Token
-    let programAuthority: PublicKey
-    let nonce: number
 
-    let allPairs: Pair[];
-    let allTokens: Token[];
+    // Programs
+    const solbondProgram = anchor.workspace.Solbond;
+    const invariantProgram = anchor.workspace.Amm;
+
+    // More Complex Objects
+    let market: MockQPools;
 
     before(async () => {
 
         await Promise.all([
             await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
             await connection.requestAirdrop(admin.publicKey, 1e9),
-            await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-        ])
-
-        allTokens = await Promise.all(Array.from({length: 2 * NUMBER_POOLS}).map((_) => {
-            return createToken(connection, wallet, mintAuthority)
-        }));
-
-        const swaplineProgram = anchor.workspace.Amm as Program
-        const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-            [Buffer.from(SEED)],
-            swaplineProgram.programId
-        )
-        nonce = _nonce
-        programAuthority = _programAuthority
-
-        let i = 0;
-        allPairs = Array.from({length: NUMBER_POOLS}).map((_) => {
-            let pair = new Pair(allTokens[2*i].publicKey, allTokens[(2*i)+1].publicKey, feeTier);
-            i++;
-            return pair;
-        });
-
+            await connection.requestAirdrop(positionOwner.publicKey, 1e9),
+            await connection.requestAirdrop(payer.publicKey, 1e9)
+        ]);
+        currencyMint = await createMint(provider, payer);
     })
 
-    let bondPoolRedeemableMint: Token | null = null;
-    let bondPoolCurrencyTokenMint: Token | null = null;
-    let bondPoolRedeemableTokenAccount: PublicKey | null = null;
-    //let bondPoolTokenAccount: PublicKey | null = null;
-    let bondPoolAccount: PublicKey | null = null;
-    let bumpBondPoolAccount: number | null = null;
-    let bondPoolTokenAccount: PublicKey | null = null;
-
-    it('#initializeBondPoolAccounts()', async () => {
-
-        // Airdrop some solana for computation purposes
-        await provider.connection.requestAirdrop(payer.publicKey, 100 * 1e9);
-
-        // Create the bondPoolAccount as a PDA
-        [bondPoolAccount, bumpBondPoolAccount] = await PublicKey.findProgramAddress(
-            [payer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
-            solbondProgram.programId
+    /*
+     * Markets need to be initialized in this exact order
+     * Most of these happen from within the mock
+     * Some of these need to happen also on the frontend / as part of the SDK
+     */
+    it('#initializeMockedMarket()', async () => {
+        market = new MockQPools(
+            provider.wallet,
+            connection,
         );
-        // Token account has to be another PDA, I guess
-
-        // Create the Mints that we will be using
-        bondPoolCurrencyTokenMint = await createMint(provider, payer);
-        bondPoolRedeemableMint = await createMint(provider, payer, bondPoolAccount, 9);
-
-        bondPoolRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(bondPoolAccount);
-        bondPoolTokenAccount = await bondPoolCurrencyTokenMint.createAccount(bondPoolAccount);
-
     });
-    it('#initializeBondPool()', async () => {
-        const initializeTx = await solbondProgram.rpc.initializeBondPool(
-            bumpBondPoolAccount,
-            {
-                accounts: {
-                    bondPoolAccount: bondPoolAccount,
-                    bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-                    bondPoolCurrencyTokenMint: bondPoolCurrencyTokenMint.publicKey,
-                    bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
-                    bondPoolCurrencyTokenAccount: bondPoolTokenAccount,
-                    initializer: payer.publicKey,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [payer]
-            }
-        );
-        await provider.connection.confirmTransaction(initializeTx);
-    });
+    it("#createTradedToken()", async () => {
+        await market.createTokens(NUMBER_POOLS, mintAuthority);
+    })
+    it("#createTradePairs()", async () => {
+        await market.createPairs(NUMBER_POOLS);
+    })
+    it('#createState()', async () => {
+        await market.createState(admin);
+    })
+    it("#createFeeTier()", async () => {
+        await market.createFeeTier(admin);
+    })
+    it("#createMarketsFromPairs()", async () => {
+        // Get network and wallet from the adapter somewhere
+        await market.creatMarketWithPairs(
+            NUMBER_POOLS,
+            admin,
+            Network.LOCAL,
+            provider.wallet,
+        )
+    })
 
-
+    /*
+     * Now run our endpoints
+     */
     it("#connectsToSolbond()", async () => {
         // Call the health-checkpoint
         await solbondProgram.rpc.healthcheck({
@@ -141,125 +89,69 @@ describe('claim', () => {
         });
     })
 
-    it('#createState()', async () => {
-        await market.createState(admin, protocolFee)
-    })
-    it('#createFeeTier()', async () => {
-        await market.createFeeTier(feeTier, admin)
-    })
+
 
     // Create 10 pools, one for each pair
     // Make this async, maybe
-    it('#create()', async () => {
 
-        for (let i = 0; i < NUMBER_POOLS; i++) {
+    // let poolList: PublicKey | null;
+    // let poolListBump: number;
+    //
+    // it("#registerInvariantPools()", async () => {
+    //
+    //     // Get the addresses of some of the pools that we generated
+    //     [poolList, poolListBump] = await anchor.web3.PublicKey.findProgramAddress(
+    //         [wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("poolList"))],
+    //         solbondProgram.programId
+    //     );
+    //
+    //     // TODO: Replace these with actual values
+    //     let _bump_register_position = 5;
+    //     let _curr_idx = 5;
+    //     let _max_idx = 5;
+    //     let weight = 5;
+    //
+    //     // Call the health-checkpoint
+    //     await solbondProgram.rpc.registerInvariantPools(
+    //         // poolListBump,
+    //         // [new BN(10), new BN(10), new BN(10), new BN(10), new BN(10)],
+    //         _bump_register_position,
+    //         _curr_idx,
+    //         _max_idx,
+    //         weight,
+    //         {
+    //             accounts: {
+    //
+    //                 invariantPoolAccount: null,
+    //                 poolAddress: null,
+    //                 state: null,
+    //                 tickmap: null,
+    //                 currencyTokenMint: null,
+    //                 tokenXMint: null,
+    //                 reserveCurrencyToken: null,
+    //                 reserveX: null,
+    //                 reserveY: null,
+    //                 accountCurrencyReserve: null,
+    //                 accountXReserve: null,
+    //                 initializer: null,
+    //                 positionInPool: null,
+    //                 positionListInPool: null,
+    //                 upperTick: null,
+    //                 lowerTick: null,
+    //
+    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //                 clock: web3.SYSVAR_CLOCK_PUBKEY,
+    //                 systemProgram: web3.SystemProgram.programId,
+    //                 tokenProgram: TOKEN_PROGRAM_ID
+    //             },
+    //             signers: [wallet]
+    //         }
+    //     );
+    // })
 
-            let pair = allPairs[i];
 
-            // 0.6% / 10
-            await market.create({
-                pair,
-                signer: admin
-            })
-            const createdPool = await market.get(pair)
+    // Now do all the swaps ...
 
-            const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-            const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-            assert.ok(createdPool.tokenX.equals(tokenX.publicKey), ("createdPool.tokenX === tokenX.publicKey) " + createdPool.tokenX.toString() + " " + tokenX.publicKey.toString()));
-            assert.ok(createdPool.tokenY.equals(tokenY.publicKey), ("createdPool.tokenY === tokenY.publicKey) " + createdPool.tokenY.toString() + " " + tokenY.publicKey.toString()));
-            assert.ok(createdPool.fee.v.eq(feeTier.fee), ("createdPool.fee.v.eq(feeTier.fee)"));
-            assert.equal(createdPool.tickSpacing, feeTier.tickSpacing, ("createdPool.tickSpacing, feeTier.tickSpacing"));
-            assert.ok(createdPool.liquidity.v.eqn(0), ("createdPool.liquidity.v.eqn(0)"));
-            assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR), ("createdPool.sqrtPrice.v.eq(DENOMINATOR)"));
-            assert.ok(createdPool.currentTickIndex == 0, ("createdPool.currentTickIndex == 0"));
-            assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0), ("createdPool.feeGrowthGlobalX.v.eqn(0)"));
-            assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0), ("createdPool.feeGrowthGlobalY.v.eqn(0)"));
-            assert.ok(createdPool.feeProtocolTokenX.v.eqn(0), ("createdPool.feeProtocolTokenX.v.eqn(0)"));
-            assert.ok(createdPool.feeProtocolTokenY.v.eqn(0), ("createdPool.feeProtocolTokenY.v.eqn(0)"));
-            assert.ok(createdPool.authority.equals(programAuthority), ("createdPool.authority.equals(programAuthority)"));
-            assert.ok(createdPool.nonce == nonce, ("createdPool.nonce == nonce"));
-
-            const tickmapData = await market.getTickmap(pair)
-            assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4, "tickmapData.bitmap.length == TICK_LIMIT / 4")
-            assert.ok(tickmapData.bitmap.every((v) => v == 0), "tickmapData.bitmap.every((v) => v == 0)")
-        }
-
-        return true;
-
-    })
-
-    let poolList: PublicKey | null;
-    let poolListBump: number;
-
-    it("#registerInvariantPools()", async () => {
-
-        // Get the addresses of some of the pools that we generated
-        [poolList, poolListBump] = await anchor.web3.PublicKey.findProgramAddress(
-            [wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("poolList"))],
-            solbondProgram.programId
-        );
-
-        let marketAddresses: PublicKey[] = [];
-        let reserveTokenXAddresses: PublicKey[] = [];
-        let reserveTokenYAddresses: PublicKey[] = [];
-        // For each pair, get the market addresses
-        for (let i = 0; i < NUMBER_POOLS; i++) {
-
-            let pair = allPairs[i];
-            const [marketAddress, marketAddressBump] = await pair.getAddressAndBump(market.program.programId);
-            marketAddresses.push(marketAddress);
-
-            const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet);
-            const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet);
-
-            // For each token, generate an account for the reserve
-            let reserveTokenXAccount = await tokenX!.createAccount(bondPoolAccount);
-            reserveTokenXAddresses.push(reserveTokenXAccount);
-            let reserveTokenYAccount = await tokenY!.createAccount(bondPoolAccount);
-            reserveTokenYAddresses.push(reserveTokenYAccount);
-        }
-
-        // Call the health-checkpoint
-        await solbondProgram.rpc.registerInvariantPools(
-            poolListBump,
-            [new BN(10), new BN(10), new BN(10), new BN(10), new BN(10)],
-            {
-                accounts: {
-
-                    poolList: poolList,
-                    poolListAddress0: marketAddresses[0],
-                    poolListAddress1: marketAddresses[1],
-                    poolListAddress2: marketAddresses[2],
-                    poolListAddress3: marketAddresses[3],
-                    poolListAddress4: marketAddresses[4],
-                    initializer: wallet.publicKey,
-
-                    reserveTokenXAddress0: reserveTokenXAddresses[0],
-                    reserveTokenXAddress1: reserveTokenXAddresses[1],
-                    reserveTokenXAddress2: reserveTokenXAddresses[2],
-                    reserveTokenXAddress3: reserveTokenXAddresses[3],
-                    reserveTokenXAddress4: reserveTokenXAddresses[4],
-
-                    reserveTokenYAddress0: reserveTokenYAddresses[0],
-                    reserveTokenYAddress1: reserveTokenYAddresses[1],
-                    reserveTokenYAddress2: reserveTokenYAddresses[2],
-                    reserveTokenYAddress3: reserveTokenYAddresses[3],
-                    reserveTokenYAddress4: reserveTokenYAddresses[4],
-
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [wallet]
-            }
-        );
-    })
-
-    it("#reserveInitializesPositions", async () => {
-
-    })
 
     // let purchaser: PublicKey | null = null;
     // let purchaserRedeemableTokenAccount: PublicKey | null = null;

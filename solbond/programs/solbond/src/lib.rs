@@ -10,7 +10,8 @@ use instructions::*;
 use state::*;
 
 // declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
-declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
+// declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
+declare_id!( "GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g" );
 // static KEY: &str = env!("PROGRAM_ID");
 // declare_id!(KEY);
 
@@ -159,6 +160,35 @@ pub mod solbond {
             weights
         )
     }
+    pub fn swap_pair(
+        ctx: Context<SwapPairInstruction>,
+        _fee_tier_address: Pubkey,
+        x_to_y: bool,
+        amount: u64,
+        by_amount_in: bool,
+        sqrt_price_limit: u128,
+    ) -> ProgramResult {
+        instructions::swap_pair::handler(
+            ctx,
+            _fee_tier_address,
+            x_to_y,
+            amount,
+            by_amount_in,
+            sqrt_price_limit,
+        )
+    }
+    // /**
+    // * Register the state needed to make CPI calls to Invariant
+    // */
+    // pub fn register_invariant_instruction(
+    //     ctx: Context<RegisterInvariantInstruction>,
+    //     _bump_position: u8,
+    //     _curr_idx: u32,
+    //     _max_idx: u32,
+    //     _weight: u32,
+    // ) -> ProgramResult {
+    //     instructions::register_invariant_instruction::handler(ctx, _bump_position, _curr_idx, _max_idx, _weight)
+    // }
 
     /**
      * Register all the pools that are defined by invariant

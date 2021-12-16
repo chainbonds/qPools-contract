@@ -15,12 +15,15 @@ use errors::ErrorCode;
 use errors::*;
 use instructions::*;
 use math::*;
-use structs::State;
+//use structs::State;
+pub use structs::*;
 use util::*;
+
 
 use instructions::claim_fee::ClaimFee;
 
-declare_id!("3f2yCuof5e1MpAC8RNgWVnQuSHpDjUHPGds6jQ1tRphY");
+// declare_id!("3f2yCuof5e1MpAC8RNgWVnQuSHpDjUHPGds6jQ1tRphY");
+declare_id!("GpvoxwEz4AEPnWqhmD9DTfSQwUp3oQ5up71cWGVn2HsC");
 const SEED: &str = "Invariant";
 
 #[program]

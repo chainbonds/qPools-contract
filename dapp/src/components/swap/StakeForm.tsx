@@ -1,21 +1,20 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {clusterApiUrl, Connection, PublicKey,} from "@solana/web3.js";
+import {clusterApiUrl, Connection} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
-import {BN, web3, Wallet as AnchorWallet} from "@project-serum/anchor";
+// web3, Wallet as AnchorWallet
+// import {BN} from "@project-serum/anchor";
 import {Wallet} from "../../splpasta";
-import {useState} from "react";
-import {solbondProgram} from "../../programs/solbond";
-import {getTokenList} from "../../const";
+// import {solbondProgram} from "../../programs/solbond";
+// import {getTokenList} from "../../const";
 import {AiOutlineArrowDown} from "react-icons/ai";
 
-export default function StakeForm(props: any) {
+export default function StakeForm() {
 
     // TODO: Implement Solana input field
     const {register, handleSubmit} = useForm();
     const walletContext: any = useWallet();
-    const [accountInfo, setAccountInfo] = useState({});
 
     const submitToContract = async (d: any) => {
 
@@ -31,7 +30,7 @@ export default function StakeForm(props: any) {
 
             // (1) Generate the solbond provider
             // Will send some instructions to our smart contract from here
-        const programSolbond: any = solbondProgram(connection, provider);
+        // const programSolbond: any = solbondProgram(connection, provider);
         // const programMarinade: any = marinadeProgram(connection, provider);
 
         console.log("Submitting logs");
@@ -43,7 +42,7 @@ export default function StakeForm(props: any) {
         console.log("Phantom user account is: ", userAccount);
         console.log("Provider is: ", provider);
 
-        const sendAmount: BN = new BN(d["amount"]);
+        // const sendAmount: BN = new BN(d["amount"]);
 
         /**
          * Fetch the wallet user
@@ -63,22 +62,6 @@ export default function StakeForm(props: any) {
 
         console.log("TODO: Implement the RPC endpoint!");
 
-    }
-
-    const tokenButton = () => {
-        // display: "flex",
-        //     alignItems: "center",
-        //     cursor: "pointer",
-        //     marginBottom: theme.spacing(1),
-        return (
-            <div>
-                {/*<TokenIcon mint={mint} style={{ width: theme.spacing(4) }} />*/}
-                {/*<TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />*/}
-                {/*<ExpandMore />*/}
-
-                {/*    */}
-            </div>
-        );
     }
 
     return (
@@ -116,7 +99,7 @@ export default function StakeForm(props: any) {
                                             <div>
                                                 <div className={"absolute"}>
                                                     <div className={"flex m-2 ml-2 absolute h-max w-max bg-gray-800 rounded-xl p-1"}>
-                                                        <img className={""} height={42} width={42} src={"./solana-logo.png"} />
+                                                        <img alt={"Solana Logo"} className={""} height={42} width={42} src={"./solana-logo.png"} />
                                                         <text className={"my-auto text-xl mx-2"}>SOL</text>
                                                     </div>
                                                 </div>
@@ -139,7 +122,7 @@ export default function StakeForm(props: any) {
                                         <div>
                                             <div className={"absolute"}>
                                                 <div className={"flex m-2 ml-2 absolute h-max w-max bg-gray-800 rounded-xl p-1"}>
-                                                    <img className={"my-1"} height={50} width={46} src={"./Light 2.png"} />
+                                                    <img alt={"QPT Logo"} className={"my-1"} height={50} width={46} src={"./Light 2.png"} />
                                                     <text className={"my-auto text-xl mx-2"}>QPT</text>
                                                 </div>
                                             </div>

@@ -11,7 +11,7 @@ export default function HeroForm(props: any) {
     const [displayForm, setDisplayForm] = useState<HeroFormState>(HeroFormState.Stake);
 
     const stakeTab = () => {
-        if (displayForm == HeroFormState.Stake) {
+        if (displayForm === HeroFormState.Stake) {
             return (
                 <button onClick={() => changeTabToStake(HeroFormState.Stake)} className="bg-slate-800 w-20 border-b-2 border-white inline-block rounded-t pb-4 py-2 px-4 text-white">
                     Stake
@@ -27,7 +27,7 @@ export default function HeroForm(props: any) {
     };
 
     const unstakeTab = () => {
-        if (displayForm == HeroFormState.Unstake) {
+        if (displayForm === HeroFormState.Unstake) {
             return (
                 <button onClick={() => changeTabToStake(HeroFormState.Unstake)} className="bg-slate-800 w-20 border-b-2 border-white inline-block rounded-t pb-4 py-2 px-4 text-white">
                     Unstake

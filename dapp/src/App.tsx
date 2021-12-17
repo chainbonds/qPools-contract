@@ -2,14 +2,13 @@
  * Incredibly good tutorial to copy and paste lol
  * https://blog.prototypr.io/design-a-landing-page-using-tailwind-css-3a1a68166c47
  */
-import React, {useEffect} from 'react';
+import React from 'react';
 import './App.css';
 import {SocialIcon} from 'react-social-icons';
 import {clusterApiUrl, Keypair} from '@solana/web3.js';
 import {web3} from '@project-serum/anchor'
 //@ts-ignore
 import _kp from './keypair.json';
-import StakeForm from "./components/swap/StakeForm";
 import {getPhantomWallet} from "@solana/wallet-adapter-wallets";
 import {WalletModalProvider, WalletMultiButton} from '@solana/wallet-adapter-react-ui';
 import {WalletProvider, ConnectionProvider} from '@solana/wallet-adapter-react';
@@ -60,35 +59,15 @@ function App() {
 
                             <ul className="flex">
 
-                                <li className="ml-24">
-                                    <a href={"#idBuyBonds"}>
-                                        <div className="flex items-center justify-end">
-                                            <div className="w-10 border-b border-solid border-white"></div>
-                                            <h1 className="ml-3 text-3xl font-bold">1</h1>
-                                        </div>
-                                        <div className="text-right">Buy</div>
-                                    </a>
-                                </li>
-
-                                <li className="ml-24">
-                                    <a href={"#idPoolList"}>
-                                        <div className="flex items-center justify-end">
-                                            <div className="w-10 border-b border-solid border-white"></div>
-                                            <h1 className="ml-3 text-3xl font-bold">2</h1>
-                                        </div>
-                                        <div className="text-right">Redeem</div>
-                                    </a>
-                                </li>
-
-                                <li className="ml-24">
-                                    <a href="">
-                                        <div className="flex items-center justify-end">
-                                            <div className="w-10 border-b border-solid border-white"></div>
-                                            <h1 className="ml-3 text-3xl font-bold">3</h1>
-                                        </div>
-                                        <div className="text-right">Whitepaper</div>
-                                    </a>
-                                </li>
+                                {/*<li className="ml-24">*/}
+                                {/*    <a href="">*/}
+                                {/*        <div className="flex items-center justify-end">*/}
+                                {/*            <div className="w-10 border-b border-solid border-white"></div>*/}
+                                {/*            <h1 className="ml-3 text-3xl font-bold">3</h1>*/}
+                                {/*        </div>*/}
+                                {/*        <div className="text-right">Whitepaper</div>*/}
+                                {/*    </a>*/}
+                                {/*</li>*/}
 
                                 <li className="ml-24">
 
@@ -104,7 +83,7 @@ function App() {
                     </div>
                 </header>
 
-                <section className="text-left mt-52 w-full h-full md:w-8/12 xl:w-7/12 mt-10">
+                <section className="text-left mt-24 w-full h-full md:w-8/12 xl:w-7/12">
                     {/*<span className="font-bold uppercase tracking-widest">ChainBonds</span>*/}
                     <div className={"px-1"}>
                         {/*<h1 className='absolute'>TEST TEXT</h1>*/}
@@ -133,7 +112,7 @@ function App() {
                             qPools generates passive yields, all while staying liquid.
                         </div>
                         <div>
-                            We optimize for yield while adjusting for risk.
+                            Optimize for yield while adjusting for risk.
                         </div>
                         {/*<div>*/}
                         {/*    /!*You enjoy being able to spend your funds elsewhere.*!/*/}
@@ -150,7 +129,7 @@ function App() {
                     {/*</p>*/}
                 </section>
 
-                <div className={"m-auto w-4/12"}>
+                <div className={"mx-auto w-4/12 -mt-40"}>
                     {/*<div className={"text-left"}>*/}
                     {/*    /!* TODO: We gotta have a section which covers some basic statics (how much is staked, etc.)*!/*/}
                     {/*    <p className="align-bottom mb-0 text-pink-500 mb-1 text-2xl leading-10 font-bold">*/}
@@ -165,8 +144,8 @@ function App() {
                     {/*    </p>*/}
                     {/*</div>*/}
 
-                    <div className="mt-10 sm:mt-0">
-                        <br />
+                    {/*mt-10*/}
+                    <div className="sm:mt-0">
                         <HeroForm />
                     </div>
 

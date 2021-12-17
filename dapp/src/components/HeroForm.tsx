@@ -1,5 +1,6 @@
 import {useState} from "react";
 import StakeForm from "./swap/StakeForm";
+import UnstakeForm from "./swap/UnstakeForm";
 
 enum HeroFormState {
     Stake,
@@ -74,7 +75,8 @@ export default function HeroForm(props: any) {
             {/*className={"w-full flex justify-end"}*/}
             <div className={"flex flex-col"}>
                 { stakingFormNavbar() }
-                <StakeForm />
+                { (displayForm === HeroFormState.Stake) && <StakeForm /> }
+                { (displayForm === HeroFormState.Unstake) && <UnstakeForm /> }
             </div>
         </>
     )

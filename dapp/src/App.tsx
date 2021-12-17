@@ -33,11 +33,12 @@ function App() {
 
             <div className={"min-h-full flex items-center px-6 lg:px-32 bg-slate-800 text-white relative"}>
 
-                <header id={"idBuyBonds"} className="w-full absolute left-0 top-0 p-6 lg:p-28 lg:pt-12">
+                <header id={"idBuyBonds"} className="w-full absolute left-0 top-0 px-6 lg:px-28 lg:pt-12">
                     <div className="flex justify-between">
                         <div>
                             <div>
-                                <svg width="187" height="118" viewBox="0 0 287 218" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {/*width="187" height="118"*/}
+                                <svg width="94" height="59" viewBox="0 0 287 218" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="15.9251" y="131.362" width="160.413" height="89.7648" rx="28" transform="rotate(-39.4745 15.9251 131.362)" stroke="#FF3CD4" stroke-width="14"/>
                                     <rect x="14.855" y="118.406" width="160.413" height="89.7648" rx="28" transform="rotate(-39.4745 14.855 118.406)" stroke="white" stroke-width="14"/>
                                     <rect x="90.5575" y="131.294" width="160.413" height="89.7648" rx="28" transform="rotate(-39.4745 90.5575 131.294)" stroke="#FF3CD4" stroke-width="14"/>

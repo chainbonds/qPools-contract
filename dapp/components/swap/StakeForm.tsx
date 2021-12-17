@@ -1,13 +1,13 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {clusterApiUrl, Connection,} from "@solana/web3.js";
+import {clusterApiUrl, Connection, PublicKey,} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {BN, web3, Wallet as AnchorWallet} from "@project-serum/anchor";
-import {Wallet} from "../splpasta";
+import {Wallet} from "../../splpasta";
 import {useState} from "react";
-import {solbondProgram} from "../programs/solbond";
-import {getTokenList} from "../const";
+import {solbondProgram} from "../../programs/solbond";
+import {getTokenList} from "../../const";
 
 export default function StakeForm(props: any) {
 
@@ -64,6 +64,22 @@ export default function StakeForm(props: any) {
 
     }
 
+    const tokenButton = () => {
+        // display: "flex",
+        //     alignItems: "center",
+        //     cursor: "pointer",
+        //     marginBottom: theme.spacing(1),
+        return (
+            <div>
+                {/*<TokenIcon mint={mint} style={{ width: theme.spacing(4) }} />*/}
+                {/*<TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />*/}
+                {/*<ExpandMore />*/}
+                <img src={"solana-logo.png"} />
+                {/*    */}
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="md:grid md:grid-cols-2 md:gap-6">
@@ -72,8 +88,8 @@ export default function StakeForm(props: any) {
                     {/*<Swap provider={provider} tokenList={getTokenList()} />*/}
 
                     <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
-                        <div className="shadow overflow-hidden sm:rounded-md">
-                            <div className="px-4 py-5 bg-pink-600 bg-gray sm:p-6">
+                        <div className="overflow-hidden sm:rounded-md">
+                            <div className="px-4 py-5 bg-slate-800 bg-gray sm:p-6">
 
                                 {/*<h2 className="text-2xl lg:text-2xl font-bold text-white pb-5 border-b border-white">*/}
                                 {/*    Buy Your Bonds*/}
@@ -81,20 +97,49 @@ export default function StakeForm(props: any) {
 
                                 <div className="grid grid-cols-6 gap-6 pt-5">
 
-                                    <div className="col-span-6 sm:col-span-6">
+                                    <div className="col-span-6 bg-slate-800 sm:col-span-6">
 
-                                        <label htmlFor="stake_amount" className="
-                                            text-left text-sm font-medium text-gray-100 mx-autoblock text-xl font-medium text-white mx-auto pl-0 ml-0
-                                        ">
-                                            Stake Amount in SOL
-                                        </label>
-                                        <input
-                                            type="number"
-                                            {...register("stake_amount")}
-                                            id="stake_amount"
-                                            autoComplete="stake_amount"
-                                            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md"
-                                        />
+                                        {/*<label htmlFor="stake_amount" className="*/}
+                                        {/*    text-left text-sm font-medium text-gray-100 mx-autoblock text-xl font-medium text-white mx-auto pl-0 ml-0*/}
+                                        {/*">*/}
+                                        {/*    Stake Amount in SOL*/}
+                                        {/*</label>*/}
+                                        {/*<input*/}
+                                        {/*    type="number"*/}
+                                        {/*    {...register("stake_amount")}*/}
+                                        {/*    id="stake_amount"*/}
+                                        {/*    autoComplete="stake_amount"*/}
+                                        {/*    className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm text-gray-700 sm:text-sm border-gray-300 rounded-md "*/}
+                                        {/*/>*/}
+                                        <div className={"bg-gray-900"}>
+                                            <div>
+                                                {tokenButton()}
+                                                <input
+                                                    className="rounded w-full py-2 px-5 bg-gray-900"
+                                                    type="number"
+                                                    {...register("stake_amount")}
+                                                    id="stake_amount"
+                                                    autoComplete="stake_amount"
+                                                    placeholder="0.0"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <br />
+
+                                        {/* the next input field will not be manipulatable (if it is staking)*/}
+                                        <div>
+                                            <input
+                                                readOnly={true}
+                                                className="rounded w-full py-2 px-5 bg-gray-900"
+                                                type="number"
+                                                {...register("stake_amount")}
+                                                id="stake_amount"
+                                                autoComplete="stake_amount"
+                                                placeholder="0.0"
+                                            />
+                                        </div>
+
                                     </div>
 
                                     {/*<div className="col-span-6 sm:col-span-6">*/}
@@ -113,7 +158,7 @@ export default function StakeForm(props: any) {
 
                                 </div>
                             </div>
-                            <div className="px-4 py-3 bg-pink-600 text-right sm:px-6">
+                            <div className="px-4 py-3 bg-slate-800 text-right sm:px-6">
                                 <button
                                     type="submit"
                                     // className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

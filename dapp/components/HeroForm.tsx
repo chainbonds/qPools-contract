@@ -1,6 +1,5 @@
 import {useState} from "react";
-import StakeForm from "./StakeForm";
-import {Typography} from "@material-ui/core";
+import StakeForm from "./swap/StakeForm";
 
 enum HeroFormState {
     Stake,
@@ -14,13 +13,13 @@ export default function HeroForm(props: any) {
     const stakeTab = () => {
         if (displayForm == HeroFormState.Stake) {
             return (
-                <button onClick={() => changeTabToStake(HeroFormState.Stake)} className="bg-pink-600 inline-block rounded-t pb-4 py-2 px-4 text-white font-semibold">
+                <button onClick={() => changeTabToStake(HeroFormState.Stake)} className="bg-slate-800 w-20 border-b-2 border-white inline-block rounded-t pb-4 py-2 px-4 text-white">
                     Stake
                 </button>
             );
         } else {
             return (
-                <button onClick={() => changeTabToStake(HeroFormState.Stake)} className="bg-pink-900 inline-block rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200 font-semibold">
+                <button onClick={() => changeTabToStake(HeroFormState.Stake)} className="bg-slate-800 inline-block pb-2 rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200">
                     Stake
                 </button>
             );
@@ -30,13 +29,13 @@ export default function HeroForm(props: any) {
     const unstakeTab = () => {
         if (displayForm == HeroFormState.Unstake) {
             return (
-                <button onClick={() => changeTabToStake(HeroFormState.Unstake)} className="bg-pink-600 inline-block rounded-t pb-4 py-2 px-4 text-white font-semibold">
+                <button onClick={() => changeTabToStake(HeroFormState.Unstake)} className="bg-slate-800 w-20 border-b-2 border-white inline-block rounded-t pb-4 py-2 px-4 text-white">
                     Unstake
                 </button>
             );
         } else {
             return (
-                <button onClick={() => changeTabToStake(HeroFormState.Unstake)} className="bg-pink-900 inline-block rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200 font-semibold">
+                <button onClick={() => changeTabToStake(HeroFormState.Unstake)} className="bg-slate-800 inline-block pb-2 rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200">
                     Unstake
                 </button>
             );
@@ -52,7 +51,7 @@ export default function HeroForm(props: any) {
     const stakingFormNavbar = () => {
         return (
             <>
-                <ul className="flex">
+                <ul className="flex mx-auto px-auto content-center items-center place-content-center">
                     <li className="-mb-px mr-3">
                         {stakeTab()}
                     </li>
@@ -67,13 +66,13 @@ export default function HeroForm(props: any) {
     return (
         <>
 
-            Please select your wallet to connect
-            You have 0 Chain-Bond Tokens, worth currently worth 0.0 SOL.
+            {/*Please select your wallet to connect*/}
+            {/*You have 0 Chain-Bond Tokens, worth currently worth 0.0 SOL.*/}
             {/* Perhaps calculat initially paid-in amount, also to calculate profits (?) */}
 
             <br />
 
-            <div className={"min-h-full -mb-2"}>
+            <div className={"min-h-full mx-auto px-auto content-center items-center place-content-center"}>
                 { stakingFormNavbar() }
             </div>
             <StakeForm />

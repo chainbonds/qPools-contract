@@ -66,8 +66,8 @@ export default function StakeForm() {
 
     return (
         <>
-            <div className="md:grid md:grid-cols-2 md:gap-6">
-                <div className="mt-5 md:mt-0 md:col-span-2">
+            <div className="">
+                <div className="">
 
                     {/*<Swap provider={provider} tokenList={getTokenList()} />*/}
 
@@ -79,9 +79,11 @@ export default function StakeForm() {
                                 {/*    Buy Your Bonds*/}
                                 {/*</h2>*/}
 
-                                <div className="grid grid-cols-6 gap-6">
+                                {/*<div className="grid grid-cols-6 gap-6">*/}
+                                <div>
 
-                                    <div className="col-span-6 bg-slate-800 sm:col-span-6 mx-auto container">
+                                    {/*<div className="col-span-6 bg-slate-800 sm:col-span-6 mx-auto">*/}
+                                    <div>
 
                                         {/*<label htmlFor="stake_amount" className="*/}
                                         {/*    text-left text-sm font-medium text-gray-100 mx-autoblock text-xl font-medium text-white mx-auto pl-0 ml-0*/}
@@ -114,7 +116,7 @@ export default function StakeForm() {
                                             </div>
                                         </div>
 
-                                        <div className={"mx-auto"}>
+                                        <div className={"w-full flex justify-center"}>
                                             <AiOutlineArrowDown size={28} />
                                         </div>
 

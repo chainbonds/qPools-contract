@@ -9,7 +9,7 @@ export default function Statistics(props: any) {
                     {title}
                 </h2>
                 <br />
-                <h2 className="left-0 bottom-0 mb-1 text-xl">
+                <h2 className="left-0 bottom-0 mb-1 text-2xl">
                     {value}
                 </h2>
             </div>

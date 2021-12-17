@@ -29,7 +29,7 @@ const wallets = [getPhantomWallet()];
 function App() {
 
     return (
-        <div className="App mx-auto bg-gray-400">
+        <div className="App bg-gray-400">
 
             <div className={"min-h-full flex items-center px-6 lg:px-32 bg-slate-800 text-white relative"}>
 
@@ -49,9 +49,6 @@ function App() {
                             <h1 className="text-3xl font-bold">
                                 qPools
                             </h1>
-                            {/*<span>*/}
-                            {/*    Diamond Hands Forever*/}
-                            {/*</span>*/}
                         </div>
 
 
@@ -145,7 +142,7 @@ function App() {
                     {/*</div>*/}
 
                     {/*mt-10*/}
-                    <div className="sm:mt-0">
+                    <div>
                         <HeroForm />
                     </div>
 

@@ -8,6 +8,7 @@ import {Wallet} from "../../splpasta";
 import {useState} from "react";
 import {solbondProgram} from "../../programs/solbond";
 import {getTokenList} from "../../const";
+import {AiOutlineArrowDown} from "react-icons/ai";
 
 export default function StakeForm(props: any) {
 
@@ -74,7 +75,7 @@ export default function StakeForm(props: any) {
                 {/*<TokenIcon mint={mint} style={{ width: theme.spacing(4) }} />*/}
                 {/*<TokenName mint={mint} style={{ fontSize: 14, fontWeight: 700 }} />*/}
                 {/*<ExpandMore />*/}
-                <img src={"solana-logo.png"} />
+
                 {/*    */}
             </div>
         );
@@ -95,9 +96,9 @@ export default function StakeForm(props: any) {
                                 {/*    Buy Your Bonds*/}
                                 {/*</h2>*/}
 
-                                <div className="grid grid-cols-6 gap-6 pt-5">
+                                <div className="grid grid-cols-6 gap-6">
 
-                                    <div className="col-span-6 bg-slate-800 sm:col-span-6">
+                                    <div className="col-span-6 bg-slate-800 sm:col-span-6 mx-auto container">
 
                                         {/*<label htmlFor="stake_amount" className="*/}
                                         {/*    text-left text-sm font-medium text-gray-100 mx-autoblock text-xl font-medium text-white mx-auto pl-0 ml-0*/}
@@ -113,9 +114,14 @@ export default function StakeForm(props: any) {
                                         {/*/>*/}
                                         <div className={"bg-gray-900"}>
                                             <div>
-                                                {tokenButton()}
+                                                <div className={"absolute"}>
+                                                    <div className={"flex m-2 ml-2 absolute h-max w-max bg-gray-800 rounded-xl p-1"}>
+                                                        <img className={""} height={42} width={42} src={"./solana-logo.png"} />
+                                                        <text className={"my-auto text-xl mx-2"}>SOL</text>
+                                                    </div>
+                                                </div>
                                                 <input
-                                                    className="rounded w-full py-2 px-5 bg-gray-900"
+                                                    className="rounded w-full py-5 px-5 bg-gray-900 items-end text-right"
                                                     type="number"
                                                     {...register("stake_amount")}
                                                     id="stake_amount"
@@ -125,13 +131,21 @@ export default function StakeForm(props: any) {
                                             </div>
                                         </div>
 
-                                        <br />
+                                        <div className={"mx-auto"}>
+                                            <AiOutlineArrowDown size={28} />
+                                        </div>
 
                                         {/* the next input field will not be manipulatable (if it is staking)*/}
                                         <div>
+                                            <div className={"absolute"}>
+                                                <div className={"flex m-2 ml-2 absolute h-max w-max bg-gray-800 rounded-xl p-1"}>
+                                                    <img className={"my-1"} height={50} width={46} src={"./Light 2.png"} />
+                                                    <text className={"my-auto text-xl mx-2"}>QPT</text>
+                                                </div>
+                                            </div>
                                             <input
                                                 readOnly={true}
-                                                className="rounded w-full py-2 px-5 bg-gray-900"
+                                                className="rounded w-full py-5 px-5 bg-gray-900 items-end text-right"
                                                 type="number"
                                                 {...register("stake_amount")}
                                                 id="stake_amount"

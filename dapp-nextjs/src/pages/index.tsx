@@ -14,6 +14,9 @@ const Home: NextPage = (props) => {
                     content="qPools | Passive Income - Stay Liquid | The most convenient way to generate passive income without locking in liquidity. Built on #Solana"
                 />
                 {/*// <!-- Global site tag (gtag.js) - Google Analytics -->*/}
+            </Head>
+            <div className={"h-screen w-screen bg-gray-800"}>
+                <HomeView/>
                 <Script
                     src="https://www.googletagmanager.com/gtag/js?id=G-P5225TV5V8"
                     strategy="afterInteractive"
@@ -39,9 +42,6 @@ const Home: NextPage = (props) => {
                         })();
                     `}
                 </Script>
-            </Head>
-            <div className={"h-screen w-screen bg-gray-800"}>
-                <HomeView/>
             </div>
         </>
     );

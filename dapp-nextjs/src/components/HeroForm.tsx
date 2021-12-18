@@ -69,7 +69,7 @@ export default function HeroForm(props: any) {
             <div className={"flex flex-col justify-center mx-auto px-auto"}>
                 { stakingFormNavbar() }
                 { (displayForm === HeroFormState.Stake) && <StakeForm /> }
-                {/*{ (displayForm === HeroFormState.Unstake) && <UnstakeForm /> }*/}
+                { (displayForm === HeroFormState.Unstake) && <UnstakeForm /> }
             </div>
         </>
     )

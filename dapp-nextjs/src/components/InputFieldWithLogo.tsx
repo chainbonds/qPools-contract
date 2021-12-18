@@ -15,7 +15,7 @@ export default function InputFieldWithLogo(props: any) {
                     </text>
                 </div>
                 <input
-                    className="rounded-xl w-full px-5 bg-gray-900 items-end text-right"
+                    className="rounded-xl w-full w-full px-5 bg-gray-900 items-end text-right"
                     type="number"
                     id="stake_amount"
                     {...props.registerFunction()}

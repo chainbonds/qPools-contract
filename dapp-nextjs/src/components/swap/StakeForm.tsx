@@ -42,7 +42,7 @@ export default function StakeForm() {
                                         />
                                 </div>
                             </div>
-                            <div className="flex w-full bg-slate-800 sm:px-6 justify-end">
+                            <div className="flex w-full bg-slate-800 sm:px-6 justify-center md:justify-end">
                                 <button
                                     type="submit"
                                     className={"rounded p-2 text-lg bg-pink-700 hover:bg-pink-900"}

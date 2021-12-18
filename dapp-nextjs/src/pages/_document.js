@@ -7,7 +7,7 @@ class MyDocument extends Document {
         <Head>
           <meta
             name="description"
-            content="This site will fly high 🦤"
+            content="The most convenient way to generate passive income without locking in liquidity. Built on Solana."
           />
           <link rel="icon" href="/favicon.ico" />
 

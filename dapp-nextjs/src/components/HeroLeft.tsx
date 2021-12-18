@@ -4,18 +4,20 @@ import Statistics from "../../src/components/Statistics";
 export const HeroLeft: FC = ({}) => {
 
     return (
-        <div>
-            <div className={"px-1 mt-44 lg:mt-0"}>
-                <h1 className="absolute text-5xl lg:text-7xl font-bold red-text-shadow transform -translate-x-1 -translate-y-1">
-                    Passive Income
-                    <br/>
-                    Staying Liquid
-                </h1>
-                <h1 className="text-5xl lg:text-7xl font-bold text-pink-500 red-text-shadow">
-                    Passive Income
-                    <br/>
-                    Staying Liquid
-                </h1>
+        <div className={"xl:ml-28"}>
+            <div className={"px-1 md:mt-56 pt-8"}>
+                <div>
+                    <h1 className="absolute text-5xl lg:text-7xl font-bold red-text-shadow transform -translate-x-1 -translate-y-1">
+                        Passive Income
+                        <br/>
+                        Staying Liquid
+                    </h1>
+                    <h1 className="text-5xl lg:text-7xl font-bold text-pink-500 red-text-shadow">
+                        Passive Income
+                        <br/>
+                        Staying Liquid
+                    </h1>
+                </div>
             </div>
             <br />
             <div>

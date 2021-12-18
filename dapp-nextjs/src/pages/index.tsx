@@ -31,7 +31,7 @@ const Home: NextPage = (props) => {
                     `}
                 </Script>
                 {/*// <!-- Begin Inspectlet Asynchronous Code -->*/}
-                <Script type="text/javascript">
+                <Script id="inspectlet" type="text/javascript" strategy="afterInteractive">
                     {` 
                             (function() {
                             window.__insp = window.__insp || [];

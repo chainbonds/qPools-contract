@@ -4,8 +4,8 @@ import Statistics from "../../src/components/Statistics";
 export const HeroLeft: FC = ({}) => {
 
     return (
-        <div className={"xl:ml-28"}>
-            <div className={"px-1 md:mt-56 pt-8"}>
+        <div className={"2xl:ml-40"}>
+            <div className={"px-1 md:mt-0 2xl:mt-56 pt-8"}>
                 <div>
                     <h1 className="absolute text-5xl lg:text-7xl font-bold red-text-shadow transform -translate-x-1 -translate-y-1">
                         Passive Income

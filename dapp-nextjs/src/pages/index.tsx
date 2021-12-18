@@ -7,11 +7,11 @@ const Home: NextPage = (props) => {
     return (
         <>
             <Head>
-                <title>qPools | Passive Income - Stay Liquid | The most convenient way to generate passive income
+                <title>qPools | Generate Yields - Stay Liquid | The most convenient way to generate passive income
                     without locking in liquidity. Built on #Solana</title>
                 <meta
                     name="description"
-                    content="qPools | Passive Income - Stay Liquid | The most convenient way to generate passive income without locking in liquidity. Built on #Solana"
+                    content="qPools | Generate Yields - Stay Liquid | The most convenient way to generate passive income without locking in liquidity. Built on #Solana"
                 />
                 {/*// <!-- Global site tag (gtag.js) - Google Analytics -->*/}
             </Head>

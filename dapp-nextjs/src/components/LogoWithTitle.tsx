@@ -3,8 +3,8 @@ import React, {FC} from "react";
 export const LogoWithTitle: FC = ({}) => {
 
     return (
-        <>
-            <div>
+        <div className={"flex flex-row items-center"}>
+            <div >
                 {/*width="187" height="118"*/}
                 <svg width="94" height="59" viewBox="0 0 287 218" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="15.9251" y="131.362" width="160.413" height="89.7648" rx="28" transform="rotate(-39.4745 15.9251 131.362)" stroke="#FF3CD4" stroke-width="14"/>
@@ -18,7 +18,7 @@ export const LogoWithTitle: FC = ({}) => {
             <h1 className="text-3xl font-bold">
                 qPools
             </h1>
-        </>
+        </div>
     );
 
 }

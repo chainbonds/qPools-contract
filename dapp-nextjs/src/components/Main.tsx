@@ -6,7 +6,7 @@ import {HeroLeft} from "./HeroLeft";
 export const Main: FC = ({}) => {
 
     return (
-        <div className={"flex flex-col justify-center h-full px-2 md:px-12"}>
+        <div className={"flex flex-col justify-center h-full px-2 md:px-12 bg-gray-800"}>
             <HeroLeft />
         </div>
     );

@@ -19,7 +19,7 @@ export default function Statistics(props: any) {
 
     return (
         <>
-            <div className={"flex"}>
+            <div className={"flex flex-col md:flex-row items-center md:items-begin bg-gray-800"}>
                 {singleBox("Total Value Locked", "$147.84M USD")}
                 {singleBox("Total QTP Minted", "712.03 QTP")}
                 {singleBox("7 Day APY", "8.02%")}

@@ -41,7 +41,7 @@ const plugins = [
 ];
 
 const nextConfig = {
-  distDir: "build",
+  // distDir: "build",
   swcMinify: false,
   webpack: (config, { isServer }) => {
     if (!isServer) {

@@ -9,7 +9,7 @@ export default function InputFieldWithLogo(props: any) {
         <>
             <div className={"flex"}>
                 <div className={"flex m-2 h-max w-max bg-gray-800 rounded-xl p-1"}>
-                    <Image src={props.logoPath} height={80} width={80}/>
+                    <Image alt={props.displayText} src={props.logoPath} height={80} width={80}/>
                     <text className={"my-auto mx-2"}>
                         {props.displayText}
                     </text>

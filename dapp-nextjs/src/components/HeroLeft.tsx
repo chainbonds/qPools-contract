@@ -8,14 +8,14 @@ export const HeroLeft: FC = ({}) => {
             <div className={"px-1 pt-10 md:pt-0 2xl:pt-56"}>
                 <div className={"text-center md:text-left"}>
                     <h1 className="absolute text-5xl lg:text-7xl font-bold transform -translate-x-1 -translate-y-1">
-                        Passive Income
+                        Generate Income
                         <br/>
-                        Staying Liquid
+                        Stay Liquid
                     </h1>
                     <h1 className="text-5xl lg:text-7xl font-bold text-pink-500">
-                        Passive Income
+                        Generate Income
                         <br/>
-                        Staying Liquid
+                        Stay Liquid
                     </h1>
                 </div>
             </div>

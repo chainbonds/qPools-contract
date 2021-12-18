@@ -23,10 +23,10 @@ export const HeroLeft: FC = ({}) => {
             <div>
                 <p className="pb-1 text-2xl text-gray-100 leading-10 text-center md:text-left">
                     <p>
-                        qPools generates passive yields, all while staying liquid.
+                        The most convenient way to generate passive income
                     </p>
                     <p>
-                        Optimize for yield while adjusting for risk.
+                        without locking in liquidity. Risk-adjusted for your favorite asset.
                     </p>
                 </p>
             </div>

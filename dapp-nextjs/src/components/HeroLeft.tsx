@@ -13,7 +13,7 @@ export const HeroLeft: FC = ({}) => {
                         Stay Liquid
                     </h1>
                     <h1 className="text-5xl lg:text-7xl font-bold text-pink-500">
-                        Generate Yiels
+                        Generate Yields
                         <br/>
                         Stay Liquid
                     </h1>

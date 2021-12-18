@@ -47,7 +47,7 @@ export default function UnstakeForm() {
                                     type="submit"
                                     className={"rounded p-2 text-lg bg-pink-700 hover:bg-pink-900"}
                                 >
-                                    Purchase Bond
+                                    Redeem Tokens
                                 </button>
                         </div>
                     </form>

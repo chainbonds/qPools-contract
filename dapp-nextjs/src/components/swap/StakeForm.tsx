@@ -47,7 +47,7 @@ export default function StakeForm() {
                                     type="submit"
                                     className={"rounded p-2 text-lg bg-pink-700 hover:bg-pink-900"}
                                 >
-                                    Purchase Bond
+                                    Earn Income
                                 </button>
                         </div>
                     </form>

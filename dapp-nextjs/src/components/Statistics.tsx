@@ -4,7 +4,7 @@ export default function Statistics(props: any) {
     const singleBox = (title: String, value: String) => {
 
         return (
-            <div className={"mr-5 mb-5 rounded-lg border-2 border-gray-200 p-5 w-56 h-30"}>
+            <div className={"m-5 md:mt-0 md:ml-0 rounded-lg border-2 border-gray-200 p-5 w-56 h-30"}>
                 <h2 className="left-0 top-0 mb-1 text-xl text-gray-300">
                     {title}
                 </h2>

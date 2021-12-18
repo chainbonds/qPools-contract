@@ -53,10 +53,10 @@ export default function HeroForm(props: any) {
         return (
             <>
                 <ul className="flex mx-auto px-auto content-center items-center place-content-center">
-                    <li className="mr-3">
+                    <li className="pr-3">
                         {stakeTab()}
                     </li>
-                    <li className="mr-5">
+                    <li className="pr-5">
                         {unstakeTab()}
                     </li>
                 </ul>
@@ -66,7 +66,7 @@ export default function HeroForm(props: any) {
 
     return (
         <>
-            <div className={"flex flex-col items-end justify-center mx-auto"}>
+            <div className={"flex flex-col items-end justify-center mx-auto 2xl:pt-52"}>
                 { stakingFormNavbar() }
                 { (displayForm === HeroFormState.Stake) && <StakeForm /> }
                 { (displayForm === HeroFormState.Unstake) && <UnstakeForm /> }

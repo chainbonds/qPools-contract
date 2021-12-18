@@ -1,7 +1,6 @@
 import React, {FC} from "react";
 import {SocialIcon} from 'react-social-icons';
 
-
 export const Footer: FC = ({}) => {
 
     return (

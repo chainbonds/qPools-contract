@@ -1,27 +1,27 @@
 [provider]
-cluster = "devnet"  # localnet
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
 solbond = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
-amm = { address = "R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc", idl = "./deps/invariant/target/idl/amm.json" }
-staker = { address = "GE2kSRw4wWNumAybT5VWFh9aA6eCoQLztbsQ5riMbxKC", idl = "./deps/invariant/target/idl/staker.json" }
+amm = { address = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z", idl = "./deps/protocol/target/idl/amm.json" }
+staker = { address = "9uEe4WVxssWaSe1gRRBwpkWMq6mS8dqFzV3RU62rondF", idl = "./deps/protocol/target/idl/staker.json" }
 
 [programs.devnet]
 solbond = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
-amm = { address = "R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc", idl = "./deps/invariant/target/idl/amm.json" }
-staker = { address = "GE2kSRw4wWNumAybT5VWFh9aA6eCoQLztbsQ5riMbxKC", idl = "./deps/invariant/target/idl/staker.json" }
+amm = { address = "R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc", idl = "./deps/protocol/target/idl/amm.json" }
+staker = { address = "GE2kSRw4wWNumAybT5VWFh9aA6eCoQLztbsQ5riMbxKC", idl = "./deps/protocol/target/idl/staker.json" }
 
 [registry]
 url = "https://anchor.projectserum.com"
 
-#[[test.genesis]]
-#address = "R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc"
-#program = "./deps/invariant/target/deploy/amm.so"
-#
-#[[test.genesis]]
-#address = "GE2kSRw4wWNumAybT5VWFh9aA6eCoQLztbsQ5riMbxKC"
-#program = "./deps/invariant/target/deploy/staker.so"
+[[test.genesis]]
+address = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z"
+program = "./deps/protocol/target/deploy/amm.so"
+
+[[test.genesis]]
+address = "9uEe4WVxssWaSe1gRRBwpkWMq6mS8dqFzV3RU62rondF"
+program = "./deps/protocol/target/deploy/staker.so"
 
 [scripts]
 #test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/*.ts"

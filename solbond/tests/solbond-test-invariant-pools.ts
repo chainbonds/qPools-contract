@@ -18,11 +18,7 @@ function delay(ms: number) {
 describe('claim', () => {
 
     // Connection
-    // const provider = Provider.local("https://api.devnet.solana.com")
-    // "https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/"
-    const provider = Provider.local(clusterApiUrl('devnet'), {
-       skipPreflight: true
-    })
+    const provider = Provider.local();
     console.log("Provider is: ", provider);
     const connection = provider.connection;
 
@@ -36,11 +32,8 @@ describe('claim', () => {
     const admin = Keypair.generate()
 
     // Programs
-    // const solbondProgram = anchor.workspace.Solbond;
-    // const invariantProgram = anchor.workspace.Amm;
-
-    const solbondProgram = getSolbondProgram(connection, provider);
-    const invariantProgram = getInvariantProgram(connection, provider);
+    const solbondProgram = anchor.workspace.Solbond;
+    const invariantProgram = anchor.workspace.Amm;
 
     console.log("Solbond program");
     console.log(solbondProgram.programId.toString());
@@ -52,14 +45,10 @@ describe('claim', () => {
     let market: MockQPools;
 
     before(async () => {
-        // await delay(1_000);
         await connection.requestAirdrop(mintAuthority.publicKey, 1e9);
-        // await delay(1_000);
-        // await delay(1_000);
-        // await connection.requestAirdrop(positionOwner.publicKey, 1e9);
-        // await delay(1_000);
-        // await connection.requestAirdrop(payer.publicKey, 1e9);
-        // await delay(1_000);
+        await connection.requestAirdrop(admin.publicKey, 1e9);
+        await connection.requestAirdrop(positionOwner.publicKey, 1e9);
+        await connection.requestAirdrop(payer.publicKey, 1e9);
         currencyMint = await createMint(provider, payer);
     })
 
@@ -70,7 +59,6 @@ describe('claim', () => {
      */
 
     it('#initializeMockedMarket()', async () => {
-        await delay(1_000);
         market = new MockQPools(
             provider.wallet,
             connection,
@@ -86,10 +74,8 @@ describe('claim', () => {
         await market.createTokens(NUMBER_POOLS, mintAuthority);
     })
     it('#createState()', async () => {
-        await connection.requestAirdrop(admin.publicKey, 1e9);
-        // await market.createState(admin);
+        await market.createState(admin);
     })
-
     // it("#createFeeTier()", async () => {
     //     await market.createFeeTier(admin);
     // })

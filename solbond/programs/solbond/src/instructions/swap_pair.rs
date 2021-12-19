@@ -78,7 +78,7 @@ pub fn handler(
         invariant_program,
         swap_accounts
     );
-    amm::cpi::swap(cpi_ctx, _fee_tier_address, x_to_y, amount, by_amount_in, sqrt_price_limit);
+    amm::cpi::swap(cpi_ctx, x_to_y, amount, by_amount_in, sqrt_price_limit);
 
     // amm::cpi::swap(
     //     CpiContext::new_with_signer(

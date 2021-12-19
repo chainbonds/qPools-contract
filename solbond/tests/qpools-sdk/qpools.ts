@@ -1,6 +1,6 @@
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
-import {Amm, IDL} from "../../deps/invariant/sdk/src/idl/amm";
+import {Amm, IDL} from "../../deps/protocol/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
     calculate_price_sqrt,
@@ -23,7 +23,7 @@ import {createMint} from "../utils";
 import {Key} from "readline";
 
 import {assert} from "chai";
-import {PoolStructure, Position, PositionList} from "../../deps/invariant/sdk/src/market";
+import {PoolStructure, Position, PositionList} from "../../deps/protocol/sdk/src/market";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'

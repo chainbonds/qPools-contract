@@ -76,19 +76,21 @@ describe('claim', () => {
     it('#createState()', async () => {
         await market.createState(admin);
     })
-    // it("#createFeeTier()", async () => {
-    //     await market.createFeeTier(admin);
-    // })
-    // it("#createTradePairs()", async () => {
-    //     await market.createPairs(NUMBER_POOLS);
-    // })
-    // it("#createMarketsFromPairs()", async () => {
-    //     // Get network and wallet from the adapter somewhere
-    //     await market.creatMarketsFromPairs(
-    //         NUMBER_POOLS,
-    //         admin
-    //     )
-    // })
+    it("#createFeeTier()", async () => {
+        await market.createFeeTier(admin);
+    })
+    it("#createTradePairs()", async () => {
+        await market.createPairs(NUMBER_POOLS);
+    })
+    it("#createMarketsFromPairs()", async () => {
+        // Get network and wallet from the adapter somewhere
+        await market.creatMarketsFromPairs(
+            NUMBER_POOLS,
+            admin
+        )
+    })
+
+    // TODO: Initialize a position
 
     //it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(

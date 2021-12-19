@@ -271,6 +271,7 @@ export class MockQPools extends QPoolsAdmin {
         wallet: IWallet,
         ammProgramId: PublicKey,
     ) {
+
         this.mockMarket = new Market(
             network,
             wallet,
@@ -365,34 +366,34 @@ export class MockQPools extends QPoolsAdmin {
         console.log("pair addr")
         const feetieraddr = await pair.feeTierAddress
         console.log("feetier addr ", feetieraddr.toString())
-        const swapInstruction = await this.solbondProgram.rpc.swapPair(
-            pair.feeTierAddress,
-            xToy,
-            amount,
-            byAmountIn,
-            sqrtPriceLimit,
-            {
-                accounts: {
-                    initializer: admin.publicKey,
-                    pool: pairaddrs,
-                    state: stateAddress,
-                    tickmap: pool.tickmap,
-                    tokenXMint: tokenXMint.publicKey,
-                    tokenYMint: tokenYMint.publicKey,
-                    reserveAccountX: pool.tokenXReserve,
-                    reserveAccountY: pool.tokenYReserve,
-                    accountX: accountX,
-                    accountY: accountY,
-                    programAuthority:pool.authority,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    invariantProgram: this.invariantProgram.programId,
-                    systemProgram: web3.SystemProgram.programId,
-                },
-                signers: [admin]
-            }
-        )
+        // const swapInstruction = await this.solbondProgram.rpc.swapPair(
+        //     pair.feeTierAddress,
+        //     xToy,
+        //     amount,
+        //     byAmountIn,
+        //     sqrtPriceLimit,
+        //     {
+        //         accounts: {
+        //             initializer: admin.publicKey,
+        //             pool: pairaddrs,
+        //             state: stateAddress,
+        //             tickmap: pool.tickmap,
+        //             tokenXMint: tokenXMint.publicKey,
+        //             tokenYMint: tokenYMint.publicKey,
+        //             reserveAccountX: pool.tokenXReserve,
+        //             reserveAccountY: pool.tokenYReserve,
+        //             accountX: accountX,
+        //             accountY: accountY,
+        //             programAuthority:pool,
+        //             tokenProgram: TOKEN_PROGRAM_ID,
+        //             invariantProgram: this.invariantProgram.programId,
+        //             systemProgram: web3.SystemProgram.programId,
+        //         },
+        //         signers: [admin]
+        //     }
+        // )
 
-        const tx = await this.provider.connection.confirmTransaction(swapInstruction);
+        //const tx = await this.provider.connection.confirmTransaction(swapInstruction);
 
 
     }

@@ -1,19 +1,27 @@
 import * as anchor from '@project-serum/anchor';
 import {Provider, web3} from '@project-serum/anchor';
-import {Keypair} from '@solana/web3.js';
+import {clusterApiUrl, Connection, Keypair} from '@solana/web3.js';
 import {Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
 import {MockQPools} from "./qpools-sdk/qpools";
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
+import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
 
+// require('dotenv').config()
 const NUMBER_POOLS = 5;
 
 describe('claim', () => {
 
     // Connection
     const provider = Provider.local()
+    //const connection = provider.connection
+    //const provider = Provider.local(clusterApiUrl('devnet'), {
+    //    skipPreflight: true
+    //})
     const connection = provider.connection
+
+
 
     const payer = getPayer();
     const mintAuthority = Keypair.generate();
@@ -25,8 +33,11 @@ describe('claim', () => {
     const admin = Keypair.generate()
 
     // Programs
-    const solbondProgram = anchor.workspace.Solbond;
-    const invariantProgram = anchor.workspace.Amm;
+    // const solbondProgram = anchor.workspace.Solbond;
+    // const invariantProgram = anchor.workspace.Amm;
+
+    const solbondProgram = getSolbondProgram(connection, provider);
+    const invariantProgram = getInvariantProgram(connection, provider);
 
     // More Complex Objects
     let market: MockQPools;
@@ -54,7 +65,7 @@ describe('claim', () => {
             provider
         );
         await market.createMockMarket(
-            Network.LOCAL,
+            Network.DEV,
             provider.wallet,
             invariantProgram.programId
         )
@@ -78,6 +89,17 @@ describe('claim', () => {
             admin
         )
     })
+
+    //it("#swapWithInvariant()", async () => {
+    //    await market.swapWithInvariant(
+    //        admin,
+    //        true,
+    //        new anchor.BN(10),
+    //        true,
+    //        new anchor.BN(3),
+    //        new anchor.BN(0)
+    //    )
+    //})
 
     /*
      * Now run our endpoints

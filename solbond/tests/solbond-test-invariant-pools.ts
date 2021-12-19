@@ -11,10 +11,15 @@ import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
 // require('dotenv').config()
 const NUMBER_POOLS = 5;
 
+function delay(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
+}
+
 describe('claim', () => {
 
     // Connection
     // const provider = Provider.local("https://api.devnet.solana.com")
+    // "https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/"
     const provider = Provider.local(clusterApiUrl('devnet'), {
        skipPreflight: true
     })
@@ -47,13 +52,15 @@ describe('claim', () => {
     let market: MockQPools;
 
     before(async () => {
-
-        await Promise.all([
-            await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-            await connection.requestAirdrop(admin.publicKey, 1e9),
-            await connection.requestAirdrop(positionOwner.publicKey, 1e9),
-            await connection.requestAirdrop(payer.publicKey, 1e9)
-        ]);
+        // await delay(1_000);
+        await connection.requestAirdrop(mintAuthority.publicKey, 1e9);
+        // await delay(1_000);
+        // await connection.requestAirdrop(admin.publicKey, 1e9);
+        // await delay(1_000);
+        // await connection.requestAirdrop(positionOwner.publicKey, 1e9);
+        // await delay(1_000);
+        // await connection.requestAirdrop(payer.publicKey, 1e9);
+        // await delay(1_000);
         currencyMint = await createMint(provider, payer);
     })
 
@@ -64,16 +71,17 @@ describe('claim', () => {
      */
 
     it('#initializeMockedMarket()', async () => {
+        await delay(1_000);
         market = new MockQPools(
             provider.wallet,
             connection,
             provider
         );
-        // await market.createMockMarket(
-        //     Network.DEV,
-        //     provider.wallet,
-        //     invariantProgram.programId
-        // )
+        await market.createMockMarket(
+            Network.DEV,
+            provider.wallet,
+            invariantProgram.programId
+        )
     });
     // it("#createTradedToken()", async () => {
     //     await market.createTokens(NUMBER_POOLS, mintAuthority);

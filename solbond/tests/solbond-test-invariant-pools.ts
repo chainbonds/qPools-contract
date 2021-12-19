@@ -55,7 +55,6 @@ describe('claim', () => {
         // await delay(1_000);
         await connection.requestAirdrop(mintAuthority.publicKey, 1e9);
         // await delay(1_000);
-        // await connection.requestAirdrop(admin.publicKey, 1e9);
         // await delay(1_000);
         // await connection.requestAirdrop(positionOwner.publicKey, 1e9);
         // await delay(1_000);
@@ -83,17 +82,19 @@ describe('claim', () => {
             invariantProgram.programId
         )
     });
-    // it("#createTradedToken()", async () => {
-    //     await market.createTokens(NUMBER_POOLS, mintAuthority);
-    // })
+    it("#createTradedToken()", async () => {
+        await market.createTokens(NUMBER_POOLS, mintAuthority);
+    })
+    it('#createState()', async () => {
+        await connection.requestAirdrop(admin.publicKey, 1e9);
+        // await market.createState(admin);
+    })
+
     // it("#createFeeTier()", async () => {
     //     await market.createFeeTier(admin);
     // })
     // it("#createTradePairs()", async () => {
     //     await market.createPairs(NUMBER_POOLS);
-    // })
-    // it('#createState()', async () => {
-    //     await market.createState(admin);
     // })
     // it("#createMarketsFromPairs()", async () => {
     //     // Get network and wallet from the adapter somewhere

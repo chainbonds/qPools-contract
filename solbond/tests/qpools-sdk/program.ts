@@ -12,7 +12,7 @@ const solana_idl: any = _solana_idl;
 
 export const getSolbondProgram = (connection: Connection, provider: Provider) => {
 
-    const programId = new anchor.web3.PublicKey("GGoMTmrJtapovtdjZLv1hdbgZeF4pj8ANWxRxewnZ35g");
+    const programId = new anchor.web3.PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
     const program = new anchor.Program(
         solana_idl,
         programId,

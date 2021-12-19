@@ -65,7 +65,7 @@ describe('claim', () => {
             provider
         );
         await market.createMockMarket(
-            Network.DEV,
+            Network.LOCAL,
             provider.wallet,
             invariantProgram.programId
         )

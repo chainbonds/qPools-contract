@@ -23,7 +23,7 @@ import {createMint} from "../utils";
 import {Key} from "readline";
 
 import {assert} from "chai";
-import {PoolStructure, Position, PositionList} from "../../deps/protocol/sdk/src/market";
+import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'

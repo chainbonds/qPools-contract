@@ -62,18 +62,19 @@ describe('claim', () => {
      * Most of these happen from within the mock
      * Some of these need to happen also on the frontend / as part of the SDK
      */
-    // it('#initializeMockedMarket()', async () => {
-    //     market = new MockQPools(
-    //         provider.wallet,
-    //         connection,
-    //         provider
-    //     );
-    //     await market.createMockMarket(
-    //         Network.DEV,
-    //         provider.wallet,
-    //         invariantProgram.programId
-    //     )
-    // });
+
+    it('#initializeMockedMarket()', async () => {
+        market = new MockQPools(
+            provider.wallet,
+            connection,
+            provider
+        );
+        // await market.createMockMarket(
+        //     Network.DEV,
+        //     provider.wallet,
+        //     invariantProgram.programId
+        // )
+    });
     // it("#createTradedToken()", async () => {
     //     await market.createTokens(NUMBER_POOLS, mintAuthority);
     // })

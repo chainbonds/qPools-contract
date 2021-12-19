@@ -5,7 +5,7 @@
         "@solana/spl-token": "^0.1.8"
     },
     "devDependencies": {
-        "@invariant-labs/sdk": "file:sdk",
+        "@invariant-labs/sdk": "file:./deps/protocol/sdk",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.11.7",
         "chai": "^4.3.4",

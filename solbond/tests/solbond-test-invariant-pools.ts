@@ -11,7 +11,7 @@ import {QPoolsUser} from "./qpools-sdk/qpools-user";
 import {mintTo} from "@project-serum/serum/lib/token-instructions";
 
 // require('dotenv').config()
-const NUMBER_POOLS = 1;
+const NUMBER_POOLS = 5;
 
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -99,7 +99,7 @@ describe('claim', () => {
     })
     it("#createTradePairs()", async () => {
         // Create 10 pools, one for each pair
-        await market.createPairs(NUMBER_POOLS);
+        await market.createPairs(NUMBER_POOLS, currencyMint);
     })
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere

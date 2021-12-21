@@ -25,6 +25,7 @@ import {Key} from "readline";
 import {assert} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {QPoolsAdmin} from "./qpools-admin";
+import {Mint} from "../../../dapp/src/splpasta";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'
@@ -50,7 +51,7 @@ export class MockQPools extends QPoolsAdmin {
         );
     }
 
-    async createPairs(number_pools: number) {
+    async createPairs(number_pools: number, currencyMint: Token) {
         // Call this after all tokens were created!
         if (!this.tokens) {
             throw Error("Token Mints were not generated yet");
@@ -59,10 +60,12 @@ export class MockQPools extends QPoolsAdmin {
             throw Error("Token Mints were not generated yet");
         }
 
+        this.currencyMint = currencyMint;
+
         let i = 0;
         this.pairs = Array.from({length: number_pools}).map((_) => {
             let pair = new Pair(
-                this.tokens[0].publicKey,
+                this.currencyMint.publicKey,
                 this.tokens[(2 * i) + 1].publicKey,
                 this.feeTier
             );

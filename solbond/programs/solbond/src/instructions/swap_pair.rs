@@ -28,14 +28,14 @@ pub struct SwapPairInstruction<'info> {
     constraint = &reserve_account_y.mint == token_y_mint.to_account_info().key
     )]
     pub reserve_account_y: Account<'info, TokenAccount>,
-    // #[account(mut,
-    // constraint = &account_x.mint == token_x_mint.to_account_info().key
-    // )]
-    // pub account_x: Box<Account<'info, TokenAccount>>,
-    // #[account(mut,
-    // constraint = &account_y.mint == token_y_mint.to_account_info().key
-    // )]
-    // pub account_y: Box<Account<'info, TokenAccount>>,
+    #[account(mut,
+    constraint = &account_x.mint == token_x_mint.to_account_info().key
+    )]
+    pub account_x: Box<Account<'info, TokenAccount>>,
+    #[account(mut,
+    constraint = &account_y.mint == token_y_mint.to_account_info().key
+    )]
+    pub account_y: Box<Account<'info, TokenAccount>>,
 
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,

@@ -166,6 +166,8 @@ export class QPoolsAdmin {
             console.log("")
             this.QPReserveTokens[pair.tokenY.toString()] = await tokenY.createAccount(this.qPoolAccount);
 
+            console.log("Token X and Token Y are: ", tokenX.publicKey.toString(), tokenY.publicKey.toString());
+
             console.log("Inputs are: ");
             console.log("Inputs are: ",
                 // xToY: bool,
@@ -223,7 +225,7 @@ export class QPoolsAdmin {
 
                         reserveAccountX: pool.tokenXReserve,
                         reserveAccountY: pool.tokenYReserve,
-                        accountX: this.qPoolCurrencyAccount,
+                        accountX: this.qPoolCurrencyAccount,  // this.QPReserveTokens[pair.tokenY.toString()]
                         accountY: this.QPReserveTokens[pair.tokenY.toString()],
 
 

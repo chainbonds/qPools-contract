@@ -48,7 +48,7 @@ export class QPoolsAdmin {
     public mockMarket: Market;
     public feeTier: FeeTier;
 
-    public QPReserveTokens : Record<string, PublicKey> = {};
+    public QPReserveTokens: Record<string, PublicKey> = {};
 
 
     constructor(
@@ -150,8 +150,6 @@ export class QPoolsAdmin {
             // this.mockMarket.poo
 
             const poolAddress = await pair.getAddress(this.invariantProgram.programId);
-            console.log("PoolAddress is: ", poolAddress.toString())
-
             // TODO: assert that pair.tokenX is equivalent to currencyMint!
 
             // Create a tokenX, and tokenY account for us, and
@@ -162,11 +160,27 @@ export class QPoolsAdmin {
             const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, initializer);
             const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, initializer);
             console.log("Creating token accounts");
-            this.QPReserveTokens[pair.tokenX.toString()] = await tokenX.createAccount(this.qPoolAccount);
+            const QPtokenXAccount = await tokenX.createAccount(this.qPoolAccount);
             console.log("")
-            this.QPReserveTokens[pair.tokenY.toString()] = await tokenY.createAccount(this.qPoolAccount);
+            const QPtokenYAccount = await tokenY.createAccount(this.qPoolAccount);
 
-            console.log("Token X and Token Y are: ", tokenX.publicKey.toString(), tokenY.publicKey.toString());
+            // assert.ok(
+            //     (await tokenX.getAccountInfo(QPtokenXAccount)).mint.equals(tokenX.publicKey),
+            //     // ("1 " + (await tokenX.getAccountInfo(this.QPReserveTokens[pair.tokenX.toString()])).mint.toString() + ", " + tokenX.publicKey.toString())
+            // );
+            // assert.ok(
+            //     (await tokenY.getAccountInfo(QPtokenYAccount)).mint.equals(tokenY.publicKey),
+            //     // ("2 " + (await tokenY.getAccountInfo(this.QPReserveTokens[pair.tokenY.toString()])).mint.toString() + ", " + tokenY.publicKey.toString())
+            // );
+            // assert.ok(
+            //     (await tokenX.getAccountInfo(pool.tokenX)).mint.equals(tokenX.publicKey),
+            //     // ("3 " + (await tokenX.getAccountInfo(pool.tokenX)).mint.toString() + ", " + tokenX.publicKey.toString())
+            // );
+            // assert.ok(
+            //     (await tokenY.getAccountInfo(pool.tokenY)).mint.equals(tokenY.publicKey),
+            //     // ("4 " + (await tokenY.getAccountInfo(pool.tokenY)).mint.toString() + ", " + tokenY.publicKey.toString())
+            // );
+
 
             console.log("Inputs are: ");
             console.log("Inputs are: ",
@@ -188,8 +202,8 @@ export class QPoolsAdmin {
                     token_y_mint: pair.tokenY.toString(),
                     reserve_account_x: pool.tokenXReserve.toString(),
                     reserve_account_y: pool.tokenYReserve.toString(),
-                    account_x: this.QPReserveTokens[pair.tokenX.toString()].toString(),  // this.qPoolCurrencyAccount.toString(),
-                    account_y: this.QPReserveTokens[pair.tokenY.toString()].toString(),
+                    account_x: QPtokenXAccount.toString(),  // this.qPoolCurrencyAccount.toString(),
+                    account_y: QPtokenYAccount.toString(),
 
                     pool: poolAddress.toString(),
 
@@ -201,6 +215,7 @@ export class QPoolsAdmin {
                     system_program: web3.SystemProgram.programId.toString(),
                 }
             )
+
 
             await this.solbondProgram.rpc.swapPair(
                 // xToY: boolea,
@@ -225,8 +240,9 @@ export class QPoolsAdmin {
 
                         reserveAccountX: pool.tokenXReserve,
                         reserveAccountY: pool.tokenYReserve,
-                        accountX: this.qPoolCurrencyAccount,  // this.QPReserveTokens[pair.tokenY.toString()]
-                        accountY: this.QPReserveTokens[pair.tokenY.toString()],
+
+                        accountX: this.qPoolCurrencyAccount,  // ,  // this.QPReserveTokens[pair.tokenY.toString()]
+                        accountY: QPtokenYAccount,  //
 
 
                         programAuthority: this.mockMarket.programAuthority,

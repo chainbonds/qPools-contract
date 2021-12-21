@@ -13,8 +13,11 @@ pub struct SwapPairInstruction<'info> {
     #[account(signer)]
     pub initializer: AccountInfo<'info>,
 
+    // #[account(mut)]
     pub pool: AccountLoader<'info, Pool>,
     pub state: AccountLoader<'info, State>,
+
+    // #[account(mut)]
     pub tickmap: AccountLoader<'info, Tickmap>,
 
     pub token_x_mint: Account<'info, Mint>,
@@ -52,8 +55,6 @@ pub fn handler(
     by_amount_in: bool,
     sqrt_price_limit: u128,
 ) -> ProgramResult {
-
-    msg!("Going in!!!");
 
     // let swap_accounts = Swap{
     //     state: ctx.accounts.state.to_account_info(),

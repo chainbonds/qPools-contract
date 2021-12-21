@@ -26,9 +26,10 @@ describe('claim', () => {
     let currencyMint: Token | null = null;
 
     // @ts-expect-error
-    const wallet = provider.wallet.payer as Keypair
-    const positionOwner = Keypair.generate()
-    const admin = Keypair.generate()
+    const wallet = provider.wallet.payer as Keypair;
+    const positionOwner = Keypair.generate();
+    const admin = Keypair.generate();
+    const reserveAdmin = Keypair.generate();
 
     // Programs
     const solbondProgram = anchor.workspace.Solbond;
@@ -43,6 +44,7 @@ describe('claim', () => {
     let market: MockQPools;
 
     before(async () => {
+        await connection.requestAirdrop(reserveAdmin.publicKey, 1e9);
         await connection.requestAirdrop(mintAuthority.publicKey, 1e9);
         await connection.requestAirdrop(admin.publicKey, 1e9);
         await connection.requestAirdrop(positionOwner.publicKey, 1e9);
@@ -102,10 +104,8 @@ describe('claim', () => {
             admin
         )
     })
-
     it("#provideThirdPartyLiquidity()", async () => {
         // Provide Liquidity through a third party (this is not the bond yet)
-        console.log("Working on providing liquidity..");
         await market.provideLiquidityToAllPairs(
             NUMBER_POOLS,
             admin,
@@ -113,6 +113,21 @@ describe('claim', () => {
             1_000_000,
             1_000_000
         )
+    })
+
+    // We must now instantiate all accounts!
+    it("initializeQPTReserve()", async () => {
+        // Initialize the QPT Reserves
+        await market.initializeQPTReserve(
+            currencyMint,
+            reserveAdmin
+        )
+    })
+
+    // We now want to pay in some funds into our reserve ...
+    it("buyQPT()", async () => {
+        // As a new, third-party user (A), (A) wants to buy QPT!
+
     })
 
     // it("#swapWithInvariant()", async () => {

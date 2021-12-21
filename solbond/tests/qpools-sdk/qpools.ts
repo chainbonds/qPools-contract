@@ -110,7 +110,7 @@ export class QPoolsAdmin {
         return (await this.invariantProgram.account.pool.fetch(address)) as PoolStructure
     }
 
-    async initialize(currencyMint: Token, initializer: Keypair) {
+    async initializeQPTReserve(currencyMint: Token, initializer: Keypair) {
 
         this.currencyMint = currencyMint;
 
@@ -376,6 +376,13 @@ export class MockQPools extends QPoolsAdmin {
                 positionOwner
             )
         }
+    }
+
+    async makeSwap(
+        pair: Pair,
+
+    ) {
+
     }
 
     async swapWithInvariant(

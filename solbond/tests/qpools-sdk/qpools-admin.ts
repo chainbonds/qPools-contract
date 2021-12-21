@@ -12,7 +12,7 @@ import {
     Network,
     Pair,
     SEED,
-    TICK_LIMIT
+    TICK_LIMIT, tou64
 } from "@invariant-labs/sdk";
 import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
@@ -59,7 +59,7 @@ export class QPoolsAdmin {
         this.connection = connection;
 
         this.solbondProgram = anchor.workspace.Solbond;
-        this.invariantProgram = anchor.workspace.Amm;
+        this.invariantProgram = anchor.workspace.Amm as Program<Amm>;
         this.provider = provider;
 
         // @ts-expect-error
@@ -171,7 +171,7 @@ export class QPoolsAdmin {
                 // xToY: bool,
                 true,
                 // amount: u64,
-                new BN(2_000_000),
+                tou64(2_000_000),
                 // by_amount_in: bool,
                 true,
                 // sqrt_price_limit: u128,
@@ -179,24 +179,24 @@ export class QPoolsAdmin {
             );
             console.log(
                 {
-                    initializer: initializer.publicKey,
+                    initializer: initializer.publicKey.toString(),
 
-                    tickmap: pool.tickmap,
-                    token_x_mint: pair.tokenX,
-                    token_y_mint: pair.tokenY,
-                    reserve_account_x: pool.tokenXReserve,
-                    reserve_account_y: pool.tokenYReserve,
-                    account_x: this.qPoolCurrencyAccount,
-                    account_y: this.QPReserveTokens[pair.tokenY.toString()],
+                    tickmap: pool.tickmap.toString(),
+                    token_x_mint: pair.tokenX.toString(),
+                    token_y_mint: pair.tokenY.toString(),
+                    reserve_account_x: pool.tokenXReserve.toString(),
+                    reserve_account_y: pool.tokenYReserve.toString(),
+                    account_x: this.QPReserveTokens[pair.tokenX.toString()].toString(),  // this.qPoolCurrencyAccount.toString(),
+                    account_y: this.QPReserveTokens[pair.tokenY.toString()].toString(),
 
-                    pool: poolAddress,
+                    pool: poolAddress.toString(),
 
-                    state: this.mockMarket.stateAddress,
-                    program_authority: this.mockMarket.programAuthority,
+                    state: this.mockMarket.stateAddress.toString(),
+                    program_authority: this.mockMarket.programAuthority.toString(),
 
-                    token_program: TOKEN_PROGRAM_ID,
-                    invariant_program: this.invariantProgram.programId,
-                    system_program: web3.SystemProgram.programId,
+                    token_program: TOKEN_PROGRAM_ID.toString(),
+                    invariant_program: this.invariantProgram.programId.toString(),
+                    system_program: web3.SystemProgram.programId.toString(),
                 }
             )
 
@@ -213,17 +213,20 @@ export class QPoolsAdmin {
                     accounts: {
                         initializer: initializer.publicKey,
 
+                        pool: poolAddress,
+                        state: this.mockMarket.stateAddress,
                         tickmap: pool.tickmap,
+
+
                         tokenXMint: pair.tokenX,
                         tokenYMint: pair.tokenY,
+
                         reserveAccountX: pool.tokenXReserve,
                         reserveAccountY: pool.tokenYReserve,
                         accountX: this.qPoolCurrencyAccount,
                         accountY: this.QPReserveTokens[pair.tokenY.toString()],
 
-                        pool: poolAddress,
 
-                        state: this.mockMarket.stateAddress,
                         programAuthority: this.mockMarket.programAuthority,
 
                         tokenProgram: TOKEN_PROGRAM_ID,

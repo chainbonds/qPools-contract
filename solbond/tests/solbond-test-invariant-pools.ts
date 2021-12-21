@@ -152,7 +152,7 @@ describe('claim', () => {
 
     it("swapReserveToAllPairs()", async() => {
         // Start the swaps!
-        await market.swapToAllPairs(reserveAdmin);
+        await market.swapToAllPairs(admin);
     })
 
     // it("#swapWithInvariant()", async () => {

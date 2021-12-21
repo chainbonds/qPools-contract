@@ -34,17 +34,15 @@ const POSITION_LIST_SEED = 'positionlistv1'
 // Probably put into a separate file, so we can outsource the SDK into a separate set of imports ...
 export class MockQPools extends QPoolsAdmin {
 
-    public mockMarket: Market;
-    public pairs: Pair[];
     public tokens: Token[];
     public currencyMint: Token | null = null;  // We will only have a single currency across one qPool
 
     // We have a single fee tier across all pools, for simplicity
-    public feeTier: FeeTier;
     public protocolFee: Decimal;
 
     // TODO: Number pools should be part of the constructor!
     async createTokens(number_pools: number, mintAuthority: Keypair) {
+        // Every second token should be the same!
         this.tokens = await Promise.all(
             Array.from({length: 2 * number_pools}).map((_) => {
                 return createToken(this.connection, this.wallet, mintAuthority)
@@ -64,7 +62,7 @@ export class MockQPools extends QPoolsAdmin {
         let i = 0;
         this.pairs = Array.from({length: number_pools}).map((_) => {
             let pair = new Pair(
-                this.tokens[2 * i].publicKey,
+                this.tokens[0].publicKey,
                 this.tokens[(2 * i) + 1].publicKey,
                 this.feeTier
             );
@@ -133,10 +131,6 @@ export class MockQPools extends QPoolsAdmin {
 
 
     async createFeeTier(admin: Keypair) {
-        this.feeTier = {
-            fee: fromFee(new BN(600)),
-            tickSpacing: 10
-        }
         await this.mockMarket.createFeeTier(this.feeTier, admin);
     }
 

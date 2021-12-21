@@ -11,7 +11,7 @@ import {QPoolsUser} from "./qpools-sdk/qpools-user";
 import {mintTo} from "@project-serum/serum/lib/token-instructions";
 
 // require('dotenv').config()
-const NUMBER_POOLS = 5;
+const NUMBER_POOLS = 1;
 
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -148,6 +148,10 @@ describe('claim', () => {
         await qpools.buyQPT(
             5_000_000
         );
+    })
+
+    it("swapReserveToAllPairs()", async() => {
+        // Start the swaps!
 
     })
 

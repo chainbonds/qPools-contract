@@ -44,6 +44,13 @@ export class QPoolsAdmin {
     public qPoolQPAccount: PublicKey;
     public qPoolCurrencyAccount: PublicKey;
 
+    public pairs: Pair[];
+    public mockMarket: Market;
+    public feeTier: FeeTier;
+
+    public QPReserveTokens : Record<string, PublicKey>;
+
+
     constructor(
         wallet: IWallet,
         connection: Connection,
@@ -57,6 +64,11 @@ export class QPoolsAdmin {
 
         // @ts-expect-error
         this.wallet = provider.wallet.payer as Keypair
+
+        this.feeTier = {
+            fee: fromFee(new BN(600)),
+            tickSpacing: 10
+        }
     }
 
     /**
@@ -112,6 +124,104 @@ export class QPoolsAdmin {
             }
         );
         await this.provider.connection.confirmTransaction(initializeTx);
+
+    }
+
+    async setPairs(pairs) {
+        this.pairs = pairs;
+    }
+
+    async swapToAllPairs(initializer: Keypair) {
+
+        // For every pair in our token account, we need to
+        for (let i = 0; i < this.pairs.length; i++) {
+            let pair = this.pairs[i];
+
+            // Get the oracle price for every pair
+
+            // Get the ratio for each pair
+
+            // Check how much was swapped already
+
+            // Swap the rest / difference of this
+            // Rename `mockMarket` with `market` everywhere
+            const feeTierAddress = await this.mockMarket.getFeeTierAddress(this.feeTier);
+
+            // this.mockMarket.poo
+            const poolAddress = await pair.getAddress(this.invariantProgram.programId);
+
+            // TODO: assert that pair.tokenX is equivalent to currencyMint!
+
+            // Create a tokenX, and tokenY account for us, and
+            const pool = await this.get(pair);
+
+            // Create a token for our QP Reserve
+            // If a token exists already, save it in the dictionary
+            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, initializer);
+            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, initializer);
+            this.QPReserveTokens[pair.tokenX.toString()] = await tokenX.createAccount(this.qPoolAccount);
+            this.QPReserveTokens[pair.tokenY.toString()] = await tokenY.createAccount(this.qPoolAccount);
+
+            await this.solbondProgram.rpc.swapPair(
+                // _fee_tier_address: Pubkey,
+                feeTierAddress.address,
+                // xToY: boolea,
+                true,
+                // amount: u64,
+                new BN(2_000_000),
+                // by_amount_in: bool,
+                true,
+                // sqrt_price_limit: u128,
+                1_000_000,
+                {
+                    accounts: {
+                        initializer: initializer.publicKey,
+
+                        tickmap: pool.tickmap,
+                        token_x_mint: pair.tokenX,
+                        token_y_mint: pair.tokenY,
+                        reserve_account_x: pool.tokenXReserve,
+                        reserve_account_y: pool.tokenYReserve,
+                        account_x: this.qPoolCurrencyAccount,
+                        account_y: this.QPReserveTokens[pair.tokenY.toString()],
+
+                        pool: poolAddress,
+
+                        state: this.mockMarket.stateAddress,
+                        program_authority: this.mockMarket.programAuthority,
+
+                        token_program: TOKEN_PROGRAM_ID,
+                        invariant_program: this.invariantProgram.programId,
+                        system_program: web3.SystemProgram.programId,
+                    },
+                    signers: [initializer]
+                }
+            );
+
+        }
+
+        // pub fn swap_pair(
+        //     ctx: Context<SwapPairInstruction>,
+
+        // )
+
+        // Later on we should probably remove initializer from the seeds completely, then anyone can call this
+        // And the user could prob get some governance tokens out of it ...
+
+        // initializer
+        // pool
+        // state
+        // tickmap
+        // token_x_mint
+        // token_y_mint
+        // reserve_account_x
+        // reserve_account_y
+        // account_x
+        // account_y
+        // program_authority
+        // token_program
+        // invariant_program
+        // system_program
 
     }
 

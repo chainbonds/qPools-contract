@@ -61,23 +61,23 @@ export class QPoolsUser {
         // Bond Pool
         if (!this.bondPoolQPTAccount) {
             // Create the reserve account, if none exists
-            console.log("Going to create the this.bondPoolQPTAccount");
+            // console.log("Going to create the this.bondPoolQPTAccount");
             this.bondPoolQPTAccount = await createTokenAccount(this.provider, this.QPTMint.publicKey, this.bondPoolAccount);
         }
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists
-            console.log("Going to create the this.bondPoolCurrencyAccount");
+            // console.log("Going to create the this.bondPoolCurrencyAccount");
             this.bondPoolCurrencyAccount = await createTokenAccount(this.provider, this.currencyMint.publicKey, this.bondPoolAccount);
         }
         // Purchaser
         if (!this.purchaserCurrencyAccount) {
             // Create the reserve account, if none exists
-            console.log("Going to create the this.purchaserCurrencyAccount");
+            // console.log("Going to create the this.purchaserCurrencyAccount");
             this.purchaserCurrencyAccount = await createTokenAccount(this.provider, this.currencyMint.publicKey, this.wallet.publicKey);
         }
         if (!this.purchaserQPTAccount) {
             // Same for the currency mint account, if none exists
-            console.log("Going to create the this.purchaserQPTAccount");
+            // console.log("Going to create the this.purchaserQPTAccount");
             this.purchaserQPTAccount = await createTokenAccount(this.provider, this.QPTMint.publicKey, this.wallet.publicKey);
         }
     }
@@ -130,7 +130,6 @@ export class QPoolsUser {
                 signers: [this.wallet as Signer]
             }
         )
-
     }
 
 }

@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 import {Provider, web3} from '@project-serum/anchor';
-import {clusterApiUrl, Connection, Keypair, PublicKey} from '@solana/web3.js';
+import {clusterApiUrl, Connection, Keypair, PublicKey, Signer} from '@solana/web3.js';
 import {IWallet, Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
@@ -8,6 +8,7 @@ import {MockQPools} from "./qpools-sdk/qpools-mock";
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
 import {QPoolsUser} from "./qpools-sdk/qpools-user";
+import {mintTo} from "@project-serum/serum/lib/token-instructions";
 
 // require('dotenv').config()
 const NUMBER_POOLS = 5;
@@ -28,6 +29,7 @@ describe('claim', () => {
 
     // @ts-expect-error
     const wallet = provider.wallet.payer as Keypair;
+    // const wallet = Keypair.generate();
     const positionOwner = Keypair.generate();
     const admin = Keypair.generate();
     const reserveAdmin = Keypair.generate();
@@ -43,6 +45,7 @@ describe('claim', () => {
 
     // More Complex Objects
     let market: MockQPools;
+    let qpools: QPoolsUser;
 
     before(async () => {
         await connection.requestAirdrop(reserveAdmin.publicKey, 1e9);
@@ -50,7 +53,7 @@ describe('claim', () => {
         await connection.requestAirdrop(admin.publicKey, 1e9);
         await connection.requestAirdrop(positionOwner.publicKey, 1e9);
         await connection.requestAirdrop(payer.publicKey, 1e9);
-        currencyMint = await createMint(provider, payer);
+        currencyMint = await createMint(provider, payer, mintAuthority.publicKey);
     })
 
     /*
@@ -125,21 +128,26 @@ describe('claim', () => {
         )
     })
 
-    // // Create the QPools Object
-    // const qpools = new QPoolsUser(
-    //     provider,
-    //     //@ts-expect-error
-    //     wallet as IWallet,
-    //     connection,
-    //     market.qPoolAccount,
-    //     market.QPTokenMint,
-    //     market.currencyMint
-    // );
-
     // We now want to pay in some funds into our reserve ...
     it("buyQPT()", async () => {
         // As a new, third-party user (A), (A) wants to buy QPT!
+        // // Create the QPools Object
 
+        qpools = new QPoolsUser(
+            provider,
+            wallet,
+            connection,
+            market.qPoolAccount,
+            market.QPTokenMint,
+            market.currencyMint
+        );
+
+        await qpools.registerAccount();
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 10e6);
+        console.log("Can now proceed with buying QPT!");
+        await qpools.buyQPT(
+            5_000_000
+        );
 
     })
 

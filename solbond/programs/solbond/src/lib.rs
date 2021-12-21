@@ -162,7 +162,6 @@ pub mod solbond {
     }
     pub fn swap_pair(
         ctx: Context<SwapPairInstruction>,
-        _fee_tier_address: Pubkey,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool,
@@ -170,7 +169,6 @@ pub mod solbond {
     ) -> ProgramResult {
         instructions::swap_pair::handler(
             ctx,
-            _fee_tier_address,
             x_to_y,
             amount,
             by_amount_in,

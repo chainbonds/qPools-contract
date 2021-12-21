@@ -48,7 +48,7 @@ export class QPoolsAdmin {
     public mockMarket: Market;
     public feeTier: FeeTier;
 
-    public QPReserveTokens : Record<string, PublicKey>;
+    public QPReserveTokens : Record<string, PublicKey> = {};
 
 
     constructor(
@@ -137,6 +137,8 @@ export class QPoolsAdmin {
         for (let i = 0; i < this.pairs.length; i++) {
             let pair = this.pairs[i];
 
+            console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString())
+
             // Get the oracle price for every pair
 
             // Get the ratio for each pair
@@ -145,10 +147,10 @@ export class QPoolsAdmin {
 
             // Swap the rest / difference of this
             // Rename `mockMarket` with `market` everywhere
-            const feeTierAddress = await this.mockMarket.getFeeTierAddress(this.feeTier);
-
             // this.mockMarket.poo
+
             const poolAddress = await pair.getAddress(this.invariantProgram.programId);
+            console.log("PoolAddress is: ", poolAddress.toString())
 
             // TODO: assert that pair.tokenX is equivalent to currencyMint!
 
@@ -159,13 +161,14 @@ export class QPoolsAdmin {
             // If a token exists already, save it in the dictionary
             const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, initializer);
             const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, initializer);
+            console.log("Creating token accounts");
             this.QPReserveTokens[pair.tokenX.toString()] = await tokenX.createAccount(this.qPoolAccount);
+            console.log("")
             this.QPReserveTokens[pair.tokenY.toString()] = await tokenY.createAccount(this.qPoolAccount);
 
-            await this.solbondProgram.rpc.swapPair(
-                // _fee_tier_address: Pubkey,
-                feeTierAddress.address,
-                // xToY: boolea,
+            console.log("Inputs are: ");
+            console.log("Inputs are: ",
+                // xToY: bool,
                 true,
                 // amount: u64,
                 new BN(2_000_000),
@@ -173,26 +176,59 @@ export class QPoolsAdmin {
                 true,
                 // sqrt_price_limit: u128,
                 1_000_000,
+            );
+            console.log(
+                {
+                    initializer: initializer.publicKey,
+
+                    tickmap: pool.tickmap,
+                    token_x_mint: pair.tokenX,
+                    token_y_mint: pair.tokenY,
+                    reserve_account_x: pool.tokenXReserve,
+                    reserve_account_y: pool.tokenYReserve,
+                    account_x: this.qPoolCurrencyAccount,
+                    account_y: this.QPReserveTokens[pair.tokenY.toString()],
+
+                    pool: poolAddress,
+
+                    state: this.mockMarket.stateAddress,
+                    program_authority: this.mockMarket.programAuthority,
+
+                    token_program: TOKEN_PROGRAM_ID,
+                    invariant_program: this.invariantProgram.programId,
+                    system_program: web3.SystemProgram.programId,
+                }
+            )
+
+            await this.solbondProgram.rpc.swapPair(
+                // xToY: boolea,
+                true,
+                // amount: u64,
+                new BN(2_000_000),
+                // by_amount_in: bool,
+                true,
+                // sqrt_price_limit: u128,
+                new BN(1_000_000_000_000),
                 {
                     accounts: {
                         initializer: initializer.publicKey,
 
                         tickmap: pool.tickmap,
-                        token_x_mint: pair.tokenX,
-                        token_y_mint: pair.tokenY,
-                        reserve_account_x: pool.tokenXReserve,
-                        reserve_account_y: pool.tokenYReserve,
-                        account_x: this.qPoolCurrencyAccount,
-                        account_y: this.QPReserveTokens[pair.tokenY.toString()],
+                        tokenXMint: pair.tokenX,
+                        tokenYMint: pair.tokenY,
+                        reserveAccountX: pool.tokenXReserve,
+                        reserveAccountY: pool.tokenYReserve,
+                        accountX: this.qPoolCurrencyAccount,
+                        accountY: this.QPReserveTokens[pair.tokenY.toString()],
 
                         pool: poolAddress,
 
                         state: this.mockMarket.stateAddress,
-                        program_authority: this.mockMarket.programAuthority,
+                        programAuthority: this.mockMarket.programAuthority,
 
-                        token_program: TOKEN_PROGRAM_ID,
-                        invariant_program: this.invariantProgram.programId,
-                        system_program: web3.SystemProgram.programId,
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                        invariantProgram: this.invariantProgram.programId,
+                        systemProgram: web3.SystemProgram.programId,
                     },
                     signers: [initializer]
                 }

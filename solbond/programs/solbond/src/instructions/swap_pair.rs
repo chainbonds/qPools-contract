@@ -7,10 +7,8 @@ use amm::program::Amm;
 use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey)]
+// #[instruction(fee_tier_address: Pubkey)]
 pub struct SwapPairInstruction<'info> {
-
-
 
     #[account(signer)]
     pub initializer: AccountInfo<'info>,
@@ -51,7 +49,6 @@ pub struct SwapPairInstruction<'info> {
 
 pub fn handler(
     ctx: Context<SwapPairInstruction>,
-    _fee_tier_address: Pubkey,
     x_to_y: bool,
     amount: u64,
     by_amount_in: bool,

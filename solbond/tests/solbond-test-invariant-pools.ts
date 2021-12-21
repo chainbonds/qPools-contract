@@ -1,12 +1,13 @@
 import * as anchor from '@project-serum/anchor';
 import {Provider, web3} from '@project-serum/anchor';
-import {clusterApiUrl, Connection, Keypair} from '@solana/web3.js';
-import {Network} from '@invariant-labs/sdk';
+import {clusterApiUrl, Connection, Keypair, PublicKey} from '@solana/web3.js';
+import {IWallet, Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
-import {MockQPools} from "./qpools-sdk/qpools";
+import {MockQPools} from "./qpools-sdk/qpools-mock";
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
+import {QPoolsUser} from "./qpools-sdk/qpools-user";
 
 // require('dotenv').config()
 const NUMBER_POOLS = 5;
@@ -124,9 +125,21 @@ describe('claim', () => {
         )
     })
 
+    // // Create the QPools Object
+    // const qpools = new QPoolsUser(
+    //     provider,
+    //     //@ts-expect-error
+    //     wallet as IWallet,
+    //     connection,
+    //     market.qPoolAccount,
+    //     market.QPTokenMint,
+    //     market.currencyMint
+    // );
+
     // We now want to pay in some funds into our reserve ...
     it("buyQPT()", async () => {
         // As a new, third-party user (A), (A) wants to buy QPT!
+
 
     })
 

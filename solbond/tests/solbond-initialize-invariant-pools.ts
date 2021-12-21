@@ -4,7 +4,7 @@ import {clusterApiUrl, Connection, Keypair} from '@solana/web3.js';
 import {Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
-import {MockQPools} from "./qpools-sdk/qpools";
+import {MockQPools} from "./qpools-sdk/qpools-admin";
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
 

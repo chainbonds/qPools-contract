@@ -12,14 +12,13 @@ import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
 const NUMBER_POOLS = 5;
 
 function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 describe('claim', () => {
 
     // Connection
     const provider = Provider.local();
-    console.log("Provider is: ", provider);
     const connection = provider.connection;
 
     const payer = getPayer();
@@ -37,7 +36,6 @@ describe('claim', () => {
 
     console.log("Solbond program");
     console.log(solbondProgram.programId.toString());
-
     console.log("Invairant Program");
     console.log(invariantProgram.programId.toString());
 
@@ -57,6 +55,20 @@ describe('claim', () => {
      * Most of these happen from within the mock
      * Some of these need to happen also on the frontend / as part of the SDK
      */
+    /*
+     * Now run our endpoints
+     */
+    it("#solbondHealthCheckpoint()", async () => {
+        // Call the health-checkpoint
+        await solbondProgram.rpc.healthcheck({
+            accounts: {
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                clock: web3.SYSVAR_CLOCK_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        });
+    })
 
     it('#initializeMockedMarket()', async () => {
         market = new MockQPools(
@@ -80,6 +92,7 @@ describe('claim', () => {
         await market.createFeeTier(admin);
     })
     it("#createTradePairs()", async () => {
+        // Create 10 pools, one for each pair
         await market.createPairs(NUMBER_POOLS);
     })
     it("#createMarketsFromPairs()", async () => {
@@ -90,9 +103,19 @@ describe('claim', () => {
         )
     })
 
-    // TODO: Initialize a position
+    it("#provideThirdPartyLiquidity()", async () => {
+        // Provide Liquidity through a third party (this is not the bond yet)
+        console.log("Working on providing liquidity..");
+        await market.provideLiquidityToAllPairs(
+            NUMBER_POOLS,
+            admin,
+            mintAuthority,
+            1_000_000,
+            1_000_000
+        )
+    })
 
-    //it("#swapWithInvariant()", async () => {
+    // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
     //        admin,
     //        true,
@@ -101,33 +124,8 @@ describe('claim', () => {
     //        new anchor.BN(3),
     //        new anchor.BN(0)
     //    )
-    //})
-
-    /*
-     * Now run our endpoints
-     */
-    // it("#connectsToSolbond()", async () => {
-    //     // Call the health-checkpoint
-    //     await solbondProgram.rpc.healthcheck({
-    //         accounts: {
-    //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //             clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //             systemProgram: web3.SystemProgram.programId,
-    //             tokenProgram: TOKEN_PROGRAM_ID
-    //         }
-    //     });
     // })
 
-    // Until here should work
-
-
-
-    // Create 10 pools, one for each pair
-    // Make this async, maybe
-
-    // let poolList: PublicKey | null;
-    // let poolListBump: number;
-    //
     // it("#registerInvariantPools()", async () => {
     //
     //     // Get the addresses of some of the pools that we generated

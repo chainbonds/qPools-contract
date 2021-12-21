@@ -1,6 +1,6 @@
-import {Connection, Keypair, PublicKey} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
 import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
-import {Amm, IDL} from "../../deps/protocol/sdk/src/idl/amm";
+import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
     calculate_price_sqrt,
@@ -14,12 +14,12 @@ import {
     SEED,
     TICK_LIMIT
 } from "@invariant-labs/sdk";
-import {CreatePool, Decimal, FeeTier, Tick, } from "@invariant-labs/sdk/lib/market";
+import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {createStandardFeeTiers, createToken} from "../invariant-utils";
 import {FEE_TIERS, fromFee} from "@invariant-labs/sdk/lib/utils";
-import {createMint} from "../utils";
+import {createMint, createTokenAccount} from "../utils";
 import {Key} from "readline";
 
 import {assert} from "chai";
@@ -206,6 +206,7 @@ export class MockQPools extends QPoolsAdmin {
         this.protocolFee = {v: fromFee(new BN(10000))};
         await this.mockMarket.createState(admin, this.protocolFee);
     }
+
     async getPositionAddress(owner: PublicKey, index: number) {
         const indexBuffer = Buffer.alloc(4)
         indexBuffer.writeInt32LE(index)
@@ -220,6 +221,7 @@ export class MockQPools extends QPoolsAdmin {
             positionBump
         }
     }
+
     async getPositionListAddress(owner: PublicKey) {
         const [positionListAddress, positionListBump] = await PublicKey.findProgramAddress(
             [Buffer.from(utils.bytes.utf8.encode(POSITION_LIST_SEED)), owner.toBuffer()],
@@ -231,13 +233,14 @@ export class MockQPools extends QPoolsAdmin {
             positionListBump
         }
     }
+
     async getPositionList(owner: PublicKey) {
-        const { positionListAddress } = await this.getPositionListAddress(owner)
+        const {positionListAddress} = await this.getPositionListAddress(owner)
         return (await this.invariantProgram.account.positionList.fetch(positionListAddress)) as PositionList
     }
 
     async getPosition(owner: PublicKey, index: number) {
-        const { positionAddress } = await this.getPositionAddress(owner, index)
+        const {positionAddress} = await this.getPositionAddress(owner, index)
         return (await this.invariantProgram.account.position.fetch(positionAddress)) as Position
     }
 
@@ -327,12 +330,62 @@ export class MockQPools extends QPoolsAdmin {
         }
 
     }
-    async swapWithInvariant(admin: Keypair,
-                            xToy: boolean,
-                            amount: BN,
-                            byAmountIn: boolean,
-                            sqrtPriceLimit: BN,
-                            current_idx: BN) {
+
+    async provideLiquidityToAllPairs(
+        numberPools: number,
+        positionOwner: Keypair,
+        tokenMintAuthority: Keypair,
+        airdropAmount: number,
+        _liquidityDelta: number
+    ) {
+        // liquidityDelta = 1_000_000
+        const liquidityDelta = { v: new BN(_liquidityDelta).mul(DENOMINATOR) };
+        await this.mockMarket.createPositionList(positionOwner);
+
+        const upperTick = 1000;
+        const lowerTick = -1000;
+
+        for (let i = 0; i < numberPools; i++) {
+            // Fetch the pair
+            let pair = this.pairs[i];
+
+            // Generate token accounts for the liquidity provider (our bond program, basically)
+            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, tokenMintAuthority);
+            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, tokenMintAuthority);
+
+            const qPoolsTokenX = await tokenX.createAccount(positionOwner.publicKey);
+            const qPoolsTokenY = await tokenY.createAccount(positionOwner.publicKey);
+
+            // Also make an airdrop to provide some of this liquidity to the token holders ...
+            await tokenX.mintTo(qPoolsTokenX, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmount);
+            await tokenY.mintTo(qPoolsTokenY, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmount);
+
+            // Generate the upper and lower ticks, if they don't exist yet
+
+            // Now initialize the position
+            await this.mockMarket.initPosition(
+                {
+                    pair: pair,
+                    owner: positionOwner.publicKey,
+                    userTokenX: qPoolsTokenX,
+                    userTokenY: qPoolsTokenY,
+                    lowerTick: lowerTick,
+                    upperTick: upperTick,
+                    liquidityDelta: liquidityDelta
+                },
+                positionOwner
+            )
+        }
+    }
+
+    async swapWithInvariant(
+        admin: Keypair,
+        xToy: boolean,
+        amount: BN,
+        byAmountIn: boolean,
+        sqrtPriceLimit: BN,
+        current_idx: BN
+    ) {
 
         let pair = this.pairs[current_idx.toNumber()];
         await this.mockMarket.create({
@@ -342,9 +395,9 @@ export class MockQPools extends QPoolsAdmin {
         console.log("made market for pair")
         const pool = await this.get(pair);
         console.log("god pool ")
-        const state= (await this.mockMarket.getStateAddress()) //.address
+        const state = (await this.mockMarket.getStateAddress()) //.address
         console.log("got state")
-        const stateAddress= state.address
+        const stateAddress = state.address
         console.log("got state address")
         const tickmap = await this.mockMarket.getTickmap(pair);
         console.log("got the tickmap data")
@@ -533,9 +586,9 @@ export class MockQPools extends QPoolsAdmin {
                     tokenXMint: this.tokens[current_idx].publicKey,
                     reserveCurrencyToken: reserveCurrencyTokenAcc,
                     reserveX: this.tokens[current_idx].publicKey,
-                    accountCurrencyReserve:accountCurrencyReserve,
-                    accountXReserve:accountXReserve,
-                    initializer:admin.publicKey,
+                    accountCurrencyReserve: accountCurrencyReserve,
+                    accountXReserve: accountXReserve,
+                    initializer: admin.publicKey,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,

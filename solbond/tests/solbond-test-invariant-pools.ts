@@ -72,7 +72,7 @@ describe('claim', () => {
         await connection.requestAirdrop(liquidityProvider.publicKey, 3e9);
         await connection.requestAirdrop(qpAuthority.publicKey, 3e9);
         // Wait for airdrop to kick in ...
-        await delay(1_000);
+        await delay(1_500);
         assert.equal(
             (await provider.connection.getBalance(mintAuthority.publicKey)),
             3e9,
@@ -187,7 +187,7 @@ describe('claim', () => {
 
     it("swapReserveToAllPairs()", async() => {
         // Start the swaps!
-        await market.swapToAllPairs(100);
+        await market.swapToAllPairs(10);
     })
 
     // it("#swapWithInvariant()", async () => {

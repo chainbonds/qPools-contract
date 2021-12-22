@@ -25,7 +25,9 @@ pub struct SwapPairInstruction<'info> {
 
     #[account(
         mut,
-        constraint = & reserve_account_x.mint == token_x_mint.to_account_info().key
+        constraint = &reserve_account_x.mint == token_x_mint.to_account_info().key,
+        constraint = &reserve_account_x.owner == program_authority.key,
+        constraint = reserve_account_x.to_account_info().key == &pool.load()?.token_x_reserve
     )]
     pub reserve_account_x: Account<'info, TokenAccount>,
     #[account(

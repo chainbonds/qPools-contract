@@ -30,7 +30,9 @@ pub struct SwapPairInstruction<'info> {
     pub reserve_account_x: Account<'info, TokenAccount>,
     #[account(
         mut,
-        constraint = & reserve_account_y.mint == token_y_mint.to_account_info().key
+        constraint = &reserve_account_y.mint == token_y_mint.to_account_info().key,
+        constraint = &reserve_account_y.owner == program_authority.key,
+        constraint = reserve_account_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
     pub reserve_account_y: Account<'info, TokenAccount>,
     #[account(
@@ -44,6 +46,7 @@ pub struct SwapPairInstruction<'info> {
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
 
+    // #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 

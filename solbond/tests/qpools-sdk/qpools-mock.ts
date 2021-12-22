@@ -45,13 +45,23 @@ export class MockQPools extends QPoolsAdmin {
     async createTokens(number_pools: number, mintAuthority: Keypair) {
         // Every second token should be the same!
         this.tokens = await Promise.all(
-            Array.from({length: 2 * number_pools}).map((_) => {
+            Array.from({length: number_pools}).map((_) => {
                 return createToken(this.connection, this.wallet, mintAuthority)
             })
         );
+        this.currencyMint = await createToken(
+            this.provider.connection,
+            this.wallet,
+            mintAuthority,
+        );
+        // Assert
+        assert.ok(this.tokens.map(async (token: Token) => {
+            return (await token.getMintInfo()).mintAuthority.equals(mintAuthority.publicKey)
+        }));
+        assert.ok(this.tokens.length == number_pools);
     }
 
-    async createPairs(number_pools: number, currencyMint: Token) {
+    async createPairs() {
         // Call this after all tokens were created!
         if (!this.tokens) {
             throw Error("Token Mints were not generated yet");
@@ -60,23 +70,30 @@ export class MockQPools extends QPoolsAdmin {
             throw Error("Token Mints were not generated yet");
         }
 
-        this.currencyMint = currencyMint;
-
-        let i = 0;
-        this.pairs = Array.from({length: number_pools}).map((_) => {
-            let pair = new Pair(
+        this.pairs = this.tokens.map((token: Token) => {
+            return new Pair(
                 this.currencyMint.publicKey,
-                this.tokens[(2 * i) + 1].publicKey,
+                token.publicKey,
                 this.feeTier
-            );
-            i++;
-            return pair;
+            )
         });
+        // Assert
+        assert.ok(this.pairs.map(async (pairs: Pair) => {
+            // (await token.getMintInfo()).mintAuthority.equals(mintAuthority.publicKey)
+            return pairs.tokenX.equals(this.currencyMint.publicKey)
+        }));
+        assert.ok(this.pairs.length == this.tokens.length);
     }
 
     async createState(admin: Keypair) {
         this.protocolFee = {v: fromFee(new BN(10000))};
         await this.mockMarket.createState(admin, this.protocolFee);
+    }
+
+    async createFeeTier(admin: Keypair) {
+        await this.mockMarket.createFeeTier(this.feeTier, admin);
+        // Get fee tier
+        assert.ok((await this.mockMarket.getFeeTierAddress(this.feeTier)).address)
     }
 
     async getPositionAddress(owner: PublicKey, index: number) {
@@ -132,17 +149,11 @@ export class MockQPools extends QPoolsAdmin {
         }
     }
 
-
-    async createFeeTier(admin: Keypair) {
-        await this.mockMarket.createFeeTier(this.feeTier, admin);
-    }
-
     async createMockMarket(
         network: Network,
         wallet: IWallet,
         ammProgramId: PublicKey,
     ) {
-
         this.mockMarket = await Market.build(
             network,
             wallet,
@@ -152,24 +163,17 @@ export class MockQPools extends QPoolsAdmin {
     }
 
     async creatMarketsFromPairs(
-        numberPools: number,
         admin: Keypair,
     ) {
 
-        const [programAuthority, nonce] = await anchor.web3.PublicKey.findProgramAddress(
-            [Buffer.from(SEED)],
-            this.invariantProgram.programId
-        )
+        this.pairs.map(async (pair: Pair) => {
 
-        // Now register a bunch of pairs
-        for (let i = 0; i < numberPools; i++) {
-            let pair = this.pairs[i];
-
-            // 0.6% / 10
+            // 0.6% / 10 Fees, according to pair
             await this.mockMarket.create({
-                pair,
+                pair: pair,
                 signer: admin
             });
+
             const createdPool = await this.mockMarket.get(pair);
             const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, admin);
             const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, admin);
@@ -187,63 +191,73 @@ export class MockQPools extends QPoolsAdmin {
             assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0), ("createdPool.feeGrowthGlobalY.v.eqn(0)"));
             assert.ok(createdPool.feeProtocolTokenX.v.eqn(0), ("createdPool.feeProtocolTokenX.v.eqn(0)"));
             assert.ok(createdPool.feeProtocolTokenY.v.eqn(0), ("createdPool.feeProtocolTokenY.v.eqn(0)"));
-            // I guess these will be ok?
-            // assert.ok(createdPool.authority.equals(programAuthority), ("createdPool.authority.equals(programAuthority)"));
-            // assert.ok(createdPool.nonce == nonce, ("createdPool.nonce == nonce"));
 
             const tickmapData = await this.mockMarket.getTickmap(pair)
             assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4, "tickmapData.bitmap.length == TICK_LIMIT / 4")
             assert.ok(tickmapData.bitmap.every((v) => v == 0), "tickmapData.bitmap.every((v) => v == 0)")
 
-        }
+        })
 
     }
 
-    async provideLiquidityToAllPairs(
-        numberPools: number,
-        positionOwner: Keypair,
+    async provideThirdPartyLiquidityToAllPairs(
+        liquidityProvider: Keypair,
         tokenMintAuthority: Keypair,
         airdropAmount: number,
         _liquidityDelta: number
     ) {
         // liquidityDelta = 1_000_000
         const liquidityDelta = { v: new BN(_liquidityDelta).mul(DENOMINATOR) };
-        await this.mockMarket.createPositionList(positionOwner);
+        await this.mockMarket.createPositionList(liquidityProvider);
 
+        // Generate the upper and lower ticks, if they don't exist yet
         const upperTick = 1000;
         const lowerTick = -1000;
 
-        for (let i = 0; i < numberPools; i++) {
-            // Fetch the pair
-            let pair = this.pairs[i];
+        // For each pair, provide some liquidity
+        this.pairs.map(async (pair: Pair) => {
 
-            // Generate token accounts for the liquidity provider (our bond program, basically)
-            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, tokenMintAuthority);
-            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, tokenMintAuthority);
+            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, liquidityProvider);
+            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, liquidityProvider);
 
-            const qPoolsTokenX = await tokenX.createAccount(positionOwner.publicKey);
-            const qPoolsTokenY = await tokenY.createAccount(positionOwner.publicKey);
+            const tokenXAccount = await tokenX.createAccount(liquidityProvider.publicKey);
+            const tokenYAccount = await tokenY.createAccount(liquidityProvider.publicKey);
 
             // Also make an airdrop to provide some of this liquidity to the token holders ...
-            await tokenX.mintTo(qPoolsTokenX, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmount);
-            await tokenY.mintTo(qPoolsTokenY, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmount);
+            await tokenX.mintTo(tokenXAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmount);
+            await tokenY.mintTo(tokenYAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmount);
 
-            // Generate the upper and lower ticks, if they don't exist yet
+            // Do a bunch of asserts, to check if tokens were successfully minted
+            const amountX = (await tokenX.getAccountInfo(tokenXAccount)).amount;
+            const amountY = (await tokenY.getAccountInfo(tokenYAccount)).amount;
+
+            assert.ok(amountX.eqn(airdropAmount));
+            assert.ok(amountY.eqn(airdropAmount));
 
             // Now initialize the position
             await this.mockMarket.initPosition(
                 {
                     pair: pair,
-                    owner: positionOwner.publicKey,
-                    userTokenX: qPoolsTokenX,
-                    userTokenY: qPoolsTokenY,
+                    owner: liquidityProvider.publicKey,
+                    userTokenX: tokenXAccount,
+                    userTokenY: tokenYAccount,
                     lowerTick: lowerTick,
                     upperTick: upperTick,
                     liquidityDelta: liquidityDelta
                 },
-                positionOwner
+                liquidityProvider
             )
-        }
+
+            // Do a bunch of tests to check if liquidity was successfully provided
+            const poolData = await this.mockMarket.get(pair);
+            assert.ok(poolData.feeGrowthGlobalX.v.eqn(0));
+            assert.ok(poolData.feeGrowthGlobalY.v.eqn(0));
+            assert.ok(poolData.feeProtocolTokenX.v.eqn(0));
+            assert.ok(poolData.feeProtocolTokenY.v.eqn(0));
+            assert.ok((await this.mockMarket.get(pair)).liquidity.v.eq(liquidityDelta.v))
+
+        });
+
     }
 
     async makeSwap(
@@ -333,10 +347,6 @@ export class MockQPools extends QPoolsAdmin {
         current_weight: number,
         admin: Keypair,
     ) {
-        this.currencyMint = await createMint(
-            this.provider,
-            admin
-        );
         let seed_string = current_idx.toString();
         const [invariantPoolAccount, bumpRegisterPosition] = await anchor.web3.PublicKey.findProgramAddress(
             [admin.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("invariantPoolAccount" + current_idx.toString()))],

@@ -24,6 +24,7 @@ import {Key} from "readline";
 
 import {assert} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
+import {UnderlyingSinkAbortCallback} from "stream/web";
 
 export class QPoolsAdmin {
 
@@ -78,6 +79,25 @@ export class QPoolsAdmin {
     async get(pair: Pair) {
         const address = await pair.getAddress(this.invariantProgram.programId)
         return (await this.invariantProgram.account.pool.fetch(address)) as PoolStructure
+    }
+
+    async createQPTReservePoolAccounts(
+        positionOwner: Keypair
+    ) {
+
+        this.pairs.map(async (pair: Pair) => {
+
+            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, positionOwner);
+            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, positionOwner);
+
+            // TODO: Implement
+            // Create qPool Accounts as a side-products.
+            // I think these should be done somewhere separate!
+            const qPoolsTokenX = await tokenX.createAccount(positionOwner.publicKey);
+            const qPoolsTokenY = await tokenY.createAccount(positionOwner.publicKey);
+
+        });
+
     }
 
     async initializeQPTReserve(currencyMint: Token, initializer: Keypair) {
@@ -150,7 +170,6 @@ export class QPoolsAdmin {
             // this.mockMarket.poo
 
             const poolAddress = await pair.getAddress(this.invariantProgram.programId);
-            // TODO: assert that pair.tokenX is equivalent to currencyMint!
 
             // Create a tokenX, and tokenY account for us, and
             const pool = await this.get(pair);
@@ -163,7 +182,6 @@ export class QPoolsAdmin {
             const QPtokenXAccount = await tokenX.createAccount(this.qPoolAccount);
             console.log("")
             const QPtokenYAccount = await tokenY.createAccount(this.qPoolAccount);
-
 
             assert.ok(
                 (await tokenX.getAccountInfo(QPtokenXAccount)).mint.equals(tokenX.publicKey),

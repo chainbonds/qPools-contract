@@ -76,6 +76,7 @@ describe('claim', () => {
         });
     })
 
+    /* Initialize markets and pairs */
     it('#initializeMockedMarket()', async () => {
         market = new MockQPools(
             provider.wallet,
@@ -99,61 +100,57 @@ describe('claim', () => {
     })
     it("#createTradePairs()", async () => {
         // Create 10 pools, one for each pair
-        await market.createPairs(NUMBER_POOLS, currencyMint);
+        await market.createPairs();
     })
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere
-        await market.creatMarketsFromPairs(
-            NUMBER_POOLS,
-            admin
-        )
+        await market.creatMarketsFromPairs(admin)
     })
     it("#provideThirdPartyLiquidity()", async () => {
         // Provide Liquidity through a third party (this is not the bond yet)
-        await market.provideLiquidityToAllPairs(
-            NUMBER_POOLS,
-            admin,
+        await market.provideThirdPartyLiquidityToAllPairs(
+            positionOwner,
             mintAuthority,
             1_000_000,
             1_000_000
         )
     })
-
-    // We must now instantiate all accounts!
-    it("initializeQPTReserve()", async () => {
-        // Initialize the QPT Reserves
-        await market.initializeQPTReserve(
-            currencyMint,
-            reserveAdmin
-        )
-    })
-
-    // We now want to pay in some funds into our reserve ...
-    it("buyQPT()", async () => {
-        // As a new, third-party user (A), (A) wants to buy QPT!
-        // // Create the QPools Object
-
-        qpools = new QPoolsUser(
-            provider,
-            wallet,
-            connection,
-            market.qPoolAccount,
-            market.QPTokenMint,
-            market.currencyMint
-        );
-
-        await qpools.registerAccount();
-        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 10e6);
-        console.log("Can now proceed with buying QPT!");
-        await qpools.buyQPT(
-            5_000_000
-        );
-    })
-
-    it("swapReserveToAllPairs()", async() => {
-        // Start the swaps!
-        await market.swapToAllPairs(reserveAdmin);
-    })
+    //
+    // // We must now instantiate all accounts!
+    // it("initializeQPTReserve()", async () => {
+    //     // Initialize the QPT Reserves
+    //     await market.initializeQPTReserve(
+    //         currencyMint,
+    //         reserveAdmin
+    //     )
+    // })
+    //
+    // // We now want to pay in some funds into our reserve ...
+    // it("buyQPT()", async () => {
+    //     // As a new, third-party user (A), (A) wants to buy QPT!
+    //     // // Create the QPools Object
+    //
+    //     qpools = new QPoolsUser(
+    //         provider,
+    //         wallet,
+    //         connection,
+    //         market.qPoolAccount,
+    //         market.QPTokenMint,
+    //         market.currencyMint
+    //     );
+    //
+    //     await qpools.registerAccount();
+    //     await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 10e6);
+    //     console.log("Can now proceed with buying QPT!");
+    //     await qpools.buyQPT(
+    //         5_000_000
+    //     );
+    // })
+    //
+    // it("swapReserveToAllPairs()", async() => {
+    //     // Start the swaps!
+    //     await market.swapToAllPairs(reserveAdmin);
+    // })
 
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
@@ -165,6 +162,12 @@ describe('claim', () => {
     //        new anchor.BN(0)
     //    )
     // })
+
+
+
+
+
+
 
     // it("#registerInvariantPools()", async () => {
     //

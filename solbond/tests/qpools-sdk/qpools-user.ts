@@ -5,7 +5,7 @@
 import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import { IWallet } from "@invariant-labs/sdk";
+import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {createTokenAccount} from "../utils";
 import {create} from "domain";
@@ -20,7 +20,7 @@ export interface Tickmap {
 export class QPoolsUser {
 
     public connection: Connection;
-    public wallet: IWallet | Keypair;
+    public wallet: Keypair;
     public solbondProgram: Program;
     public provider: Provider;
 
@@ -37,7 +37,7 @@ export class QPoolsUser {
 
     constructor(
         provider: Provider,
-        wallet: IWallet | Keypair,
+        wallet: Keypair,
         connection: Connection,
 
         bondPoolAccount: PublicKey,
@@ -111,7 +111,7 @@ export class QPoolsUser {
 
         console.log("Sending RPC call");
         await this.solbondProgram.rpc.purchaseBond(
-            new BN(currency_amount_raw),
+            tou64(currency_amount_raw),
             {
                 accounts: {
 

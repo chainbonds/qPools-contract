@@ -9,6 +9,9 @@ import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
 import {QPoolsUser} from "./qpools-sdk/qpools-user";
 import {mintTo} from "@project-serum/serum/lib/token-instructions";
+import {assert} from "chai";
+import {createToken} from "./invariant-utils";
+import {sendAndConfirm} from "../../dapp/src/splpasta/util";
 
 // require('dotenv').config()
 const NUMBER_POOLS = 1;
@@ -23,16 +26,24 @@ describe('claim', () => {
     const provider = Provider.local();
     const connection = provider.connection;
 
-    const payer = getPayer();
-    const mintAuthority = Keypair.generate();
-    let currencyMint: Token | null = null;
+    let currencyMint: Token;
+
+    // TODO: We should write additional tests, where the qpAuthority
+    //  and the market authority are separate!
 
     // @ts-expect-error
-    const wallet = provider.wallet.payer as Keypair;
+    const qpAuthority = provider.wallet.payer as Keypair;
+
+    // Again, assume that everyone has kinda the same wallet ...
+    const user = Keypair.generate();
     // const wallet = Keypair.generate();
-    const positionOwner = Keypair.generate();
-    const admin = Keypair.generate();
-    const reserveAdmin = Keypair.generate();
+    const mintAuthority = Keypair.generate();
+    // Assume for today, that the market authority is equivalent to the QPT authority.
+    const marketAuthority = provider.wallet;
+    // const user = Keypair.generate();
+    // const qpAuthority = Keypair.generate();
+    // const reserveAdmin = Keypair.generate();
+    const liquidityProvider = Keypair.generate();
 
     // Programs
     const solbondProgram = anchor.workspace.Solbond;
@@ -47,13 +58,42 @@ describe('claim', () => {
     let market: MockQPools;
     let qpools: QPoolsUser;
 
+    let msg: string = "";
+
+    // Payer, who pays for all transactions here, because he is part of the provider
+    // const unspecifiedPayer = getPayer();
+
+    // TODO: Mint authority cannot pay for mint.. weird!!! Mint authority does not have any airdrop amount!
     before(async () => {
-        await connection.requestAirdrop(reserveAdmin.publicKey, 1e9);
         await connection.requestAirdrop(mintAuthority.publicKey, 1e9);
-        await connection.requestAirdrop(admin.publicKey, 1e9);
-        await connection.requestAirdrop(positionOwner.publicKey, 1e9);
-        await connection.requestAirdrop(payer.publicKey, 1e9);
-        currencyMint = await createMint(provider, payer, mintAuthority.publicKey);
+        await connection.requestAirdrop(user.publicKey, 1e9);
+        // await connection.requestAirdrop(unspecifiedPayer.publicKey, 1e9);
+        // await connection.requestAirdrop(marketAuthority.publicKey, 1e9);
+        await connection.requestAirdrop(liquidityProvider.publicKey, 1e9);
+        await connection.requestAirdrop(qpAuthority.publicKey, 1e9);
+        // Wait for airdrop to kick in ...
+        await delay(500);
+        assert.equal(
+            (await provider.connection.getBalance(mintAuthority.publicKey)),
+            1e9,
+            String((await provider.connection.getBalance(mintAuthority.publicKey)))
+        );
+        // assert.equal(
+        //     (await provider.connection.getBalance(userWallet.publicKey)),
+        //     500000001000000000,
+        //     String((await provider.connection.getBalance(userWallet.publicKey)))
+        // );
+        assert.equal(
+            (await provider.connection.getBalance(liquidityProvider.publicKey)),
+            1e9,
+            String((await provider.connection.getBalance(liquidityProvider.publicKey)))
+        );
+        assert.equal(
+            (await provider.connection.getBalance(qpAuthority.publicKey)),
+            500000001000000000,
+            String((await provider.connection.getBalance(qpAuthority.publicKey)))
+        );
+        currencyMint = await createToken(connection, mintAuthority, mintAuthority);
     })
 
     /*
@@ -79,14 +119,14 @@ describe('claim', () => {
     /* Initialize markets and pairs */
     it('#initializeMockedMarket()', async () => {
         market = new MockQPools(
-            provider.wallet,
+            qpAuthority,
             connection,
             provider,
             currencyMint
         );
         await market.createMockMarket(
             Network.LOCAL,
-            provider.wallet,
+            marketAuthority,
             invariantProgram.programId
         )
     });
@@ -94,10 +134,10 @@ describe('claim', () => {
         await market.createTokens(NUMBER_POOLS, mintAuthority);
     })
     it('#createState()', async () => {
-        await market.createState(admin);
+        await market.createState(qpAuthority);
     })
     it("#createFeeTier()", async () => {
-        await market.createFeeTier(admin);
+        await market.createFeeTier(qpAuthority);
     })
     it("#createTradePairs()", async () => {
         // Create 10 pools, one for each pair
@@ -105,12 +145,12 @@ describe('claim', () => {
     })
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere
-        await market.creatMarketsFromPairs(admin)
+        await market.creatMarketsFromPairs(qpAuthority)
     })
     it("#provideThirdPartyLiquidity()", async () => {
         // Provide Liquidity through a third party (this is not the bond yet)
         await market.provideThirdPartyLiquidityToAllPairs(
-            positionOwner,
+            liquidityProvider,
             mintAuthority,
             1_000_000,
             1_000_000
@@ -120,7 +160,7 @@ describe('claim', () => {
     // We must now instantiate all accounts!
     it("initializeQPTReserve()", async () => {
         // Initialize the QPT Reserves
-        await market.initializeQPTReserve(reserveAdmin)
+        await market.initializeQPTReserve()
     })
 
     /* Simulate a user purchasing QPT Tokens */
@@ -129,7 +169,7 @@ describe('claim', () => {
         // // Create the QPools Object
         qpools = new QPoolsUser(
             provider,
-            wallet,
+            user,
             connection,
             market.qPoolAccount,
             market.QPTokenMint,
@@ -145,10 +185,10 @@ describe('claim', () => {
         );
     })
 
-    // it("swapReserveToAllPairs()", async() => {
-    //     // Start the swaps!
-    //     await market.swapToAllPairs(reserveAdmin);
-    // })
+    it("swapReserveToAllPairs()", async() => {
+        // Start the swaps!
+        await market.swapToAllPairs();
+    })
 
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(

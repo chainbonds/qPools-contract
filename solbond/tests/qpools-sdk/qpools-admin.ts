@@ -53,7 +53,7 @@ export class QPoolsAdmin {
 
 
     constructor(
-        wallet: IWallet,
+        wallet: Keypair,
         connection: Connection,
         provider: Provider,
         currencyMint: Token
@@ -90,33 +90,34 @@ export class QPoolsAdmin {
         positionOwner: Keypair
     ) {
 
-        this.pairs.map(async (pair: Pair) => {
+        await Promise.all(
+            this.pairs.map(async (pair: Pair) => {
 
-            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, positionOwner);
-            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, positionOwner);
+                const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, positionOwner);
+                const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, positionOwner);
 
-            // TODO: Implement
-            // Create qPool Accounts as a side-products.
-            // I think these should be done somewhere separate!
-            const qPoolsTokenX = await tokenX.createAccount(positionOwner.publicKey);
-            const qPoolsTokenY = await tokenY.createAccount(positionOwner.publicKey);
-
-        });
+                // TODO: Implement
+                // Create qPool Accounts as a side-products.
+                // I think these should be done somewhere separate!
+                const qPoolsTokenX = await tokenX.createAccount(positionOwner.publicKey);
+                const qPoolsTokenY = await tokenY.createAccount(positionOwner.publicKey);
+            })
+        )
 
     }
 
-    async initializeQPTReserve(initializer: Keypair) {
+    async initializeQPTReserve() {
 
         // Generate qPoolAccount
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [initializer.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
+            [this.wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
             this.solbondProgram.programId
         );
 
         // Generate Redeemable Mint which is owned by the program
         this.QPTokenMint = await createMint(
             this.provider,
-            initializer,
+            this.wallet,
             this.qPoolAccount,
             9
         );
@@ -135,13 +136,13 @@ export class QPoolsAdmin {
                     bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
                     bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
                     bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
-                    initializer: initializer.publicKey,
+                    initializer: this.wallet.publicKey,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID
                 },
-                signers: [initializer]
+                signers: [this.wallet]
             }
         );
         await this.provider.connection.confirmTransaction(initializeTx);
@@ -154,13 +155,21 @@ export class QPoolsAdmin {
         this.pairs = pairs;
     }
 
-    async swapToAllPairs(initializer: Keypair) {
+    /**
+     * The admin user is making these transactions
+     * @param initializer
+     */
+    async swapToAllPairs() {
 
-        // For every pair in our token account, we need to
-        for (let i = 0; i < this.pairs.length; i++) {
-            let pair = this.pairs[i];
+        this.pairs.map((pair: Pair) => {
+            console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString());
 
-            console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString())
+            // Create token accounts for the
+
+
+        });
+
+            // For every pair in our token account, we need to
 
             // Get the oracle price for every pair
 
@@ -170,114 +179,113 @@ export class QPoolsAdmin {
 
             // Swap the rest / difference of this
             // Rename `mockMarket` with `market` everywhere
-            // this.mockMarket.poo
 
-            const poolAddress = await pair.getAddress(this.invariantProgram.programId);
+            // const poolAddress = await pair.getAddress(this.invariantProgram.programId);
+            //
+            // // Create a tokenX, and tokenY account for us, and
+            // const pool = await this.get(pair);
+            //
+            // // Create a token for our QP Reserve
+            // // If a token exists already, save it in the dictionary
+            // const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, initializer);
+            // const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, initializer);
+            // console.log("Creating token accounts");
+            // const QPtokenXAccount = await tokenX.createAccount(this.qPoolAccount);
+            // console.log("")
+            // const QPtokenYAccount = await tokenY.createAccount(this.qPoolAccount);
+            //
+            // assert.ok(
+            //     (await tokenX.getAccountInfo(QPtokenXAccount)).mint.equals(tokenX.publicKey),
+            //     ("1 " + (await tokenX.getAccountInfo(QPtokenXAccount)).mint.toString() + ", " + tokenX.publicKey.toString())
+            // );
+            // assert.ok(
+            //     (await tokenY.getAccountInfo(QPtokenYAccount)).mint.equals(tokenY.publicKey),
+            //     ("2 " + (await tokenY.getAccountInfo(QPtokenYAccount)).mint.toString() + ", " + tokenY.publicKey.toString())
+            // );
+            //
+            // assert.ok(
+            //     (await tokenX.getAccountInfo(pool.tokenXReserve)).mint.equals(tokenX.publicKey),
+            //     ("3 " + (await tokenX.getAccountInfo(pool.tokenXReserve)).mint.toString() + ", " + tokenX.publicKey.toString())
+            // );
+            // assert.ok(
+            //     (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.equals(tokenY.publicKey),
+            //     ("4 " + (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.toString() + ", " + tokenY.publicKey.toString())
+            // );
+            //
+            // console.log("Inputs are: ");
+            // console.log("Inputs are: ",
+            //     // xToY: bool,
+            //     true,
+            //     // amount: u64,
+            //     tou64(2_000_000),
+            //     // by_amount_in: bool,
+            //     true,
+            //     // sqrt_price_limit: u128,
+            //     1_000_000,
+            // );
+            // console.log(
+            //     {
+            //         initializer: initializer.publicKey.toString(),
+            //
+            //         tickmap: pool.tickmap.toString(),
+            //         token_x_mint: pair.tokenX.toString(),
+            //         token_y_mint: pair.tokenY.toString(),
+            //         reserve_account_x: pool.tokenXReserve.toString(),
+            //         reserve_account_y: pool.tokenYReserve.toString(),
+            //         account_x: QPtokenXAccount.toString(),  // this.qPoolCurrencyAccount.toString(),
+            //         account_y: QPtokenYAccount.toString(),
+            //
+            //         pool: poolAddress.toString(),
+            //
+            //         state: this.mockMarket.stateAddress.toString(),
+            //         program_authority: this.mockMarket.programAuthority.toString(),
+            //
+            //         token_program: TOKEN_PROGRAM_ID.toString(),
+            //         invariant_program: this.invariantProgram.programId.toString(),
+            //         system_program: web3.SystemProgram.programId.toString(),
+            //     }
+            // )
+            //
+            //
+            // await this.solbondProgram.rpc.swapPair(
+            //     // xToY: boolea,
+            //     true,
+            //     // amount: u64,
+            //     new BN(2_000_000),
+            //     // by_amount_in: bool,
+            //     true,
+            //     // sqrt_price_limit: u128,
+            //     new BN(1_000_000_000_000),
+            //     {
+            //         accounts: {
+            //             initializer: initializer.publicKey,
+            //
+            //             pool: poolAddress,
+            //             state: this.mockMarket.stateAddress,
+            //             tickmap: pool.tickmap,
+            //
+            //
+            //             tokenXMint: pair.tokenX,
+            //             tokenYMint: pair.tokenY,
+            //
+            //             reserveAccountX: pool.tokenXReserve,
+            //             reserveAccountY: pool.tokenYReserve,
+            //
+            //             accountX: this.qPoolCurrencyAccount,  // ,  // this.QPReserveTokens[pair.tokenY.toString()]
+            //             accountY: QPtokenYAccount,  //
+            //
+            //
+            //             programAuthority: this.mockMarket.programAuthority,
+            //
+            //             tokenProgram: TOKEN_PROGRAM_ID,
+            //             invariantProgram: this.invariantProgram.programId,
+            //             systemProgram: web3.SystemProgram.programId,
+            //         },
+            //         signers: [initializer]
+            //     }
+            // );
 
-            // Create a tokenX, and tokenY account for us, and
-            const pool = await this.get(pair);
-
-            // Create a token for our QP Reserve
-            // If a token exists already, save it in the dictionary
-            const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, initializer);
-            const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, initializer);
-            console.log("Creating token accounts");
-            const QPtokenXAccount = await tokenX.createAccount(this.qPoolAccount);
-            console.log("")
-            const QPtokenYAccount = await tokenY.createAccount(this.qPoolAccount);
-
-            assert.ok(
-                (await tokenX.getAccountInfo(QPtokenXAccount)).mint.equals(tokenX.publicKey),
-                ("1 " + (await tokenX.getAccountInfo(QPtokenXAccount)).mint.toString() + ", " + tokenX.publicKey.toString())
-            );
-            assert.ok(
-                (await tokenY.getAccountInfo(QPtokenYAccount)).mint.equals(tokenY.publicKey),
-                ("2 " + (await tokenY.getAccountInfo(QPtokenYAccount)).mint.toString() + ", " + tokenY.publicKey.toString())
-            );
-
-            assert.ok(
-                (await tokenX.getAccountInfo(pool.tokenXReserve)).mint.equals(tokenX.publicKey),
-                ("3 " + (await tokenX.getAccountInfo(pool.tokenXReserve)).mint.toString() + ", " + tokenX.publicKey.toString())
-            );
-            assert.ok(
-                (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.equals(tokenY.publicKey),
-                ("4 " + (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.toString() + ", " + tokenY.publicKey.toString())
-            );
-
-            console.log("Inputs are: ");
-            console.log("Inputs are: ",
-                // xToY: bool,
-                true,
-                // amount: u64,
-                tou64(2_000_000),
-                // by_amount_in: bool,
-                true,
-                // sqrt_price_limit: u128,
-                1_000_000,
-            );
-            console.log(
-                {
-                    initializer: initializer.publicKey.toString(),
-
-                    tickmap: pool.tickmap.toString(),
-                    token_x_mint: pair.tokenX.toString(),
-                    token_y_mint: pair.tokenY.toString(),
-                    reserve_account_x: pool.tokenXReserve.toString(),
-                    reserve_account_y: pool.tokenYReserve.toString(),
-                    account_x: QPtokenXAccount.toString(),  // this.qPoolCurrencyAccount.toString(),
-                    account_y: QPtokenYAccount.toString(),
-
-                    pool: poolAddress.toString(),
-
-                    state: this.mockMarket.stateAddress.toString(),
-                    program_authority: this.mockMarket.programAuthority.toString(),
-
-                    token_program: TOKEN_PROGRAM_ID.toString(),
-                    invariant_program: this.invariantProgram.programId.toString(),
-                    system_program: web3.SystemProgram.programId.toString(),
-                }
-            )
-
-
-            await this.solbondProgram.rpc.swapPair(
-                // xToY: boolea,
-                true,
-                // amount: u64,
-                new BN(2_000_000),
-                // by_amount_in: bool,
-                true,
-                // sqrt_price_limit: u128,
-                new BN(1_000_000_000_000),
-                {
-                    accounts: {
-                        initializer: initializer.publicKey,
-
-                        pool: poolAddress,
-                        state: this.mockMarket.stateAddress,
-                        tickmap: pool.tickmap,
-
-
-                        tokenXMint: pair.tokenX,
-                        tokenYMint: pair.tokenY,
-
-                        reserveAccountX: pool.tokenXReserve,
-                        reserveAccountY: pool.tokenYReserve,
-
-                        accountX: this.qPoolCurrencyAccount,  // ,  // this.QPReserveTokens[pair.tokenY.toString()]
-                        accountY: QPtokenYAccount,  //
-
-
-                        programAuthority: this.mockMarket.programAuthority,
-
-                        tokenProgram: TOKEN_PROGRAM_ID,
-                        invariantProgram: this.invariantProgram.programId,
-                        systemProgram: web3.SystemProgram.programId,
-                    },
-                    signers: [initializer]
-                }
-            );
-
-        }
+        // }
 
         // pub fn swap_pair(
         //     ctx: Context<SwapPairInstruction>,

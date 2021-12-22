@@ -208,6 +208,7 @@ export class QPoolsAdmin {
                 // Now run the RPC Call
                 console.log("Inputs are: ");
                 console.log("Inputs are: ",
+                    this.bumpQPoolAccount,
                     // xToY: bool,
                     true,
                     // amount: u64,
@@ -220,6 +221,7 @@ export class QPoolsAdmin {
                 console.log(
                     {
                         initializer: this.wallet.publicKey.toString(),
+                        owner: this.qPoolAccount.toString(),
 
                         tickmap: pool.tickmap.toString(),
                         token_x_mint: pair.tokenX.toString(),
@@ -241,6 +243,7 @@ export class QPoolsAdmin {
                 )
 
                 await this.solbondProgram.rpc.swapPair(
+                    this.bumpQPoolAccount,
                     // xToY: boolea,
                     true,
                     // amount: u64,
@@ -248,10 +251,11 @@ export class QPoolsAdmin {
                     // by_amount_in: bool,
                     true,
                     // sqrt_price_limit: u128,
-                    new BN(1_000_000_000_000),
+                    new BN(1),
                     {
                         accounts: {
                             initializer: this.wallet.publicKey,
+                            owner: this.qPoolAccount,
 
                             pool: poolAddress,
                             state: this.mockMarket.stateAddress,

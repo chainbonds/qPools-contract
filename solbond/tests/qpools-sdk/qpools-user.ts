@@ -111,7 +111,7 @@ export class QPoolsUser {
 
         console.log("Sending RPC call");
         await this.solbondProgram.rpc.purchaseBond(
-            tou64(currency_amount_raw),
+            new BN(currency_amount_raw),
             {
                 accounts: {
 

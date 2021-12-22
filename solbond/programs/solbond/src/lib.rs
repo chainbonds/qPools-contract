@@ -162,6 +162,7 @@ pub mod solbond {
     }
     pub fn swap_pair(
         ctx: Context<SwapPairInstruction>,
+        _bump_bond_pool_account: u8,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool,
@@ -169,6 +170,7 @@ pub mod solbond {
     ) -> ProgramResult {
         instructions::swap_pair::handler(
             ctx,
+            _bump_bond_pool_account,
             x_to_y,
             amount,
             by_amount_in,

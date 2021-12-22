@@ -9,33 +9,36 @@ use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 #[derive(Accounts)]
 // #[instruction(fee_tier_address: Pubkey)]
 pub struct SwapPairInstruction<'info> {
-
-    #[account(signer)]
+    #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
 
-    // #[account(mut)]
+    #[account(mut)]
     pub pool: AccountLoader<'info, Pool>,
     pub state: AccountLoader<'info, State>,
-    // #[account(mut)]
+    #[account(mut)]
     pub tickmap: AccountLoader<'info, Tickmap>,
 
     pub token_x_mint: Account<'info, Mint>,
     pub token_y_mint: Account<'info, Mint>,
 
-    #[account(mut,
-    constraint = &reserve_account_x.mint == token_x_mint.to_account_info().key
+    #[account(
+        mut,
+        constraint = & reserve_account_x.mint == token_x_mint.to_account_info().key
     )]
     pub reserve_account_x: Account<'info, TokenAccount>,
-    #[account(mut,
-    constraint = &reserve_account_y.mint == token_y_mint.to_account_info().key
+    #[account(
+        mut,
+        constraint = & reserve_account_y.mint == token_y_mint.to_account_info().key
     )]
     pub reserve_account_y: Account<'info, TokenAccount>,
-    #[account(mut,
-    constraint = &account_x.mint == token_x_mint.to_account_info().key
+    #[account(
+        mut,
+        constraint = & account_x.mint == token_x_mint.to_account_info().key
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
-    #[account(mut,
-    constraint = &account_y.mint == token_y_mint.to_account_info().key
+    #[account(
+        mut,
+        constraint = & account_y.mint == token_y_mint.to_account_info().key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
 
@@ -54,34 +57,33 @@ pub fn handler(
     by_amount_in: bool,
     sqrt_price_limit: u128,
 ) -> ProgramResult {
+    let swap_accounts = Swap {
+        state: ctx.accounts.state.to_account_info(),
+        pool: ctx.accounts.pool.to_account_info(),
+        tickmap: ctx.accounts.tickmap.to_account_info(),
+        token_x: ctx.accounts.token_x_mint.to_account_info(),
+        token_y: ctx.accounts.token_y_mint.to_account_info(),
+        reserve_x: ctx.accounts.reserve_account_x.to_account_info(),
+        reserve_y: ctx.accounts.reserve_account_y.to_account_info(),
+        account_x: ctx.accounts.account_x.to_account_info(),
+        account_y: ctx.accounts.account_y.to_account_info(),
+        owner: ctx.accounts.initializer.to_account_info(),
+        program_authority: ctx.accounts.program_authority.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+    };
+    let invariant_program = ctx.accounts.invariant_program.to_account_info();
 
-    // let swap_accounts = Swap{
-    //     state: ctx.accounts.state.to_account_info(),
-    //     pool: ctx.accounts.pool.to_account_info(),
-    //     tickmap: ctx.accounts.tickmap.to_account_info(),
-    //     token_x: ctx.accounts.token_x_mint.to_account_info(),
-    //     token_y: ctx.accounts.token_y_mint.to_account_info(),
-    //     reserve_x: ctx.accounts.reserve_account_x.to_account_info(),
-    //     reserve_y: ctx.accounts.reserve_account_y.to_account_info(),
-    //     account_x: ctx.accounts.account_x.to_account_info(),
-    //     account_y: ctx.accounts.account_y.to_account_info(),
-    //     owner: ctx.accounts.initializer.to_account_info(),
-    //     program_authority: ctx.accounts.program_authority.to_account_info(),
-    //     token_program: ctx.accounts.token_program.to_account_info(),
-    // };
-    // let invariant_program = ctx.accounts.invariant_program.to_account_info();
-    //
-    // let cpi_ctx = CpiContext::new(
-    //     invariant_program,
-    //     swap_accounts
-    // );
-    // amm::cpi::swap(
-    //     cpi_ctx,
-    //     x_to_y,
-    //     amount,
-    //     by_amount_in,
-    //     sqrt_price_limit
-    // );
+    let cpi_ctx = CpiContext::new(
+        invariant_program,
+        swap_accounts,
+    );
+    amm::cpi::swap(
+        cpi_ctx,
+        x_to_y,
+        amount,
+        by_amount_in,
+        sqrt_price_limit,
+    );
 
     // amm::cpi::swap(
     //     CpiContext::new_with_signer(
@@ -99,5 +101,4 @@ pub fn handler(
     //                x_to_y, amount, by_amount_in, sqrt_price_limit)?;
 
     Ok(())
-
 }

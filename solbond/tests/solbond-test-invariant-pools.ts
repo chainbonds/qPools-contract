@@ -72,7 +72,7 @@ describe('claim', () => {
         await connection.requestAirdrop(liquidityProvider.publicKey, 1e9);
         await connection.requestAirdrop(qpAuthority.publicKey, 1e9);
         // Wait for airdrop to kick in ...
-        await delay(500);
+        await delay(1_000);
         assert.equal(
             (await provider.connection.getBalance(mintAuthority.publicKey)),
             1e9,

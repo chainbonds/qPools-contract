@@ -120,34 +120,31 @@ describe('claim', () => {
     // We must now instantiate all accounts!
     it("initializeQPTReserve()", async () => {
         // Initialize the QPT Reserves
-        await market.initializeQPTReserve(
-            currencyMint,
-            reserveAdmin
-        )
+        await market.initializeQPTReserve(reserveAdmin)
     })
 
-    // // We now want to pay in some funds into our reserve ...
-    // it("buyQPT()", async () => {
-    //     // As a new, third-party user (A), (A) wants to buy QPT!
-    //     // // Create the QPools Object
-    //
-    //     qpools = new QPoolsUser(
-    //         provider,
-    //         wallet,
-    //         connection,
-    //         market.qPoolAccount,
-    //         market.QPTokenMint,
-    //         market.currencyMint
-    //     );
-    //
-    //     await qpools.registerAccount();
-    //     await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 10e6);
-    //     console.log("Can now proceed with buying QPT!");
-    //     await qpools.buyQPT(
-    //         5_000_000
-    //     );
-    // })
-    //
+    /* Simulate a user purchasing QPT Tokens */
+    it("buyQPT()", async () => {
+        // As a new, third-party user (A), (A) wants to buy QPT!
+        // // Create the QPools Object
+        qpools = new QPoolsUser(
+            provider,
+            wallet,
+            connection,
+            market.qPoolAccount,
+            market.QPTokenMint,
+            market.currencyMint
+        );
+
+        await qpools.registerAccount();
+        // Simulate the user having some money
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 10e6);
+        console.log("Can now proceed with buying QPT!");
+        await qpools.buyQPT(
+            5_000_000
+        );
+    })
+
     // it("swapReserveToAllPairs()", async() => {
     //     // Start the swaps!
     //     await market.swapToAllPairs(reserveAdmin);

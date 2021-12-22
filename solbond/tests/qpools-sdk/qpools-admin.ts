@@ -105,9 +105,7 @@ export class QPoolsAdmin {
 
     }
 
-    async initializeQPTReserve(currencyMint: Token, initializer: Keypair) {
-
-        this.currencyMint = currencyMint;
+    async initializeQPTReserve(initializer: Keypair) {
 
         // Generate qPoolAccount
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
@@ -115,7 +113,7 @@ export class QPoolsAdmin {
             this.solbondProgram.programId
         );
 
-        // Generate Redeemable Mint
+        // Generate Redeemable Mint which is owned by the program
         this.QPTokenMint = await createMint(
             this.provider,
             initializer,
@@ -123,20 +121,18 @@ export class QPoolsAdmin {
             9
         );
 
-
+        // Create QPT Token Accounts
         this.qPoolQPAccount = await this.QPTokenMint!.createAccount(this.qPoolAccount);
         this.qPoolCurrencyAccount = await this.currencyMint.createAccount(this.qPoolAccount);
 
-        /*
-            Now make the RPC call, to initialize a qPool
-         */
+        /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
             this.bumpQPoolAccount,
             {
                 accounts: {
                     bondPoolAccount: this.qPoolAccount,
                     bondPoolRedeemableMint: this.QPTokenMint.publicKey,
-                    bondPoolCurrencyTokenMint: currencyMint.publicKey,
+                    bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
                     bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
                     bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
                     initializer: initializer.publicKey,
@@ -149,6 +145,8 @@ export class QPoolsAdmin {
             }
         );
         await this.provider.connection.confirmTransaction(initializeTx);
+
+        // TODO: Do a bunch of asserts?
 
     }
 

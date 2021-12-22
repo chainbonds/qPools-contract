@@ -86,6 +86,12 @@ export class QPoolsUser {
         currency_amount_raw: number
     ) {
 
+        if (!(currency_amount_raw > 0)) {
+            // TODO: Also implement this in the contract
+            console.log("Cannot buy negative token amounts!");
+            return
+        }
+
         console.log("Inputs are: ");
         console.log(currency_amount_raw);
         console.log({

@@ -48,7 +48,7 @@ pub struct SwapPairInstruction<'info> {
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
 
-    // #[account(constraint = &state.load()?.authority == program_authority.key)]
+    #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 

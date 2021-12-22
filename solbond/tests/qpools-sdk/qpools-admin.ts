@@ -164,23 +164,24 @@ export class QPoolsAdmin {
             console.log("")
             const QPtokenYAccount = await tokenY.createAccount(this.qPoolAccount);
 
-            // assert.ok(
-            //     (await tokenX.getAccountInfo(QPtokenXAccount)).mint.equals(tokenX.publicKey),
-            //     // ("1 " + (await tokenX.getAccountInfo(this.QPReserveTokens[pair.tokenX.toString()])).mint.toString() + ", " + tokenX.publicKey.toString())
-            // );
-            // assert.ok(
-            //     (await tokenY.getAccountInfo(QPtokenYAccount)).mint.equals(tokenY.publicKey),
-            //     // ("2 " + (await tokenY.getAccountInfo(this.QPReserveTokens[pair.tokenY.toString()])).mint.toString() + ", " + tokenY.publicKey.toString())
-            // );
-            // assert.ok(
-            //     (await tokenX.getAccountInfo(pool.tokenX)).mint.equals(tokenX.publicKey),
-            //     // ("3 " + (await tokenX.getAccountInfo(pool.tokenX)).mint.toString() + ", " + tokenX.publicKey.toString())
-            // );
-            // assert.ok(
-            //     (await tokenY.getAccountInfo(pool.tokenY)).mint.equals(tokenY.publicKey),
-            //     // ("4 " + (await tokenY.getAccountInfo(pool.tokenY)).mint.toString() + ", " + tokenY.publicKey.toString())
-            // );
 
+            assert.ok(
+                (await tokenX.getAccountInfo(QPtokenXAccount)).mint.equals(tokenX.publicKey),
+                ("1 " + (await tokenX.getAccountInfo(QPtokenXAccount)).mint.toString() + ", " + tokenX.publicKey.toString())
+            );
+            assert.ok(
+                (await tokenY.getAccountInfo(QPtokenYAccount)).mint.equals(tokenY.publicKey),
+                ("2 " + (await tokenY.getAccountInfo(QPtokenYAccount)).mint.toString() + ", " + tokenY.publicKey.toString())
+            );
+
+            assert.ok(
+                (await tokenX.getAccountInfo(pool.tokenXReserve)).mint.equals(tokenX.publicKey),
+                ("3 " + (await tokenX.getAccountInfo(pool.tokenXReserve)).mint.toString() + ", " + tokenX.publicKey.toString())
+            );
+            assert.ok(
+                (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.equals(tokenY.publicKey),
+                ("4 " + (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.toString() + ", " + tokenY.publicKey.toString())
+            );
 
             console.log("Inputs are: ");
             console.log("Inputs are: ",

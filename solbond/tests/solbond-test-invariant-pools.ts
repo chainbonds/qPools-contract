@@ -65,17 +65,17 @@ describe('claim', () => {
 
     // TODO: Mint authority cannot pay for mint.. weird!!! Mint authority does not have any airdrop amount!
     before(async () => {
-        await connection.requestAirdrop(mintAuthority.publicKey, 1e9);
-        await connection.requestAirdrop(user.publicKey, 1e9);
+        await connection.requestAirdrop(mintAuthority.publicKey, 3e9);
+        await connection.requestAirdrop(user.publicKey, 3e9);
         // await connection.requestAirdrop(unspecifiedPayer.publicKey, 1e9);
         // await connection.requestAirdrop(marketAuthority.publicKey, 1e9);
-        await connection.requestAirdrop(liquidityProvider.publicKey, 1e9);
-        await connection.requestAirdrop(qpAuthority.publicKey, 1e9);
+        await connection.requestAirdrop(liquidityProvider.publicKey, 3e9);
+        await connection.requestAirdrop(qpAuthority.publicKey, 3e9);
         // Wait for airdrop to kick in ...
         await delay(1_000);
         assert.equal(
             (await provider.connection.getBalance(mintAuthority.publicKey)),
-            1e9,
+            3e9,
             String((await provider.connection.getBalance(mintAuthority.publicKey)))
         );
         // assert.equal(
@@ -85,12 +85,12 @@ describe('claim', () => {
         // );
         assert.equal(
             (await provider.connection.getBalance(liquidityProvider.publicKey)),
-            1e9,
+            3e9,
             String((await provider.connection.getBalance(liquidityProvider.publicKey)))
         );
         assert.equal(
             (await provider.connection.getBalance(qpAuthority.publicKey)),
-            500000001000000000,
+            500000003000000000,
             String((await provider.connection.getBalance(qpAuthority.publicKey)))
         );
         currencyMint = await createToken(connection, mintAuthority, mintAuthority);
@@ -152,8 +152,8 @@ describe('claim', () => {
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,
             mintAuthority,
-            1_000_000,
-            1_000_000
+            1e6,
+            1e4  // 1_000_000 // 1_000_000_000_000
         )
     })
 
@@ -178,16 +178,16 @@ describe('claim', () => {
 
         await qpools.registerAccount();
         // Simulate the user having some money
-        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 10e6);
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 1e9);
         console.log("Can now proceed with buying QPT!");
         await qpools.buyQPT(
-            5_000_000
+            1_000_000_000
         );
     })
 
     it("swapReserveToAllPairs()", async() => {
         // Start the swaps!
-        await market.swapToAllPairs();
+        await market.swapToAllPairs(100);
     })
 
     // it("#swapWithInvariant()", async () => {

@@ -206,8 +206,8 @@ export class MockQPools extends QPoolsAdmin {
         await this.mockMarket.createPositionList(liquidityProvider);
 
         // Generate the upper and lower ticks, if they don't exist yet
-        const upperTick = 1000;
-        const lowerTick = -1000;
+        const upperTick = 20;
+        const lowerTick = -20;
 
         // For each pair, provide some liquidity
         await Promise.all(

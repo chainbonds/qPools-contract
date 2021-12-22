@@ -167,7 +167,7 @@ export class QPoolsAdmin {
      *
      * @param initializer
      */
-    async swapToAllPairs() {
+    async swapToAllPairs(amount) {
 
         await Promise.all(
             this.pairs.map(async (pair: Pair) => {
@@ -212,11 +212,11 @@ export class QPoolsAdmin {
                     // xToY: bool,
                     true,
                     // amount: u64,
-                    tou64(2_000_000),
+                    tou64(amount),
                     // by_amount_in: bool,
                     true,
                     // sqrt_price_limit: u128,
-                    1_000_000,
+                    pool.sqrtPrice.v.sub(new BN(10_000_000_000)).toString(),
                 );
                 console.log(
                     {
@@ -242,16 +242,27 @@ export class QPoolsAdmin {
                     }
                 )
 
+                // Get the sqrt price
+                // And subtract some tolerance from this
+
+                console.log("Sqrt price is: ", pool.sqrtPrice.v.toString());
+                console.log("Liquidity provided is: ", pool.liquidity.v.toString());
+                console.log("Liquidity in X are", (await this.connection.getBalance(pool.tokenXReserve)));
+                console.log("Liquidity in Y are", (await this.connection.getBalance(pool.tokenYReserve)));
+
+                // Not entirely sure what this is!
+
                 await this.solbondProgram.rpc.swapPair(
                     this.bumpQPoolAccount,
                     // xToY: boolea,
                     true,
                     // amount: u64,
-                    new BN(2_000_000),
+                    new BN(amount),
                     // by_amount_in: bool,
                     true,
                     // sqrt_price_limit: u128,
-                    new BN(1),
+                    // 1_000_000_000_000
+                    pool.sqrtPrice.v.sub(new BN(90_000_000_000)),
                     {
                         accounts: {
                             initializer: this.wallet.publicKey,

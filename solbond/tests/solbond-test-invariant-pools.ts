@@ -81,7 +81,8 @@ describe('claim', () => {
         market = new MockQPools(
             provider.wallet,
             connection,
-            provider
+            provider,
+            currencyMint
         );
         await market.createMockMarket(
             Network.LOCAL,
@@ -115,16 +116,16 @@ describe('claim', () => {
             1_000_000
         )
     })
-    //
-    // // We must now instantiate all accounts!
-    // it("initializeQPTReserve()", async () => {
-    //     // Initialize the QPT Reserves
-    //     await market.initializeQPTReserve(
-    //         currencyMint,
-    //         reserveAdmin
-    //     )
-    // })
-    //
+
+    // We must now instantiate all accounts!
+    it("initializeQPTReserve()", async () => {
+        // Initialize the QPT Reserves
+        await market.initializeQPTReserve(
+            currencyMint,
+            reserveAdmin
+        )
+    })
+
     // // We now want to pay in some funds into our reserve ...
     // it("buyQPT()", async () => {
     //     // As a new, third-party user (A), (A) wants to buy QPT!

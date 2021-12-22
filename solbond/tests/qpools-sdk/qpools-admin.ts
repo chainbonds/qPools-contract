@@ -35,7 +35,7 @@ export class QPoolsAdmin {
     public wallet: Keypair;
 
     // All tokens not owned by the protocol
-    public currencyMint: Token | null = null;  // We will only have a single currency across one qPool
+    public currencyMint: Token;  // We will only have a single currency across one qPool
 
     // All tokens owned by the protocol
     public qPoolAccount: PublicKey | null = null;  // qPool Account
@@ -55,13 +55,15 @@ export class QPoolsAdmin {
     constructor(
         wallet: IWallet,
         connection: Connection,
-        provider: Provider
+        provider: Provider,
+        currencyMint: Token
     ) {
         this.connection = connection;
 
         this.solbondProgram = anchor.workspace.Solbond;
         this.invariantProgram = anchor.workspace.Amm as Program<Amm>;
         this.provider = provider;
+        this.currencyMint = currencyMint;
 
         // @ts-expect-error
         this.wallet = provider.wallet.payer as Keypair
@@ -70,7 +72,10 @@ export class QPoolsAdmin {
             fee: fromFee(new BN(600)),
             tickSpacing: 10
         }
+
+        // Do a bunch of assert OKs
     }
+
 
     /**
      *

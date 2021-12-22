@@ -36,7 +36,6 @@ const POSITION_LIST_SEED = 'positionlistv1'
 export class MockQPools extends QPoolsAdmin {
 
     public tokens: Token[];
-    public currencyMint: Token | null = null;  // We will only have a single currency across one qPool
 
     // We have a single fee tier across all pools, for simplicity
     public protocolFee: Decimal;
@@ -48,11 +47,6 @@ export class MockQPools extends QPoolsAdmin {
             Array.from({length: number_pools}).map((_) => {
                 return createToken(this.connection, this.wallet, mintAuthority)
             })
-        );
-        this.currencyMint = await createToken(
-            this.provider.connection,
-            this.wallet,
-            mintAuthority,
         );
         // Assert
         assert.ok(this.tokens.map(async (token: Token) => {

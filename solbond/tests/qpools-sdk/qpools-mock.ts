@@ -199,13 +199,13 @@ export class MockQPools extends QPoolsAdmin {
     async provideThirdPartyLiquidityToAllPairs(
         liquidityProvider: Keypair,
         tokenMintAuthority: Keypair,
-        airdropAmountX: number,
+        airdropAmountX: BN,
     ) {
         await this.mockMarket.createPositionList(liquidityProvider);
 
         // Generate the upper and lower ticks, if they don't exist yet
-        const upperTick = 30;
-        const lowerTick = -30;
+        const upperTick = 50;
+        const lowerTick = -50;
 
         // For each pair, provide some liquidity
         await Promise.all(
@@ -229,13 +229,13 @@ export class MockQPools extends QPoolsAdmin {
                 console.log("SQRT Price is: ", pool.sqrtPrice.v.div(DENOMINATOR).toString());
                 console.log("airdropAmountX", airdropAmountX.toString());
                 const {liquidity, y} = getLiquidityByX(
-                    new BN(airdropAmountX),
+                    airdropAmountX,
                     lowerTick,
                     upperTick,
                     pool.sqrtPrice,
                     true
                 );
-                const airdropAmountY = y.toNumber();
+                const airdropAmountY = y;
                 const liquidityDelta = liquidity;
                 console.log("Airdrop amount y", airdropAmountY);
                 console.log("Liquidity delta :", liquidityDelta.v.toString());
@@ -246,15 +246,19 @@ export class MockQPools extends QPoolsAdmin {
                 // console.log(liquidity.v.toString());
 
                 // Also make an airdrop to provide some of this liquidity to the token holders ...
-                await tokenX.mintTo(tokenXAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmountX);
-                await tokenY.mintTo(tokenYAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmountY);
+                await tokenX.mintTo(tokenXAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmountX.toNumber());
+                await tokenY.mintTo(tokenYAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmountY.toNumber());
 
+                console.log("Before get amount")
                 // Do a bunch of asserts, to check if tokens were successfully minted
-                const amountX = (await tokenX.getAccountInfo(tokenXAccount)).amount.toNumber();
-                const amountY = (await tokenY.getAccountInfo(tokenYAccount)).amount.toNumber();
+                const amountX = (await tokenX.getAccountInfo(tokenXAccount)).amount;
+                const amountY = (await tokenY.getAccountInfo(tokenYAccount)).amount;
+                console.log("After get amount")
 
-                assert.ok(amountX == airdropAmountX, (String(amountX) + " (1) " + String(airdropAmountX)));
-                assert.ok(amountY == airdropAmountY, (String(amountY) + " (2) " + String(airdropAmountY)));
+                console.log("Assert 1: ", (String(amountX) + " Assert (1) " + airdropAmountX.toString()))
+                assert.ok(amountX.eq(airdropAmountX), (String(amountX) + " Assert (1) " + airdropAmountX.toString()));
+                console.log("Assert 2: ", (String(amountY) + " Assert (2) " + airdropAmountY.toString()))
+                assert.ok(amountY.eq(airdropAmountY), (String(amountY) + " Assert (2) " + airdropAmountY.toString()));
 
                 // Now initialize the position
                 await this.mockMarket.initPosition(
@@ -273,16 +277,20 @@ export class MockQPools extends QPoolsAdmin {
                 console.log("First (9)");
                 // Do a bunch of tests to check if liquidity was successfully provided
                 const poolData = await this.mockMarket.get(pair);
-                assert.ok(poolData.feeGrowthGlobalX.v.eqn(0), String(" (3) " + poolData.feeGrowthGlobalX.v));
-                assert.ok(poolData.feeGrowthGlobalY.v.eqn(0), String(" (4) " + poolData.feeGrowthGlobalY.v));
-                assert.ok(poolData.feeProtocolTokenX.v.eqn(0), String(" (5) " + poolData.feeProtocolTokenX.v));
-                assert.ok(poolData.feeProtocolTokenY.v.eqn(0), String(" (6) " + poolData.feeProtocolTokenY.v));
-                assert.ok((await this.mockMarket.get(pair)).liquidity.v.eq(liquidityDelta.v), String(" (7) " + (await this.mockMarket.get(pair)).liquidity) + " " + String(liquidityDelta.v))
+
+                console.log(String(" Assert (3) " + poolData.feeGrowthGlobalX.v.toString()));
+                console.log(String(" Assert (4) " + poolData.feeGrowthGlobalY.v.toString()));
+                console.log(String(" Assert (5) " + poolData.feeProtocolTokenX.v.toString()));
+                console.log(String(" Assert (6) " + poolData.feeProtocolTokenY.v.toString()));
+                console.log(String(" Assert (7) " + (await this.mockMarket.get(pair)).liquidity) + " " + liquidityDelta.v.toString());
+                assert.ok(poolData.feeGrowthGlobalX.v.eqn(0), String(" Assert (3) " + poolData.feeGrowthGlobalX.v.toString()));
+                assert.ok(poolData.feeGrowthGlobalY.v.eqn(0), String(" Assert (4) " + poolData.feeGrowthGlobalY.v.toString()));
+                assert.ok(poolData.feeProtocolTokenX.v.eqn(0), String(" Assert (5) " + poolData.feeProtocolTokenX.v.toString()));
+                assert.ok(poolData.feeProtocolTokenY.v.eqn(0), String(" Assert (6) " + poolData.feeProtocolTokenY.v.toString()));
+                assert.ok((await this.mockMarket.get(pair)).liquidity.v.eq(liquidityDelta.v), String(" Assert (7) " + (await this.mockMarket.get(pair)).liquidity) + " " + liquidityDelta.v.toString());
 
             })
         );
-
-        return true
 
     }
 

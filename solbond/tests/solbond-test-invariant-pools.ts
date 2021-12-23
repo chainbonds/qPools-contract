@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import {Provider, web3} from '@project-serum/anchor';
+import {BN, Provider, web3} from '@project-serum/anchor';
 import {clusterApiUrl, Connection, Keypair, PublicKey, Signer} from '@solana/web3.js';
 import {IWallet, Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
@@ -155,7 +155,9 @@ describe('claim', () => {
         // 2500000000000
         // 252821720222
 
-        let liquidityProvidingAmount = 1e11;
+        console.log("Before amount");
+        let liquidityProvidingAmount = new BN(1e12);
+        console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,
             mintAuthority,

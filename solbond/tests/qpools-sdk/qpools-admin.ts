@@ -25,12 +25,13 @@ import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {UnderlyingSinkAbortCallback} from "stream/web";
 import {calculatePriceAfterSlippage} from "@invariant-labs/sdk/lib/math";
+import {getInvariantProgram} from "./program";
 
 export class QPoolsAdmin {
 
     public connection: Connection;
     public solbondProgram: Program;
-    public invariantProgram: Program<Amm>;
+    public invariantProgram: Program;  // <Amm>
     public provider: Provider;
     public wallet: Keypair;
 
@@ -61,7 +62,8 @@ export class QPoolsAdmin {
         this.connection = connection;
 
         this.solbondProgram = anchor.workspace.Solbond;
-        this.invariantProgram = anchor.workspace.Amm as Program<Amm>;
+        this.invariantProgram = getInvariantProgram(connection, provider);
+        // this.invariantProgram = anchor.workspace.Amm as Program;  //  as Program<Amm>;
         this.provider = provider;
         this.currencyMint = currencyMint;
 

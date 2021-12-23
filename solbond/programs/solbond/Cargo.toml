@@ -15,8 +15,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.18.0"
-anchor-spl = "0.18.0"
-solana-program = "1.8.5"
+anchor-lang = "0.18.2"
+anchor-spl = "0.18.2"
+solana-program = "1.8.11"
 amm = { path = "../../deps/protocol/programs/amm" , features = ["cpi"]}
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }

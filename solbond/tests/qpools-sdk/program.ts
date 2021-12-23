@@ -4,7 +4,7 @@ import {Provider} from "@project-serum/anchor";
 
 // Not sure if this import is allowed...
 //@ts-ignore
-import _invariant_idl from './../../deps/invariant/target/idl/amm.json';
+import _invariant_idl from './../../deps/protocol/target/idl/amm.json';
 const invariant_idl: any = _invariant_idl;
 //@ts-ignore
 import _solana_idl from './../../target/idl/solbond.json';
@@ -24,9 +24,9 @@ export const getSolbondProgram = (connection: Connection, provider: Provider) =>
 
 export const getInvariantProgram = (connection: Connection, provider: Provider) => {
 
-    const programId = new anchor.web3.PublicKey("R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc");
+    const programId = new anchor.web3.PublicKey("77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z");
     const program = new anchor.Program(
-        solana_idl,
+        invariant_idl,
         programId,
         provider,
     );

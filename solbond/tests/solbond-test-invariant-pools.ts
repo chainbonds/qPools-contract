@@ -47,7 +47,8 @@ describe('claim', () => {
 
     // Programs
     const solbondProgram = anchor.workspace.Solbond;
-    const invariantProgram = anchor.workspace.Amm;
+    // const invariantProgram = anchor.workspace.Amm;
+    const invariantProgram = getInvariantProgram(connection, provider);
 
     console.log("Solbond program");
     console.log(solbondProgram.programId.toString());
@@ -157,7 +158,8 @@ describe('claim', () => {
 
         console.log("Before amount");
         // let liquidityProvidingAmount = (new BN(1e8)).mul(new BN(1e8));
-        let liquidityProvidingAmount = new BN(2).pow(new BN(64)).subn(1);
+        // Until update, cannot use 2^64
+        let liquidityProvidingAmount = new BN(2).pow(new BN(52)).subn(1);
         console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,

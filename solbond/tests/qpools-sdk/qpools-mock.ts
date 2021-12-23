@@ -246,8 +246,8 @@ export class MockQPools extends QPoolsAdmin {
                 // console.log(liquidity.v.toString());
 
                 // Also make an airdrop to provide some of this liquidity to the token holders ...
-                await tokenX.mintTo(tokenXAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], tou64(airdropAmountX));
-                await tokenY.mintTo(tokenYAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], tou64(airdropAmountY));
+                await tokenX.mintTo(tokenXAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmountX.toNumber());
+                await tokenY.mintTo(tokenYAccount, tokenMintAuthority.publicKey, [tokenMintAuthority], airdropAmountY.toNumber());
 
                 // console.log("Before get amount")
                 // Do a bunch of asserts, to check if tokens were successfully minted

@@ -149,11 +149,16 @@ describe('claim', () => {
     })
     it("#provideThirdPartyLiquidity()", async () => {
         // Provide Liquidity through a third party (this is not the bond yet)
+        // 10_000_000_000_000
+
+        // 1000000000000
+        // 5000000000000
+
+        let liquidityProvidingAmount = 1e12;
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,
             mintAuthority,
-            1e6,
-            1e4  // 1_000_000 // 1_000_000_000_000
+            liquidityProvidingAmount
         )
     })
 
@@ -178,16 +183,19 @@ describe('claim', () => {
 
         await qpools.registerAccount();
         // Simulate the user having some money
-        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], 1e9);
+        let airdropBuyAmount = 1e10;
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
         console.log("Can now proceed with buying QPT!");
         await qpools.buyQPT(
-            1_000_000_000
+            airdropBuyAmount
         );
     })
 
     it("swapReserveToAllPairs()", async() => {
         // Start the swaps!
-        await market.swapToAllPairs(10);
+        console.log("Get market authority balance: ");
+        console.log(await connection.getBalance(marketAuthority.publicKey));
+        await market.swapToAllPairs(5);
     })
 
     // it("#swapWithInvariant()", async () => {

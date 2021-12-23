@@ -4,7 +4,6 @@ import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
     calculate_price_sqrt,
-    DENOMINATOR,
     IWallet,
     Market,
     MAX_TICK,
@@ -18,13 +17,14 @@ import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/marke
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {createStandardFeeTiers, createToken} from "../invariant-utils";
-import {FEE_TIERS, fromFee} from "@invariant-labs/sdk/lib/utils";
+import {FEE_TIERS, fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
 import {createMint, createTokenAccount} from "../utils";
 import {Key} from "readline";
 
 import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {UnderlyingSinkAbortCallback} from "stream/web";
+import {calculatePriceAfterSlippage} from "@invariant-labs/sdk/lib/math";
 
 export class QPoolsAdmin {
 
@@ -205,6 +205,32 @@ export class QPoolsAdmin {
                     ("4 " + (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.toString() + ", " + tokenY.publicKey.toString())
                 );
 
+                // Get the sqrt price
+                // And subtract some tolerance from this
+
+                console.log("Sqrt price is: ", pool.sqrtPrice.v.toString());
+                console.log("Liquidity provided is: ", pool.liquidity.v.toString());
+
+
+                console.log("Liquidity in X are", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toNumber());
+                console.log("Liquidity in Y are", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toNumber());
+
+                // Not entirely sure what this is!
+
+                const xToY = true;
+                const slippage = toDecimal(5, 1);
+
+                // Calculate price limit after slippage
+                const priceLimit = calculatePriceAfterSlippage(
+                    pool.sqrtPrice,
+                    slippage,
+                    !xToY
+                ).v;
+
+                console.log("Slippage is: ", slippage.v.toString());
+
+                // pool.sqrtPrice.v.sub(new BN(500_000_000_000))
+
                 // Now run the RPC Call
                 console.log("Inputs are: ");
                 console.log("Inputs are: ",
@@ -212,11 +238,11 @@ export class QPoolsAdmin {
                     // xToY: bool,
                     true,
                     // amount: u64,
-                    tou64(amount),
+                    new BN(amount).toString(),
                     // by_amount_in: bool,
                     true,
                     // sqrt_price_limit: u128,
-                    pool.sqrtPrice.v.sub(new BN(10_000_000_000)).toString(),
+                    priceLimit.toString()
                 );
                 console.log(
                     {
@@ -242,27 +268,17 @@ export class QPoolsAdmin {
                     }
                 )
 
-                // Get the sqrt price
-                // And subtract some tolerance from this
-
-                console.log("Sqrt price is: ", pool.sqrtPrice.v.toString());
-                console.log("Liquidity provided is: ", pool.liquidity.v.toString());
-                console.log("Liquidity in X are", (await this.connection.getBalance(pool.tokenXReserve)));
-                console.log("Liquidity in Y are", (await this.connection.getBalance(pool.tokenYReserve)));
-
-                // Not entirely sure what this is!
-
                 await this.solbondProgram.rpc.swapPair(
                     this.bumpQPoolAccount,
                     // xToY: boolea,
-                    true,
+                    xToY,
                     // amount: u64,
                     new BN(amount),
                     // by_amount_in: bool,
                     true,
                     // sqrt_price_limit: u128,
                     // 1_000_000_000_000
-                    pool.sqrtPrice.v.sub(new BN(90_000_000_000)),
+                    priceLimit,
                     {
                         accounts: {
                             initializer: this.wallet.publicKey,

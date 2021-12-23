@@ -156,7 +156,8 @@ describe('claim', () => {
         // 252821720222
 
         console.log("Before amount");
-        let liquidityProvidingAmount = new BN(1e12);
+        // let liquidityProvidingAmount = (new BN(1e8)).mul(new BN(1e8));
+        let liquidityProvidingAmount = new BN(2).pow(new BN(64)).subn(1);
         console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,

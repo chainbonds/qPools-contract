@@ -152,9 +152,10 @@ describe('claim', () => {
         // 10_000_000_000_000
 
         // 1000000000000
-        // 5000000000000
+        // 2500000000000
+        // 252821720222
 
-        let liquidityProvidingAmount = 1e12;
+        let liquidityProvidingAmount = 2.5e12;
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,
             mintAuthority,
@@ -195,7 +196,7 @@ describe('claim', () => {
         // Start the swaps!
         console.log("Get market authority balance: ");
         console.log(await connection.getBalance(marketAuthority.publicKey));
-        await market.swapToAllPairs(5);
+        await market.swapToAllPairs(1);
     })
 
     // it("#swapWithInvariant()", async () => {

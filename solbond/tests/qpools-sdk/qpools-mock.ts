@@ -224,6 +224,8 @@ export class MockQPools extends QPoolsAdmin {
                 // on how much airdrop is made
                 // liquidityDelta = 1_000_000
                 // returns {liquidity: Decimal, y: BN}
+                console.log("SQRT Price is: ", pool.sqrtPrice.v.div(DENOMINATOR).toString());
+                // 1_000_000_000_000
                 const {liquidity, y} = getLiquidityByX(
                     new BN(airdropAmountX),
                     lowerTick,

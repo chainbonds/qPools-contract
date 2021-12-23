@@ -3,7 +3,7 @@ import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
 import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
-    calculate_price_sqrt,
+    calculate_price_sqrt, DENOMINATOR,
     IWallet,
     Market,
     MAX_TICK,
@@ -227,7 +227,7 @@ export class QPoolsAdmin {
                     !xToY
                 ).v;
 
-                console.log("Slippage is: ", slippage.v.toString());
+                console.log("Slippage is: ", slippage.v.div(DENOMINATOR.div(new BN(1_000))).toString());
 
                 // pool.sqrtPrice.v.sub(new BN(500_000_000_000))
 

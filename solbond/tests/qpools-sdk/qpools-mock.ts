@@ -204,8 +204,8 @@ export class MockQPools extends QPoolsAdmin {
         await this.mockMarket.createPositionList(liquidityProvider);
 
         // Generate the upper and lower ticks, if they don't exist yet
-        const upperTick = 500;
-        const lowerTick = -50;
+        const upperTick = 30;
+        const lowerTick = -30;
 
         // For each pair, provide some liquidity
         await Promise.all(
@@ -217,6 +217,8 @@ export class MockQPools extends QPoolsAdmin {
                 const tokenXAccount = await tokenX.createAccount(liquidityProvider.publicKey);
                 const tokenYAccount = await tokenY.createAccount(liquidityProvider.publicKey);
 
+                // 100_000_000_000
+                // 75_018_745_971
                 const pool = await this.mockMarket.get(pair);
 
                 // Calculate how much to airdrop, etc.
@@ -225,7 +227,7 @@ export class MockQPools extends QPoolsAdmin {
                 // liquidityDelta = 1_000_000
                 // returns {liquidity: Decimal, y: BN}
                 console.log("SQRT Price is: ", pool.sqrtPrice.v.div(DENOMINATOR).toString());
-                // 1_000_000_000_000
+                console.log("airdropAmountX", airdropAmountX.toString());
                 const {liquidity, y} = getLiquidityByX(
                     new BN(airdropAmountX),
                     lowerTick,
@@ -235,7 +237,8 @@ export class MockQPools extends QPoolsAdmin {
                 );
                 const airdropAmountY = y.toNumber();
                 const liquidityDelta = liquidity;
-                // const liquidityDelta = { v: new BN(_liquidityDelta).mul(DENOMINATOR) };
+                console.log("Airdrop amount y", airdropAmountY);
+                console.log("Liquidity delta :", liquidityDelta.v.toString());
 
                 // console.log("Airdrop amounts and liquidity are: ");
                 // console.log(airdropAmountX);

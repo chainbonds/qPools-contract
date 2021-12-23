@@ -155,7 +155,7 @@ describe('claim', () => {
         // 2500000000000
         // 252821720222
 
-        let liquidityProvidingAmount = 2.5e12;
+        let liquidityProvidingAmount = 1e11;
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,
             mintAuthority,
@@ -184,7 +184,7 @@ describe('claim', () => {
 
         await qpools.registerAccount();
         // Simulate the user having some money
-        let airdropBuyAmount = 1e10;
+        let airdropBuyAmount = 1e11;
         await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
         console.log("Can now proceed with buying QPT!");
         await qpools.buyQPT(

@@ -2,12 +2,19 @@
  * This is the file that can later on be shared with the frontend
  * The other qpools files will be used as an admin, and should probably not be open
  */
-import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Signer, Transaction} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import assert from "assert";
+import {createTokenAccount} from "../utils";
+import {getOrCreateAssociatedTokenAccount} from "../../../dapp/src/programs/anchor";
+import {
+    createAssociatedTokenAccountSend,
+    getAssociatedTokenAddress
+} from "../../../dapp/src/splpasta/tx/associated-token-account";
+import {Key} from "readline";
 
 // can't remember what this is
 export interface Tickmap {
@@ -18,7 +25,7 @@ export interface Tickmap {
 export class QPoolsUser {
 
     public connection: Connection;
-    public wallet: Keypair;
+    public wallet: IWallet;
     public solbondProgram: Program;
     public provider: Provider;
 
@@ -35,7 +42,7 @@ export class QPoolsUser {
 
     constructor(
         provider: Provider,
-        wallet: Keypair,
+        wallet: IWallet,
         connection: Connection,
 
         bondPoolAccount: PublicKey,
@@ -60,7 +67,13 @@ export class QPoolsUser {
         if (!this.bondPoolQPTAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.bondPoolQPTAccount");
-            this.bondPoolQPTAccount = await this.QPTMint.createAccount(this.bondPoolAccount);
+            console.log("('''qPoolAccount) here: ", this.bondPoolAccount.toString());
+            // this.provider
+            await createAssociatedTokenAccountSend(this.connection, this.QPTMint.publicKey, this.bondPoolQPTAccount, this.wallet);
+            this.bondPoolQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.bondPoolAccount);
+            console.log("('''qPoolCurrencyAccount) 1", this.bondPoolQPTAccount.toString());
+            this.bondPoolQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.bondPoolAccount);
+            console.log("('''qPoolCurrencyAccount) 2", this.bondPoolQPTAccount.toString())
         }
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists
@@ -99,7 +112,8 @@ export class QPoolsUser {
         let beforeCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
         let beforeCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount;
 
-        await this.solbondProgram.rpc.purchaseBond(
+        const transactions: Transaction = new Transaction();
+        const purchaseBondInstruction =  this.solbondProgram.instruction.purchaseBond(
             new BN(currency_amount_raw),
             {
                 accounts: {
@@ -130,6 +144,12 @@ export class QPoolsUser {
         let afterQptTargetAmount = (await this.QPTMint.getAccountInfo(this.purchaserQPTAccount)).amount;
         let afterCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
         let afterCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount;
+
+        console.log("afterQptFromAmount", afterQptFromAmount.toString());
+        console.log("afterQptTargetAmount", afterQptTargetAmount.toString());
+        console.log("afterCurrencyFromAmount", afterCurrencyFromAmount.toString());
+        console.log("afterCurrencyTargetAmount", afterCurrencyTargetAmount.toString());
+
         assert.ok(beforeCurrencyFromAmount.eq(afterQptTargetAmount), String("(T1) " + beforeQptFromAmount.toString() + " " + afterQptTargetAmount.toString()));
         assert.ok(beforeQptTargetAmount.eq(afterQptFromAmount), String("(T2) " + beforeQptTargetAmount.toString() + " " + afterQptFromAmount.toString()));
         assert.ok(beforeCurrencyFromAmount.eq(afterCurrencyTargetAmount), String("(T3) " + beforeCurrencyFromAmount.toString() + " " + afterCurrencyTargetAmount.toString()));

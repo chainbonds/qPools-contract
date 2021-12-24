@@ -164,6 +164,8 @@ describe('claim', () => {
     it("initializeQPTReserve()", async () => {
         // Initialize the QPT Reserves
         await market.initializeQPTReserve()
+        // this.qPoolQPAccount
+        // this.qPoolCurrencyAccount
     })
 
     /* Simulate a user purchasing QPT Tokens */

@@ -74,14 +74,15 @@ export class MockQPools extends QPoolsAdmin {
             );
             // Make the currency always tokenX
             pair.setCurrencyMint(this.currencyMint.publicKey);
-            console.log("(Currency Mint PK) First pair mint is: ", pair.tokenX.toString());
-            console.log("(Other Mint PK) First pair mint is: ", pair.tokenY.toString());
             return pair
         });
         // Assert
-        assert.ok(this.pairs.map((pairs: Pair) => {
-            return pairs.tokenX.equals(this.currencyMint.publicKey)
-        }));
+        this.pairs.map((pairs: Pair) => {
+            assert.ok(
+                pairs.tokenX.equals(this.currencyMint.publicKey) ||
+                pairs.tokenY.equals(this.currencyMint.publicKey)
+            );
+        });
         assert.ok(this.pairs.length == this.tokens.length);
     }
 
@@ -169,8 +170,8 @@ export class MockQPools extends QPoolsAdmin {
         await Promise.all(
                 this.pairs.map(async (pair: Pair) => {
 
-                    console.log("(Currency Mint PK) First pair mint is: ", pair.tokenX.toString());
-                    console.log("(Target Mint PK) when swapping to Pairs: ", pair.tokenY.toString());
+                console.log("(Currency Mint PK) First pair mint is: ", pair.tokenX.toString());
+                console.log("(Target Mint PK) when swapping to Pairs: ", pair.tokenY.toString());
 
                 // 0.6% / 10 Fees, according to pair
                 await this.mockMarket.create({

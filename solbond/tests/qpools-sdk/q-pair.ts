@@ -1,7 +1,5 @@
 import {Pair} from "@invariant-labs/sdk";
 import {PublicKey} from "@solana/web3.js";
-import {FeeTier} from "@invariant-labs/sdk/lib/market";
-import {feeToTickSpacing} from "@invariant-labs/sdk/lib/utils";
 
 export class QPair extends Pair {
 

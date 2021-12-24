@@ -26,6 +26,7 @@ import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/mar
 import {UnderlyingSinkAbortCallback} from "stream/web";
 import {calculatePriceAfterSlippage} from "@invariant-labs/sdk/lib/math";
 import {getInvariantProgram} from "./program";
+import {QPair} from "./q-pair";
 
 export class QPoolsAdmin {
 
@@ -173,7 +174,7 @@ export class QPoolsAdmin {
     async swapToAllPairs(amount) {
 
         await Promise.all(
-            this.pairs.map(async (pair: Pair) => {
+            this.pairs.map(async (pair: QPair) => {
                 // console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString());
                 console.log("(Currency Mint PK) when swapping to Pairs: ", pair.tokenX.toString());
                 console.log("(Target Mint PK) when swapping to Pairs: ", pair.tokenY.toString());
@@ -221,8 +222,14 @@ export class QPoolsAdmin {
                 console.log("Liquidity in Y are", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
 
                 // Not entirely sure what this is!
+                let xToY: boolean;
+                if (tokenX.publicKey.equals(pair.currencyMint)) {
+                    xToY = true
+                } else {
+                    xToY = false
+                }
 
-                const xToY = true;
+                // const xToY = true;
                 const slippage = toDecimal(5, 1);
 
                 // Calculate price limit after slippage

@@ -66,13 +66,17 @@ describe('claim', () => {
 
     // TODO: Mint authority cannot pay for mint.. weird!!! Mint authority does not have any airdrop amount!
     before(async () => {
-        await connection.requestAirdrop(mintAuthority.publicKey, 3e9);
-        await connection.requestAirdrop(user.publicKey, 3e9);
+        let tx1 = await connection.requestAirdrop(mintAuthority.publicKey, 3e9);
+        let tx2 = await connection.requestAirdrop(user.publicKey, 3e9);
         // await connection.requestAirdrop(unspecifiedPayer.publicKey, 1e9);
         // await connection.requestAirdrop(marketAuthority.publicKey, 1e9);
-        await connection.requestAirdrop(liquidityProvider.publicKey, 3e9);
-        await connection.requestAirdrop(qpAuthority.publicKey, 3e9);
+        let tx3 = await connection.requestAirdrop(liquidityProvider.publicKey, 3e9);
+        let tx4 = await connection.requestAirdrop(qpAuthority.publicKey, 3e9);
         // Wait for airdrop to kick in ...
+        await connection.confirmTransaction(tx1);
+        await connection.confirmTransaction(tx2);
+        await connection.confirmTransaction(tx3);
+        await connection.confirmTransaction(tx4);
         await delay(1_500);
         assert.equal(
             (await provider.connection.getBalance(mintAuthority.publicKey)),
@@ -157,15 +161,15 @@ describe('claim', () => {
             liquidityProvidingAmount
         )
     })
-    //
-    // // We must now instantiate all accounts!
-    // it("initializeQPTReserve()", async () => {
-    //     // Initialize the QPT Reserves
-    //     await market.initializeQPTReserve()
-    //     // this.qPoolQPAccount
-    //     // this.qPoolCurrencyAccount
-    // })
-    //
+
+    // We must now instantiate all accounts!
+    it("initializeQPTReserve()", async () => {
+        // Initialize the QPT Reserves
+        await market.initializeQPTReserve()
+        // this.qPoolQPAccount
+        // this.qPoolCurrencyAccount
+    })
+
     // /* Simulate a user purchasing QPT Tokens */
     // it("buyQPT()", async () => {
     //     // As a new, third-party user (A), (A) wants to buy QPT!

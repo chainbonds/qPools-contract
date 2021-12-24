@@ -27,7 +27,11 @@ import {UnderlyingSinkAbortCallback} from "stream/web";
 import {calculatePriceAfterSlippage} from "@invariant-labs/sdk/lib/math";
 import {getInvariantProgram} from "./program";
 import {QPair} from "./q-pair";
-import {createAssociatedTokenAccountSend, getAssociatedTokenAddress} from "./splpasta/tx/associated-token-account";
+import {
+    createAssociatedTokenAccountSend, createAssociatedTokenAccountSendUnsigned,
+    createAssociatedTokenAccountTx,
+    getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
+} from "./splpasta/tx/associated-token-account";
 
 export class QPoolsAdmin {
 
@@ -138,9 +142,54 @@ export class QPoolsAdmin {
             9
         );
 
+        console.log('before creating associated token account');
+        // const tx = await createAssociatedTokenAccountTx(
+        //     this.connection,
+        //     this.QPTokenMint.publicKey,
+        //     null,
+        //     this.qPoolAccount,
+        //     this.wallet.publicKey,
+        //     //@ts-ignore
+        //     false
+        // );
+        // const signature = await web3.sendAndConfirmTransaction(
+        //     this.connection,
+        //     tx,
+        //     [this.wallet],
+        // );
+
+
+        // const address = await getAssociatedTokenAddressOffCurve(
+        //     this.QPTokenMint.publicKey,
+        //     owner
+        // );
+        // const tx = await createAssociatedTokenAccountTx(
+        //     this.connection,
+        //     this.QPTokenMint.publicKey,
+        //     ,
+        //     owner,
+        //     wallet.publicKey
+        // );
+        // const signature = await this.provider.wallet.signTransaction(tx);
+        // console.log('SIGNATURE', signature);
+
+        // return await wallet.signTransaction(tx);
+
         // Create QPT Token Accounts
-        this.qPoolQPAccount = await this.QPTokenMint!.createAssociatedTokenAccount(this.qPoolAccount);
-        this.qPoolCurrencyAccount = await this.currencyMint.createAssociatedTokenAccount(this.qPoolAccount);
+        // this.qPoolQPAccount = await this.QPTokenMint!.createAssociatedTokenAccount(this.qPoolAccount);
+        // this.qPoolCurrencyAccount = await this.currencyMint.createAssociatedTokenAccount(this.qPoolAccount);
+        this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
+            this.connection,
+            this.QPTokenMint.publicKey,
+            this.qPoolAccount,
+            this.provider.wallet
+        );
+        this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
+            this.connection,
+            this.currencyMint.publicKey,
+            this.qPoolAccount,
+            this.provider.wallet
+        );
 
         /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(

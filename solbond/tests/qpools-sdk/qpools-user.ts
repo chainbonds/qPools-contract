@@ -95,7 +95,7 @@ export class QPoolsUser {
 
         console.log("Sending RPC call");
         console.log("Transfers (Before)");
-        console.log("(Currency Mint PK) when buying QPT: ", this.QPTMint.publicKey.toString());
+        console.log("(Currency Mint PK) when buying QPT: ", this.currencyMint.publicKey.toString());
 
         let beforeQptFromAmount = (await this.QPTMint.getAccountInfo(this.bondPoolQPTAccount)).amount;
         let beforeQptTargetAmount = (await this.QPTMint.getAccountInfo(this.purchaserQPTAccount)).amount;

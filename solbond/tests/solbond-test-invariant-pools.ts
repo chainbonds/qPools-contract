@@ -159,7 +159,7 @@ describe('claim', () => {
         console.log("Before amount");
         // let liquidityProvidingAmount = (new BN(1e8)).mul(new BN(1e8));
         // Until update, cannot use 2^64
-        let liquidityProvidingAmount = new BN(2).pow(new BN(52)).subn(1);
+        let liquidityProvidingAmount = new BN(2).pow(new BN(63)).subn(1);
         console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
         await market.provideThirdPartyLiquidityToAllPairs(
             liquidityProvider,
@@ -189,9 +189,9 @@ describe('claim', () => {
 
         await qpools.registerAccount();
         // Simulate the user having some money
-        let airdropBuyAmount = 1e11;
+        let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
         await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
-        console.log("Can now proceed with buying QPT!");
+        console.log("Can now proceed with buying QPT!", airdropBuyAmount.toString());
         await qpools.buyQPT(
             airdropBuyAmount
         );
@@ -201,6 +201,9 @@ describe('claim', () => {
         // Start the swaps!
         console.log("Get market authority balance: ");
         console.log(await connection.getBalance(marketAuthority.publicKey));
+        await delay(2_000);
+        console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+        // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
         await market.swapToAllPairs(1);
     })
 

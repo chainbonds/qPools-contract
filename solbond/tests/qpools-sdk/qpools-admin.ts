@@ -214,8 +214,8 @@ export class QPoolsAdmin {
                 console.log("Liquidity provided is: ", pool.liquidity.v.toString());
 
 
-                console.log("Liquidity in X are", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toNumber());
-                console.log("Liquidity in Y are", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toNumber());
+                console.log("Liquidity in X are", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toString());
+                console.log("Liquidity in Y are", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
 
                 // Not entirely sure what this is!
 
@@ -228,6 +228,9 @@ export class QPoolsAdmin {
                     slippage,
                     !xToY
                 ).v;
+
+                // 9_223_372_036_854_775_807
+                // 1_000_000_000_000
 
                 console.log("Slippage is: ", slippage.v.div(DENOMINATOR.div(new BN(1_000))).toString());
 
@@ -270,6 +273,14 @@ export class QPoolsAdmin {
                     }
                 )
 
+                console.log("Swaps (Before)");
+                console.log("Currency PK is: ", pair.tokenX.toString());
+                console.log("Currency Account From ", (await tokenX.getAccountInfo(QPTokenXAccount)).amount.toString());
+                console.log("Currency Account To ", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toString());
+
+                console.log("Target Token From ", (await tokenY.getAccountInfo(QPTokenYAccount)).amount.toString());
+                console.log("Target Token To ", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
+
                 await this.solbondProgram.rpc.swapPair(
                     this.bumpQPoolAccount,
                     // xToY: boolea,
@@ -309,6 +320,15 @@ export class QPoolsAdmin {
                         signers: [this.wallet]
                     }
                 );
+
+
+                console.log("Swaps (After)");
+                console.log("Currency Account From ", (await tokenX.getAccountInfo(QPTokenXAccount)).amount.toString());
+                console.log("Currency Account To ", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toString());
+
+                console.log("Target Token From ", (await tokenY.getAccountInfo(QPTokenYAccount)).amount.toString());
+                console.log("Target Token To ", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
+
 
             })
         )

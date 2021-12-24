@@ -79,11 +79,6 @@ describe('claim', () => {
             3e9,
             String((await provider.connection.getBalance(mintAuthority.publicKey)))
         );
-        // assert.equal(
-        //     (await provider.connection.getBalance(userWallet.publicKey)),
-        //     500000001000000000,
-        //     String((await provider.connection.getBalance(userWallet.publicKey)))
-        // );
         assert.equal(
             (await provider.connection.getBalance(liquidityProvider.publicKey)),
             3e9,
@@ -149,6 +144,9 @@ describe('claim', () => {
         // Get network and wallet from the adapter somewhere
         await market.creatMarketsFromPairs(qpAuthority)
     })
+
+    // For each pair, generate an account for the qPools token if it doesnt exist yet
+
     it("#provideThirdPartyLiquidity()", async () => {
         console.log("Before amount");
         let liquidityProvidingAmount = new BN(2).pow(new BN(63)).subn(1);
@@ -159,48 +157,52 @@ describe('claim', () => {
             liquidityProvidingAmount
         )
     })
+    //
+    // // We must now instantiate all accounts!
+    // it("initializeQPTReserve()", async () => {
+    //     // Initialize the QPT Reserves
+    //     await market.initializeQPTReserve()
+    //     // this.qPoolQPAccount
+    //     // this.qPoolCurrencyAccount
+    // })
+    //
+    // /* Simulate a user purchasing QPT Tokens */
+    // it("buyQPT()", async () => {
+    //     // As a new, third-party user (A), (A) wants to buy QPT!
+    //     // // Create the QPools Object
+    //     qpools = new QPoolsUser(
+    //         provider,
+    //         user,
+    //         connection,
+    //         market.qPoolAccount,
+    //         market.QPTokenMint,
+    //         market.currencyMint
+    //     );
+    //
+    //     await qpools.registerAccount();
+    //     // Simulate the user having some money
+    //     let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
+    //     console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
+    //     await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
+    //     await qpools.buyQPT(
+    //         airdropBuyAmount
+    //     );
+    //     await delay(2_000);
+    // })
+    //
+    // it("swapReserveToAllPairs()", async() => {
+    //     // Start the swaps!
+    //     console.log("Get market authority balance: ");
+    //     console.log(await connection.getBalance(marketAuthority.publicKey));
+    //     // Where is the airdrop!! (?) // Or where is the reserve's currency amount in the first place
+    //     console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+    //     // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+    //     await market.swapToAllPairs(1);
+    // })
 
-    // We must now instantiate all accounts!
-    it("initializeQPTReserve()", async () => {
-        // Initialize the QPT Reserves
-        await market.initializeQPTReserve()
-        // this.qPoolQPAccount
-        // this.qPoolCurrencyAccount
-    })
 
-    /* Simulate a user purchasing QPT Tokens */
-    it("buyQPT()", async () => {
-        // As a new, third-party user (A), (A) wants to buy QPT!
-        // // Create the QPools Object
-        qpools = new QPoolsUser(
-            provider,
-            user,
-            connection,
-            market.qPoolAccount,
-            market.QPTokenMint,
-            market.currencyMint
-        );
 
-        await qpools.registerAccount();
-        // Simulate the user having some money
-        let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
-        console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
-        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
-        await qpools.buyQPT(
-            airdropBuyAmount
-        );
-        await delay(2_000);
-    })
 
-    it("swapReserveToAllPairs()", async() => {
-        // Start the swaps!
-        console.log("Get market authority balance: ");
-        console.log(await connection.getBalance(marketAuthority.publicKey));
-        // Where is the airdrop!! (?) // Or where is the reserve's currency amount in the first place
-        console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
-        // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
-        await market.swapToAllPairs(1);
-    })
 
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(

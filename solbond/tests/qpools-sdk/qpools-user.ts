@@ -78,18 +78,18 @@ export class QPoolsUser {
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.bondPoolCurrencyAccount");
-            this.bondPoolCurrencyAccount = await this.currencyMint.createAccount(this.bondPoolAccount);
+            this.bondPoolCurrencyAccount = await getAssociatedTokenAddress(this.currencyMint.publicKey, this.bondPoolAccount);
         }
         // Purchaser
         if (!this.purchaserCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.purchaserCurrencyAccount");
-            this.purchaserCurrencyAccount = await this.currencyMint.createAccount(this.wallet.publicKey);
+            this.purchaserCurrencyAccount = await getAssociatedTokenAddress(this.currencyMint.publicKey, this.wallet.publicKey);
         }
         if (!this.purchaserQPTAccount) {
             // Same for the currency mint account, if none exists
             // console.log("Going to create the this.purchaserQPTAccount");
-            this.purchaserQPTAccount = await this.QPTMint.createAccount(this.wallet.publicKey);
+            this.purchaserQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.wallet.publicKey);
         }
     }
 

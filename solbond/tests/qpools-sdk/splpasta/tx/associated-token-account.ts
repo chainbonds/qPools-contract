@@ -78,33 +78,11 @@ export const createAssociatedTokenAccountSend = async (
   return address
 }
 
-export const createAssociatedTokenAccountSendUnsigned = async (
-    conn: web3.Connection,
-    mint: web3.PublicKey,
-    owner: web3.PublicKey,
-    wallet: WalletI,
-): Promise<web3.PublicKey> => {
-  const address = await getAssociatedTokenAddressOffCurve(mint, owner)
-  if (await account.exists(conn, address)) {
-    return address
-  }
-  const tx = await createAssociatedTokenAccountUnsigned(conn, mint, address, owner, wallet)
-  await util.sendAndConfirm(conn, tx)
-  return address
-}
-
 export const getAssociatedTokenAddress = async (
   mint: web3.PublicKey,
   user: web3.PublicKey
 ): Promise<web3.PublicKey> => {
   return Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, user)
-}
-
-export const getAssociatedTokenAddressOffCurve = async (
-    mint: web3.PublicKey,
-    user: web3.PublicKey
-): Promise<web3.PublicKey> => {
-  return Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, user, true);
 }
 
 export const exists = async(

@@ -131,8 +131,8 @@ export const createUserWithTokens = async (
   const owner = Keypair.generate()
 
   const [userAccountX, userAccountY] = await Promise.all([
-    tokenX.createAccount(owner.publicKey),
-    tokenY.createAccount(owner.publicKey),
+    tokenX.createAssociatedTokenAccount(owner.publicKey),
+    tokenY.createAssociatedTokenAccount(owner.publicKey),
     connection.requestAirdrop(owner.publicKey, 1e9)
   ])
 

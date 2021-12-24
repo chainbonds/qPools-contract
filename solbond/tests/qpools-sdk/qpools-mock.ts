@@ -28,6 +28,7 @@ import {QPoolsAdmin} from "./qpools-admin";
 import {Mint} from "../../../dapp/src/splpasta";
 import {getLiquidityByX} from "@invariant-labs/sdk/lib/math";
 import {QPair} from "./q-pair";
+import {createAssociatedTokenAccountSend, getAssociatedTokenAddress} from "./splpasta/tx/associated-token-account";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'
@@ -224,11 +225,14 @@ export class MockQPools extends QPoolsAdmin {
                 const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, liquidityProvider);
                 const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, liquidityProvider);
 
-                const tokenXAccount = await tokenX.createAccount(liquidityProvider.publicKey);
-                const tokenYAccount = await tokenY.createAccount(liquidityProvider.publicKey);
+                // Create token account first
+                await tokenX.createAssociatedTokenAccount(liquidityProvider.publicKey);
+                await tokenY.createAssociatedTokenAccount(liquidityProvider.publicKey);
 
-                // 100_000_000_000
-                // 75_018_745_971
+                // Then get the token accounts
+                const tokenXAccount = await getAssociatedTokenAddress(tokenX.publicKey, liquidityProvider.publicKey);
+                const tokenYAccount = await getAssociatedTokenAddress(tokenY.publicKey, liquidityProvider.publicKey);
+
                 const pool = await this.mockMarket.get(pair);
 
                 // Calculate how much to airdrop, etc.
@@ -301,234 +305,6 @@ export class MockQPools extends QPoolsAdmin {
 
             })
         );
-
-    }
-
-    async makeSwap(
-        pair: Pair,
-
-    ) {
-
-    }
-
-    async swapWithInvariant(
-        admin: Keypair,
-        xToy: boolean,
-        amount: BN,
-        byAmountIn: boolean,
-        sqrtPriceLimit: BN,
-        current_idx: BN
-    ) {
-
-        let pair = this.pairs[current_idx.toNumber()];
-        await this.mockMarket.create({
-            pair,
-            signer: admin
-        });
-        console.log("made market for pair")
-        const pool = await this.get(pair);
-        console.log("god pool ")
-        const state = (await this.mockMarket.getStateAddress()) //.address
-        console.log("got state")
-        const stateAddress = state.address
-        console.log("got state address")
-        const tickmap = await this.mockMarket.getTickmap(pair);
-        console.log("got the tickmap data")
-        const tokenXMint = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, admin);
-        console.log("token x mint baby")
-        const tokenYMint = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, admin);
-        console.log("token y mint yo")
-        const reserveX = pool.tokenX//tokenXMint.createAccount(admin)
-        console.log("pool token x address")
-        const reserveY = pool.tokenY//tokenXMint.createAccount(admin)
-        console.log("pool token y address")
-
-        const accountX = await tokenXMint!.createAccount(admin.publicKey)
-        console.log("token account x address")
-
-        const accountY = await tokenYMint!.createAccount(admin.publicKey)
-        console.log("token account y address")
-        const pairaddrs = await pair.getAddress(this.invariantProgram.programId)
-        console.log("pair addr")
-        const feetieraddr = await pair.feeTierAddress
-        console.log("feetier addr ", feetieraddr.toString())
-        // const swapInstruction = await this.solbondProgram.rpc.swapPair(
-        //     pair.feeTierAddress,
-        //     xToy,
-        //     amount,
-        //     byAmountIn,
-        //     sqrtPriceLimit,
-        //     {
-        //         accounts: {
-        //             initializer: admin.publicKey,
-        //             pool: pairaddrs,
-        //             state: stateAddress,
-        //             tickmap: pool.tickmap,
-        //             tokenXMint: tokenXMint.publicKey,
-        //             tokenYMint: tokenYMint.publicKey,
-        //             reserveAccountX: pool.tokenXReserve,
-        //             reserveAccountY: pool.tokenYReserve,
-        //             accountX: accountX,
-        //             accountY: accountY,
-        //             programAuthority:pool,
-        //             tokenProgram: TOKEN_PROGRAM_ID,
-        //             invariantProgram: this.invariantProgram.programId,
-        //             systemProgram: web3.SystemProgram.programId,
-        //         },
-        //         signers: [admin]
-        //     }
-        // )
-
-        //const tx = await this.provider.connection.confirmTransaction(swapInstruction);
-
-
-    }
-
-
-    async registerInvariantInstruction(
-        current_idx: number,
-        max_idx: number,
-        current_weight: number,
-        admin: Keypair,
-    ) {
-        let seed_string = current_idx.toString();
-        const [invariantPoolAccount, bumpRegisterPosition] = await anchor.web3.PublicKey.findProgramAddress(
-            [admin.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("invariantPoolAccount" + current_idx.toString()))],
-            this.solbondProgram.programId
-        )
-        console.log("invariant pool account ", invariantPoolAccount.toString())
-
-        console.log("GOT POOL PDA")
-        let pair = this.pairs[current_idx];
-
-        // 0.6% / 10
-        await this.mockMarket.create({
-            pair,
-            signer: admin
-        });
-
-        const createdPool = await this.mockMarket.get(pair);
-        const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, admin);
-        const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, admin);
-        const tickmapData = await this.mockMarket.getTickmap(pair)
-
-        // CREATE POSITION IN POOL
-
-        const [createPositionInPoolAccount, bumpCreatePositionInPool] = await anchor.web3.PublicKey.findProgramAddress(
-            [admin.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("positionv1"))],
-            this.invariantProgram.programId
-        )
-
-        console.log("GOT POSITION IN POOL PDA")
-
-        const [positionList, bumpPositionList] = await anchor.web3.PublicKey.findProgramAddress(
-            [admin.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("positionlistv1"))],
-            this.invariantProgram.programId
-        )
-        console.log("GOT POSITION LIST PDA")
-
-        // DO I EVEN NEED TO DO THIS?
-        // const createPositionListTx = await this.invariantProgram.rpc.createPositionList(
-        //     bumpPositionList,
-        //     {
-        //         accounts: {
-        //             positionList: positionList,
-        //             owner: admin.publicKey,
-        //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        //             systemProgram: web3.SystemProgram.programId,
-        //         },
-        //         signers: [admin]
-        //     }
-        // );
-
-
-        // await this.provider.connection.confirmTransaction(createPositionListTx);
-        const index: number = 0;
-        const pairTick = await this.mockMarket.createTick(pair, index, admin);
-        // console.log("888")
-        const [poolAddress, poolBump] = await pair.getAddressAndBump(this.invariantProgram.programId);
-        // console.log("08989")
-        const {tickAddress} = await this.mockMarket.getTickAddress(pair, index);
-        // console.log("87000")
-        const stateAddress = (await this.mockMarket.getStateAddress()).address
-        console.log(" state  ", stateAddress.toString())
-
-        // console.log("8900010")
-        const currencyTokenMint = this.currencyMint.publicKey;
-        // console.log("cuee")
-        const tokenXMint = this.tokens[current_idx]//.publicKey;
-        // console.log("2")
-        const accountCurrencyReserve = await this.currencyMint!.createAccount(createPositionInPoolAccount);
-        const accountXReserve = await tokenXMint!.createAccount(createPositionInPoolAccount);
-
-        const reserveCurrencyToken = this.qPoolCurrencyAccount;
-        //console.log("3")
-        const assumeFirstPosition: boolean = false;
-        const reserveX = this.tokens[current_idx].publicKey;
-        //console.log("bi")
-        //const otherMint = await this.tokens[current_idx].getMintInfo().then().
-        // const upperTick = await this.mockMarket.createTick(pair, 0, admin);
-        // console.log("created Tick")
-        const pool = await this.get(pair);
-        console.log(" pool  ", await pair.getAddress(this.invariantProgram.programId).toString())
-        console.log(" tick map ", pool.tickmap.toString())
-
-        //const { address: stateAddress } = await this.getStateAddress()
-        //vconst { positionAddress, positionBump } = await this.getPositionAddress(
-        //    admin.publicKey,
-        //    assumeFirstPosition ? 0 : (await this.getPositionList(admin.publicKey)).head
-        //)
-        // console.log(" positionaddr  ",  positionAddress.toString())
-
-        //const { positionListAddress } = await this.getPositionListAddress(admin.publicKey)
-        //console.log(" poslist addrses  ",  positionListAddress.toString())
-
-        //const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
-        //console.log(" uppertick addrses  ",  upperTickAddress.toString())
-
-        //const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
-        //console.log(" lower tick addrses  ",  lowerTickAddress.toString())
-
-        // console.log(" currency token mint ", this.currencyMint.publicKey.toString())
-        // console.log(" x token mint ", this.tokens[current_idx].publicKey.toString())
-        // console.log(" currency reseve  ", this.qPoolCurrencyAccount.toString())
-        // console.log(" x reseve  ",  this.tokens[current_idx].publicKey.toString())
-        // console.log(" accountCurrencyReserve  ",  accountCurrencyReserve.toString())
-        // console.log(" accountXreserve  ",  accountXReserve.toString())
-        // console.log(" admin  ",  admin.publicKey.toString())
-        // this.qPoolQPAccount = await this.QPTokenMint!.createAccount(this.qPoolAccount);
-        const reserveCurrencyTokenAcc = await this.currencyMint.createAccount(admin.publicKey)
-        const registerInvariantInstruction = await this.solbondProgram.rpc.registerInvariantInstruction(
-            bumpRegisterPosition,
-            current_idx,
-            max_idx,
-            current_weight,
-            {
-                accounts: {
-                    invariantPoolAccount: invariantPoolAccount,
-                    pool: await pair.getAddress(this.invariantProgram.programId),
-                    state: stateAddress,
-                    tickmap: pool.tickmap,
-                    currencyTokenMint: this.currencyMint.publicKey,
-                    // need to do indexing ninja stuff
-                    // or store only second part of swap?
-                    tokenXMint: this.tokens[current_idx].publicKey,
-                    reserveCurrencyToken: reserveCurrencyTokenAcc,
-                    reserveX: this.tokens[current_idx].publicKey,
-                    accountCurrencyReserve: accountCurrencyReserve,
-                    accountXReserve: accountXReserve,
-                    initializer: admin.publicKey,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [admin]
-            }
-        )
-
-        // const upperTick = createdPool.
-
 
     }
 

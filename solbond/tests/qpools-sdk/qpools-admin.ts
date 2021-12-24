@@ -1,5 +1,5 @@
 import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
-import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
+import {BN, Program, Provider, utils, Wallet, web3} from "@project-serum/anchor";
 import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
@@ -27,6 +27,7 @@ import {UnderlyingSinkAbortCallback} from "stream/web";
 import {calculatePriceAfterSlippage} from "@invariant-labs/sdk/lib/math";
 import {getInvariantProgram} from "./program";
 import {QPair} from "./q-pair";
+import {createAssociatedTokenAccountSend, getAssociatedTokenAddress} from "./splpasta/tx/associated-token-account";
 
 export class QPoolsAdmin {
 
@@ -91,7 +92,8 @@ export class QPoolsAdmin {
     }
 
     async createQPTReservePoolAccounts(
-        positionOwner: Keypair
+        positionOwner: Keypair,
+        payer: Wallet
     ) {
 
         await Promise.all(
@@ -103,8 +105,18 @@ export class QPoolsAdmin {
                 // TODO: Implement
                 // Create qPool Accounts as a side-products.
                 // I think these should be done somewhere separate!
-                const qPoolsTokenX = await tokenX.createAccount(positionOwner.publicKey);
-                const qPoolsTokenY = await tokenY.createAccount(positionOwner.publicKey);
+                await createAssociatedTokenAccountSend(
+                    this.connection,
+                    tokenX.publicKey,
+                    positionOwner.publicKey,
+                    payer
+                );
+                await createAssociatedTokenAccountSend(
+                    this.connection,
+                    tokenY.publicKey,
+                    positionOwner.publicKey,
+                    payer
+                );
             })
         )
 
@@ -127,8 +139,8 @@ export class QPoolsAdmin {
         );
 
         // Create QPT Token Accounts
-        this.qPoolQPAccount = await this.QPTokenMint!.createAccount(this.qPoolAccount);
-        this.qPoolCurrencyAccount = await this.currencyMint.createAccount(this.qPoolAccount);
+        this.qPoolQPAccount = await this.QPTokenMint!.createAssociatedTokenAccount(this.qPoolAccount);
+        this.qPoolCurrencyAccount = await this.currencyMint.createAssociatedTokenAccount(this.qPoolAccount);
 
         /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
@@ -198,9 +210,9 @@ export class QPoolsAdmin {
                 // We're not fuckily trading QPT tokens. These are only redeemed etc.!!
 
                 console.log("('''qPoolAccount) here: ", this.qPoolAccount.toString());
-                const QPTokenXAccount = await tokenX.createAccount(this.qPoolAccount);
+                const QPTokenXAccount = await getAssociatedTokenAddress(tokenX.publicKey, this.qPoolAccount);
                 console.log("('''qPoolCurrencyAccount) 1: ", QPTokenXAccount.toString())
-                const QPTokenYAccount = await tokenY.createAccount(this.qPoolAccount);
+                const QPTokenYAccount = await getAssociatedTokenAddress(tokenY.publicKey, this.qPoolAccount);
                 console.log("('''qPoolCurrencyAccount) 2: ", QPTokenYAccount.toString())
 
                 assert.ok(

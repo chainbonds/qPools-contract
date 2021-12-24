@@ -33,6 +33,10 @@ import {
     getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
 } from "./splpasta/tx/associated-token-account";
 
+function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export class QPoolsAdmin {
 
     public connection: Connection;
@@ -141,55 +145,26 @@ export class QPoolsAdmin {
             this.qPoolAccount,
             9
         );
+        await delay(1_000);
 
         console.log('before creating associated token account');
-        // const tx = await createAssociatedTokenAccountTx(
-        //     this.connection,
-        //     this.QPTokenMint.publicKey,
-        //     null,
-        //     this.qPoolAccount,
-        //     this.wallet.publicKey,
-        //     //@ts-ignore
-        //     false
-        // );
-        // const signature = await web3.sendAndConfirmTransaction(
-        //     this.connection,
-        //     tx,
-        //     [this.wallet],
-        // );
-
-
-        // const address = await getAssociatedTokenAddressOffCurve(
-        //     this.QPTokenMint.publicKey,
-        //     owner
-        // );
-        // const tx = await createAssociatedTokenAccountTx(
-        //     this.connection,
-        //     this.QPTokenMint.publicKey,
-        //     ,
-        //     owner,
-        //     wallet.publicKey
-        // );
-        // const signature = await this.provider.wallet.signTransaction(tx);
-        // console.log('SIGNATURE', signature);
-
-        // return await wallet.signTransaction(tx);
 
         // Create QPT Token Accounts
-        // this.qPoolQPAccount = await this.QPTokenMint!.createAssociatedTokenAccount(this.qPoolAccount);
-        // this.qPoolCurrencyAccount = await this.currencyMint.createAssociatedTokenAccount(this.qPoolAccount);
+        console.log("Flaky starts here");
         this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
             this.connection,
             this.QPTokenMint.publicKey,
             this.qPoolAccount,
             this.provider.wallet
         );
+        console.log("Goes through here")
         this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
             this.connection,
             this.currencyMint.publicKey,
             this.qPoolAccount,
             this.provider.wallet
         );
+        console.log("And end here");
 
         /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(

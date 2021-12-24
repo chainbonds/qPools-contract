@@ -166,34 +166,31 @@ describe('claim', () => {
     it("initializeQPTReserve()", async () => {
         // Initialize the QPT Reserves
         await market.initializeQPTReserve()
-        // this.qPoolQPAccount
-        // this.qPoolCurrencyAccount
     })
 
     // /* Simulate a user purchasing QPT Tokens */
-    // it("buyQPT()", async () => {
-    //     // As a new, third-party user (A), (A) wants to buy QPT!
-    //     // // Create the QPools Object
-    //     qpools = new QPoolsUser(
-    //         provider,
-    //         user,
-    //         connection,
-    //         market.qPoolAccount,
-    //         market.QPTokenMint,
-    //         market.currencyMint
-    //     );
-    //
-    //     await qpools.registerAccount();
-    //     // Simulate the user having some money
-    //     let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
-    //     console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
-    //     await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
-    //     await qpools.buyQPT(
-    //         airdropBuyAmount
-    //     );
-    //     await delay(2_000);
-    // })
-    //
+    it("buyQPT()", async () => {
+        // As a new, third-party user (A), (A) wants to buy QPT!
+        // // Create the QPools Object
+        qpools = new QPoolsUser(
+            provider,
+            connection,
+            market.qPoolAccount,
+            market.QPTokenMint,
+            market.currencyMint
+        );
+
+        // await qpools.registerAccount();
+        // // Simulate the user having some money
+        // let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
+        // console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
+        // await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
+        // await qpools.buyQPT(
+        //     airdropBuyAmount
+        // );
+        // await delay(2_000);
+    })
+
     // it("swapReserveToAllPairs()", async() => {
     //     // Start the swaps!
     //     console.log("Get market authority balance: ");

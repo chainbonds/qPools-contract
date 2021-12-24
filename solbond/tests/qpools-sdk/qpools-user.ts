@@ -3,18 +3,16 @@
  * The other qpools files will be used as an admin, and should probably not be open
  */
 import {Connection, Keypair, PublicKey, Signer, Transaction} from "@solana/web3.js";
-import {BN, Program, Provider, web3} from "@project-serum/anchor";
+import {BN, Program, Provider, Wallet, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import assert from "assert";
 import {createTokenAccount} from "../utils";
 import {getOrCreateAssociatedTokenAccount} from "../../../dapp/src/programs/anchor";
-import {
-    createAssociatedTokenAccountSend,
-    getAssociatedTokenAddress
-} from "../../../dapp/src/splpasta/tx/associated-token-account";
 import {Key} from "readline";
+import {Sign} from "crypto";
+import {getAssociatedTokenAddress, createAssociatedTokenAccountSendUnsigned} from "./splpasta/tx/associated-token-account";
 
 // can't remember what this is
 export interface Tickmap {
@@ -42,7 +40,7 @@ export class QPoolsUser {
 
     constructor(
         provider: Provider,
-        wallet: IWallet,
+        // wallet: IWallet,
         connection: Connection,
 
         bondPoolAccount: PublicKey,
@@ -51,7 +49,7 @@ export class QPoolsUser {
 
     ) {
         this.connection = connection;
-        this.wallet = wallet;
+        this.wallet = provider.wallet;
         this.solbondProgram = anchor.workspace.Solbond;
         this.provider = provider;
 
@@ -69,7 +67,7 @@ export class QPoolsUser {
             // console.log("Going to create the this.bondPoolQPTAccount");
             console.log("('''qPoolAccount) here: ", this.bondPoolAccount.toString());
             // this.provider
-            await createAssociatedTokenAccountSend(this.connection, this.QPTMint.publicKey, this.bondPoolQPTAccount, this.wallet);
+            await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.bondPoolQPTAccount, this.wallet);
             this.bondPoolQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.bondPoolAccount);
             console.log("('''qPoolCurrencyAccount) 1", this.bondPoolQPTAccount.toString());
             this.bondPoolQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.bondPoolAccount);
@@ -78,18 +76,18 @@ export class QPoolsUser {
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.bondPoolCurrencyAccount");
-            this.bondPoolCurrencyAccount = await getAssociatedTokenAddress(this.currencyMint.publicKey, this.bondPoolAccount);
+            this.bondPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(this.connection, this.currencyMint.publicKey, this.bondPoolAccount, this.wallet);
         }
         // Purchaser
         if (!this.purchaserCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.purchaserCurrencyAccount");
-            this.purchaserCurrencyAccount = await getAssociatedTokenAddress(this.currencyMint.publicKey, this.wallet.publicKey);
+            this.purchaserCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(this.connection, this.currencyMint.publicKey, this.wallet.publicKey, this.wallet);
         }
         if (!this.purchaserQPTAccount) {
             // Same for the currency mint account, if none exists
             // console.log("Going to create the this.purchaserQPTAccount");
-            this.purchaserQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.wallet.publicKey);
+            this.purchaserQPTAccount = await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.wallet.publicKey, this.wallet);
         }
     }
 
@@ -112,8 +110,7 @@ export class QPoolsUser {
         let beforeCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
         let beforeCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount;
 
-        const transactions: Transaction = new Transaction();
-        const purchaseBondInstruction =  this.solbondProgram.instruction.purchaseBond(
+        await this.solbondProgram.rpc.purchaseBond(
             new BN(currency_amount_raw),
             {
                 accounts: {
@@ -136,7 +133,8 @@ export class QPoolsUser {
                     systemProgram: web3.SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID
                 },
-                signers: [this.wallet as Signer]
+                // @ts-expect-error
+                signers: [this.provider.wallet as Keypair]
             }
         );
 

@@ -27,6 +27,7 @@ import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/mar
 import {QPoolsAdmin} from "./qpools-admin";
 import {Mint} from "../../../dapp/src/splpasta";
 import {getLiquidityByX} from "@invariant-labs/sdk/lib/math";
+import {QPair} from "./q-pair";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'
@@ -66,11 +67,13 @@ export class MockQPools extends QPoolsAdmin {
         }
 
         this.pairs = this.tokens.map((token: Token) => {
-            let pair = new Pair(
+            let pair: QPair = new QPair(
                 this.currencyMint.publicKey,
                 token.publicKey,
                 this.feeTier
             );
+            // Make the currency always tokenX
+            pair.setCurrencyMint(this.currencyMint.publicKey);
             console.log("(Currency Mint PK) First pair mint is: ", pair.tokenX.toString());
             console.log("(Other Mint PK) First pair mint is: ", pair.tokenY.toString());
             return pair

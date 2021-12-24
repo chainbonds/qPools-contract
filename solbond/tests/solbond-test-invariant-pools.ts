@@ -180,15 +180,15 @@ describe('claim', () => {
             market.currencyMint
         );
 
-        // await qpools.registerAccount();
-        // // Simulate the user having some money
-        // let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
-        // console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
-        // await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
-        // await qpools.buyQPT(
-        //     airdropBuyAmount
-        // );
-        // await delay(2_000);
+        await qpools.registerAccount();
+        // Simulate the user having some money
+        let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
+        console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
+        await qpools.buyQPT(
+            airdropBuyAmount
+        );
+        await delay(2_000);
     })
 
     // it("swapReserveToAllPairs()", async() => {

@@ -12,7 +12,11 @@ import {createTokenAccount} from "../utils";
 import {getOrCreateAssociatedTokenAccount} from "../../../dapp/src/programs/anchor";
 import {Key} from "readline";
 import {Sign} from "crypto";
-import {getAssociatedTokenAddress, createAssociatedTokenAccountSendUnsigned} from "./splpasta/tx/associated-token-account";
+import {
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccountSendUnsigned,
+    getAssociatedTokenAddressOffCurve
+} from "./splpasta/tx/associated-token-account";
 
 // can't remember what this is
 export interface Tickmap {
@@ -67,10 +71,10 @@ export class QPoolsUser {
             // console.log("Going to create the this.bondPoolQPTAccount");
             console.log("('''qPoolAccount) here: ", this.bondPoolAccount.toString());
             // this.provider
-            await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.bondPoolQPTAccount, this.wallet);
-            this.bondPoolQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.bondPoolAccount);
+            await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.bondPoolAccount, this.wallet);
+            this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
             console.log("('''qPoolCurrencyAccount) 1", this.bondPoolQPTAccount.toString());
-            this.bondPoolQPTAccount = await getAssociatedTokenAddress(this.QPTMint.publicKey, this.bondPoolAccount);
+            this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
             console.log("('''qPoolCurrencyAccount) 2", this.bondPoolQPTAccount.toString())
         }
         if (!this.bondPoolCurrencyAccount) {
@@ -110,6 +114,8 @@ export class QPoolsUser {
         let beforeCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
         let beforeCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount;
 
+        console.log("Error is: ");
+
         await this.solbondProgram.rpc.purchaseBond(
             new BN(currency_amount_raw),
             {
@@ -134,7 +140,7 @@ export class QPoolsUser {
                     tokenProgram: TOKEN_PROGRAM_ID
                 },
                 // @ts-expect-error
-                signers: [this.provider.wallet as Keypair]
+                signers: [this.provider.wallet.payer as Keypair]
             }
         );
 

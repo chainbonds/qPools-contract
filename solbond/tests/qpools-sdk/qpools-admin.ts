@@ -66,6 +66,7 @@ export class QPoolsAdmin {
         // this.invariantProgram = anchor.workspace.Amm as Program;  //  as Program<Amm>;
         this.provider = provider;
         this.currencyMint = currencyMint;
+        console.log("(Currency Mint PK) after registering in Market: ", this.currencyMint.publicKey.toString());
 
         // @ts-expect-error
         this.wallet = provider.wallet.payer as Keypair
@@ -173,7 +174,9 @@ export class QPoolsAdmin {
 
         await Promise.all(
             this.pairs.map(async (pair: Pair) => {
-                console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString());
+                // console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString());
+                console.log("(Currency Mint PK) when swapping to Pairs: ", pair.tokenX.toString());
+                console.log("(Target Mint PK) when swapping to Pairs: ", pair.tokenY.toString());
 
                 // Create token accounts for the
                 const poolAddress = await pair.getAddress(this.invariantProgram.programId);

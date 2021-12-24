@@ -119,6 +119,7 @@ describe('claim', () => {
 
     /* Initialize markets and pairs */
     it('#initializeMockedMarket()', async () => {
+        console.log("(Currency Mint PK) when creating market is: ", currencyMint.publicKey.toString());
         market = new MockQPools(
             qpAuthority,
             connection,
@@ -149,16 +150,7 @@ describe('claim', () => {
         await market.creatMarketsFromPairs(qpAuthority)
     })
     it("#provideThirdPartyLiquidity()", async () => {
-        // Provide Liquidity through a third party (this is not the bond yet)
-        // 10_000_000_000_000
-
-        // 1000000000000
-        // 2500000000000
-        // 252821720222
-
         console.log("Before amount");
-        // let liquidityProvidingAmount = (new BN(1e8)).mul(new BN(1e8));
-        // Until update, cannot use 2^64
         let liquidityProvidingAmount = new BN(2).pow(new BN(63)).subn(1);
         console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
         await market.provideThirdPartyLiquidityToAllPairs(
@@ -190,8 +182,8 @@ describe('claim', () => {
         await qpools.registerAccount();
         // Simulate the user having some money
         let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
+        console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
         await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
-        console.log("Can now proceed with buying QPT!", airdropBuyAmount.toString());
         await qpools.buyQPT(
             airdropBuyAmount
         );

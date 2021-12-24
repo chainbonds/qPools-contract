@@ -93,36 +93,14 @@ export class QPoolsUser {
             return
         }
 
-        console.log("Inputs are: ");
-        console.log(currency_amount_raw);
-        console.log({
-            bondPoolAccount: this.bondPoolAccount.toString(),
-            bondPoolRedeemableMint: this.QPTMint.publicKey.toString(),
-            bondPoolCurrencyTokenMint: this.currencyMint.publicKey.toString(),
-            bondPoolCurrencyTokenAccount: this.bondPoolCurrencyAccount.toString(),
-            bondPoolRedeemableTokenAccount: this.bondPoolQPTAccount.toString(),
-            purchaser: this.wallet.publicKey.toString(),
-            purchaserCurrencyTokenAccount: this.purchaserCurrencyAccount.toString(),
-            purchaserRedeemableTokenAccount: this.purchaserQPTAccount.toString(),
-            rent: anchor.web3.SYSVAR_RENT_PUBKEY.toString(),
-            clock: web3.SYSVAR_CLOCK_PUBKEY.toString(),
-            systemProgram: web3.SystemProgram.programId.toString(),
-            tokenProgram: TOKEN_PROGRAM_ID.toString()
-        })
-
         console.log("Sending RPC call");
+        console.log("Transfers (Before)");
+        console.log("(Currency Mint PK) when buying QPT: ", this.QPTMint.publicKey.toString());
 
         let beforeQptFromAmount = (await this.QPTMint.getAccountInfo(this.bondPoolQPTAccount)).amount;
         let beforeQptTargetAmount = (await this.QPTMint.getAccountInfo(this.purchaserQPTAccount)).amount;
         let beforeCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
         let beforeCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount;
-
-        console.log("Transfers (Before)");
-        console.log("Currency mint PK: ", this.QPTMint.publicKey.toString());
-        console.log("QPT Account From ", (await this.QPTMint.getAccountInfo(this.bondPoolQPTAccount)).amount.toString());
-        console.log("QPT Account To ", (await this.QPTMint.getAccountInfo(this.purchaserQPTAccount)).amount.toString());
-        console.log("Currency Account From ", (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount.toString());
-        console.log("Currency Account To ", (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount.toString());
 
         await this.solbondProgram.rpc.purchaseBond(
             new BN(currency_amount_raw),
@@ -155,17 +133,10 @@ export class QPoolsUser {
         let afterQptTargetAmount = (await this.QPTMint.getAccountInfo(this.purchaserQPTAccount)).amount;
         let afterCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
         let afterCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount;
-
-        console.log("Transfers (After)");
-        console.log("QPT Account From ", (await this.QPTMint.getAccountInfo(this.bondPoolQPTAccount)).amount.toString());
-        console.log("QPT Account To ", (await this.QPTMint.getAccountInfo(this.purchaserQPTAccount)).amount.toString());
-        console.log("Currency Account From ", (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount.toString());
-        console.log("Currency Account To ", (await this.currencyMint.getAccountInfo(this.bondPoolCurrencyAccount)).amount.toString());
         assert.ok(beforeCurrencyFromAmount.eq(afterQptTargetAmount), String("(T1) " + beforeQptFromAmount.toString() + " " + afterQptTargetAmount.toString()));
         assert.ok(beforeQptTargetAmount.eq(afterQptFromAmount), String("(T2) " + beforeQptTargetAmount.toString() + " " + afterQptFromAmount.toString()));
         assert.ok(beforeCurrencyFromAmount.eq(afterCurrencyTargetAmount), String("(T3) " + beforeCurrencyFromAmount.toString() + " " + afterCurrencyTargetAmount.toString()));
         assert.ok(beforeCurrencyTargetAmount.eq(afterCurrencyFromAmount), String("(T4) " + beforeCurrencyTargetAmount.toString() + " " + afterCurrencyFromAmount.toString()));
-
 
     }
 

@@ -233,11 +233,26 @@ export class QPoolsAdmin {
                 // Must create asset accounts, not QPT!!!
                 // We're not fuckily trading QPT tokens. These are only redeemed etc.!!
 
+                // TODO: Create accounts if not existent!
+
+                // const QPTokenXAccount = await getAssociatedTokenAddressOffCurve(tokenX.publicKey, this.qPoolAccount);
+                // const QPTokenYAccount = await getAssociatedTokenAddressOffCurve(tokenY.publicKey, this.qPoolAccount);
                 console.log("('''qPoolAccount) here: ", this.qPoolAccount.toString());
-                const QPTokenXAccount = await getAssociatedTokenAddress(tokenX.publicKey, this.qPoolAccount);
+                const QPTokenXAccount = await createAssociatedTokenAccountSendUnsigned(
+                    this.connection,
+                    tokenX.publicKey,
+                    this.qPoolAccount,
+                    this.provider.wallet
+                );
                 console.log("('''qPoolCurrencyAccount) 1: ", QPTokenXAccount.toString())
-                const QPTokenYAccount = await getAssociatedTokenAddress(tokenY.publicKey, this.qPoolAccount);
+                const QPTokenYAccount = await createAssociatedTokenAccountSendUnsigned(
+                    this.connection,
+                    tokenY.publicKey,
+                    this.qPoolAccount,
+                    this.provider.wallet
+                );
                 console.log("('''qPoolCurrencyAccount) 2: ", QPTokenYAccount.toString())
+
 
                 assert.ok(
                     (await tokenX.getAccountInfo(QPTokenXAccount)).mint.equals(tokenX.publicKey),

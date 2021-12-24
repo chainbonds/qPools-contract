@@ -73,9 +73,9 @@ export class QPoolsUser {
             // this.provider
             await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.bondPoolAccount, this.wallet);
             this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
-            console.log("('''qPoolCurrencyAccount) 1", this.bondPoolQPTAccount.toString());
+            console.log("('''qPoolCurrencyAccount) 1.1", this.bondPoolQPTAccount.toString());
             this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
-            console.log("('''qPoolCurrencyAccount) 2", this.bondPoolQPTAccount.toString())
+            console.log("('''qPoolCurrencyAccount) 2.1", this.bondPoolQPTAccount.toString())
         }
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists

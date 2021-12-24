@@ -191,15 +191,15 @@ describe('claim', () => {
         await delay(2_000);
     })
 
-    // it("swapReserveToAllPairs()", async() => {
-    //     // Start the swaps!
-    //     console.log("Get market authority balance: ");
-    //     console.log(await connection.getBalance(marketAuthority.publicKey));
-    //     // Where is the airdrop!! (?) // Or where is the reserve's currency amount in the first place
-    //     console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
-    //     // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
-    //     await market.swapToAllPairs(1);
-    // })
+    it("swapReserveToAllPairs()", async() => {
+        // Start the swaps!
+        console.log("Get market authority balance: ");
+        console.log(await connection.getBalance(marketAuthority.publicKey));
+        // Where is the airdrop!! (?) // Or where is the reserve's currency amount in the first place
+        console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+        // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+        await market.swapToAllPairs(1);
+    })
 
 
 

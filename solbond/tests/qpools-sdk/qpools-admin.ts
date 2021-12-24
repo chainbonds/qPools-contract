@@ -176,8 +176,12 @@ export class QPoolsAdmin {
         await Promise.all(
             this.pairs.map(async (pair: QPair) => {
                 // console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString());
-                console.log("(Currency Mint PK) when swapping to Pairs: ", pair.tokenX.toString());
-                console.log("(Target Mint PK) when swapping to Pairs: ", pair.tokenY.toString());
+                console.log("(tokenX) when swapping to Pairs: ", pair.tokenX.toString());
+                console.log("(tokenY) when swapping to Pairs: ", pair.tokenY.toString());
+
+                assert.ok(
+                    pair.tokenX.equals(pair.currencyMint) || pair.tokenY.equals(pair.currencyMint)
+                );
 
                 // Create token accounts for the
                 const poolAddress = await pair.getAddress(this.invariantProgram.programId);
@@ -190,8 +194,14 @@ export class QPoolsAdmin {
                 const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, this.wallet);
                 const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, this.wallet);
 
+                // Must create asset accounts, not QPT!!!
+                // We're not fuckily trading QPT tokens. These are only redeemed etc.!!
+
                 const QPTokenXAccount = await tokenX.createAccount(this.qPoolAccount);
                 const QPTokenYAccount = await tokenY.createAccount(this.qPoolAccount);
+                console.log("Currency and target accounts (should be re-fetched! not re-created) are");
+                console.log(QPTokenXAccount.toString());
+                console.log(QPTokenYAccount.toString());
 
                 assert.ok(
                     (await tokenX.getAccountInfo(QPTokenXAccount)).mint.equals(tokenX.publicKey),
@@ -211,12 +221,22 @@ export class QPoolsAdmin {
                     ("4 " + (await tokenY.getAccountInfo(pool.tokenYReserve)).mint.toString() + ", " + tokenY.publicKey.toString())
                 );
 
+                // One of them must be the currency account of qpools,
+                // and one of them must have some credit
+                assert.ok(
+                    ((await tokenX.getAccountInfo(QPTokenXAccount)).amount > tou64(0)) ||
+                    ((await tokenY.getAccountInfo(QPTokenYAccount)).amount > tou64(0)),
+                    String("(currency and target (tokenX and tokenY) amounts are: ) " +
+                        ((await tokenX.getAccountInfo(QPTokenXAccount)).amount) + " " +
+                        ((await tokenY.getAccountInfo(QPTokenYAccount)).amount),
+                    )
+                );
+
                 // Get the sqrt price
                 // And subtract some tolerance from this
 
                 console.log("Sqrt price is: ", pool.sqrtPrice.v.toString());
                 console.log("Liquidity provided is: ", pool.liquidity.v.toString());
-
 
                 console.log("Liquidity in X are", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toString());
                 console.log("Liquidity in Y are", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
@@ -228,6 +248,7 @@ export class QPoolsAdmin {
                 } else {
                     xToY = false
                 }
+                console.log("xToY is: ", xToY);
 
                 // const xToY = true;
                 const slippage = toDecimal(5, 1);

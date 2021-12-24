@@ -7,9 +7,6 @@ import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {createTokenAccount} from "../utils";
-import {create} from "domain";
-import {Key} from "readline";
 import assert from "assert";
 
 // can't remember what this is
@@ -63,23 +60,23 @@ export class QPoolsUser {
         if (!this.bondPoolQPTAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.bondPoolQPTAccount");
-            this.bondPoolQPTAccount = await createTokenAccount(this.provider, this.QPTMint.publicKey, this.bondPoolAccount);
+            this.bondPoolQPTAccount = await this.QPTMint.createAccount(this.bondPoolAccount);
         }
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.bondPoolCurrencyAccount");
-            this.bondPoolCurrencyAccount = await createTokenAccount(this.provider, this.currencyMint.publicKey, this.bondPoolAccount);
+            this.bondPoolCurrencyAccount = await this.currencyMint.createAccount(this.bondPoolAccount);
         }
         // Purchaser
         if (!this.purchaserCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.purchaserCurrencyAccount");
-            this.purchaserCurrencyAccount = await createTokenAccount(this.provider, this.currencyMint.publicKey, this.wallet.publicKey);
+            this.purchaserCurrencyAccount = await this.currencyMint.createAccount(this.wallet.publicKey);
         }
         if (!this.purchaserQPTAccount) {
             // Same for the currency mint account, if none exists
             // console.log("Going to create the this.purchaserQPTAccount");
-            this.purchaserQPTAccount = await createTokenAccount(this.provider, this.QPTMint.publicKey, this.wallet.publicKey);
+            this.purchaserQPTAccount = await this.QPTMint.createAccount(this.wallet.publicKey);
         }
     }
 
@@ -137,6 +134,11 @@ export class QPoolsUser {
         assert.ok(beforeQptTargetAmount.eq(afterQptFromAmount), String("(T2) " + beforeQptTargetAmount.toString() + " " + afterQptFromAmount.toString()));
         assert.ok(beforeCurrencyFromAmount.eq(afterCurrencyTargetAmount), String("(T3) " + beforeCurrencyFromAmount.toString() + " " + afterCurrencyTargetAmount.toString()));
         assert.ok(beforeCurrencyTargetAmount.eq(afterCurrencyFromAmount), String("(T4) " + beforeCurrencyTargetAmount.toString() + " " + afterCurrencyFromAmount.toString()));
+
+        // Make sure in the end that the token currency account has funds now
+        assert.ok(afterCurrencyTargetAmount > tou64(0), String("(T5)" + afterCurrencyTargetAmount.toString()));
+        console.log("Bond pool currency account is: ", this.bondPoolCurrencyAccount.toString());
+
 
     }
 

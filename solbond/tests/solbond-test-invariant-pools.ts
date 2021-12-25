@@ -201,6 +201,18 @@ describe('claim', () => {
         await market.swapReserveToAllAssetPairs(100);
     })
 
+    it("#createPositionList()", async () => {
+        await market.createPositionList()
+    });
+
+    // it("#createLiquidityPositions()", async () => {
+    //     console.log("Creating Liquidity Positions");
+    //     // First, create a position list if it doesn't exist yet
+    //     // Then, dissolve the position if it exists already, if it doesn't exist yet
+    //     // Then, create a new position, if it doesn't exist already
+    //
+    // })
+
 
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
@@ -274,48 +286,6 @@ describe('claim', () => {
 
     // Now do all the swaps ...
 
-
-    // let purchaser: PublicKey | null = null;
-    // let purchaserRedeemableTokenAccount: PublicKey | null = null;
-    // let purchaserCurrencyTokenAccount: PublicKey | null = null;
-    //
-    // // Make a purchase of the bond / staking
-    // it('#buySolbond', async () => {
-    //
-    //     let amountToBuy = 10_000_000_000;
-    //
-    //     purchaser = payer.publicKey;
-    //     purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
-    //     purchaserCurrencyTokenAccount = await bondPoolCurrencyTokenMint!.createAccount(purchaser);
-    //     await bondPoolCurrencyTokenMint.mintTo(purchaserCurrencyTokenAccount, purchaser, [], amountToBuy);
-    //
-    //     const initializeTx = await solbondProgram.rpc.purchaseBond(
-    //         new BN(amountToBuy),
-    //         {
-    //             accounts: {
-    //                 bondPoolAccount: bondPoolAccount,
-    //                 bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-    //                 bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
-    //                 bondPoolTokenAccount: bondPoolTokenAccount,
-    //                 bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
-    //                 purchaser: payer.publicKey,
-    //                 purchaserTokenAccount: purchaserCurrencyTokenAccount,
-    //                 purchaserRedeemableTokenAccount: purchaserRedeemableTokenAccount,
-    //
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //                 clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 tokenProgram: TOKEN_PROGRAM_ID
-    //             },
-    //             signers: [payer]
-    //         }
-    //     );
-    //     const tx = await provider.connection.confirmTransaction(initializeTx);
-    //     console.log("initializeTx signature", initializeTx);
-    //     console.log(tx);
-    //
-    // });
-    //
     //
     // it('#claim', async () => {
     //     const upperTick = 10

@@ -1,4 +1,13 @@
-import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
+import {
+    Connection,
+    Keypair,
+    PublicKey,
+    Signer,
+    SystemProgram,
+    SYSVAR_RENT_PUBKEY,
+    Transaction,
+    TransactionInstruction
+} from "@solana/web3.js";
 import {BN, Program, Provider, utils, Wallet, web3} from "@project-serum/anchor";
 import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
@@ -10,7 +19,7 @@ import {
     MIN_TICK,
     Network,
     Pair,
-    SEED,
+    SEED, signAndSend,
     TICK_LIMIT, tou64
 } from "@invariant-labs/sdk";
 import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
@@ -207,7 +216,7 @@ export class QPoolsAdmin {
      *
      * @param initializer
      */
-    async swapReserveToAllAssetPairs(amount) {
+    async swapReserveToAllAssetPairs(amount, backToCurrency = false) {
 
         await Promise.all(
             this.pairs.map(async (pair: QPair) => {
@@ -300,7 +309,7 @@ export class QPoolsAdmin {
 
                 // Not entirely sure what this is!
                 let xToY: boolean;
-                if (tokenX.publicKey.equals(pair.currencyMint)) {
+                if ((!backToCurrency) && tokenX.publicKey.equals(pair.currencyMint)) {
                     xToY = true
                 } else {
                     xToY = false
@@ -487,39 +496,99 @@ export class QPoolsAdmin {
             })
         )
 
-        // TODO: Create Position
+    }
 
-        // TODO: Close Position
+    // TODO: Create Position
 
-        // TODO: Claim Fee
+    // TODO: Close Position
 
-        // TODO: Swap assets to currency
+    // TODO: Claim Fee
 
-        // TODO: Redeem Bond
+    // TODO: Redeem Bond
 
-        // pub fn swap_pair(
-        //     ctx: Context<SwapPairInstruction>,
+    // Later on we should probably remove initializer from the seeds completely, then anyone can call this
+    // And the user could prob get some governance tokens out of it ... Actually not needed, because the generating program is the owner of this by default
 
-        // )
+    /**
+     * Swap assets back from the liquidity-pool assets
+     * back to the currency asset
+     * @param amount
+     */
+    async swapAllAssetPairsToReserve(amount) {
+        return this.swapReserveToAllAssetPairs(amount, true);
+    }
 
-        // Later on we should probably remove initializer from the seeds completely, then anyone can call this
-        // And the user could prob get some governance tokens out of it ...
+    async getPositionListSeeds(owner: PublicKey) {
+        const POSITION_LIST_SEED = 'positionlistv1';
+        const [positionListAddress, positionListBump] = await PublicKey.findProgramAddress(
+            [Buffer.from(utils.bytes.utf8.encode(POSITION_LIST_SEED)), owner.toBuffer()],
+            this.solbondProgram.programId
+        )
+        return {
+            positionListAddress,
+            positionListBump
+        }
+    }
 
-        // initializer
-        // pool
-        // state
-        // tickmap
-        // token_x_mint
-        // token_y_mint
-        // reserve_account_x
-        // reserve_account_y
-        // account_x
-        // account_y
-        // program_authority
-        // token_program
-        // invariant_program
-        // system_program
+    async createPositionList() {
 
+        const { positionListAddress, positionListBump } = await this.mockMarket.getPositionListAddress(
+            this.qPoolAccount
+        );
+
+        const ix = this.invariantProgram.instruction.createPositionList(positionListBump, {
+            accounts: {
+                positionList: positionListAddress,
+                owner: this.qPoolAccount,
+                signer: this.wallet.publicKey,
+                rent: SYSVAR_RENT_PUBKEY,
+                systemProgram: SystemProgram.programId
+            }
+        }) as TransactionInstruction
+
+        // const ix = await this.mockMarket.createPositionListInstruction(this.qPoolAccount);
+        await signAndSend(new Transaction().add(ix), [this.wallet], this.connection);
+
+        // await this.mockMarket.createPositionList(this.qPoolAccount);
+        //
+        // const { positionListAddress, positionListBump } = await this.getPositionListSeeds(
+        //     this.qPoolAccount
+        // );
+        //
+        // console.log("Who cannot sign?");
+        // console.log(
+        //     positionListBump,
+        //     this.bumpQPoolAccount,
+        //     {
+        //         accounts: {
+        //             positionList: positionListAddress.toString(),
+        //             bondPoolAccount: this.qPoolAccount.toString(),
+        //             signer: this.wallet.publicKey.toString(),
+        //             invariantProgram: this.invariantProgram.programId.toString(),
+        //         },
+        //         signers: [this.wallet]
+        //     }
+        // );
+        //
+        // // Get a PDA for the position list
+        // const tx = await this.solbondProgram.rpc.createLiquidityPositionList(
+        //     positionListBump,
+        //     this.bumpQPoolAccount,
+        //     {
+        //         accounts: {
+        //             positionList: positionListAddress,
+        //             bondPoolAccount: this.qPoolAccount,
+        //             signer: this.wallet.publicKey,
+        //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        //             systemProgram: web3.SystemProgram.programId,
+        //             invariantProgram: this.invariantProgram.programId,
+        //             clock: web3.SYSVAR_CLOCK_PUBKEY,
+        //             tokenProgram: TOKEN_PROGRAM_ID,
+        //         },
+        //         signers: [this.wallet]
+        //     }
+        // );
+        // await this.connection.confirmTransaction(tx);
     }
 
 

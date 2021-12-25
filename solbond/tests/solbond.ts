@@ -67,9 +67,9 @@ describe('solbond', () => {
                 accounts: {
                     bondPoolAccount: bondPoolAccount,
                     bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-                    bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
+                    // bondPoolTokenMint: bondPoolCurrencyTokenMint!.publicKey,
                     bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
-                    bondPoolTokenAccount: bondPoolTokenAccount,
+                    // bondPoolTokenAccount: bondPoolTokenAccount,
                     initializer: payer.publicKey,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,

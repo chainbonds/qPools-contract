@@ -121,8 +121,8 @@ pub fn handler(
 
     amm::cpi::swap(
         CpiContext::new_with_signer(
-        invariant_program,
-        swap_accounts,
+            invariant_program,
+            swap_accounts,
         &[
                 [
                     ctx.accounts.initializer.key.as_ref(), b"bondPoolAccount",

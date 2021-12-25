@@ -147,19 +147,6 @@ pub mod solbond {
     * Register all the pools that are defined by invariant
     *
     */
-    pub fn register_invariant_pools(
-        ctx: Context<RegisterInvariantPools>,
-        _bump_pool_list: u8,
-        weights: [u64; 5]
-    ) -> ProgramResult {
-
-        // For now assume that our portfolio has an equal weight across all pools
-        instructions::register_invariant_pools::handler(
-            ctx,
-            _bump_pool_list,
-            weights
-        )
-    }
     pub fn swap_pair(
         ctx: Context<SwapPairInstruction>,
         _bump_bond_pool_account: u8,
@@ -177,30 +164,33 @@ pub mod solbond {
             sqrt_price_limit,
         )
     }
-    // /**
-    // * Register the state needed to make CPI calls to Invariant
-    // */
-    // pub fn register_invariant_instruction(
-    //     ctx: Context<RegisterInvariantInstruction>,
-    //     _bump_position: u8,
-    //     _curr_idx: u32,
-    //     _max_idx: u32,
-    //     _weight: u32,
-    // ) -> ProgramResult {
-    //     instructions::register_invariant_instruction::handler(ctx, _bump_position, _curr_idx, _max_idx, _weight)
-    // }
+
 
     /**
      * Register all the pools that are defined by invariant
      *
      */
-    pub fn deposit_reserve_to_pools(
-        ctx: Context<DepositReserveToPools>
+    pub fn create_liquidity_position(
+        ctx: Context<CreateLiquidityPosition>
     ) -> ProgramResult {
 
         // For now assume that our portfolio has an equal weight across all pools
-        instructions::deposit_reserve_to_pools::handler(
-            ctx
+        instructions::create_liquidity_position::handler(
+            ctx,
+        )
+    }
+
+    pub fn create_liquidity_position_list(
+        ctx: Context<CreateLiquidityPositionList>,
+        position_list_bump: u8,
+        _bump_bond_pool_account: u8
+    ) -> ProgramResult {
+
+        // For now assume that our portfolio has an equal weight across all pools
+        instructions::create_liquidity_position_list::handler(
+            ctx,
+            position_list_bump,
+            _bump_bond_pool_account
         )
     }
 

@@ -178,12 +178,8 @@ pub mod solbond {
         _bump_bond_pool_account: u8,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
-        _liquidity_delta: u128
+        liquidity_delta: u128
     ) -> ProgramResult {
-
-        let liquidity_delta: Decimal = Decimal {
-            v: _liquidity_delta
-        };
 
         // For now assume that our portfolio has an equal weight across all pools
         instructions::create_liquidity_position::handler(

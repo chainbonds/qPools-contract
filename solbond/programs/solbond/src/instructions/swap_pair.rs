@@ -136,5 +136,7 @@ pub fn handler(
         sqrt_price_limit
     )?;
 
+    msg!("swap seems to have gone through!");
+
     Ok(())
 }

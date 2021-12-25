@@ -324,12 +324,14 @@ export class QPoolsAdmin {
 
                 // pool.sqrtPrice.v.sub(new BN(500_000_000_000))
 
+                let byAmountIn = false;
+
                 // Now run the RPC Call
                 console.log("Inputs are: ");
                 console.log("Inputs are: ",
                     this.bumpQPoolAccount,
                     // xToY: bool,
-                    true,
+                    byAmountIn,
                     // amount: u64,
                     new BN(amount).toString(),
                     // by_amount_in: bool,
@@ -398,7 +400,7 @@ export class QPoolsAdmin {
                     // amount: u64,
                     new BN(amount),
                     // by_amount_in: bool,
-                    true,
+                    byAmountIn,
                     // sqrt_price_limit: u128,
                     // 1_000_000_000_000
                     priceLimit,

@@ -22,7 +22,7 @@ import {
     SEED, signAndSend,
     TICK_LIMIT, tou64
 } from "@invariant-labs/sdk";
-import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
+import {CreatePool, Decimal, FeeTier, InitPosition, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {createStandardFeeTiers, createToken} from "../invariant-utils";
@@ -33,7 +33,7 @@ import {Key} from "readline";
 import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {UnderlyingSinkAbortCallback} from "stream/web";
-import {calculatePriceAfterSlippage} from "@invariant-labs/sdk/lib/math";
+import {calculatePriceAfterSlippage, isInitialized} from "@invariant-labs/sdk/lib/math";
 import {getInvariantProgram} from "./program";
 import {QPair} from "./q-pair";
 import {
@@ -547,48 +547,107 @@ export class QPoolsAdmin {
         }) as TransactionInstruction
 
         // const ix = await this.mockMarket.createPositionListInstruction(this.qPoolAccount);
-        await signAndSend(new Transaction().add(ix), [this.wallet], this.connection);
+        const tx = await signAndSend(new Transaction().add(ix), [this.wallet], this.connection);
+        await this.connection.confirmTransaction(tx);
 
-        // await this.mockMarket.createPositionList(this.qPoolAccount);
-        //
-        // const { positionListAddress, positionListBump } = await this.getPositionListSeeds(
-        //     this.qPoolAccount
-        // );
-        //
-        // console.log("Who cannot sign?");
-        // console.log(
-        //     positionListBump,
-        //     this.bumpQPoolAccount,
-        //     {
-        //         accounts: {
-        //             positionList: positionListAddress.toString(),
-        //             bondPoolAccount: this.qPoolAccount.toString(),
-        //             signer: this.wallet.publicKey.toString(),
-        //             invariantProgram: this.invariantProgram.programId.toString(),
-        //         },
-        //         signers: [this.wallet]
-        //     }
-        // );
-        //
-        // // Get a PDA for the position list
-        // const tx = await this.solbondProgram.rpc.createLiquidityPositionList(
-        //     positionListBump,
-        //     this.bumpQPoolAccount,
-        //     {
-        //         accounts: {
-        //             positionList: positionListAddress,
-        //             bondPoolAccount: this.qPoolAccount,
-        //             signer: this.wallet.publicKey,
-        //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        //             systemProgram: web3.SystemProgram.programId,
-        //             invariantProgram: this.invariantProgram.programId,
-        //             clock: web3.SYSVAR_CLOCK_PUBKEY,
-        //             tokenProgram: TOKEN_PROGRAM_ID,
-        //         },
-        //         signers: [this.wallet]
-        //     }
-        // );
-        // await this.connection.confirmTransaction(tx);
+    }
+
+    async createPositions() {
+
+        // For each pair, create a position!
+        await Promise.all(
+            this.pairs.map(async (pair: Pair) => {
+                    console.log()
+
+                // Ticks should be well-defined for now!
+                const lowerTick = -50;
+                const upperTick = 50;
+
+                const [tickmap, pool] = await Promise.all([this.mockMarket.getTickmap(pair), this.mockMarket.get(pair)])
+
+                const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
+                const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)
+
+                const tx = new Transaction();
+
+                // TODO: Who is the owner here
+                // Let's assume its the reserve / qPoolAccount
+                if (!lowerExists) {
+                    tx.add(await this.mockMarket.createTickInstruction(pair, lowerTick, this.qPoolAccount));
+                }
+                if (!upperExists) {
+                    tx.add(await this.mockMarket.createTickInstruction(pair, upperTick, this.qPoolAccount));
+                }
+
+                const { positionListAddress } = await this.mockMarket.getPositionListAddress(this.qPoolAccount);
+                const account = await this.connection.getAccountInfo(positionListAddress);
+
+                if (account === null) {
+                    tx.add(await this.mockMarket.createPositionListInstruction(this.qPoolAccount));
+                }
+
+                await signAndSend(tx, [this.wallet], this.connection);
+
+                // Now make the CPI call to our contract
+
+                // Now make the CPI call
+
+                // Get the userTokenX
+                // Get the userTokenY
+
+                // SpecifyLiquidityDelta
+                // LiquidityDelta
+                // Specify lowerTick
+                // Make a transaction, then send everything to
+                // const initializePositionStruct: InitPosition = {
+                //     liquidityDelta: undefined,
+                //     lowerTick: lowerTick,
+                //     owner: this.qPoolAccount,
+                //     pair: pair,
+                //     upperTick: upperTick,
+                //     userTokenX: undefined,
+                //     userTokenY: undefined
+                //
+                // };
+                // tx.add(await this.mockMarket.initPositionInstruction(initializePositionStruct, account === null));
+
+
+                // const tx = new Transaction()
+                //
+                // if (!lowerExists) {
+                //     tx.add(await this.mockMarket.createTickInstruction(pair, lowerTick, owner))
+                // }
+                // if (!upperExists) {
+                //     tx.add(await this.mockMarket.createTickInstruction(pair, upperTick, owner))
+                // }
+                //
+                // const ix = this.invariantProgram.instruction.createLiquidityPosition(
+                //     _position_bump: u8,
+                //     _lower_tick_index: i32,
+                //     _upper_tick_index: i32,
+                //     liquidity_delta: Decimal
+                //     {
+                //         accounts: {
+                //             positionList: positionListAddress,
+                //             owner: this.qPoolAccount,
+                //             signer: this.wallet.publicKey,
+                //             rent: SYSVAR_RENT_PUBKEY,
+                //             systemProgram: SystemProgram.programId
+                //         }
+                //     }
+                // ) as TransactionInstruction;
+                //
+                // await signAndSend(tx, [signer], this.connection)
+                // // const ix = await this.mockMarket.createPositionListInstruction(this.qPoolAccount);
+                // // const tx = await signAndSend(new Transaction().add(ix), [this.wallet], this.connection);
+                // await this.connection.confirmTransaction(tx);
+                //
+                // create_liquidity_position()
+
+                }
+            )
+        );
+
     }
 
 

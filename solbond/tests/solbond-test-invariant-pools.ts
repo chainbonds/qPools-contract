@@ -205,6 +205,10 @@ describe('claim', () => {
         await market.createPositionList()
     });
 
+    it("#createPositionList()", async () => {
+        await market.createPositions()
+    });
+
     // it("#createLiquidityPositions()", async () => {
     //     console.log("Creating Liquidity Positions");
     //     // First, create a position list if it doesn't exist yet

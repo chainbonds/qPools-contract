@@ -8,6 +8,7 @@ use anchor_spl::token::{Token};
 
 use instructions::*;
 use state::*;
+use amm::{self, Decimal, Tickmap, State, Pool, Tick, Position, PositionList};
 
 // declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
 // declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
@@ -170,27 +171,28 @@ pub mod solbond {
      * Register all the pools that are defined by invariant
      *
      */
+    // Should probably import the Decimal types?
     pub fn create_liquidity_position(
-        ctx: Context<CreateLiquidityPosition>
+        ctx: Context<CreateLiquidityPosition>,
+        _position_bump: u8,
+        _bump_bond_pool_account: u8,
+        _lower_tick_index: i32,
+        _upper_tick_index: i32,
+        _liquidity_delta: u128
     ) -> ProgramResult {
+
+        let liquidity_delta: Decimal = Decimal {
+            v: _liquidity_delta
+        };
 
         // For now assume that our portfolio has an equal weight across all pools
         instructions::create_liquidity_position::handler(
             ctx,
-        )
-    }
-
-    pub fn create_liquidity_position_list(
-        ctx: Context<CreateLiquidityPositionList>,
-        position_list_bump: u8,
-        _bump_bond_pool_account: u8
-    ) -> ProgramResult {
-
-        // For now assume that our portfolio has an equal weight across all pools
-        instructions::create_liquidity_position_list::handler(
-            ctx,
-            position_list_bump,
-            _bump_bond_pool_account
+            _position_bump,
+            _bump_bond_pool_account,
+            _lower_tick_index,
+            _upper_tick_index,
+            liquidity_delta
         )
     }
 

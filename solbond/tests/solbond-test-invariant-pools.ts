@@ -198,11 +198,8 @@ describe('claim', () => {
         // Where is the airdrop!! (?) // Or where is the reserve's currency amount in the first place
         console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
         // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
-        await market.swapToAllPairs(1);
+        await market.swapReserveToAllAssetPairs(100);
     })
-
-
-
 
 
     // it("#swapWithInvariant()", async () => {

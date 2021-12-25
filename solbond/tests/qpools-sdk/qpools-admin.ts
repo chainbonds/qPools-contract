@@ -15,7 +15,7 @@ import {
 } from "@invariant-labs/sdk";
 import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
-import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {Token, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {createStandardFeeTiers, createToken} from "../invariant-utils";
 import {FEE_TIERS, fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
 import {createMint, createTokenAccount} from "../utils";
@@ -207,7 +207,7 @@ export class QPoolsAdmin {
      *
      * @param initializer
      */
-    async swapToAllPairs(amount) {
+    async swapReserveToAllAssetPairs(amount) {
 
         await Promise.all(
             this.pairs.map(async (pair: QPair) => {
@@ -238,6 +238,12 @@ export class QPoolsAdmin {
                 // const QPTokenXAccount = await getAssociatedTokenAddressOffCurve(tokenX.publicKey, this.qPoolAccount);
                 // const QPTokenYAccount = await getAssociatedTokenAddressOffCurve(tokenY.publicKey, this.qPoolAccount);
                 console.log("('''qPoolAccount) here: ", this.qPoolAccount.toString());
+                // createAssociatedTokenAccountSendUnsigned(
+                //     this.connection,
+                //     this.QPTMint.publicKey,
+                //     this.bondPoolAccount,
+                //     this.wallet
+                // )
                 const QPTokenXAccount = await createAssociatedTokenAccountSendUnsigned(
                     this.connection,
                     tokenX.publicKey,
@@ -355,15 +361,37 @@ export class QPoolsAdmin {
                     }
                 )
 
+                let beforeFromCurrency: u64;
+                let beforeToCurrency: u64;
+                let beforeFromAsset: u64;
+                let beforeToAsset: u64;
+
                 console.log("Swaps (Before)");
-                console.log("Currency PK is: ", pair.tokenX.toString());
-                console.log("Currency Account From ", (await tokenX.getAccountInfo(QPTokenXAccount)).amount.toString());
-                console.log("Currency Account To ", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toString());
+                if (xToY) {
+                    console.log("Currency PK is: ", pair.tokenX.toString());
+                    beforeFromCurrency = (await tokenX.getAccountInfo(QPTokenXAccount)).amount;
+                    console.log("Currency Account From ", beforeFromCurrency.toString());
+                    beforeToCurrency = (await tokenX.getAccountInfo(pool.tokenXReserve)).amount;
+                    console.log("Currency Account To ", beforeToCurrency.toString());
 
-                console.log("Target Token From ", (await tokenY.getAccountInfo(QPTokenYAccount)).amount.toString());
-                console.log("Target Token To ", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
+                    beforeFromAsset = (await tokenY.getAccountInfo(QPTokenYAccount)).amount;
+                    console.log("Target Token From ", beforeFromAsset.toString());
+                    beforeToAsset = (await tokenY.getAccountInfo(pool.tokenYReserve)).amount;
+                    console.log("Target Token To ", beforeToAsset.toString());
+                } else {
+                    console.log("Currency PK is: ", pair.tokenY.toString());
+                    beforeFromCurrency = (await tokenY.getAccountInfo(QPTokenYAccount)).amount;
+                    console.log("Currency Account From ", beforeFromCurrency.toString());
+                    beforeToCurrency = (await tokenY.getAccountInfo(pool.tokenYReserve)).amount;
+                    console.log("Currency Account To ", beforeToCurrency.toString());
 
-                await this.solbondProgram.rpc.swapPair(
+                    beforeFromAsset = (await tokenX.getAccountInfo(QPTokenXAccount)).amount;
+                    console.log("Target Token From  ", beforeFromAsset.toString());
+                    beforeToAsset = (await tokenX.getAccountInfo(pool.tokenXReserve)).amount;
+                    console.log("Target Token To  ", beforeToAsset.toString());
+                }
+
+                const tx = await this.solbondProgram.rpc.swapPair(
                     this.bumpQPoolAccount,
                     // xToY: boolea,
                     xToY,
@@ -402,18 +430,70 @@ export class QPoolsAdmin {
                         signers: [this.wallet]
                     }
                 );
+                await this.connection.confirmTransaction(tx);
+                console.log("Transaction id is: ", tx);
+                await delay(5_000);
 
+                let afterFromCurrency: u64;
+                let afterToCurrency: u64;
+                let afterFromAsset: u64;
+                let afterToAsset: u64;
 
                 console.log("Swaps (After)");
-                console.log("Currency Account From ", (await tokenX.getAccountInfo(QPTokenXAccount)).amount.toString());
-                console.log("Currency Account To ", (await tokenX.getAccountInfo(pool.tokenXReserve)).amount.toString());
+                if (xToY) {
+                    afterFromCurrency = (await tokenX.getAccountInfo(QPTokenXAccount)).amount;
+                    console.log("Currency Account From ", afterFromCurrency.toString());
+                    afterToCurrency = (await tokenX.getAccountInfo(pool.tokenXReserve)).amount;
+                    console.log("Currency Account To ", afterToCurrency.toString());
 
-                console.log("Target Token From ", (await tokenY.getAccountInfo(QPTokenYAccount)).amount.toString());
-                console.log("Target Token To ", (await tokenY.getAccountInfo(pool.tokenYReserve)).amount.toString());
+                    afterFromAsset = (await tokenY.getAccountInfo(QPTokenYAccount)).amount;
+                    console.log("Target Token From ", afterFromAsset.toString());
+                    afterToAsset = (await tokenY.getAccountInfo(pool.tokenYReserve)).amount;
+                    console.log("Target Token To ", afterToAsset.toString());
+                } else {
+                    afterFromCurrency = (await tokenY.getAccountInfo(QPTokenYAccount)).amount;
+                    console.log("Currency Account From ", afterFromCurrency.toString());
+                    afterToCurrency = (await tokenY.getAccountInfo(pool.tokenYReserve)).amount;
+                    console.log("Currency Account To ", afterToCurrency.toString());
 
+                    afterFromAsset = (await tokenX.getAccountInfo(QPTokenXAccount)).amount;
+                    console.log("Target Token From  ", afterFromAsset.toString());
+                    afterToAsset = (await tokenX.getAccountInfo(pool.tokenXReserve)).amount;
+                    console.log("Target Token To  ", afterToAsset.toString());
+                }
+
+                // assert.ok(
+                //     beforeFromCurrency.eq(afterToCurrency)
+                // )
+                // assert.ok(
+                //     beforeToCurrency.eq(afterFromAsset)
+                // )
+                // assert.ok(
+                //     beforeFromAsset.eq(afterToAsset)
+                // )
+                // assert.ok(
+                //     beforeToAsset.eq(afterFromCurrency)
+                // )
+
+                // afterFromCurrency
+                // afterToCurrency
+                // afterFromAsset
+                // afterToAsset
+
+                // TODO: This does not work properly!! Get back to this in a bit!!
 
             })
         )
+
+        // TODO: Create Position
+
+        // TODO: Close Position
+
+        // TODO: Claim Fee
+
+        // TODO: Swap assets to currency
+
+        // TODO: Redeem Bond
 
         // pub fn swap_pair(
         //     ctx: Context<SwapPairInstruction>,

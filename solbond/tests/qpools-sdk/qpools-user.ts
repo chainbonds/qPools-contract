@@ -71,16 +71,22 @@ export class QPoolsUser {
             // console.log("Going to create the this.bondPoolQPTAccount");
             console.log("('''qPoolAccount) here: ", this.bondPoolAccount.toString());
             // this.provider
-            await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.bondPoolAccount, this.wallet);
-            this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
-            console.log("('''qPoolCurrencyAccount) 1.1", this.bondPoolQPTAccount.toString());
-            this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
-            console.log("('''qPoolCurrencyAccount) 2.1", this.bondPoolQPTAccount.toString())
+            this.bondPoolQPTAccount = await createAssociatedTokenAccountSendUnsigned(this.connection, this.QPTMint.publicKey, this.bondPoolAccount, this.wallet);
+            // console.log("('''qPoolCurrencyAccount) 1.0", this.bondPoolQPTAccount.toString());
+            // this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
+            // console.log("('''qPoolCurrencyAccount) 1.1", this.bondPoolQPTAccount.toString());
+            // this.bondPoolQPTAccount = await getAssociatedTokenAddressOffCurve(this.QPTMint.publicKey, this.bondPoolAccount);
+            // console.log("('''qPoolCurrencyAccount) 2.1", this.bondPoolQPTAccount.toString())
         }
         if (!this.bondPoolCurrencyAccount) {
             // Create the reserve account, if none exists
             // console.log("Going to create the this.bondPoolCurrencyAccount");
             this.bondPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(this.connection, this.currencyMint.publicKey, this.bondPoolAccount, this.wallet);
+            console.log("('''qPoolCurrencyAccount) 1.0", this.bondPoolCurrencyAccount.toString());
+            this.bondPoolCurrencyAccount = await getAssociatedTokenAddressOffCurve(this.currencyMint.publicKey, this.bondPoolAccount);
+            console.log("('''qPoolCurrencyAccount) 1.1", this.bondPoolCurrencyAccount.toString());
+            this.bondPoolCurrencyAccount = await getAssociatedTokenAddressOffCurve(this.currencyMint.publicKey, this.bondPoolAccount);
+            console.log("('''qPoolCurrencyAccount) 2.1", this.bondPoolCurrencyAccount.toString())
         }
         // Purchaser
         if (!this.purchaserCurrencyAccount) {

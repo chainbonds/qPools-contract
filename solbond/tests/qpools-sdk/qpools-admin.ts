@@ -608,6 +608,7 @@ export class QPoolsAdmin {
                         [Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)), this.qPoolAccount.toBuffer(), indexBuffer],
                         this.invariantProgram.programId
                     )
+                    console.log("invariant program id is: ", this.invariantProgram.programId.toString());
                     // console.log("Owning account: ", this.invariantProgram.programId.toString());
                     // console.log("Owning account: ", this.solbondProgram.programId);
 

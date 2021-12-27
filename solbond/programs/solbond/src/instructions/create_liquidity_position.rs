@@ -32,7 +32,7 @@ pub struct CreateLiquidityPosition<'info> {
     pub initializer: AccountInfo<'info>,
     // Seeds constraint violated it says!
     // #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
-    pub state: AccountLoader<'info, State>,
+    pub state: AccountInfo<'info>,
     // #[account(mut)]
     // associated_token::authority = program_authority.key,
     // #[account(
@@ -52,7 +52,7 @@ pub struct CreateLiquidityPosition<'info> {
     //     bump = pool.load()?.bump
     // )]
     #[account(mut)]
-    pub pool: AccountLoader<'info, Pool>,
+    pub pool: AccountInfo<'info>,
     // Seeds constraint violated it says!
     // #[account(
     //     mut,
@@ -60,7 +60,7 @@ pub struct CreateLiquidityPosition<'info> {
     //     bump = position_list.load()?.bump
     // )]
     #[account(mut)]
-    pub position_list: AccountLoader<'info, PositionList>,
+    pub position_list: AccountInfo<'info>,
     #[account(
         mut,
         seeds=[initializer.key.as_ref(), b"bondPoolAccount"],
@@ -73,42 +73,43 @@ pub struct CreateLiquidityPosition<'info> {
     //     bump = lower_tick.load()?.bump
     // )]
     #[account(mut)]
-    pub lower_tick: AccountLoader<'info, Tick>,
+    pub lower_tick: AccountInfo<'info>,
     // Seeds constraint violated it says!
     // #[account(mut,
     //     seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
     //     bump = upper_tick.load()?.bump
     // )]
     #[account(mut)]
-    pub upper_tick: AccountLoader<'info, Tick>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
-    pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
-    pub token_y: Account<'info, Mint>,
-    #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key,
-        constraint = &account_x.owner == owner.key,
-    )]
-    pub account_x: Box<Account<'info, TokenAccount>>,
-    #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key
-    )]
-    pub account_y: Box<Account<'info, TokenAccount>>,
-    #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key,
-        constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
-    )]
-    pub reserve_x: Box<Account<'info, TokenAccount>>,
-    #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key,
-        constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
-    )]
-    pub reserve_y: Box<Account<'info, TokenAccount>>,
-
-    #[account(constraint = &state.load()?.authority == program_authority.key)]
+    pub upper_tick: AccountInfo<'info>,
+    // #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
+    #[account(mut)]
+    pub token_x: AccountInfo<'info>,
+    // #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
+    #[account(mut)]
+    pub token_y: AccountInfo<'info>,
+    // #[account(mut,
+    //     constraint = &account_x.mint == token_x.to_account_info().key,
+    //     constraint = &account_x.owner == owner.key,
+    // )]
+    #[account(mut)]
+    pub account_x: AccountInfo<'info>,
+    // #[account(mut,
+    //     constraint = &account_y.mint == token_y.to_account_info().key,
+    //     constraint = &account_y.owner == owner.key
+    // )]
+    #[account(mut)]
+    pub account_y: AccountInfo<'info>,
+    // constraint = &reserve_x.mint == token_x.to_account_info().key,
+    // constraint = &reserve_x.owner == program_authority.key,
+    // constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
+    #[account(mut)]
+    pub reserve_x: AccountInfo<'info>,
+    // constraint = &reserve_y.mint == token_y.to_account_info().key,
+    // constraint = &reserve_y.owner == program_authority.key,
+    // constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
+    #[account(mut)]
+    pub reserve_y: AccountInfo<'info>,
+    // #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -170,6 +171,10 @@ pub fn handler(
         system_program: ctx.accounts.system_program.to_account_info(),
     };
     let invariant_program = ctx.accounts.invariant_program.to_account_info();
+
+    // Try borrow lamports to pay for account initialization of the position if not existent
+    // **ctx.accounts.initializer.to_account_info().try_borrow_mut_lamports()? -= 100_000;
+    // **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += 100_000;
 
     amm::cpi::create_position(
         CpiContext::new_with_signer(

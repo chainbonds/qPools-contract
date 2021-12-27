@@ -604,8 +604,12 @@ export class QPoolsAdmin {
                     const index = 0;  // TODO: Gotta find index first
                     const indexBuffer = Buffer.alloc(4)
                     indexBuffer.writeInt32LE(0);
+                    // Should not have wallet as seed,
+                    // but should have
+                    //
                     const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
                         [Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)), this.qPoolAccount.toBuffer(), indexBuffer],
+                        // this.invariantProgram.programId
                         this.invariantProgram.programId
                     )
                     console.log("invariant program id is: ", this.invariantProgram.programId.toString());

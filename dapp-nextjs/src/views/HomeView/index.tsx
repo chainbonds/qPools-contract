@@ -17,12 +17,12 @@ export const HomeView: FC = ({}) => {
             className="h-screen h-full w-full w-screen flex text-white flex-col"
             style={{ backgroundColor: "#1a202c" }}
         >
-            {/* Import the header first */}
-
             <Header />
-
-            {/*<Main/>*/}
-
+            <Main/>
+            {/*<div*/}
+            {/*    id="content"*/}
+            {/*    className="flex flex-col md:flex-row w-full grow my-auto"*/}
+            {/*> </div>*/}
             <Footer/>
         </div>
     );

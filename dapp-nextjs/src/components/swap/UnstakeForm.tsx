@@ -9,7 +9,6 @@ import {Wallet} from "../../splpasta";
 // import {solbondProgram} from "../../programs/solbond";
 // import {getTokenList} from "../../const";
 import {AiOutlineArrowDown} from "react-icons/ai";
-import Image from "next/image";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
 

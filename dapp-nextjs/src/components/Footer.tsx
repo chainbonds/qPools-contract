@@ -15,7 +15,7 @@ export const Footer: FC = ({}) => {
                     className={"mx-5"}
                 />
                 <SocialIcon
-                    url={"https://twitter.com/chainbonds"}
+                    url={"https://twitter.com/qpoolsfinance"}
                     className={"mx-5"}
                 />
                 <SocialIcon

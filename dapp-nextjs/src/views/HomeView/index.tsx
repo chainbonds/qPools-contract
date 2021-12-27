@@ -1,4 +1,4 @@
-import {FC} from "react";
+import React, {FC} from "react";
 import {useWallet} from "@solana/wallet-adapter-react";
 import {Header} from "../../components/Header";
 import {Footer} from "../../components/Footer";

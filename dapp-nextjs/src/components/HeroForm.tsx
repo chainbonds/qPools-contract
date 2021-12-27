@@ -66,7 +66,10 @@ export default function HeroForm(props: any) {
 
     return (
         <>
-            <div className={"flex flex-col items-end justify-center mx-auto 2xl:pt-52"}>
+            {/*pt-64*/}
+            {/*px-auto*/}
+            {/*align-bottom*/}
+            <div className={"flex flex-col justify-center mx-auto 2xl:align-middle"}>
                 { stakingFormNavbar() }
                 { (displayForm === HeroFormState.Stake) && <StakeForm /> }
                 { (displayForm === HeroFormState.Unstake) && <UnstakeForm /> }

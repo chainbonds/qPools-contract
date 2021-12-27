@@ -5,14 +5,15 @@ export const HeroLeft: FC = ({}) => {
 
     return (
         <div className={"2xl:ml-40"}>
-            <div className={"px-1 pt-10 md:pt-0 2xl:pt-56"}>
+            {/*md:pt-0*/}
+            <div className={"px-1 pt-10 2xl:pt-44"}>
                 <div className={"text-center md:text-left"}>
-                    <h1 className="absolute text-5xl lg:text-7xl font-bold transform -translate-x-1 -translate-y-1">
+                    <h1 className="invisible md:visible absolute text-5xl lg:text-7xl font-bold transform -translate-x-1 -translate-y-1">
                         Generate Yields
                         <br/>
                         Stay Liquid
                     </h1>
-                    <h1 className="text-5xl lg:text-7xl font-bold text-pink-500">
+                    <h1 className="text-5xl lg:text-7xl font-bold text-white md:text-pink-500">
                         Generate Yields
                         <br/>
                         Stay Liquid

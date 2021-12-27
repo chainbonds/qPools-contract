@@ -10,7 +10,7 @@ export const HomeView: FC = ({}) => {
     const onClick = () => {};
 
     return (
-        <div className={"bg-gray-800 min-h-full w-full space-y-between flex flex-col"}>
+        <div className={"bg-gray-800 min-h-full w-full space-y-between flex flex-col mx-auto"}>
             <Header/>
             <Main/>
             <Footer/>

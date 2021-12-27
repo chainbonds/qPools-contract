@@ -25,7 +25,7 @@ export default function StakeForm() {
                 <div className="">
 
                     <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
-                            <div className="px-4 py-5 bg-slate-800 bg-gray sm:p-6">
+                            <div className="px-4 py-5 bg-slate-800 bg-gray md:p-6">
                                     <div>
                                         <InputFieldWithLogo
                                             logoPath={"/solana-logo.png"}
@@ -42,7 +42,7 @@ export default function StakeForm() {
                                         />
                                 </div>
                             </div>
-                            <div className="flex w-full bg-slate-800 sm:px-6 justify-center md:justify-end pt-4">
+                            <div className="flex w-full bg-slate-800 md:px-6 justify-center md:justify-end pt-4">
                                 <button
                                     type="submit"
                                     className={"rounded p-2 text-lg bg-pink-700 hover:bg-pink-900"}

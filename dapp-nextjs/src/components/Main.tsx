@@ -64,7 +64,7 @@ export const Main: FC = ({}) => {
                 {/*flex-none*/}
                 {/*justify-center*/}
                 {/* w-full */}
-                <div className={"my-auto flex flex-row grow w-full justify-end mx-auto"}>
+                <div className={"my-auto flex flex-row grow w-full justify-center lg:justify-end mx-auto"}>
                     <HeroForm />
                 </div>
             </div>

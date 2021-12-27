@@ -7,7 +7,7 @@ export const Footer: FC = ({}) => {
         <>
             {/*  items-end content-end bottom-0 */}
             <div
-                className="w-full flex flex-row justify-center lg:justify-end pt-10 lg:p-20 pb-10 mt-auto"
+                className="w-full flex flex-row justify-center lg:justify-end py-10 lg:px-20 mt-auto"
                 style={{ backgroundColor: "#1a202c" }}
             >
                 <SocialIcon
@@ -20,7 +20,7 @@ export const Footer: FC = ({}) => {
                 />
                 <SocialIcon
                     url={"/whitepaper.pdf"}
-                    className={"mx-5"}
+                    className={"ml-5"}
                     bgColor="#ff5a01"
                 />
             </div>

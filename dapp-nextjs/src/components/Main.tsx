@@ -35,15 +35,15 @@ export const Main: FC = ({}) => {
             style={{ backgroundColor: "#1a202c" }}
         >
             {/*flex-none*/}
-            <div className={"flex flex-row pt-8"}>
-                {title()}
-            </div>
+            {/*<div className={"flex flex-row pt-8"}>*/}
+            {/*</div>*/}
             {/*className={"flex flex-col md:flex-row   "}*/}
             <div className={"flex flex-col lg:flex-row grow w-full justify-center lg:justify-start my-auto"}>
                 {/*className={"flex grow my-auto"}*/}
 
                 <div className={"flex flex-col"}>
 
+                    {title()}
                     <div className="pt-8 pb-1 text-2xl text-gray-100 leading-10 text-center lg:text-left">
                         <p>
                             The most convenient way to generate passive income
@@ -62,7 +62,9 @@ export const Main: FC = ({}) => {
                 {/*</div>*/}
                 {/*/!*flex grow*!/*/}
                 {/*flex-none*/}
-                <div className={"my-auto mx-auto"}>
+                {/*justify-center*/}
+                {/* w-full */}
+                <div className={"my-auto flex flex-row grow w-full justify-end mx-auto"}>
                     <HeroForm />
                 </div>
             </div>

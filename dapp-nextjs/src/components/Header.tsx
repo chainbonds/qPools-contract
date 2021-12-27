@@ -6,16 +6,26 @@ export const Header: FC = ({}) => {
 
     return (
         <>
-            <div className="flex flex-row pb-2 px-2 md:pr-12 md:pl-10 pt-6 text-neutral-content rounded-box">
-                <div className="">
-                    <LogoWithTitle />
-                </div>
-                <div className="flex-1 px-2 mx-2">
-                    {/*<span className="text-lg font-bold">Caw Caw</span>*/}
-                </div>
-                {/*className="flex-none"*/}
-                <div className={"flex flex-col justify-center items-center content-center place-content-center"}>
-                    <WalletMultiButton className="flex-none btn btn-ghost" />
+            <div
+                id={"header-buy-bonds"}
+                className="w-full left-0 top-0 py-6 px-6 md:px-14 md:py-12"
+            >
+                <div className="flex flex-row justify-between">
+                    <div className={"my-auto py-auto"}>
+                        <LogoWithTitle />
+                    </div>
+                    <div className={"flex-1 px-2 mx-2"}>
+                        {/*<span className="text-lg font-bold">Caw Caw</span>*/}
+                    </div>
+                    <div className={"my-auto py-auto"}>
+                        <WalletMultiButton
+                            className={"btn btn-ghost"}
+                            onClick={() => {
+                                console.log("click");
+                            }}
+                        />
+                    </div>
+
                 </div>
             </div>
         </>

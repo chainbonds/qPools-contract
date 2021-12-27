@@ -8,7 +8,7 @@ export const Header: FC = ({}) => {
         <>
             <div
                 id={"header-buy-bonds"}
-                className="w-full left-0 top-0 py-6 px-6 md:px-14 md:py-12"
+                className="w-full left-0 top-0 py-6 px-6 lg:px-20 lg:py-12"
             >
                 <div className="flex flex-row justify-between">
                     <div className={"my-auto py-auto"}>

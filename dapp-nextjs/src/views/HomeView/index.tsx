@@ -19,10 +19,6 @@ export const HomeView: FC = ({}) => {
         >
             <Header />
             <Main/>
-            {/*<div*/}
-            {/*    id="content"*/}
-            {/*    className="flex flex-col md:flex-row w-full grow my-auto"*/}
-            {/*> </div>*/}
             <Footer/>
         </div>
     );

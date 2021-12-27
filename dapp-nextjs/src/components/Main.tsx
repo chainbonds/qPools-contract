@@ -1,6 +1,7 @@
 import React, {FC} from "react";
 import {HeroLeft} from "./HeroLeft";
 import HeroForm from "./HeroForm";
+import Statistics from "./Statistics";
 
 export const Main: FC = ({}) => {
 
@@ -8,10 +9,10 @@ export const Main: FC = ({}) => {
         return (
             <div
                 id="slogan-wrapper"
-                className="w-full h-full flex items-center px-6 md:px-12"
+                className="w-full h-full flex"
                 style={{ backgroundColor: "#1a202c" }}
             >
-                <div className={"relative text-center md:text-left mx-auto"}>
+                <div className={"relative text-center lg:text-left mx-auto lg:mx-0"}>
                     <h1 className="absolute text-4xl lg:text-7xl font-bold transform -translate-x-1 -translate-y-1">
                         Generate Yields
                         <br/>
@@ -28,27 +29,42 @@ export const Main: FC = ({}) => {
     }
 
     return (
-        // md:pt-20
-        // 2xl:px-54
         <div
             id="content"
-            className={"flex flex-col md:flex-row w-full grow my-auto"}
+            className={"w-full flex flex-col grow my-auto px-6 lg:px-24"}
             style={{ backgroundColor: "#1a202c" }}
         >
-            <div className={"flex-none 2xl:ml-40 md:px-16 inset-x-0 bottom-0"}>
+            {/*flex-none*/}
+            <div className={"flex flex-row"}>
                 {title()}
             </div>
-            <div className={"flex flex-col md:flex-row w-full justify-center md:justify-start px-2 md:px-6 md:px-16 my-auto"}>
-                {/*<div className={"flex grow my-auto"}>*/}
-                {/*    <HeroLeft />*/}
-                {/*</div>*/}
+            {/*className={"flex flex-col md:flex-row   "}*/}
+            <div className={"flex flex-col lg:flex-row grow w-full justify-center lg:justify-start my-auto"}>
+                {/*className={"flex grow my-auto"}*/}
+
+                <div className={"flex flex-col"}>
+
+                    <div className="pt-8 pb-1 text-2xl text-gray-100 leading-10 text-center lg:text-left">
+                        <p>
+                            The most convenient way to generate passive income
+                        </p>
+                        <p>
+                            without locking in liquidity. Risk-adjusted for your favorite asset.
+                        </p>
+                    </div>
+                    <div className={"py-8 mx-0 md:mx-auto"}>
+                        <Statistics />
+                    </div>
+
+                </div>
                 {/*<div className={"flex grow"}>*/}
                 {/*    <div className={"py-2 grow w-24"}/>*/}
                 {/*</div>*/}
                 {/*/!*flex grow*!/*/}
-                {/*<div className={"px-10 flex-none align-middle my-auto"}>*/}
-                {/*    <HeroForm />*/}
-                {/*</div>*/}
+                {/*flex-none*/}
+                <div className={"my-auto"}>
+                    <HeroForm />
+                </div>
             </div>
         </div>
     );

@@ -7,7 +7,7 @@ export const Footer: FC = ({}) => {
         <>
             {/*  items-end content-end bottom-0 */}
             <div
-                className="w-full flex flex-row justify-center md:justify-end pt-20 lg:p-20 pb-10 mt-auto"
+                className="w-full flex flex-row justify-center lg:justify-end pt-10 lg:p-20 pb-10 mt-auto"
                 style={{ backgroundColor: "#1a202c" }}
             >
                 <SocialIcon

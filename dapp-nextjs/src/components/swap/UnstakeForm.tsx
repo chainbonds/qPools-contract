@@ -44,7 +44,7 @@ export default function UnstakeForm() {
                         </div>
                         <CallToActionButton
                             type={"submit"}
-                            text={"Redeem Tokens"}
+                            text={"REDEEM"}
                         />
                     </form>
 

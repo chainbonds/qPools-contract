@@ -45,7 +45,7 @@ export default function StakeForm() {
                         </div>
                         <CallToActionButton
                             type={"submit"}
-                            text={"Earn Income"}
+                            text={"EARN"}
                         />
                     </form>
                 </div>

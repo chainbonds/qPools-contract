@@ -44,7 +44,7 @@ export const Main: FC = ({}) => {
                 <div className={"flex flex-col"}>
 
                     {title()}
-                    <div className="pt-8 pb-1 text-2xl text-gray-100 leading-10 text-center lg:text-left">
+                    <div className="pt-4 pb-1 text-2xl text-gray-100 leading-10 text-center lg:text-left">
                         <p>
                             The most convenient way to generate passive income
                         </p>

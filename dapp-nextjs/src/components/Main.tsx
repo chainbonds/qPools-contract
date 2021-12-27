@@ -11,9 +11,9 @@ export const Main: FC = ({}) => {
             <div className={"flex grow"}>
                 <HeroLeft />
             </div>
-            {/*<div className={"flex grow"}>*/}
-            {/*    <div className={"pt-5 grow w-24"}/>*/}
-            {/*</div>*/}
+            <div className={"flex grow"}>
+                <div className={"py-2 grow w-24"}/>
+            </div>
             {/*flex grow*/}
             <div className={"px-10 flex-none align-middle my-auto"}>
                 <HeroForm />

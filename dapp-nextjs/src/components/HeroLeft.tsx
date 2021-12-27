@@ -6,7 +6,8 @@ export const HeroLeft: FC = ({}) => {
     return (
         <div className={"2xl:ml-40"}>
             {/*md:pt-0*/}
-            <div className={"px-1 pt-10 2xl:pt-44"}>
+            {/*2xl:pt-44*/}
+            <div className={"px-1 pt-10"}>
                 <div className={"text-center md:text-left"}>
                     <h1 className="invisible md:visible absolute text-5xl lg:text-7xl font-bold transform -translate-x-1 -translate-y-1">
                         Generate Yields

@@ -31,7 +31,7 @@ export const Main: FC = ({}) => {
     return (
         <div
             id="content"
-            className={"w-full flex flex-col grow my-auto px-6 lg:px-24"}
+            className={"w-full flex flex-col grow my-auto px-6 lg:px-20"}
             style={{ backgroundColor: "#1a202c" }}
         >
             {/*flex-none*/}

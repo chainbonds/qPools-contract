@@ -11,6 +11,7 @@ import {Wallet} from "../../splpasta";
 import {AiOutlineArrowDown} from "react-icons/ai";
 import Image from "next/image";
 import InputFieldWithLogo from "../InputFieldWithLogo";
+import CallToActionButton from "../CallToActionButton";
 
 export default function UnstakeForm() {
 
@@ -25,31 +26,27 @@ export default function UnstakeForm() {
                 <div className="">
 
                     <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
-                            <div className="px-4 py-5 bg-slate-800 bg-gray md:p-6">
-                                    <div>
-                                        <InputFieldWithLogo
-                                            logoPath={"/Light 2 Square.png"}
-                                            displayText={"QPT"}
-                                            registerFunction={() => register("qpt_amount")}
-                                        />
-                                        <div className={"ml-10"}>
-                                            <AiOutlineArrowDown size={24}/>
-                                        </div>
-                                        <InputFieldWithLogo
-                                            logoPath={"/solana-logo.png"}
-                                            displayText={"SOL"}
-                                            registerFunction={() => register("solana_amount")}
-                                        />
+                        <div className="py-5 bg-slate-800 bg-gray">
+                            <div>
+                                <InputFieldWithLogo
+                                    logoPath={"/Light 2 Square.png"}
+                                    displayText={"QPT"}
+                                    registerFunction={() => register("qpt_amount")}
+                                />
+                                <div className={"ml-10"}>
+                                    <AiOutlineArrowDown size={24}/>
                                 </div>
+                                <InputFieldWithLogo
+                                    logoPath={"/solana-logo.png"}
+                                    displayText={"SOL"}
+                                    registerFunction={() => register("solana_amount")}
+                                />
                             </div>
-                            <div className="flex w-full bg-slate-800 md:px-6 justify-center md:justify-end">
-                                <button
-                                    type="submit"
-                                    className={"rounded p-2 text-lg bg-pink-700 hover:bg-pink-900"}
-                                >
-                                    Redeem Tokens
-                                </button>
                         </div>
+                        <CallToActionButton
+                            type={"submit"}
+                            text={"Redeem Tokens"}
+                        />
                     </form>
 
                 </div>

@@ -25,7 +25,7 @@ export default function HeroForm(props: any) {
             return (
                 <button
                     onClick={() => changeTabToStake(HeroFormState.Stake)}
-                    className="bg-slate-800 inline-block rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200"
+                    className="bg-slate-800 w-20 border-b-2 border-gray-500 inline-block rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200"
                 >
                     Stake
                 </button>
@@ -47,7 +47,7 @@ export default function HeroForm(props: any) {
             return (
                 <button
                     onClick={() => changeTabToStake(HeroFormState.Unstake)}
-                    className="bg-slate-800 inline-block rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200"
+                    className="bg-slate-800 w-20 border-b-2 border-gray-500 inline-block rounded-t pb-4 py-2 px-4 text-white hover:text-gray-200"
                 >
                     Unstake
                 </button>
@@ -83,7 +83,7 @@ export default function HeroForm(props: any) {
             {/*align-bottom*/}
             {/*Might need to do 2xl*/}
             {/* justify-center mx-auto  */}
-            <div className={"flex flex-col"}>
+            <div className={"flex flex-col w-3/5"}>
                 { stakingFormNavbar() }
                 { (displayForm === HeroFormState.Stake) && <StakeForm /> }
                 { (displayForm === HeroFormState.Unstake) && <UnstakeForm /> }

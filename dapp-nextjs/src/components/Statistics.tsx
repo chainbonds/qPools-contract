@@ -5,12 +5,12 @@ export default function Statistics(props: any) {
 
         return (
             <div className={"m-5 lg:mt-0 lg:ml-0 rounded-lg border-2 border-gray-200 p-5 w-56 h-30"}>
-                <h2 className="justify-center text-center lg:left-0 lg:top-0 mb-1 text-lg lg:text-xl text-gray-300">
-                    {title}
-                </h2>
-                <br />
                 <h2 className="justify-center text-center lg:left-0 lg:bottom-0 mb-1 text-lg lg:text-2xl">
                     {value}
+                </h2>
+                <br />
+                <h2 className="justify-center text-center lg:left-0 lg:top-0 mb-1 text-lg lg:text-xl text-gray-300">
+                    {title}
                 </h2>
             </div>
         )

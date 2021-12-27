@@ -12,7 +12,7 @@ export const Footer: FC = ({}) => {
             >
                 <SocialIcon
                     url={"https://discord.gg/ThFgTPs6t3"}
-                    className={"mx-5"}
+                    className={"mr-5"}
                 />
                 <SocialIcon
                     url={"https://twitter.com/qpoolsfinance"}

@@ -33,7 +33,7 @@ export default function UnstakeForm() {
                                     displayText={"QPT"}
                                     registerFunction={() => register("qpt_amount")}
                                 />
-                                <div className={"ml-10"}>
+                                <div className={"ml-5"}>
                                     <AiOutlineArrowDown size={24}/>
                                 </div>
                                 <InputFieldWithLogo

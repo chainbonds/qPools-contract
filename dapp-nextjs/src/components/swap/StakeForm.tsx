@@ -33,7 +33,7 @@ export default function StakeForm() {
                                     displayText={"SOL"}
                                     registerFunction={() => register("solana_amount")}
                                 />
-                                <div className={"ml-10"}>
+                                <div className={"ml-5"}>
                                     <AiOutlineArrowDown size={24}/>
                                 </div>
                                 <InputFieldWithLogo

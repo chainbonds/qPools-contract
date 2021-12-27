@@ -35,7 +35,7 @@ export const Main: FC = ({}) => {
             style={{ backgroundColor: "#1a202c" }}
         >
             {/*flex-none*/}
-            <div className={"flex flex-row"}>
+            <div className={"flex flex-row pt-8"}>
                 {title()}
             </div>
             {/*className={"flex flex-col md:flex-row   "}*/}
@@ -62,7 +62,7 @@ export const Main: FC = ({}) => {
                 {/*</div>*/}
                 {/*/!*flex grow*!/*/}
                 {/*flex-none*/}
-                <div className={"my-auto"}>
+                <div className={"my-auto mx-auto"}>
                     <HeroForm />
                 </div>
             </div>

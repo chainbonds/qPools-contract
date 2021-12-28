@@ -119,7 +119,7 @@ pub fn handler(
             cpi_program,
             cpi_accounts,
             &[[
-                ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                b"bondPoolAccount1".as_ref(),
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
             ].as_ref()],
         ),

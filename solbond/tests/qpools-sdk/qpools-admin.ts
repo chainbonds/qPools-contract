@@ -71,7 +71,6 @@ export class QPoolsAdmin {
 
     public QPReserveTokens: Record<string, PublicKey> = {};
 
-
     constructor(
         wallet: Keypair,
         connection: Connection,
@@ -96,6 +95,64 @@ export class QPoolsAdmin {
         }
 
         // Do a bunch of assert OKs
+    }
+
+    async initializeQPTReserve() {
+
+        // Generate qPoolAccount
+        [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
+            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            this.solbondProgram.programId
+        );
+
+        // Generate Redeemable Mint which is owned by the program
+        this.QPTokenMint = await createMint(
+            this.provider,
+            this.wallet,
+            this.qPoolAccount,
+            9
+        );
+        await delay(1_000);
+
+        console.log('before creating associated token account');
+
+        // Create QPT Token Accounts
+        this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
+            this.connection,
+            this.QPTokenMint.publicKey,
+            this.qPoolAccount,
+            this.provider.wallet
+        );
+        this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
+            this.connection,
+            this.currencyMint.publicKey,
+            this.qPoolAccount,
+            this.provider.wallet
+        );
+
+        /* Now make the RPC call, to initialize a qPool */
+        const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
+            this.bumpQPoolAccount,
+            {
+                accounts: {
+                    bondPoolAccount: this.qPoolAccount,
+                    bondPoolRedeemableMint: this.QPTokenMint.publicKey,
+                    bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
+                    bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
+                    bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
+                    initializer: this.wallet.publicKey,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: web3.SystemProgram.programId,
+                    tokenProgram: TOKEN_PROGRAM_ID
+                },
+                signers: [this.wallet]
+            }
+        );
+        await this.provider.connection.confirmTransaction(initializeTx);
+
+        // TODO: Do a bunch of asserts?
+
     }
 
 
@@ -136,67 +193,6 @@ export class QPoolsAdmin {
                 );
             })
         )
-
-    }
-
-    async initializeQPTReserve() {
-
-        // Generate qPoolAccount
-        [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [this.wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount"))],
-            this.solbondProgram.programId
-        );
-
-        // Generate Redeemable Mint which is owned by the program
-        this.QPTokenMint = await createMint(
-            this.provider,
-            this.wallet,
-            this.qPoolAccount,
-            9
-        );
-        await delay(1_000);
-
-        console.log('before creating associated token account');
-
-        // Create QPT Token Accounts
-        console.log("Flaky starts here");
-        this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
-            this.connection,
-            this.QPTokenMint.publicKey,
-            this.qPoolAccount,
-            this.provider.wallet
-        );
-        console.log("Goes through here")
-        this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
-            this.connection,
-            this.currencyMint.publicKey,
-            this.qPoolAccount,
-            this.provider.wallet
-        );
-        console.log("And end here");
-
-        /* Now make the RPC call, to initialize a qPool */
-        const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
-            this.bumpQPoolAccount,
-            {
-                accounts: {
-                    bondPoolAccount: this.qPoolAccount,
-                    bondPoolRedeemableMint: this.QPTokenMint.publicKey,
-                    bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
-                    bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
-                    bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
-                    initializer: this.wallet.publicKey,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    tokenProgram: TOKEN_PROGRAM_ID
-                },
-                signers: [this.wallet]
-            }
-        );
-        await this.provider.connection.confirmTransaction(initializeTx);
-
-        // TODO: Do a bunch of asserts?
 
     }
 

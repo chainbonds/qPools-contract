@@ -38,7 +38,7 @@ pub struct RedeemBond<'info> {
     pub bond_pool_account: Account<'info, BondPoolAccount>,
     #[account(
         mut,
-        constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
+        // constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
     )]
     pub bond_pool_redeemable_mint: Account<'info, Mint>,
 
@@ -71,6 +71,7 @@ pub fn handler(
     ctx: Context<RedeemBond>,
     redeemable_amount_raw: u64
 ) -> ProgramResult {
+    msg!("SOLBOND: REDEEM_BOND");
 
     if redeemable_amount_raw <= 0 {
         return Err(ErrorCode::LowBondRedeemableAmount.into());
@@ -131,7 +132,7 @@ pub fn handler(
             cpi_accounts,
             &[
                 [
-                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                    b"bondPoolAccount1".as_ref(),
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
             ]

@@ -1,4 +1,7 @@
 {
+    "scripts": {
+        "test:solbond-only": "anchor test tests/solbond-only.spec.ts"
+    },
     "dependencies": {
         "@project-serum/anchor": "^0.18.2",
         "@project-serum/serum": "^0.13.58",

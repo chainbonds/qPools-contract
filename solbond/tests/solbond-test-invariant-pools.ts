@@ -11,7 +11,6 @@ import {QPoolsUser} from "./qpools-sdk/qpools-user";
 import {mintTo} from "@project-serum/serum/lib/token-instructions";
 import {assert} from "chai";
 import {createToken} from "./invariant-utils";
-import {sendAndConfirm} from "../../dapp/src/splpasta/util";
 
 // require('dotenv').config()
 const NUMBER_POOLS = 1;

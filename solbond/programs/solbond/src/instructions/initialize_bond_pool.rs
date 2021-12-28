@@ -15,7 +15,7 @@ pub struct InitializeBondPool<'info> {
         init,
         payer = initializer,
         space = 8 + BondPoolAccount::LEN,
-        seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
+        seeds = [b"bondPoolAccount1"], bump = _bump_bond_pool_account
     )]
     pub bond_pool_account: Account<'info, BondPoolAccount>,
 

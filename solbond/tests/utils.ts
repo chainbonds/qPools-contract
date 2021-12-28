@@ -67,7 +67,7 @@ export async function createTokenAccount(provider, mint, owner) {
         TOKEN_PROGRAM_ID,
         provider.wallet.payer
     );
-    let vault = await token.createAccount(owner);
+    let vault = await token.createAssociatedTokenAccount(owner);
     return vault;
 }
 

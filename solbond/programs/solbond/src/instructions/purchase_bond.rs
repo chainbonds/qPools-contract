@@ -8,7 +8,7 @@ use crate::utils::functional::calculate_redeemables_to_be_distributed;
 
 #[derive(Accounts)]
 #[instruction(
-currency_token_amount_raw: u64,
+    currency_token_amount_raw: u64,
 )]
 pub struct PurchaseBond<'info> {
 
@@ -59,6 +59,7 @@ pub fn handler(
     if currency_token_amount_raw <= 0 {
         return Err(ErrorCode::LowBondTokAmount.into());
     }
+    msg!("Currency amount is: {}", currency_token_amount_raw);
     if ctx.accounts.purchaser_currency_token_account.amount < currency_token_amount_raw {
         return Err(ErrorCode::MinPurchaseAmount.into());
     }

@@ -1,56 +1,99 @@
 import * as anchor from '@project-serum/anchor';
-import {Provider, web3} from '@project-serum/anchor';
-import {clusterApiUrl, Connection, Keypair} from '@solana/web3.js';
-import {Network} from '@invariant-labs/sdk';
+import {BN, Provider, web3} from '@project-serum/anchor';
+import {clusterApiUrl, Connection, Keypair, PublicKey, Signer} from '@solana/web3.js';
+import {IWallet, Network} from '@invariant-labs/sdk';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {createMint, getPayer} from "./utils";
-import {MockQPools} from "./qpools-sdk/qpools-admin";
+import {MockQPools} from "./qpools-sdk/qpools-mock";
 import {invariantAmmProgram} from "./external_programs/invariant_amm";
 import {getSolbondProgram, getInvariantProgram} from "./qpools-sdk/program";
+import {QPoolsUser} from "./qpools-sdk/qpools-user";
+import {mintTo} from "@project-serum/serum/lib/token-instructions";
+import {assert} from "chai";
+import {createToken} from "./invariant-utils";
+import {sendAndConfirm} from "../../dapp/src/splpasta/util";
 
 // require('dotenv').config()
-const NUMBER_POOLS = 5;
+const NUMBER_POOLS = 1;
+
+function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 describe('claim', () => {
 
     // Connection
-    const provider = Provider.local()
-    //const connection = provider.connection
-    //const provider = Provider.local(clusterApiUrl('devnet'), {
-    //    skipPreflight: true
-    //})
-    const connection = provider.connection
+    const provider = Provider.local();
+    const connection = provider.connection;
 
+    let currencyMint: Token;
 
-
-    const payer = getPayer();
-    const mintAuthority = Keypair.generate();
-    let currencyMint: Token | null = null;
+    // TODO: We should write additional tests, where the qpAuthority
+    //  and the market authority are separate!
 
     // @ts-expect-error
-    const wallet = provider.wallet.payer as Keypair
-    const positionOwner = Keypair.generate()
-    const admin = Keypair.generate()
+    const qpAuthority = provider.wallet.payer as Keypair;
+
+    // Again, assume that everyone has kinda the same wallet ...
+    const user = Keypair.generate();
+    // const wallet = Keypair.generate();
+    const mintAuthority = Keypair.generate();
+    // Assume for today, that the market authority is equivalent to the QPT authority.
+    const marketAuthority = provider.wallet;
+    // const user = Keypair.generate();
+    // const qpAuthority = Keypair.generate();
+    // const reserveAdmin = Keypair.generate();
+    const liquidityProvider = Keypair.generate();
 
     // Programs
-    // const solbondProgram = anchor.workspace.Solbond;
+    const solbondProgram = anchor.workspace.Solbond;
     // const invariantProgram = anchor.workspace.Amm;
-
-    const solbondProgram = getSolbondProgram(connection, provider);
     const invariantProgram = getInvariantProgram(connection, provider);
+
+    console.log("Solbond program");
+    console.log(solbondProgram.programId.toString());
+    console.log("Invairant Program");
+    console.log(invariantProgram.programId.toString());
 
     // More Complex Objects
     let market: MockQPools;
+    let qpools: QPoolsUser;
 
+    let msg: string = "";
+
+    // Payer, who pays for all transactions here, because he is part of the provider
+    // const unspecifiedPayer = getPayer();
+
+    // TODO: Mint authority cannot pay for mint.. weird!!! Mint authority does not have any airdrop amount!
     before(async () => {
-
-        await Promise.all([
-            await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-            await connection.requestAirdrop(admin.publicKey, 1e9),
-            await connection.requestAirdrop(positionOwner.publicKey, 1e9),
-            await connection.requestAirdrop(payer.publicKey, 1e9)
-        ]);
-        currencyMint = await createMint(provider, payer);
+        let tx1 = await connection.requestAirdrop(mintAuthority.publicKey, 3e9);
+        let tx2 = await connection.requestAirdrop(user.publicKey, 3e9);
+        // await connection.requestAirdrop(unspecifiedPayer.publicKey, 1e9);
+        // await connection.requestAirdrop(marketAuthority.publicKey, 1e9);
+        let tx3 = await connection.requestAirdrop(liquidityProvider.publicKey, 3e9);
+        let tx4 = await connection.requestAirdrop(qpAuthority.publicKey, 3e9);
+        // Wait for airdrop to kick in ...
+        await connection.confirmTransaction(tx1);
+        await connection.confirmTransaction(tx2);
+        await connection.confirmTransaction(tx3);
+        await connection.confirmTransaction(tx4);
+        await delay(1_500);
+        assert.equal(
+            (await provider.connection.getBalance(mintAuthority.publicKey)),
+            3e9,
+            String((await provider.connection.getBalance(mintAuthority.publicKey)))
+        );
+        assert.equal(
+            (await provider.connection.getBalance(liquidityProvider.publicKey)),
+            3e9,
+            String((await provider.connection.getBalance(liquidityProvider.publicKey)))
+        );
+        assert.equal(
+            (await provider.connection.getBalance(qpAuthority.publicKey)),
+            500000003000000000,
+            String((await provider.connection.getBalance(qpAuthority.publicKey)))
+        );
+        currencyMint = await createToken(connection, mintAuthority, mintAuthority);
     })
 
     /*
@@ -58,39 +101,124 @@ describe('claim', () => {
      * Most of these happen from within the mock
      * Some of these need to happen also on the frontend / as part of the SDK
      */
+    /*
+     * Now run our endpoints
+     */
+    it("#solbondHealthCheckpoint()", async () => {
+        // Call the health-checkpoint
+        await solbondProgram.rpc.healthcheck({
+            accounts: {
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                clock: web3.SYSVAR_CLOCK_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        });
+    })
+
+    /* Initialize markets and pairs */
     it('#initializeMockedMarket()', async () => {
+        console.log("(Currency Mint PK) when creating market is: ", currencyMint.publicKey.toString());
         market = new MockQPools(
-            provider.wallet,
+            qpAuthority,
             connection,
-            provider
+            provider,
+            currencyMint
         );
         await market.createMockMarket(
-            Network.DEV,
-            provider.wallet,
+            Network.LOCAL,
+            marketAuthority,
             invariantProgram.programId
         )
     });
     it("#createTradedToken()", async () => {
         await market.createTokens(NUMBER_POOLS, mintAuthority);
     })
+    it('#createState()', async () => {
+        await market.createState(qpAuthority);
+    })
     it("#createFeeTier()", async () => {
-        await market.createFeeTier(admin);
+        await market.createFeeTier(qpAuthority);
     })
     it("#createTradePairs()", async () => {
-        await market.createPairs(NUMBER_POOLS);
-    })
-    it('#createState()', async () => {
-        await market.createState(admin);
+        // Create 10 pools, one for each pair
+        await market.createPairs();
     })
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere
-        await market.creatMarketsFromPairs(
-            NUMBER_POOLS,
-            admin
+        await market.creatMarketsFromPairs(qpAuthority)
+    })
+
+    // For each pair, generate an account for the qPools token if it doesnt exist yet
+
+    it("#provideThirdPartyLiquidity()", async () => {
+        console.log("Before amount");
+        let liquidityProvidingAmount = new BN(2).pow(new BN(63)).subn(1);
+        console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
+        await market.provideThirdPartyLiquidityToAllPairs(
+            liquidityProvider,
+            mintAuthority,
+            liquidityProvidingAmount
         )
     })
 
-    //it("#swapWithInvariant()", async () => {
+    // We must now instantiate all accounts!
+    it("initializeQPTReserve()", async () => {
+        // Initialize the QPT Reserves
+        await market.initializeQPTReserve()
+    })
+
+    // /* Simulate a user purchasing QPT Tokens */
+    it("buyQPT()", async () => {
+        // As a new, third-party user (A), (A) wants to buy QPT!
+        // // Create the QPools Object
+        qpools = new QPoolsUser(
+            provider,
+            connection,
+            market.qPoolAccount,
+            market.QPTokenMint,
+            market.currencyMint
+        );
+
+        await qpools.registerAccount();
+        // Simulate the user having some money
+        let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
+        console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, mintAuthority.publicKey, [mintAuthority as Signer], airdropBuyAmount);
+        await qpools.buyQPT(
+            airdropBuyAmount
+        );
+        await delay(2_000);
+    })
+
+    it("swapReserveToAllPairs()", async() => {
+        // Start the swaps!
+        console.log("Get market authority balance: ");
+        console.log(await connection.getBalance(marketAuthority.publicKey));
+        // Where is the airdrop!! (?) // Or where is the reserve's currency amount in the first place
+        console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+        // console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+        await market.swapReserveToAllAssetPairs(100);
+    })
+
+    it("#createPositionList()", async () => {
+        await market.createPositionList()
+    });
+
+    it("#createPositionList()", async () => {
+        await market.createPositions()
+    });
+
+    // it("#createLiquidityPositions()", async () => {
+    //     console.log("Creating Liquidity Positions");
+    //     // First, create a position list if it doesn't exist yet
+    //     // Then, dissolve the position if it exists already, if it doesn't exist yet
+    //     // Then, create a new position, if it doesn't exist already
+    //
+    // })
+
+
+    // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
     //        admin,
     //        true,
@@ -99,33 +227,14 @@ describe('claim', () => {
     //        new anchor.BN(3),
     //        new anchor.BN(0)
     //    )
-    //})
-
-    /*
-     * Now run our endpoints
-     */
-    // it("#connectsToSolbond()", async () => {
-    //     // Call the health-checkpoint
-    //     await solbondProgram.rpc.healthcheck({
-    //         accounts: {
-    //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //             clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //             systemProgram: web3.SystemProgram.programId,
-    //             tokenProgram: TOKEN_PROGRAM_ID
-    //         }
-    //     });
     // })
 
-    // Until here should work
 
 
 
-    // Create 10 pools, one for each pair
-    // Make this async, maybe
 
-    // let poolList: PublicKey | null;
-    // let poolListBump: number;
-    //
+
+
     // it("#registerInvariantPools()", async () => {
     //
     //     // Get the addresses of some of the pools that we generated
@@ -181,48 +290,6 @@ describe('claim', () => {
 
     // Now do all the swaps ...
 
-
-    // let purchaser: PublicKey | null = null;
-    // let purchaserRedeemableTokenAccount: PublicKey | null = null;
-    // let purchaserCurrencyTokenAccount: PublicKey | null = null;
-    //
-    // // Make a purchase of the bond / staking
-    // it('#buySolbond', async () => {
-    //
-    //     let amountToBuy = 10_000_000_000;
-    //
-    //     purchaser = payer.publicKey;
-    //     purchaserRedeemableTokenAccount = await bondPoolRedeemableMint!.createAccount(purchaser);
-    //     purchaserCurrencyTokenAccount = await bondPoolCurrencyTokenMint!.createAccount(purchaser);
-    //     await bondPoolCurrencyTokenMint.mintTo(purchaserCurrencyTokenAccount, purchaser, [], amountToBuy);
-    //
-    //     const initializeTx = await solbondProgram.rpc.purchaseBond(
-    //         new BN(amountToBuy),
-    //         {
-    //             accounts: {
-    //                 bondPoolAccount: bondPoolAccount,
-    //                 bondPoolRedeemableMint: bondPoolRedeemableMint.publicKey,
-    //                 bondPoolTokenMint: bondPoolCurrencyTokenMint.publicKey,
-    //                 bondPoolTokenAccount: bondPoolTokenAccount,
-    //                 bondPoolRedeemableTokenAccount: bondPoolRedeemableTokenAccount,
-    //                 purchaser: payer.publicKey,
-    //                 purchaserTokenAccount: purchaserCurrencyTokenAccount,
-    //                 purchaserRedeemableTokenAccount: purchaserRedeemableTokenAccount,
-    //
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //                 clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 tokenProgram: TOKEN_PROGRAM_ID
-    //             },
-    //             signers: [payer]
-    //         }
-    //     );
-    //     const tx = await provider.connection.confirmTransaction(initializeTx);
-    //     console.log("initializeTx signature", initializeTx);
-    //     console.log(tx);
-    //
-    // });
-    //
     //
     // it('#claim', async () => {
     //     const upperTick = 10

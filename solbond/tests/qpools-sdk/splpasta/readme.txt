@@ -1,0 +1,1 @@
+copy pasta is: https://github.com/solstar-tech/easy-spl

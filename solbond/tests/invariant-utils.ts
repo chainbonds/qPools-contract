@@ -10,6 +10,7 @@ import { Pair } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
+import exp from "constants";
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -130,8 +131,8 @@ export const createUserWithTokens = async (
   const owner = Keypair.generate()
 
   const [userAccountX, userAccountY] = await Promise.all([
-    tokenX.createAccount(owner.publicKey),
-    tokenY.createAccount(owner.publicKey),
+    tokenX.createAssociatedTokenAccount(owner.publicKey),
+    tokenY.createAssociatedTokenAccount(owner.publicKey),
     connection.requestAirdrop(owner.publicKey, 1e9)
   ])
 
@@ -179,3 +180,4 @@ export const createPoolWithLiquidity = async (
 export const setInitialized = (bitmap: number[], index: number) => {
   bitmap[Math.floor((index + TICK_LIMIT) / 8)] |= 1 << (index + TICK_LIMIT) % 8
 }
+

@@ -8,9 +8,11 @@ use anchor_spl::token::{Token};
 
 use instructions::*;
 use state::*;
+use amm::{self, Decimal, Tickmap, State, Pool, Tick, Position, PositionList};
 
 // declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
-declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
+// declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
+declare_id!("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
 // static KEY: &str = env!("PROGRAM_ID");
 // declare_id!(KEY);
 
@@ -146,31 +148,47 @@ pub mod solbond {
     * Register all the pools that are defined by invariant
     *
     */
-    pub fn register_invariant_pools(
-        ctx: Context<RegisterInvariantPools>,
-        _bump_pool_list: u8,
-        weights: [u64; 5]
+    pub fn swap_pair(
+        ctx: Context<SwapPairInstruction>,
+        _bump_bond_pool_account: u8,
+        x_to_y: bool,
+        amount: u64,
+        by_amount_in: bool,
+        sqrt_price_limit: u128,
     ) -> ProgramResult {
-
-        // For now assume that our portfolio has an equal weight across all pools
-        instructions::register_invariant_pools::handler(
+        instructions::swap_pair::handler(
             ctx,
-            _bump_pool_list,
-            weights
+            _bump_bond_pool_account,
+            x_to_y,
+            amount,
+            by_amount_in,
+            sqrt_price_limit,
         )
     }
+
 
     /**
      * Register all the pools that are defined by invariant
      *
      */
-    pub fn deposit_reserve_to_pools(
-        ctx: Context<DepositReserveToPools>
+    // Should probably import the Decimal types?
+    pub fn create_liquidity_position(
+        ctx: Context<CreateLiquidityPosition>,
+        _position_bump: u8,
+        _bump_bond_pool_account: u8,
+        _lower_tick_index: i32,
+        _upper_tick_index: i32,
+        liquidity_delta: u128
     ) -> ProgramResult {
 
         // For now assume that our portfolio has an equal weight across all pools
-        instructions::deposit_reserve_to_pools::handler(
-            ctx
+        instructions::create_liquidity_position::handler(
+            ctx,
+            _position_bump,
+            _bump_bond_pool_account,
+            _lower_tick_index,
+            _upper_tick_index,
+            liquidity_delta
         )
     }
 

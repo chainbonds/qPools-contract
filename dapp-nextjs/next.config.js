@@ -41,6 +41,11 @@ const plugins = [
 ];
 
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_CLUSTER_URL: process.env.NEXT_PUBLIC_CLUSTER_URL,
+    NEXT_PUBLIC_CLUSTER_NAME: process.env.NEXT_PUBLIC_CLUSTER_NAME,
+    NEXT_PUBLIC_PROGRAM_ID: process.env.NEXT_PUBLIC_PROGRAM_ID,
+  },
   // distDir: "build",
   swcMinify: false,
   webpack: (config, { isServer }) => {

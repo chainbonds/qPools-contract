@@ -11,10 +11,20 @@ import {Wallet} from "../../splpasta";
 import {AiOutlineArrowDown} from "react-icons/ai";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
+import {useEffect, useState} from "react";
 
 export default function UnstakeForm() {
 
     const {register, handleSubmit} = useForm();
+
+    const [valueInSol, setValueInSol] = useState<number>(0.0);
+    const [valueInQPT, setValueInQpt] = useState<number>(0.0);
+
+    useEffect(() => {
+        setValueInSol((_: number) => {
+            return valueInQPT * 1.;
+        });
+    }, [valueInQPT]);
 
     const submitToContract = async (d: any) => {
     }
@@ -23,7 +33,6 @@ export default function UnstakeForm() {
         <>
             <div className="">
                 <div className="">
-
                     <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
                         <div className="py-5 bg-slate-800 bg-gray">
                             <div>
@@ -31,6 +40,8 @@ export default function UnstakeForm() {
                                     logoPath={"/Light 2 Square.png"}
                                     displayText={"QPT"}
                                     registerFunction={() => register("qpt_amount")}
+                                    modifiable={true}
+                                    setNewValue={setValueInQpt}
                                 />
                                 <div className={"ml-5"}>
                                     <AiOutlineArrowDown size={24}/>
@@ -39,6 +50,8 @@ export default function UnstakeForm() {
                                     logoPath={"/solana-logo.png"}
                                     displayText={"SOL"}
                                     registerFunction={() => register("solana_amount")}
+                                    modifiable={false}
+                                    value={valueInSol}
                                 />
                             </div>
                         </div>

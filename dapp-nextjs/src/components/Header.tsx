@@ -12,11 +12,12 @@ export const Header: FC = ({}) => {
             >
                 <div className="flex flex-row justify-between">
                     <div className={"my-auto py-auto"}>
-                        <LogoWithTitle />
+                        <LogoWithTitle/>
                     </div>
                     <div className={"flex-1 px-2 mx-2"}>
                         {/*<span className="text-lg font-bold">Caw Caw</span>*/}
                     </div>
+                    {/*TODO Implement Devnet show (and also faucet maybe)*/}
                     <div className={"my-auto py-auto"}>
                         <WalletMultiButton
                             className={"btn btn-ghost"}

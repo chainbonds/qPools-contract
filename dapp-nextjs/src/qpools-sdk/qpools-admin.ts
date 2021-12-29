@@ -25,22 +25,23 @@ import {
 import {CreatePool, Decimal, FeeTier, InitPosition, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
-import {createStandardFeeTiers, createToken} from "../invariant-utils";
+import {createStandardFeeTiers, createToken} from "../qpools-sdk/invariant-utils";
 import {FEE_TIERS, fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
-import {createMint, createTokenAccount} from "../utils";
+import {createMint, createTokenAccount} from "../qpools-sdk/utils";
 import {Key} from "readline";
 
 import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {UnderlyingSinkAbortCallback} from "stream/web";
 import {calculatePriceAfterSlippage, isInitialized} from "@invariant-labs/sdk/lib/math";
-import {getInvariantProgram} from "./program";
+import {getInvariantProgram, getSolbondProgram} from "./program";
 import {QPair} from "./q-pair";
 import {
     createAssociatedTokenAccountSend, createAssociatedTokenAccountSendUnsigned,
     createAssociatedTokenAccountTx,
     getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
 } from "./splpasta/tx/associated-token-account";
+import {BondPoolAccount} from "./types/bondPoolAccount";
 
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -79,12 +80,13 @@ export class QPoolsAdmin {
     ) {
         this.connection = connection;
 
-        this.solbondProgram = anchor.workspace.Solbond;
+        this.solbondProgram = getSolbondProgram(connection, provider); // anchor.workspace.Solbond;
         this.invariantProgram = getInvariantProgram(connection, provider);
         // this.invariantProgram = anchor.workspace.Amm as Program;  //  as Program<Amm>;
         this.provider = provider;
+
+        // Assert that currencyMint is truly a mint
         this.currencyMint = currencyMint;
-        console.log("(Currency Mint PK) after registering in Market: ", this.currencyMint.publicKey.toString());
 
         // @ts-expect-error
         this.wallet = provider.wallet.payer as Keypair
@@ -97,14 +99,63 @@ export class QPoolsAdmin {
         // Do a bunch of assert OKs
     }
 
-    async initializeQPTReserve() {
+    prettyPrintAccounts() {
+        console.log("solbondProgram", this.solbondProgram.programId.toString());
+        console.log("invariantProgram", this.invariantProgram.programId.toString());
+        console.log("wallet", this.wallet.publicKey.toString());
 
-        // Generate qPoolAccount
+        console.log("🟢 qPoolAccount", this.qPoolAccount.toString());
+        console.log("🟢 bumpQPoolAccount", this.bumpQPoolAccount.toString());
+
+        console.log("🌊 QPTokenMint", this.QPTokenMint.publicKey.toString());
+        console.log("🌊 qPoolQPAccount", this.qPoolQPAccount.toString());
+
+        console.log("💵 currencyMint", this.currencyMint.publicKey.toString());
+        console.log("💵 qPoolCurrencyAccount", this.qPoolCurrencyAccount.toString());
+    }
+
+    async loadExistingQPTReserve() {
+        console.log("Fetching QPT reserve...");
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
             [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         );
 
+        // Get the token account
+        let bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
+
+        // Check if this is empty.
+        // If empty, return false
+
+        this.currencyMint = new Token(
+            this.connection,
+            bondPoolAccount.bondPoolCurrencyTokenAccount,
+            this.solbondProgram.programId,
+            this.wallet
+        );
+        this.QPTokenMint = new Token(
+            this.connection,
+            bondPoolAccount.bondPoolCurrencyTokenMint,
+            this.solbondProgram.programId,
+            this.wallet
+        );
+        this.qPoolQPAccount = bondPoolAccount.bondPoolRedeemableTokenAccount;
+        this.qPoolCurrencyAccount = bondPoolAccount.bondPoolCurrencyTokenAccount;
+
+    }
+
+    async initializeQPTReserve() {
+
+        // Generate qPoolAccount
+        console.log("BEGIN: initializeQPTReserve");
+        console.log("Creating QP reserve");
+        [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
+            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            this.solbondProgram.programId
+        );
+        console.log("qPoolAccount is: ", this.qPoolAccount.toString());
+
+        console.log("Creating QPT Token");
         // Generate Redeemable Mint which is owned by the program
         this.QPTokenMint = await createMint(
             this.provider,
@@ -114,8 +165,7 @@ export class QPoolsAdmin {
         );
         await delay(1_000);
 
-        console.log('before creating associated token account');
-
+        console.log('Creating associated token account (reserves QPT)');
         // Create QPT Token Accounts
         this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
             this.connection,
@@ -123,6 +173,7 @@ export class QPoolsAdmin {
             this.qPoolAccount,
             this.provider.wallet
         );
+        console.log('Creating associated token account (reserves Currency)');
         this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
             this.connection,
             this.currencyMint.publicKey,
@@ -130,6 +181,7 @@ export class QPoolsAdmin {
             this.provider.wallet
         );
 
+        console.log('Creating associated token account (initializeBondPool RPC)');
         /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
             this.bumpQPoolAccount,
@@ -150,7 +202,7 @@ export class QPoolsAdmin {
             }
         );
         await this.provider.connection.confirmTransaction(initializeTx);
-
+        console.log("END: initializeQPTReserve");
         // TODO: Do a bunch of asserts?
 
     }

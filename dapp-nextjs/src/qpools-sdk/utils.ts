@@ -1,3 +1,8 @@
+
+export function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 import { web3, Provider, BN } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {PublicKey, Keypair} from "@solana/web3.js";
@@ -23,8 +28,8 @@ export async function createMint2(provider) {
     return mint;
 }
 export async function createMint(
-    provider: Provider, 
-    payer: Keypair, 
+    provider: Provider,
+    payer: Keypair,
     authority?: web3.PublicKey,
     decimals = DEFAULT_DECIMALS,
 ): Promise<Token> {

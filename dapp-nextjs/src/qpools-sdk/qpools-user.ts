@@ -3,12 +3,11 @@
  * The other qpools files will be used as an admin, and should probably not be open
  */
 import {Connection, Keypair, PublicKey, Signer, Transaction} from "@solana/web3.js";
-import {BN, Program, Provider, Wallet, web3} from "@project-serum/anchor";
+import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import assert from "assert";
-import {createTokenAccount} from "../utils";
 import {Key} from "readline";
 import {Sign} from "crypto";
 import {
@@ -16,6 +15,8 @@ import {
     createAssociatedTokenAccountSendUnsigned,
     getAssociatedTokenAddressOffCurve
 } from "./splpasta/tx/associated-token-account";
+import {BondPoolAccount} from "./types/bondPoolAccount";
+import {getSolbondProgram} from "./program";
 
 // can't remember what this is
 export interface Tickmap {
@@ -27,20 +28,25 @@ export class QPoolsUser {
 
     public connection: Connection;
     public wallet: IWallet;
+    public walletPayer: Keypair;
     public solbondProgram: Program;
     public provider: Provider;
 
     // Accounts
+    // @ts-ignore
     public qPoolAccount: PublicKey;
+    // @ts-ignore
     public bumpQPoolAccount: number;
     public QPTokenMint: Token;
     public currencyMint: Token;
 
+    // @ts-ignore
     public qPoolQPAccount: PublicKey;
-
+    // @ts-ignore
     public purchaserCurrencyAccount: PublicKey;
+    // @ts-ignore
     public purchaserQPTAccount: PublicKey;
-
+    // @ts-ignore
     public qPoolCurrencyAccount: PublicKey;
 
     constructor(
@@ -54,8 +60,11 @@ export class QPoolsUser {
     ) {
         this.connection = connection;
         this.wallet = provider.wallet;
-        this.solbondProgram = anchor.workspace.Solbond;
         this.provider = provider;
+        this.solbondProgram = getSolbondProgram(this.connection, this.provider);
+
+        //@ts-expect-error
+        this.walletPayer = this.wallet.payer as Keypair;
 
         PublicKey.findProgramAddress(
             [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
@@ -68,6 +77,47 @@ export class QPoolsUser {
         // Add the bond pool account here too
         this.QPTokenMint = QPTokenMint;  // TODO Also hardcode this somewhere else probably
         this.currencyMint = currencyMint;
+
+        this.loadExistingQPTReserve();
+
+        // this.qPoolAccount = null;
+        // this.bumpQPoolAccount = null;
+        // this.qPoolQPAccount = null;
+        // this.purchaserCurrencyAccount = null;
+        // this.purchaserQPTAccount = null;
+        // this.qPoolCurrencyAccount = null;
+    }
+
+    async loadExistingQPTReserve() {
+        console.log("Fetching QPT reserve...");
+        [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
+            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            this.solbondProgram.programId
+        );
+
+        // Get the token account
+        console.log("qPoolAccount", this.qPoolAccount.toString());
+        // @ts-ignore
+        let bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
+
+        // Check if this is empty.
+        // If empty, return false
+
+        this.currencyMint = new Token(
+            this.connection,
+            bondPoolAccount.bondPoolCurrencyTokenAccount,
+            this.solbondProgram.programId,
+            this.walletPayer
+        );
+        this.QPTokenMint = new Token(
+            this.connection,
+            bondPoolAccount.bondPoolCurrencyTokenMint,
+            this.solbondProgram.programId,
+            this.walletPayer
+        );
+        this.qPoolQPAccount = bondPoolAccount.bondPoolRedeemableTokenAccount;
+        this.qPoolCurrencyAccount = bondPoolAccount.bondPoolCurrencyTokenAccount;
+
     }
 
     async registerAccount() {

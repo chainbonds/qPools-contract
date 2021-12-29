@@ -4,10 +4,10 @@ import {Provider} from "@project-serum/anchor";
 
 // Not sure if this import is allowed...
 //@ts-ignore
-import _invariant_idl from './../../deps/protocol/target/idl/amm.json';
+import _invariant_idl from './../../../solbond/deps/protocol/target/idl/amm.json';
 const invariant_idl: any = _invariant_idl;
 //@ts-ignore
-import _solana_idl from './../../target/idl/solbond.json';
+import _solana_idl from './../../../solbond/target/idl/solbond.json';
 const solana_idl: any = _solana_idl;
 
 export const getSolbondProgram = (connection: Connection, provider: Provider) => {

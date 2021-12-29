@@ -11,18 +11,28 @@ import {AiOutlineArrowDown} from "react-icons/ai";
 import Image from "next/image";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
-import {solbondProgram} from "../../programs/solbond";
-import {BN} from "@project-serum/anchor";
+import {BN, Provider} from "@project-serum/anchor";
 import {WalletI} from "../../splpasta/types";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
+import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
+import {Token} from "@solana/spl-token";
+import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
 export default function StakeForm() {
 
     const {register, handleSubmit} = useForm();
     const walletContext: any = useWallet();
+    const qPoolContext: IQPool = useQPoolUserTool();
 
     const [valueInSol, setValueInSol] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
+
+    // useEffect(() => {
+    //
+    //     // User should connect wallet first ...
+    //
+    //
+    // }, []);
 
     useEffect(() => {
         setValueInQpt((_: number) => {
@@ -31,52 +41,40 @@ export default function StakeForm() {
     }, [valueInSol]);
 
     const submitToContract = async (d: any) => {
-        console.log("Cluster URL is: ", String(process.env.NEXT_PUBLIC_CLUSTER_URL));
 
-        let connection;
-        let clusterName = String(process.env.NEXT_PUBLIC_CLUSTER_NAME);
-        if (clusterName === "localnet") {
-            let localClusterUrl = String(process.env.NEXT_PUBLIC_CLUSTER_URL);
-            connection = new Connection(localClusterUrl, 'confirmed');
-        } else if (clusterName === "devnet") {
-            connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-        } else if (clusterName === "testnet") {
-            connection = new Connection(clusterApiUrl('testnet'), 'confirmed');
-        } else if (clusterName === "mainnet") {
-            connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-        } else {
-            throw Error("Cluster is not defined properly! {$clusterName}");
-        }
-
-        const provider = new anchor.Provider(connection, walletContext, anchor.Provider.defaultOptions());
-        anchor.setProvider(provider);
-
-        const programSolbond: any = solbondProgram(connection, provider);
-        console.log("Solbond ProgramId is: ", programSolbond.programId.toString());
+        // Initialize if not initialized yet
+        qPoolContext.initializeQPoolsUserTool(walletContext);
 
         // TODO: Implement RPC Call
         console.log(JSON.stringify(d));
-
-        // Assert that there is some wallet registered
-        // Modify button accordingly (in a context state or so)
-
-        const userAccount: WalletI = provider.wallet;
-        if (!userAccount.publicKey) {
-            alert("Please connect your wallet first!");
-            return
-        }
-        console.log("Phantom user account is: ", userAccount.publicKey.toString());
-        console.log("Provider is: ", provider);
 
         const sendAmount: BN = new BN(d["amount"]);
         console.log("send amount is: ", sendAmount.toString());
 
         console.log("Will implement this stuff");
 
+        // Assert that there is some wallet registered
+        // Modify button accordingly (in a context state or so)
+
+        // if (!userAccount.publicKey) {
+        //     alert("Please connect your wallet first!");
+        //     return
+        // }
+        // console.log("Phantom user account is: ", userAccount.publicKey.toString());
+
+
         // Calculate the conversation ratio
         // Assume a simple multiplication with a constant (market rate)
 
     }
+
+    useEffect(() => {
+        if (walletContext.publicKey) {
+            console.log("Wallet pubkey wallet is:", walletContext.publicKey.toString());
+            qPoolContext.initializeQPoolsUserTool(walletContext);
+        }
+        // initializeQPoolsUserTool
+    }, [walletContext.publicKey]);
 
     return (
         <>
@@ -104,10 +102,22 @@ export default function StakeForm() {
                                 />
                             </div>
                         </div>
-                        <CallToActionButton
-                            type={"submit"}
-                            text={"EARN"}
-                        />
+                        {qPoolContext.qPoolsUser &&
+                            <CallToActionButton
+                                type={"submit"}
+                                text={"EARN"}
+                            />
+                        }
+                        {!qPoolContext.qPoolsUser &&
+                            <div className={"flex w-full justify-center"}>
+                                <WalletMultiButton
+                                    className={"btn btn-ghost"}
+                                    onClick={() => {
+                                        console.log("click");
+                                    }}
+                                />
+                            </div>
+                        }
                     </form>
                 </div>
             </div>

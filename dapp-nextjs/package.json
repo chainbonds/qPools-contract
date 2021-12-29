@@ -36,6 +36,7 @@
     "react-social-icons": "^5.6.1"
   },
   "devDependencies": {
+    "@invariant-labs/sdk": "file:./../solbond/deps/protocol/sdk",
     "@types/node": "16.11.7",
     "@types/react": "17.0.34",
     "@types/react-alert": "^5.2.1",

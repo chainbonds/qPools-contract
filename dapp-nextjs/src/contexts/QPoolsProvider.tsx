@@ -14,6 +14,8 @@ export interface IQPool {
     provider: any,
     _solbondProgram: any,
     userAccount: any,
+    currencyMint: any,
+    QPTokenMint: any,
 }
 
 const defaultValue: IQPool = {
@@ -23,6 +25,8 @@ const defaultValue: IQPool = {
     provider: () => console.error("attempting to use AuthContext outside of a valid provider"),
     _solbondProgram: () => console.error("attempting to use AuthContext outside of a valid provider"),
     userAccount: () => console.error("attempting to use AuthContext outside of a valid provider"),
+    currencyMint: () => console.error("attempting to use AuthContext outside of a valid provider"),
+    QPTokenMint: () => console.error("attempting to use AuthContext outside of a valid provider"),
 }
 
 const QPoolContext = React.createContext<IQPool>(defaultValue);
@@ -40,6 +44,8 @@ export function QPoolsProvider(props: any) {
     const [_solbondProgram, setSolbondProgram] = useState<any>(null);
     const [userAccount, setUserAccount] = useState<WalletI | null>(null);
 
+    const [currencyMint, setCurrencyMint] = useState<Token | null>(null);
+    const [QPTokenMint, setQPTokenMint] = useState<Token | null>(null);
 
     // Make a creator that loads the qPoolObject if it not created yet
     const initializeQPoolsUserTool = (walletContext: any) => {
@@ -76,31 +82,33 @@ export function QPoolsProvider(props: any) {
         // @ts-expect-error
         let payer = _provider.wallet.payer as Keypair;
 
-        let currencyMint = new Token(
+        let _currencyMint = new Token(
             _connection,
             new PublicKey("nXm2LqzVc76sWy2KUuDgZgbUU5XjNfExsDtf5FYopgB"),
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
-        let QPTokenMint = new Token(
+        let _QPTokenMint = new Token(
             _connection,
             new PublicKey("68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK"),
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
+        setCurrencyMint(() => currencyMint);
+        setQPTokenMint(() => QPTokenMint);
 
         if (!qPoolsUser) {
             setQPoolsUser(() => {
                 return new QPoolsUser(
                     _provider,
                     _connection,
-                    QPTokenMint,
-                    currencyMint
+                    _QPTokenMint,
+                    _currencyMint
                 );
             });
         } else {
             console.log("qPoolUserToll already exists!");
-            alert("qPoolUserToll already exists!");
+            // alert("qPoolUserToll already exists!");
         }
     };
 
@@ -110,7 +118,9 @@ export function QPoolsProvider(props: any) {
         connection,
         provider,
         _solbondProgram,
-        userAccount
+        userAccount,
+        currencyMint,
+        QPTokenMint
     };
 
     return (

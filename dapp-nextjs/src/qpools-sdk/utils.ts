@@ -12,9 +12,7 @@ const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
 
-
-
-export async function createMint2(provider) {
+export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
 
     const mint = await spl.Token.createMint(
@@ -65,7 +63,7 @@ export function getPayer(): Keypair {
     return _payer;
 }
 
-export async function createTokenAccount(provider, mint, owner) {
+export async function createTokenAccount(provider: any, mint: any, owner: any) {
     const token = new spl.Token(
         provider.connection,
         mint,

@@ -166,7 +166,7 @@ export class QPoolsUser {
         if (!(currency_amount_raw > 0)) {
             // TODO: Also implement this in the contract
             console.log("Cannot buy negative token amounts!");
-            return
+            return false;
         }
 
         console.log("Sending RPC call");

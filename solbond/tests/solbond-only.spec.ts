@@ -2,13 +2,12 @@ import * as anchor from '@project-serum/anchor';
 import {BN, Program, web3} from '@project-serum/anchor';
 import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
-import {createMint, createMint2, getPayer} from "./../qpools-sdk/utils";
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {QPoolsAdmin} from "../qpools-sdk/qpools-admin";
-import {createToken} from "./../qpools-sdk/invariant-utils";
+import {QPoolsAdmin} from "../../dapp-nextjs/src/qpools-sdk/qpools-admin";
+import {createToken} from "../../dapp-nextjs/src/qpools-sdk/invariant-utils";
 import {Key} from "readline";
-import {WalletI} from "../qpools-sdk/splpasta/types";
-import {QPoolsUser} from "../qpools-sdk/qpools-user";
+import {WalletI} from "../../dapp-nextjs/src/qpools-sdk/splpasta/types";
+import {QPoolsUser} from "../../dapp-nextjs/src/qpools-sdk/qpools-user";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");

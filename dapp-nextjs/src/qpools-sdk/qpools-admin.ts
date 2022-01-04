@@ -146,11 +146,13 @@ export class QPoolsAdmin {
 
     async initializeQPTReserve() {
 
+        // Currency mint should be part of the PDA
+
         // Generate qPoolAccount
         console.log("BEGIN: initializeQPTReserve");
         console.log("Creating QP reserve");
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         );
         console.log("qPoolAccount is: ", this.qPoolAccount.toString());

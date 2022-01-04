@@ -5,7 +5,7 @@ import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {solbondProgram} from "../programs/solbond";
-import {WalletI} from "../splpasta/types";
+import {WalletI} from "../qpools-sdk/splpasta/types";
 
 export interface IQPool {
     qPoolsUser: any,
@@ -48,7 +48,7 @@ export function QPoolsProvider(props: any) {
     const [QPTokenMint, setQPTokenMint] = useState<Token | null>(null);
 
     // Make a creator that loads the qPoolObject if it not created yet
-    const initializeQPoolsUserTool = (walletContext: any) => {
+    const initializeQPoolsUserTool = async (walletContext: any) => {
 
         console.log("Cluster URL is: ", String(process.env.NEXT_PUBLIC_CLUSTER_URL));
         let _connection: Connection;
@@ -70,7 +70,7 @@ export function QPoolsProvider(props: any) {
 
         const _provider = new anchor.Provider(_connection, walletContext, anchor.Provider.defaultOptions());
         anchor.setProvider(_provider);
-        setProvider(() => provider);
+        setProvider(() => _provider);
 
         const _programSolbond: any = solbondProgram(_connection, _provider);
         console.log("Solbond ProgramId is: ", _programSolbond.programId.toString());
@@ -82,9 +82,14 @@ export function QPoolsProvider(props: any) {
         // @ts-expect-error
         let payer = _provider.wallet.payer as Keypair;
 
+        // Make the wrapped solana mint the mint address
+        // Gotta create a new contract for that though
+
+        // new PublicKey("nXm2LqzVc76sWy2KUuDgZgbUU5XjNfExsDtf5FYopgB"),
+
         let _currencyMint = new Token(
             _connection,
-            new PublicKey("nXm2LqzVc76sWy2KUuDgZgbUU5XjNfExsDtf5FYopgB"),
+            new PublicKey("So11111111111111111111111111111111111111112"),
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );

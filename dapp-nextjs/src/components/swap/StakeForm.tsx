@@ -1,7 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {Cluster, clusterApiUrl, Connection, Keypair} from "@solana/web3.js";
+import {Cluster, clusterApiUrl, Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 // web3, Wallet as AnchorWallet
 // import {BN} from "@project-serum/anchor";
@@ -12,14 +12,17 @@ import Image from "next/image";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
 import {BN, Provider, web3} from "@project-serum/anchor";
-import {WalletI} from "../../splpasta/types";
+import {WalletI} from "../../qpools-sdk/splpasta/types";
 import React, {useEffect, useState} from "react";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {Token} from "@solana/spl-token";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {Mint, Wallet} from "../../qpools-sdk/splpasta";
-import NodeWallet from "@project-serum/anchor/src/nodewallet";
 import {mintToTx} from "../../qpools-sdk/splpasta/tx/mint";
+import {NodeWallet} from "@project-serum/anchor/src/provider";
+import {createAssociatedTokenAccountSendUnsigned} from "../../qpools-sdk/splpasta/tx/associated-token-account";
+import {tou64} from "@invariant-labs/sdk";
+import * as util from "../../qpools-sdk/splpasta/util";
 
 export default function StakeForm() {
 
@@ -57,7 +60,7 @@ export default function StakeForm() {
             return
         }
         // Initialize if not initialized yet
-        qPoolContext.initializeQPoolsUserTool(walletContext);
+        await qPoolContext.initializeQPoolsUserTool(walletContext);
         // Register accounts for this user then
         // Do some airdrop first I guess
         // there sohuld be a button or wallet that we can request an airdrop from ...
@@ -67,11 +70,15 @@ export default function StakeForm() {
         // const uintarray: Uint8Array = Uint8Array.from([
         //     149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4
         // ])
-        const uintarray: Uint8Array = Buffer.from([
-            149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4
-        ])
-        console.log("Uintarray is: ", uintarray);
-        const mintAuthorityKeypair: Keypair = Keypair.fromSecretKey(uintarray);
+        // TODO: Just request an airdrop for now,
+        // Add a button to do so
+        // Assume we only provide qSOL for now
+
+        // const uintarray: Uint8Array = Buffer.from([
+        //     149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4
+        // ])
+        // console.log("Uintarray is: ", uintarray);
+        // const mintAuthorityKeypair: Keypair = Keypair.fromSecretKey(uintarray);
 
         // // const mint = new Mint(qPoolContext.connection, mintAuthorityKeypair.publicKey);
         // const tx = await mintToTx(
@@ -90,30 +97,59 @@ export default function StakeForm() {
         // console.log('SIGNATURE', signature);
         // await mintAuthorityKeypair.signTransaction(tx)
 
-
-        // const mintAuthority: Wallet = Wallet.fromKeypair(qPoolContext.connection, mintAuthorityKeypair);
-        // // @ts-ignore
-        // const mintAuthority = anchor.Wallet();
-        // anchor.Wallet(mintAuthorityKeypair);
-
-        // console.log("Mint authority Keypair is: ", mintAuthorityKeypair.publicKey);
-        // console.log("Second mint authority: ", mintAuthority);
-        // const mintAuthority = Wallet.fromKeypair(qPoolContext.connection, mintAuthorityKeypair);
-        // @ts-ignore
-        // const mintAuthority = new anchor.Wallet(mintAuthorityKeypair);
-        // const mintAuthority = Wallet.fromKeypair(qPoolContext.connection, mintAuthorityKeypair);
-        // console.log("Mint authority is: ", mintAuthority);
-        // // Get mint authority from the token
+        // const wallet: NodeWallet = new NodeWallet(mintAuthorityKeypair);
+        // const mintWallet: WalletI = new anchor.Wallet(mintAuthorityKeypair);
+        // console.log("MintWallet are: ", mintWallet.publicKey.toString());
+        //
+        // console.log("Provider and wallet are: ");
+        // console.log(qPoolContext.provider);
+        // console.log(qPoolContext.provider.wallet);
+        //
         // console.log("Generating mint");
-        // const mint = new Mint(qPoolContext.connection, mintAuthority.publicKey);
-        // console.log("Airdropping some tokens to the user ...");
-        // const tx = await mint.mintTo(
-        //     qPoolContext.userAccount.publicKey,
-        //     mintAuthority,
+        // const currencyMint: Token = new Token(
+        //     qPoolContext.connection,
+        //     new PublicKey("So11111111111111111111111111111111111111112"), // mintWallet.publicKey,
+        //     qPoolContext._solbondProgram.programId,
+        //     qPoolContext.provider.wallet as Signer
+        // );
+        const currencyMint: Mint = new Mint(
+            qPoolContext.connection,
+            new PublicKey("So11111111111111111111111111111111111111112")
+        );
+        // const mint = new Mint(qPoolContext.connection, mintWallet.publicKey);
+        console.log("Airdropping some tokens to the user ...");
+        // mint.mintTo();
+
+        // Wrap SOL in this currency Mint
+
+        // Create an associated token account if it is not there yet!
+        console.log("Public key is: ", qPoolContext.provider.wallet.publicKey);
+        console.log("Public key is: ", qPoolContext.provider.wallet.publicKey.toString());
+
+        // const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
+        //     qPoolContext.connection,
+        //     currencyMint.key,
+        //     qPoolContext.provider.wallet.publicKey,
+        //     qPoolContext.provider.wallet
+        // );
+        // const currencyMintUserAccount = await currencyMint.createAssociatedTokenAccount(qPoolContext.provider.wallet.publicKey);
+        // console.log("Currency mint user account is: ", currencyMintUserAccount.toString());
+        // const tx = await mintToTx(
+        //     qPoolContext.connection,
+        //     currencyMint.key,
+        //     qPoolContext.provider.wallet.publicKey,
+        //     mintAuthorityKeypair.publicKey,
         //     sendAmount.toNumber()
         // );
-        // console.log("Confirming transaction");
-        // await qPoolContext.connection.confirmTransaction(tx);
+        // const txSigner = await mintWallet.signTransaction(tx);
+        // await util.sendAndConfirm(qPoolContext.connection, txSigner);
+
+        // const tx = await currencyMint.mintTo(
+        //     currencyMintUserAccount,
+        //     mintAuthorityKeypair.publicKey,
+        //     [mintAuthorityKeypair as Signer],
+        //     sendAmount
+        // );
 
         // Should probably print the amount of tokens
         const response = await qPoolContext.qPoolsUser.buyQPT(sendAmount.toNumber());

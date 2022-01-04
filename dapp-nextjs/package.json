@@ -21,7 +21,9 @@
     "@solana/wallet-adapter-sollet": "^0.8.0",
     "@solana/wallet-adapter-wallets": "^0.11.3",
     "@tailwindcss/typography": "^0.4.1",
+    "chai": "^4.3.4",
     "daisyui": "^1.16.2",
+    "easy-spl": "^0.5.0",
     "heroicons": "^1.0.5",
     "next": "12.0.3",
     "next-compose-plugins": "^2.2.1",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@invariant-labs/sdk": "file:./../solbond/deps/protocol/sdk",
+    "@types/chai": "^4.3.0",
     "@types/node": "16.11.7",
     "@types/react": "17.0.34",
     "@types/react-alert": "^5.2.1",

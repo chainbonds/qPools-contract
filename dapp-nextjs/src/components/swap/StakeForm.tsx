@@ -1,28 +1,15 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {Cluster, clusterApiUrl, Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
-import * as anchor from "@project-serum/anchor";
-// web3, Wallet as AnchorWallet
-// import {BN} from "@project-serum/anchor";
-// import {solbondProgram} from "../../programs/solbond";
-// import {getTokenList} from "../../const";
+import {PublicKey} from "@solana/web3.js";
 import {AiOutlineArrowDown} from "react-icons/ai";
-import Image from "next/image";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
-import {BN, Provider, web3} from "@project-serum/anchor";
-import {WalletI} from "../../qpools-sdk/splpasta/types";
+import {BN} from "@project-serum/anchor";
 import React, {useEffect, useState} from "react";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
-import {Token} from "@solana/spl-token";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
-import {Mint, Wallet} from "../../qpools-sdk/splpasta";
-import {mintToTx} from "../../qpools-sdk/splpasta/tx/mint";
-import {NodeWallet} from "@project-serum/anchor/src/provider";
-import {createAssociatedTokenAccountSendUnsigned} from "../../qpools-sdk/splpasta/tx/associated-token-account";
-import {tou64} from "@invariant-labs/sdk";
-import * as util from "../../qpools-sdk/splpasta/util";
+import {Mint} from "easy-spl";
 
 export default function StakeForm() {
 
@@ -66,7 +53,10 @@ export default function StakeForm() {
         // there sohuld be a button or wallet that we can request an airdrop from ...
 
         // Generate the mint authority
-        console.log("Creating WalletI");
+        console.log("Creating Wallet");
+
+
+
         // const uintarray: Uint8Array = Uint8Array.from([
         //     149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4
         // ])
@@ -190,12 +180,13 @@ export default function StakeForm() {
                                     modifiable={true}
                                     setNewValue={setValueInSol}
                                 />
-                                <div className={"ml-5"}>
+                                <div className={"ml-4"}>
                                     <AiOutlineArrowDown size={24}/>
                                 </div>
                                 <InputFieldWithLogo
                                     logoPath={"/Light 2 Square.png"}
-                                    displayText={"QPT"}
+                                    // QPT
+                                    displayText={"qSOL"}
                                     registerFunction={() => register("qpt_amount")}
                                     modifiable={false}
                                     value={valueInQPT}

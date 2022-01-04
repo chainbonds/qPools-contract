@@ -19,13 +19,10 @@ import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {createStandardFeeTiers, createToken} from "../invariant-utils";
 import {FEE_TIERS, fromFee} from "@invariant-labs/sdk/lib/utils";
-import {createMint, createTokenAccount} from "../utils";
-import {Key} from "readline";
 
 import {assert} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {QPoolsAdmin} from "./qpools-admin";
-import {Mint} from "../../../dapp/src/splpasta";
 import {getLiquidityByX} from "@invariant-labs/sdk/lib/math";
 import {QPair} from "./q-pair";
 import {createAssociatedTokenAccountSend, getAssociatedTokenAddress} from "./splpasta/tx/associated-token-account";

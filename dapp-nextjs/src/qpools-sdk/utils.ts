@@ -1,11 +1,15 @@
+import {WalletI} from "./legacy_splpasta/types";
 
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 import { web3, Provider, BN } from '@project-serum/anchor';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {PublicKey, Keypair} from "@solana/web3.js";
+// import * as util from "./legacy_splpasta/util";
+import {account, util} from "easy-spl";
+import {createAssociatedTokenAccountTx} from "easy-spl/dist/tx/associated-token-account";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
@@ -93,4 +97,49 @@ export async function getBlockchainEpoch(provider: Provider): Promise<number> {
 
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/*
+    Associated Token Accounts
+*/
+
+/**
+ * Associated Token Account
+ * @param conn
+ * @param mint
+ * @param owner
+ * @param wallet
+ */
+export const createAssociatedTokenAccountSendUnsigned = async (
+    conn: web3.Connection,
+    mint: web3.PublicKey,
+    owner: web3.PublicKey,
+    wallet: WalletI,
+): Promise<web3.PublicKey> => {
+    const address = await getAssociatedTokenAddressOffCurve(mint, owner)
+    if (await account.exists(conn, address)) {
+        return address
+    }
+    const tx = await createAssociatedTokenAccountUnsigned(conn, mint, address, owner, wallet)
+    await util.sendAndConfirm(conn, tx)
+    return address
+}
+
+export const getAssociatedTokenAddressOffCurve = async (
+    mint: web3.PublicKey,
+    user: web3.PublicKey
+): Promise<web3.PublicKey> => {
+    //@ts-ignore
+    return Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, user, true);
+}
+
+export const createAssociatedTokenAccountUnsigned = async (
+    conn: web3.Connection,
+    mint: web3.PublicKey,
+    address: web3.PublicKey | null,
+    owner: web3.PublicKey,
+    wallet: WalletI,
+): Promise<web3.Transaction> => {
+    const tx = await createAssociatedTokenAccountTx(conn, mint, owner, wallet.publicKey)
+    return await wallet.signTransaction(tx);
 }

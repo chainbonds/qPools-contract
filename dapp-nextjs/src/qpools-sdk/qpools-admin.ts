@@ -27,21 +27,23 @@ import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {createStandardFeeTiers, createToken} from "../qpools-sdk/invariant-utils";
 import {FEE_TIERS, fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
-import {createMint, createTokenAccount} from "../qpools-sdk/utils";
+import {createAssociatedTokenAccountSendUnsigned, createMint, createTokenAccount} from "../qpools-sdk/utils";
 import {Key} from "readline";
 
 import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
-import {UnderlyingSinkAbortCallback} from "stream/web";
 import {calculatePriceAfterSlippage, isInitialized} from "@invariant-labs/sdk/lib/math";
 import {getInvariantProgram, getSolbondProgram} from "./program";
 import {QPair} from "./q-pair";
-import {
-    createAssociatedTokenAccountSend, createAssociatedTokenAccountSendUnsigned,
-    createAssociatedTokenAccountTx,
-    getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
-} from "./splpasta/tx/associated-token-account";
+
+// import {
+//     createAssociatedTokenAccountSend, createAssociatedTokenAccountSendUnsigned,
+//     createAssociatedTokenAccountTx,
+//     getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
+// } from "./splpasta/tx/associated-token-account";
+
 import {BondPoolAccount} from "./types/bondPoolAccount";
+import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -62,12 +64,12 @@ export class QPoolsAdmin {
     public qPoolAccount: PublicKey | null = null;  // qPool Account
     public bumpQPoolAccount: number | null = null;
 
-    public QPTokenMint: Token;  // qPool `redeemable` tokens
-    public qPoolQPAccount: PublicKey;
-    public qPoolCurrencyAccount: PublicKey;
+    public QPTokenMint: Token | undefined;  // qPool `redeemable` tokens
+    public qPoolQPAccount: PublicKey | undefined;
+    public qPoolCurrencyAccount: PublicKey | undefined;
 
-    public pairs: Pair[];
-    public mockMarket: Market;
+    public pairs: Pair[] | undefined;
+    public mockMarket: Market | undefined;
     public feeTier: FeeTier;
 
     public QPReserveTokens: Record<string, PublicKey> = {};
@@ -104,14 +106,14 @@ export class QPoolsAdmin {
         console.log("invariantProgram", this.invariantProgram.programId.toString());
         console.log("wallet", this.wallet.publicKey.toString());
 
-        console.log("🟢 qPoolAccount", this.qPoolAccount.toString());
-        console.log("🟢 bumpQPoolAccount", this.bumpQPoolAccount.toString());
+        console.log("🟢 qPoolAccount", this.qPoolAccount!.toString());
+        console.log("🟢 bumpQPoolAccount", this.bumpQPoolAccount!.toString());
 
-        console.log("🌊 QPTokenMint", this.QPTokenMint.publicKey.toString());
-        console.log("🌊 qPoolQPAccount", this.qPoolQPAccount.toString());
+        console.log("🌊 QPTokenMint", this.QPTokenMint!.publicKey.toString());
+        console.log("🌊 qPoolQPAccount", this.qPoolQPAccount!.toString());
 
         console.log("💵 currencyMint", this.currencyMint.publicKey.toString());
-        console.log("💵 qPoolCurrencyAccount", this.qPoolCurrencyAccount.toString());
+        console.log("💵 qPoolCurrencyAccount", this.qPoolCurrencyAccount!.toString());
     }
 
     async loadExistingQPTReserve() {
@@ -225,7 +227,7 @@ export class QPoolsAdmin {
     ) {
 
         await Promise.all(
-            this.pairs.map(async (pair: Pair) => {
+            this.pairs!.map(async (pair: Pair) => {
 
                 const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, positionOwner);
                 const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, positionOwner);
@@ -250,7 +252,7 @@ export class QPoolsAdmin {
 
     }
 
-    async setPairs(pairs) {
+    async setPairs(pairs: Pair[]) {
         this.pairs = pairs;
     }
 
@@ -266,16 +268,16 @@ export class QPoolsAdmin {
      *
      * @param initializer
      */
-    async swapReserveToAllAssetPairs(amount, backToCurrency = false) {
+    async swapReserveToAllAssetPairs(amount: number, backToCurrency = false) {
 
         await Promise.all(
-            this.pairs.map(async (pair: QPair) => {
+            this.pairs!.map(async (pair: QPair) => {
                 // console.log("Looking at pair: ", pair.tokenX.toString(), pair.tokenY.toString());
                 console.log("(tokenX) when swapping to Pairs: ", pair.tokenX.toString());
                 console.log("(tokenY) when swapping to Pairs: ", pair.tokenY.toString());
 
                 assert.ok(
-                    pair.tokenX.equals(pair.currencyMint) || pair.tokenY.equals(pair.currencyMint)
+                    pair.tokenX.equals(pair.currencyMint!) || pair.tokenY.equals(pair.currencyMint!)
                 );
 
                 // Create token accounts for the
@@ -296,7 +298,7 @@ export class QPoolsAdmin {
 
                 // const QPTokenXAccount = await getAssociatedTokenAddressOffCurve(tokenX.publicKey, this.qPoolAccount);
                 // const QPTokenYAccount = await getAssociatedTokenAddressOffCurve(tokenY.publicKey, this.qPoolAccount);
-                console.log("('''qPoolAccount) here: ", this.qPoolAccount.toString());
+                console.log("('''qPoolAccount) here: ", this.qPoolAccount!.toString());
                 // createAssociatedTokenAccountSendUnsigned(
                 //     this.connection,
                 //     this.QPTMint.publicKey,
@@ -306,14 +308,14 @@ export class QPoolsAdmin {
                 const QPTokenXAccount = await createAssociatedTokenAccountSendUnsigned(
                     this.connection,
                     tokenX.publicKey,
-                    this.qPoolAccount,
+                    this.qPoolAccount!,
                     this.provider.wallet
                 );
                 console.log("('''qPoolCurrencyAccount) 1: ", QPTokenXAccount.toString())
                 const QPTokenYAccount = await createAssociatedTokenAccountSendUnsigned(
                     this.connection,
                     tokenY.publicKey,
-                    this.qPoolAccount,
+                    this.qPoolAccount!,
                     this.provider.wallet
                 );
                 console.log("('''qPoolCurrencyAccount) 2: ", QPTokenYAccount.toString())
@@ -359,7 +361,7 @@ export class QPoolsAdmin {
 
                 // Not entirely sure what this is!
                 let xToY: boolean;
-                if ((!backToCurrency) && tokenX.publicKey.equals(pair.currencyMint)) {
+                if ((!backToCurrency) && tokenX.publicKey.equals(pair.currencyMint!)) {
                     xToY = true
                 } else {
                     xToY = false
@@ -401,7 +403,7 @@ export class QPoolsAdmin {
                 console.log(
                     {
                         initializer: this.wallet.publicKey.toString(),
-                        owner: this.qPoolAccount.toString(),
+                        owner: this.qPoolAccount!.toString(),
 
                         tickmap: pool.tickmap.toString(),
                         token_x_mint: pair.tokenX.toString(),
@@ -413,8 +415,8 @@ export class QPoolsAdmin {
 
                         pool: poolAddress.toString(),
 
-                        state: this.mockMarket.stateAddress.toString(),
-                        program_authority: this.mockMarket.programAuthority.toString(),
+                        state: this.mockMarket!.stateAddress.toString(),
+                        program_authority: this.mockMarket!.programAuthority.toString(),
 
                         token_program: TOKEN_PROGRAM_ID.toString(),
                         invariant_program: this.invariantProgram.programId.toString(),
@@ -546,7 +548,7 @@ export class QPoolsAdmin {
      * back to the currency asset
      * @param amount
      */
-    async swapAllAssetPairsToReserve(amount) {
+    async swapAllAssetPairsToReserve(amount: number) {
         return this.swapReserveToAllAssetPairs(amount, true);
     }
 
@@ -564,8 +566,8 @@ export class QPoolsAdmin {
 
     async createPositionList() {
 
-        const {positionListAddress, positionListBump} = await this.mockMarket.getPositionListAddress(
-            this.qPoolAccount
+        const {positionListAddress, positionListBump} = await this.mockMarket!.getPositionListAddress(
+            this.qPoolAccount!
         );
 
         const ix = this.invariantProgram.instruction.createPositionList(positionListBump, {
@@ -588,7 +590,7 @@ export class QPoolsAdmin {
 
         // For each pair, create a position!
         await Promise.all(
-            this.pairs.map(async (pair: Pair) => {
+            this.pairs!.map(async (pair: Pair) => {
                     console.log()
 
                     // Ticks should be well-defined for now!
@@ -596,7 +598,7 @@ export class QPoolsAdmin {
                     const upperTick = 50;
 
                     const poolAddress = await pair.getAddress(this.invariantProgram.programId);
-                    const [tickmap, pool] = await Promise.all([this.mockMarket.getTickmap(pair), this.mockMarket.get(pair)])
+                    const [tickmap, pool] = await Promise.all([this.mockMarket!.getTickmap(pair), this.mockMarket.get(pair)])
 
                     const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
                     const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)
@@ -606,17 +608,17 @@ export class QPoolsAdmin {
                     // TODO: Who is the owner here
                     // Let's assume its the reserve / qPoolAccount
                     if (!lowerExists) {
-                        tx.add(await this.mockMarket.createTickInstruction(pair, lowerTick, this.qPoolAccount));
+                        tx.add(await this.mockMarket!.createTickInstruction(pair, lowerTick, this.qPoolAccount!));
                     }
                     if (!upperExists) {
-                        tx.add(await this.mockMarket.createTickInstruction(pair, upperTick, this.qPoolAccount));
+                        tx.add(await this.mockMarket!.createTickInstruction(pair, upperTick, this.qPoolAccount!));
                     }
 
-                    const {positionListAddress} = await this.mockMarket.getPositionListAddress(this.qPoolAccount);
+                    const {positionListAddress} = await this.mockMarket!.getPositionListAddress(this.qPoolAccount!);
                     const account = await this.connection.getAccountInfo(positionListAddress);
 
                     if (account === null) {
-                        tx.add(await this.mockMarket.createPositionListInstruction(this.qPoolAccount));
+                        tx.add(await this.mockMarket!.createPositionListInstruction(this.qPoolAccount!));
                     }
 
                     await signAndSend(tx, [this.wallet], this.connection);
@@ -625,24 +627,24 @@ export class QPoolsAdmin {
                     const {
                         tickAddress: lowerTickPDA,
                         tickBump: lowerTickPDABump
-                    } = await this.mockMarket.getTickAddress(pair, lowerTick);
+                    } = await this.mockMarket!.getTickAddress(pair, lowerTick);
                     const {
                         tickAddress: upperTickPDA,
                         tickBump: upperTickPDABump
-                    } = await this.mockMarket.getTickAddress(pair, upperTick);
+                    } = await this.mockMarket!.getTickAddress(pair, upperTick);
 
                     // Get AccountX and AccountY
                     const QPTokenXAccount = await createAssociatedTokenAccountSendUnsigned(
                         this.connection,
                         pool.tokenX,
-                        this.qPoolAccount,
+                        this.qPoolAccount!,
                         this.provider.wallet
                     );
                     console.log("('''qPoolTokenXAccount) ", QPTokenXAccount.toString());
                     const QPTokenYAccount = await createAssociatedTokenAccountSendUnsigned(
                         this.connection,
                         pool.tokenY,
-                        this.qPoolAccount,
+                        this.qPoolAccount!,
                         this.provider.wallet
                     );
                     console.log("('''qPoolTokenYAccount) ", QPTokenYAccount.toString());
@@ -658,7 +660,7 @@ export class QPoolsAdmin {
                     // but should have
                     //
                     const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
-                        [Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)), this.qPoolAccount.toBuffer(), indexBuffer],
+                        [Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)), this.qPoolAccount!.toBuffer(), indexBuffer],
                         // this.invariantProgram.programId
                         this.invariantProgram.programId
                     )
@@ -686,11 +688,11 @@ export class QPoolsAdmin {
                                 // Create liquidity accounts
                                 initializer: this.wallet.publicKey.toString(),
 
-                                state: this.mockMarket.stateAddress.toString(),
+                                state: this.mockMarket!.stateAddress.toString(),
                                 position: positionAddress.toString(),
                                 pool: poolAddress.toString(),
                                 positionList: positionListAddress.toString(),
-                                owner: this.qPoolAccount.toString(),
+                                owner: this.qPoolAccount!.toString(),
                                 lowerTick: lowerTickPDA.toString(),
                                 upperTick: upperTickPDA.toString(),
                                 tokenX: pool.tokenX.toString(),
@@ -701,7 +703,7 @@ export class QPoolsAdmin {
                                 reserveY: pool.tokenYReserve.toString(),
 
                                 // Auxiliary Accounts
-                                programAuthority: this.mockMarket.programAuthority.toString(),
+                                programAuthority: this.mockMarket!.programAuthority.toString(),
                                 tokenProgram: TOKEN_PROGRAM_ID.toString(),
                                 invariantProgram: this.invariantProgram.programId.toString(),
                                 systemProgram: web3.SystemProgram.programId.toString(),

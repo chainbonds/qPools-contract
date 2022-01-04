@@ -10,13 +10,9 @@ import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import assert from "assert";
 import {Key} from "readline";
 import {Sign} from "crypto";
-import {
-    getAssociatedTokenAddress,
-    createAssociatedTokenAccountSendUnsigned,
-    getAssociatedTokenAddressOffCurve
-} from "./splpasta/tx/associated-token-account";
 import {BondPoolAccount} from "./types/bondPoolAccount";
 import {getSolbondProgram} from "./program";
+import {createAssociatedTokenAccountSendUnsigned} from "./utils";
 
 // can't remember what this is
 export interface Tickmap {

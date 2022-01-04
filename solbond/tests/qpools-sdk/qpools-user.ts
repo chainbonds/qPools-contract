@@ -9,7 +9,6 @@ import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import assert from "assert";
 import {createTokenAccount} from "../utils";
-import {getOrCreateAssociatedTokenAccount} from "../../../dapp/src/programs/anchor";
 import {Key} from "readline";
 import {Sign} from "crypto";
 import {

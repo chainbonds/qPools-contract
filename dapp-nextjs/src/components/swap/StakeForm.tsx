@@ -11,7 +11,9 @@ import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {Mint} from "easy-spl";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {airdropAdmin, createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
+import airdropAdmin from "@qpools/sdk/src/airdropAdmin";
+import {createAssociatedTokenAccountSendUnsigned} from "@qpools/sdk/src/utils";
+import {MOCK} from "@qpools/sdk/src/const";
 
 export default function StakeForm() {
 

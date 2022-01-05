@@ -11,6 +11,10 @@ import {getSolbondProgram} from "./solbond-program";
 import {createAssociatedTokenAccountSendUnsigned, IWallet, tou64} from "./utils";
 import {assert} from "chai";
 
+// export interface Tickmap {
+//     bitmap: Array<number>
+// }
+
 export class QPoolsUser {
 
     public connection: Connection;
@@ -40,10 +44,8 @@ export class QPoolsUser {
         provider: Provider,
         // wallet: IWallet,
         connection: Connection,
-
         QPTokenMint: Token,
         currencyMint: Token,
-
     ) {
         this.connection = connection;
         this.wallet = provider.wallet;
@@ -60,8 +62,8 @@ export class QPoolsUser {
         PublicKey.findProgramAddress(
             [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
-        ).then(([_qPoolAccount, _bumpQPoolAccount] ) => {
-            this.qPoolAccount = _qPoolAccount ;
+        ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
+            this.qPoolAccount = _qPoolAccount;
             this.bumpQPoolAccount = _bumpQPoolAccount;
         });
 

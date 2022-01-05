@@ -122,11 +122,8 @@ export const createAssociatedTokenAccountSendUnsigned = async (
     if (await account.exists(conn, address)) {
         return address
     }
-    console.log("Now creating token unsigned")
     const tx = await createAssociatedTokenAccountUnsigned(conn, mint, address, owner, wallet);
-    console.log("Send and Confirm!");
     await util.sendAndConfirm(conn, tx);
-    console.log("return!");
     return address
 }
 
@@ -144,7 +141,6 @@ export const createAssociatedTokenAccountUnsigned = async (
     owner: web3.PublicKey,
     wallet: WalletI,
 ): Promise<web3.Transaction> => {
-
     if (!address) {
         address = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner, true);
     }
@@ -160,7 +156,6 @@ export const createAssociatedTokenAccountUnsigned = async (
     ]
     let tx = await util.wrapInstructions(conn, instructions, wallet.publicKey);
     // const tx = await createAssociatedTokenAccountTx(conn, mint, owner, wallet.publicKey);
-    console.log("Now signing")
     return await wallet.signTransaction(tx);
 }
 

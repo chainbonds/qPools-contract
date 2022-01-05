@@ -53,19 +53,19 @@ export class QPoolsUser {
         //@ts-expect-error
         this.walletPayer = this.wallet.payer as Keypair;
 
+        // Add the bond pool account here too
+        this.QPTokenMint = QPTokenMint;  // TODO Also hardcode this somewhere else probably
+        this.currencyMint = currencyMint;
+
         PublicKey.findProgramAddress(
-            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount] ) => {
             this.qPoolAccount = _qPoolAccount ;
             this.bumpQPoolAccount = _bumpQPoolAccount;
         });
 
-        // Add the bond pool account here too
-        this.QPTokenMint = QPTokenMint;  // TODO Also hardcode this somewhere else probably
-        this.currencyMint = currencyMint;
-
-        this.loadExistingQPTReserve();
+        this.loadExistingQPTReserve(this.currencyMint.publicKey);
 
         // this.qPoolAccount = null;
         // this.bumpQPoolAccount = null;
@@ -75,10 +75,13 @@ export class QPoolsUser {
         // this.qPoolCurrencyAccount = null;
     }
 
-    async loadExistingQPTReserve() {
+    async loadExistingQPTReserve(currencyMintPubkey: PublicKey) {
         console.log("Fetching QPT reserve...");
+        if (!currencyMintPubkey) {
+            throw Error("currencyMintPubkey: " + currencyMintPubkey.toString());
+        }
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [currencyMintPubkey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         );
 
@@ -87,18 +90,23 @@ export class QPoolsUser {
         // @ts-ignore
         let bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
 
+        if (bondPoolAccount.bondPoolCurrencyTokenAccount != currencyMintPubkey) {
+            console.log(bondPoolAccount.bondPoolCurrencyTokenAccount.toString());
+            console.log(currencyMintPubkey.toString());
+            throw Error("mint is not the same!: " + currencyMintPubkey.toString());
+        }
+
         // Check if this is empty.
         // If empty, return false
-
         this.currencyMint = new Token(
             this.connection,
-            bondPoolAccount.bondPoolCurrencyTokenAccount,
+            bondPoolAccount.bondPoolCurrencyTokenMint,
             this.solbondProgram.programId,
             this.walletPayer
         );
         this.QPTokenMint = new Token(
             this.connection,
-            bondPoolAccount.bondPoolCurrencyTokenMint,
+            bondPoolAccount.bondPoolRedeemableMint,
             this.solbondProgram.programId,
             this.walletPayer
         );
@@ -111,40 +119,48 @@ export class QPoolsUser {
         console.log("Registering account..");
         // Purchaser
         if (!this.qPoolQPAccount) {
+            console.log("Creating a qPoolQPAccount");
             this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
                 this.QPTokenMint.publicKey,
                 this.qPoolAccount,
                 this.provider.wallet
             );
+            console.log("Done!");
         }
         if (!this.qPoolCurrencyAccount) {
+            console.log("Creating a qPoolCurrencyAccount");
             this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
                 this.currencyMint.publicKey,
                 this.qPoolAccount,
                 this.provider.wallet
             );
+            console.log("Done!");
         }
         // Create the reserve account, if none exists
         // console.log("Going to create the this.purchaserCurrencyAccount");
         if (!this.purchaserCurrencyAccount) {
+            console.log("Creating a purchaserCurrencyAccount");
             this.purchaserCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
                 this.currencyMint.publicKey,
                 this.wallet.publicKey,
                 this.wallet
             );
+            console.log("Done!");
         }
         // Same for the currency mint account, if none exists
         // console.log("Going to create the this.purchaserQPTAccount");
         if (!this.purchaserQPTAccount) {
+            console.log("Creating a purchaserQPTAccount");
             this.purchaserQPTAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
                 this.QPTokenMint.publicKey,
                 this.wallet.publicKey,
                 this.wallet
             );
+            console.log("Done!");
         }
     }
 

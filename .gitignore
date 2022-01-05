@@ -1,0 +1,8 @@
+./**/yarn.lock
+./**/package-lock.json
+qpools-admin-sdk/lib/*
+qpools-sdk/lib/*
+./**/node_modules/*
+dapp-nextjs/build/*
+
+

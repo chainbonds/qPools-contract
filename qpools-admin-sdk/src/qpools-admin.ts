@@ -32,12 +32,6 @@ import {calculatePriceAfterSlippage, isInitialized} from "@invariant-labs/sdk/li
 import {getInvariantProgram} from "./invariant-program";
 import {QPair} from "./q-pair";
 
-// import {
-//     createAssociatedTokenAccountSend, createAssociatedTokenAccountSendUnsigned,
-//     createAssociatedTokenAccountTx,
-//     getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
-// } from "./splpasta/tx/associated-token-account";
-
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 import {
     BondPoolAccount,

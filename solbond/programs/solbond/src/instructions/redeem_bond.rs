@@ -131,7 +131,7 @@ pub fn handler(
             cpi_program,
             cpi_accounts,
             &[[
-                ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount!",
+                ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
             ].as_ref()],
         ), currency_token_to_be_distributed)?;

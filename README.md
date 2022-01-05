@@ -80,4 +80,18 @@ And please add more instructions on how to use it if you know more haha, or if y
 Go inside the following folder, and add the AMM program-address (which you received once you ran `anchor build`).
 
 - `solbond/deps/invariant/sdk/src/network.ts`
-- 
+
+
+### (5) Deploy the contract
+
+Deploy the contract to devnet
+
+``` 
+anchor deploy
+```
+
+Now you can initialize the first reserve pool
+
+``` 
+ANCHOR_WALLET=/Users/davidal/.config/solana/id.json npx ts-node scripts/deploy-qpool-reserve.ts
+```

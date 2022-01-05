@@ -28,7 +28,6 @@ export default function StakeForm() {
     //
     //     // User should connect wallet first ...
     //
-    //
     // }, []);
 
     useEffect(() => {
@@ -46,7 +45,7 @@ export default function StakeForm() {
         console.log("send amount is: ", sendAmount.toString());
         console.log("Will implement this stuff");
 
-        if (!qPoolContext.userAccount.publicKey) {
+        if (!qPoolContext.userAccount!.publicKey) {
             alert("Please connect your wallet first!");
             return
         }
@@ -107,13 +106,15 @@ export default function StakeForm() {
 
         ///////////////////////////
         // Create an associated token account for the currency if it doesn't exist yet
+        console.log("QPool context is: ", qPoolContext);
         console.log("Currency mint is: ", qPoolContext.currencyMint);
         const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
-            qPoolContext.connection,
-            qPoolContext.currencyMint,
-            qPoolContext.provider.wallet.publicKey,
-            qPoolContext.provider.wallet
+            qPoolContext.connection!,
+            qPoolContext.currencyMint!.publicKey,
+            qPoolContext.provider!.wallet.publicKey,
+            qPoolContext.provider!.wallet
         );
+        console.log("Currency Mint User Account: ", currencyMintUserAccount.toString());
 
         let transaction = new Transaction();
         let mintToInstruction = Token.createMintToInstruction(
@@ -125,99 +126,20 @@ export default function StakeForm() {
             sendAmount.toNumber()
         )
         transaction.add(mintToInstruction);
-        const blockhash = await qPoolContext.connection.getRecentBlockhash();
+        const blockhash = await qPoolContext.connection!.getRecentBlockhash();
         transaction.recentBlockhash = blockhash.blockhash;
-        let connection: Connection = qPoolContext.connection;
+        let connection: Connection = qPoolContext.connection!;
         const tx1 = await connection.sendTransaction(
             transaction,
             [airdropAdmin]
         );
+        await connection.confirmTransaction(tx1);
 
-
-
-
-        // const uintarray: Uint8Array = Buffer.from([
-        //     149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4
-        // ])
-        // console.log("Uintarray is: ", uintarray);
-        // const mintAuthorityKeypair: Keypair = Keypair.fromSecretKey(uintarray);
-
-        // // const mint = new Mint(qPoolContext.connection, mintAuthorityKeypair.publicKey);
-        // const tx = await mintToTx(
-        //     qPoolContext.connection,
-        //     mintAuthorityKeypair.publicKey,
-        //     walletContext.userAccount,
-        //     mintAuthorityKeypair.publicKey,
-        //     sendAmount.toNumber()
-        // );
-        // console.log("tx is: ", tx);
-        // const signature = await web3.sendAndConfirmTransaction(
-        //     qPoolContext.connection,
-        //     tx,
-        //     [mintAuthorityKeypair],
-        // );
-        // console.log('SIGNATURE', signature);
-        // await mintAuthorityKeypair.signTransaction(tx)
-
-        // const wallet: NodeWallet = new NodeWallet(mintAuthorityKeypair);
-        // const mintWallet: WalletI = new anchor.Wallet(mintAuthorityKeypair);
-        // console.log("MintWallet are: ", mintWallet.publicKey.toString());
-        //
-        // console.log("Provider and wallet are: ");
-        // console.log(qPoolContext.provider);
-        // console.log(qPoolContext.provider.wallet);
-        //
-        // console.log("Generating mint");
-        // const currencyMint: Token = new Token(
-        //     qPoolContext.connection,
-        //     new PublicKey("So11111111111111111111111111111111111111112"), // mintWallet.publicKey,
-        //     qPoolContext._solbondProgram.programId,
-        //     qPoolContext.provider.wallet as Signer
-        // );
-        const currencyMint: Mint = new Mint(
-            qPoolContext.connection,
-            new PublicKey("So11111111111111111111111111111111111111112")
-        );
-        // const mint = new Mint(qPoolContext.connection, mintWallet.publicKey);
-        console.log("Airdropping some tokens to the user ...");
-        // mint.mintTo();
-
-        // Wrap SOL in this currency Mint
-
-        // Create an associated token account if it is not there yet!
-        console.log("Public key is: ", qPoolContext.provider.wallet.publicKey);
-        console.log("Public key is: ", qPoolContext.provider.wallet.publicKey.toString());
-
-        // const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
-        //     qPoolContext.connection,
-        //     currencyMint.key,
-        //     qPoolContext.provider.wallet.publicKey,
-        //     qPoolContext.provider.wallet
-        // );
-        // const currencyMintUserAccount = await currencyMint.createAssociatedTokenAccount(qPoolContext.provider.wallet.publicKey);
-        // console.log("Currency mint user account is: ", currencyMintUserAccount.toString());
-        // const tx = await mintToTx(
-        //     qPoolContext.connection,
-        //     currencyMint.key,
-        //     qPoolContext.provider.wallet.publicKey,
-        //     mintAuthorityKeypair.publicKey,
-        //     sendAmount.toNumber()
-        // );
-        // const txSigner = await mintWallet.signTransaction(tx);
-        // await util.sendAndConfirm(qPoolContext.connection, txSigner);
-
-        // const tx = await currencyMint.mintTo(
-        //     currencyMintUserAccount,
-        //     mintAuthorityKeypair.publicKey,
-        //     [mintAuthorityKeypair as Signer],
-        //     sendAmount
-        // );
-
-        // Should probably print the amount of tokens
-        const response = await qPoolContext.qPoolsUser.buyQPT(sendAmount.toNumber());
-        if (!response) {
-            alert("Not enough balance!");
-        }
+        // // Should probably print the amount of tokens
+        // const response = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber());
+        // if (!response) {
+        //     alert("Not enough balance!");
+        // }
 
         // Assert that there is some wallet registered
         // Modify button accordingly (in a context state or so)

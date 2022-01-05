@@ -33,12 +33,14 @@ import {getInvariantProgram} from "./invariant-program";
 import {QPair} from "./q-pair";
 
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
-import {
-    BondPoolAccount,
-    createAssociatedTokenAccountSendUnsigned, createAssociatedTokenAccountUnsigned,
-    createMint,
-    getSolbondProgram
-} from "@qpools/sdk/lib/qpools-sdk/src";
+import {BondPoolAccount, createAssociatedTokenAccountSendUnsigned, createMint, getSolbondProgram} from "@qpools/sdk";
+
+// import {
+//     BondPoolAccount,
+//     createAssociatedTokenAccountSendUnsigned, createAssociatedTokenAccountUnsigned,
+//     createMint,
+//     getSolbondProgram
+// } from "@qpools/sdk/lib/qpools-sdk/src";
 // import {
 //     BondPoolAccount,
 //     createAssociatedTokenAccountSendUnsigned,
@@ -129,7 +131,15 @@ export class QPoolsAdmin {
         );
 
         // Get the token account
-        let bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
+        let bondPoolAccount: BondPoolAccount;
+        try {
+            bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
+        } catch (error: any) {
+            console.log("Couldn't catch bondPoolAccount");
+            console.log(JSON.stringify(error));
+            console.log(error);
+            return false
+        }
         if (!bondPoolAccount) {
             return false
         }
@@ -138,7 +148,7 @@ export class QPoolsAdmin {
         // If empty, return false
         this.currencyMint = new Token(
             this.connection,
-            bondPoolAccount.bondPoolCurrencyTokenAccount,
+            bondPoolAccount.bondPoolCurrencyTokenMint,
             this.solbondProgram.programId,
             this.wallet
         );

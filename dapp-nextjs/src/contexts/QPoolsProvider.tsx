@@ -9,25 +9,25 @@ import {QPoolsUser} from "@qpools/sdk/src/qpools-user";
 import {MOCK} from "@qpools/sdk/src/const";
 
 export interface IQPool {
-    qPoolsUser: any,
+    qPoolsUser: QPoolsUser | undefined,
     initializeQPoolsUserTool: any,
-    connection: any,
-    provider: any,
+    connection: Connection | undefined,
+    provider: Provider | undefined,
     _solbondProgram: any,
-    userAccount: any,
-    currencyMint: any,
-    QPTokenMint: any,
+    userAccount: WalletI | undefined,
+    currencyMint: Token | undefined,
+    QPTokenMint: Token | undefined,
 }
 
 const defaultValue: IQPool = {
-    qPoolsUser: () => console.error("attempting to use AuthContext outside of a valid provider"),
+    qPoolsUser: undefined,
     initializeQPoolsUserTool: () => console.error("attempting to use AuthContext outside of a valid provider"),
-    connection: () => console.error("attempting to use AuthContext outside of a valid provider"),
-    provider: () => console.error("attempting to use AuthContext outside of a valid provider"),
+    connection: undefined,
+    provider: undefined,
     _solbondProgram: () => console.error("attempting to use AuthContext outside of a valid provider"),
-    userAccount: () => console.error("attempting to use AuthContext outside of a valid provider"),
-    currencyMint: () => console.error("attempting to use AuthContext outside of a valid provider"),
-    QPTokenMint: () => console.error("attempting to use AuthContext outside of a valid provider"),
+    userAccount: undefined,
+    currencyMint: undefined,
+    QPTokenMint: undefined,
 }
 
 const QPoolContext = React.createContext<IQPool>(defaultValue);
@@ -38,15 +38,15 @@ export function useQPoolUserTool() {
 
 export function QPoolsProvider(props: any) {
 
-    const [qPoolsUser, setQPoolsUser] = useState<QPoolsUser | null>(null);
+    const [qPoolsUser, setQPoolsUser] = useState<QPoolsUser | undefined>(undefined);
 
-    const [connection, setConnection] = useState<Connection | null>(null);
-    const [provider, setProvider] = useState<Provider | null>(null);
+    const [connection, setConnection] = useState<Connection | undefined>(undefined);
+    const [provider, setProvider] = useState<Provider | undefined>(undefined);
     const [_solbondProgram, setSolbondProgram] = useState<any>(null);
-    const [userAccount, setUserAccount] = useState<WalletI | null>(null);
+    const [userAccount, setUserAccount] = useState<WalletI | undefined>(undefined);
 
-    const [currencyMint, setCurrencyMint] = useState<Token | null>(null);
-    const [QPTokenMint, setQPTokenMint] = useState<Token | null>(null);
+    const [currencyMint, setCurrencyMint] = useState<Token | undefined>(undefined);
+    const [QPTokenMint, setQPTokenMint] = useState<Token | undefined>(undefined);
 
     // Make a creator that loads the qPoolObject if it not created yet
     const initializeQPoolsUserTool = async (walletContext: any) => {
@@ -88,23 +88,25 @@ export function QPoolsProvider(props: any) {
 
         // new PublicKey("nXm2LqzVc76sWy2KUuDgZgbUU5XjNfExsDtf5FYopgB"),
 
+        // new PublicKey("So11111111111111111111111111111111111111112"),
+
         let _currencyMint = new Token(
             _connection,
             MOCK.SOL,
-            // new PublicKey("So11111111111111111111111111111111111111112"),
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
         // Will be defined based on the specific pool account ...
         // Actually, this will most likely be a PDA-based one ...
+        // TODO: Load this from the protocol?
         let _QPTokenMint = new Token(
             _connection,
             new PublicKey("68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK"),
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
-        setCurrencyMint(() => currencyMint);
-        setQPTokenMint(() => QPTokenMint);
+        setCurrencyMint(() => _currencyMint);
+        setQPTokenMint(() => _QPTokenMint);
 
         if (!qPoolsUser) {
             setQPoolsUser(() => {

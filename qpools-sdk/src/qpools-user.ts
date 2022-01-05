@@ -44,7 +44,6 @@ export class QPoolsUser {
         provider: Provider,
         // wallet: IWallet,
         connection: Connection,
-        QPTokenMint: Token,
         currencyMint: Token,
     ) {
         this.connection = connection;
@@ -56,7 +55,6 @@ export class QPoolsUser {
         this.walletPayer = this.wallet.payer as Keypair;
 
         // Add the bond pool account here too
-        this.QPTokenMint = QPTokenMint;  // TODO Also hardcode this somewhere else probably
         this.currencyMint = currencyMint;
 
         PublicKey.findProgramAddress(
@@ -67,7 +65,14 @@ export class QPoolsUser {
             this.bumpQPoolAccount = _bumpQPoolAccount;
         });
 
-        this.loadExistingQPTReserve(this.currencyMint.publicKey);
+        this.loadExistingQPTReserve(this.currencyMint.publicKey).then(() => {
+            console.log("Successfully loaded QPT Reserv!");
+
+        }).catch((error: any) => {
+            console.log("error loading existing QPT reserve!");
+            console.log(JSON.stringify(error));
+
+        });
 
         // this.qPoolAccount = null;
         // this.bumpQPoolAccount = null;
@@ -92,8 +97,8 @@ export class QPoolsUser {
         // @ts-ignore
         let bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
 
-        if (bondPoolAccount.bondPoolCurrencyTokenAccount != currencyMintPubkey) {
-            console.log(bondPoolAccount.bondPoolCurrencyTokenAccount.toString());
+        if (bondPoolAccount.bondPoolCurrencyTokenMint != currencyMintPubkey) {
+            console.log(bondPoolAccount.bondPoolCurrencyTokenMint.toString());
             console.log(currencyMintPubkey.toString());
             throw Error("mint is not the same!: " + currencyMintPubkey.toString());
         }
@@ -164,6 +169,20 @@ export class QPoolsUser {
             );
             console.log("Done!");
         }
+    }
+
+    prettyPrintAccounts() {
+        console.log("solbondProgram", this.solbondProgram.programId.toString());
+        console.log("wallet", this.wallet.publicKey.toString());
+
+        console.log("🟢 qPoolAccount", this.qPoolAccount!.toString());
+        console.log("🟢 bumpQPoolAccount", this.bumpQPoolAccount!.toString());
+
+        console.log("🌊 QPTokenMint", this.QPTokenMint!.publicKey.toString());
+        console.log("🌊 qPoolQPAccount", this.qPoolQPAccount!.toString());
+
+        console.log("💵 currencyMint", this.currencyMint.publicKey.toString());
+        console.log("💵 qPoolCurrencyAccount", this.qPoolCurrencyAccount!.toString());
     }
 
     async buyQPT(currency_amount_raw: number) {

@@ -7,10 +7,9 @@
  */
 import {Provider} from "@project-serum/anchor";
 import {clusterApiUrl, Keypair, PublicKey} from "@solana/web3.js";
-import {QPoolsAdmin} from "../../dapp-nextjs/src/qpools-sdk/qpools-admin";
 import {Token} from "@solana/spl-token";
-import {createMint, delay} from "../../dapp-nextjs/src/qpools-sdk/utils";
-import {MOCK} from "../../dapp-nextjs/src/qpools-sdk/const";
+import {MOCK} from "../../qpools-sdk";
+import {QPoolsAdmin} from "@qpools/sdk/lib/qpools-admin-sdk/src";
 
 const main = async () => {
 
@@ -27,14 +26,11 @@ const main = async () => {
     const wallet = provider.wallet.payer as Keypair;
 
     // Define the currency mint
-    const currencyMintPubkey = new PublicKey(MOCK.SOL);  // SOL
-
     console.log("Initialize a qpool");
     const qPoolAdminTool = new QPoolsAdmin(
-        wallet,
         connection,
         provider,
-        currencyMintPubkey
+        MOCK.SOL
     );
 
     // Check if an account exists already
@@ -58,6 +54,7 @@ const main = async () => {
         throw Error("mainnet definitely not implemented yet!!");
     }
 
+    qPoolAdminTool.prettyPrintAccounts();
     console.log("Done!");
 }
 

@@ -2,6 +2,18 @@
 
 ## Setup instructions
 
+### (0) Setup qpools SDK locally
+
+Please always run a watcher that automatically compiles the SDK. 
+This is to make sure that any modifications you make are immediately compiled, otherwise you might get weird bugs!
+
+``` 
+cd qpools-sdk
+tsc --watch
+```
+
+Let this run in a background terimnal, and let this run anytime you might change something in the qpools-sdk package.
+
 ### (1) Setup Invariant SDK locally
 
 You need to setup the `@invariant/sdk`, which is not public right now, and which is installed in `package.json` as such:

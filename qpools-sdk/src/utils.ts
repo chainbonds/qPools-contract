@@ -1,20 +1,18 @@
-import {WalletI} from "./legacy_splpasta/types";
-
-export function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 import { web3, Provider, BN } from '@project-serum/anchor';
-import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
-import {PublicKey, Keypair} from "@solana/web3.js";
-// import * as util from "./legacy_splpasta/util";
-import {account, util} from "easy-spl";
+import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
+import {PublicKey, Keypair, Transaction} from "@solana/web3.js";
+import {account, util, WalletI} from "easy-spl";
 import {createAssociatedTokenAccountTx} from "easy-spl/dist/tx/associated-token-account";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
+
+export function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
@@ -142,4 +140,21 @@ export const createAssociatedTokenAccountUnsigned = async (
 ): Promise<web3.Transaction> => {
     const tx = await createAssociatedTokenAccountTx(conn, mint, owner, wallet.publicKey)
     return await wallet.signTransaction(tx);
+}
+
+export interface IWallet {
+    signTransaction(tx: Transaction): Promise<Transaction>
+    signAllTransactions(txs: Transaction[]): Promise<Transaction[]>
+    publicKey: PublicKey
+}
+
+export const tou64 = (amount) => {
+    // @ts-ignore
+    // eslint-disable-next-line new-cap
+    return new u64(amount.toString())
+}
+
+// can't remember what this is
+export interface Tickmap {
+    bitmap: Array<number>
 }

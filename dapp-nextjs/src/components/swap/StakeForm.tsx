@@ -1,7 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {PublicKey} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {AiOutlineArrowDown} from "react-icons/ai";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
@@ -10,6 +10,8 @@ import React, {useEffect, useState} from "react";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {Mint} from "easy-spl";
+import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {airdropAdmin, createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
 
 export default function StakeForm() {
 
@@ -55,14 +57,82 @@ export default function StakeForm() {
         // Generate the mint authority
         console.log("Creating Wallet");
 
+        console.log("Airdrop admin is: ");
+        console.log(airdropAdmin);
+
+        /////////////
+        // Token must be owned by us ...
+        // let transaction = new Transaction();
+        // let mintToInstruction = Token.createMintToInstruction(
+        //     TOKEN_PROGRAM_ID,
+        //     MOCK.SOL,
+        //     qPoolContext.userAccount.publicKey,
+        //     airdropAdmin.publicKey,
+        //     [],
+        //     sendAmount.toNumber()
+        // )
+        // console.log("Mint to instruction", mintToInstruction);
+        // transaction.add(mintToInstruction);
+        // console.log("Getting blockhash");
+        // const blockhash = await qPoolContext.connection.getRecentBlockhash();
+        // // const blockhash = yield* call([connection, connection.getRecentBlockhash])
+        // // tx.feePayer = wallet.publicKey
+        // // tx.recentBlockhash = blockhash.blockhash
+        // transaction.feePayer = qPoolContext.provider.wallet.publicKey;
+        // transaction.recentBlockhash = blockhash.blockhash;
+        // console.log("Signing airdrop 1");
+        // transaction.sign(airdropAdmin);
+        // // airdropAdmin,
+        // // qPoolContext.provider.wallet
+        // console.log("Signing airdrop 2");
+        // // await qPoolContext.provider.wallet.signTransaction(transaction);
+        // console.log("Sending transaction");
+        // console.log("Connection is: ", qPoolContext.connection);
+        // let connection: Connection = qPoolContext.connection;
+        //
+        // console.log("Signer is: ");
+        // const signer = qPoolContext.provider.wallet;
+        // console.log("Wallet is: ", qPoolContext.provider.wallet);
+        // // console.log(signer);
+        // const tx1 = await connection.sendTransaction(
+        //     transaction,
+        //     [airdropAdmin]
+        // );
+        // // const tx2 = await qPoolContext.connection.confirmTransaction(tx1);
+        // console.log(tx1);
+        // console.log("Done!");
 
 
-        // const uintarray: Uint8Array = Uint8Array.from([
-        //     149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4
-        // ])
-        // TODO: Just request an airdrop for now,
-        // Add a button to do so
-        // Assume we only provide qSOL for now
+        ///////////////////////////
+        // Create an associated token account for the currency if it doesn't exist yet
+        console.log("Currency mint is: ", qPoolContext.currencyMint);
+        const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
+            qPoolContext.connection,
+            qPoolContext.currencyMint,
+            qPoolContext.provider.wallet.publicKey,
+            qPoolContext.provider.wallet
+        );
+
+        let transaction = new Transaction();
+        let mintToInstruction = Token.createMintToInstruction(
+            TOKEN_PROGRAM_ID,
+            MOCK.SOL,
+            currencyMintUserAccount,
+            airdropAdmin.publicKey,
+            [],
+            sendAmount.toNumber()
+        )
+        transaction.add(mintToInstruction);
+        const blockhash = await qPoolContext.connection.getRecentBlockhash();
+        transaction.recentBlockhash = blockhash.blockhash;
+        let connection: Connection = qPoolContext.connection;
+        const tx1 = await connection.sendTransaction(
+            transaction,
+            [airdropAdmin]
+        );
+
+
+
 
         // const uintarray: Uint8Array = Buffer.from([
         //     149,226,18,86,166,52,2,141,172,220,209,227,65,254,79,35,131,85,164,23,25,8,248,223,90,167,172,144,133,236,229,146,188,230,180,3,5,118,190,238,157,122,51,60,83,186,124,199,151,67,175,226,211,199,1,115,177,75,72,51,82,16,255,4

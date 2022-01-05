@@ -3,11 +3,10 @@ import {BN, Program, web3} from '@project-serum/anchor';
 import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {QPoolsAdmin} from "../../dapp-nextjs/src/qpools-sdk/qpools-admin";
-import {createToken} from "../../dapp-nextjs/src/qpools-sdk/invariant-utils";
-import {Key} from "readline";
-import {WalletI} from "../../dapp-nextjs/src/qpools-sdk/splpasta/types";
-import {QPoolsUser} from "../../dapp-nextjs/src/qpools-sdk/qpools-user";
+import {WalletI} from "easy-spl";
+import {QPoolsAdmin} from "@qpools/sdk/lib/qpools-admin-sdk/src";
+import {createToken} from "../deps/protocol/tests/testUtils";
+import {QPoolsUser} from "../../qpools-sdk/src";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
@@ -49,7 +48,7 @@ describe('solbond', () => {
             payer,
             provider.connection,
             provider,
-            currencyMint
+            currencyMint.publicKey
         );
 
     });
@@ -151,6 +150,10 @@ describe('solbond', () => {
     it('#redeemBondInstance(2)', async () => {
         console.log("Redeeming bond...");
 
+        console.log("admin account is: ");
+        console.log(qPoolsAdminTool);
+        console.log(qPoolsAdminTool.qPoolCurrencyAccount);
+
         // Simulate as if we have generated returns
         await provider.connection.requestAirdrop(qPoolsAdminTool.qPoolCurrencyAccount, RESERVE_INCREASE_PHASE_1);
 
@@ -181,7 +184,6 @@ describe('solbond', () => {
         const payerCurrencyAmount_6 = new BN((await currencyMint.getAccountInfo(qPoolsUserTool.purchaserCurrencyAccount)).amount);
         console.log("Final Payer Currency Amount", payerCurrencyAmount_6.toString());
         // END Some statistics BEGIN
-
 
     });
 

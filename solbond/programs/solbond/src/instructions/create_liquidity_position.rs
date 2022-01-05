@@ -157,6 +157,7 @@ pub fn handler(
         pool: ctx.accounts.pool.to_account_info(),
         position_list: ctx.accounts.position_list.to_account_info(),
         owner: ctx.accounts.owner.to_account_info(),
+        payer: ctx.accounts.initializer.to_account_info(),
         lower_tick: ctx.accounts.lower_tick.to_account_info(),
         upper_tick: ctx.accounts.upper_tick.to_account_info(),
         token_x: ctx.accounts.token_x.to_account_info(),

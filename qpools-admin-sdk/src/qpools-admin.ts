@@ -9,7 +9,6 @@ import {
     TransactionInstruction
 } from "@solana/web3.js";
 import {BN, Program, Provider, utils, Wallet, web3} from "@project-serum/anchor";
-import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
     calculate_price_sqrt, DENOMINATOR,
@@ -25,15 +24,12 @@ import {
 import {CreatePool, Decimal, FeeTier, InitPosition, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
-import {createStandardFeeTiers, createToken} from "../qpools-sdk/invariant-utils";
 import {FEE_TIERS, fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
-import {createAssociatedTokenAccountSendUnsigned, createMint, createTokenAccount} from "../qpools-sdk/utils";
-import {Key} from "readline";
 
 import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {calculatePriceAfterSlippage, isInitialized} from "@invariant-labs/sdk/lib/math";
-import {getInvariantProgram, getSolbondProgram} from "./program";
+import {getInvariantProgram} from "./invariant-program";
 import {QPair} from "./q-pair";
 
 // import {
@@ -42,8 +38,19 @@ import {QPair} from "./q-pair";
 //     getAssociatedTokenAddress, getAssociatedTokenAddressOffCurve
 // } from "./splpasta/tx/associated-token-account";
 
-import {BondPoolAccount} from "./types/bondPoolAccount";
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
+import {
+    BondPoolAccount,
+    createAssociatedTokenAccountSendUnsigned,
+    createMint,
+    getSolbondProgram
+} from "@qpools/sdk/lib/qpools-sdk/src";
+// import {
+//     BondPoolAccount,
+//     createAssociatedTokenAccountSendUnsigned,
+//     createMint,
+//     getSolbondProgram
+// } from "@qpools/sdk/lib/src";
 
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -68,7 +75,7 @@ export class QPoolsAdmin {
     public qPoolQPAccount: PublicKey | undefined;
     public qPoolCurrencyAccount: PublicKey | undefined;
 
-    public pairs: Pair[] | undefined;
+    public pairs: QPair[] | undefined;
     public mockMarket: Market | undefined;
     public feeTier: FeeTier;
 
@@ -78,7 +85,7 @@ export class QPoolsAdmin {
         wallet: Keypair,
         connection: Connection,
         provider: Provider,
-        currencyMint: Token
+        currencyMint: PublicKey
     ) {
         this.connection = connection;
 
@@ -87,11 +94,16 @@ export class QPoolsAdmin {
         // this.invariantProgram = anchor.workspace.Amm as Program;  //  as Program<Amm>;
         this.provider = provider;
 
-        // Assert that currencyMint is truly a mint
-        this.currencyMint = currencyMint;
-
         // @ts-expect-error
         this.wallet = provider.wallet.payer as Keypair
+
+        // Assert that currencyMint is truly a mint
+        this.currencyMint = new Token(
+            this.connection,
+            currencyMint,
+            this.solbondProgram.programId,
+            this.wallet
+        );
 
         this.feeTier = {
             fee: fromFee(new BN(600)),
@@ -125,6 +137,9 @@ export class QPoolsAdmin {
 
         // Get the token account
         let bondPoolAccount = (await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)) as BondPoolAccount;
+        if (!bondPoolAccount) {
+            return false
+        }
 
         // Check if this is empty.
         // If empty, return false
@@ -143,6 +158,8 @@ export class QPoolsAdmin {
         );
         this.qPoolQPAccount = bondPoolAccount.bondPoolRedeemableTokenAccount;
         this.qPoolCurrencyAccount = bondPoolAccount.bondPoolCurrencyTokenAccount;
+
+        return true;
 
     }
 
@@ -252,7 +269,7 @@ export class QPoolsAdmin {
 
     }
 
-    async setPairs(pairs: Pair[]) {
+    async setPairs(pairs: QPair[]) {
         this.pairs = pairs;
     }
 
@@ -598,7 +615,7 @@ export class QPoolsAdmin {
                     const upperTick = 50;
 
                     const poolAddress = await pair.getAddress(this.invariantProgram.programId);
-                    const [tickmap, pool] = await Promise.all([this.mockMarket!.getTickmap(pair), this.mockMarket.get(pair)])
+                    const [tickmap, pool] = await Promise.all([this.mockMarket!.getTickmap(pair), this.mockMarket!.get(pair)])
 
                     const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
                     const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)

@@ -10,10 +10,12 @@ import {clusterApiUrl, Keypair, PublicKey} from "@solana/web3.js";
 import {QPoolsAdmin} from "../../dapp-nextjs/src/qpools-sdk/qpools-admin";
 import {Token} from "@solana/spl-token";
 import {createMint, delay} from "../../dapp-nextjs/src/qpools-sdk/utils";
+import {MOCK} from "../../dapp-nextjs/src/qpools-sdk/const";
 
 const main = async () => {
 
     let cluster: string = clusterApiUrl('devnet');
+
     console.log("Cluster is: ", cluster);
     const provider = Provider.local(cluster,
         {
@@ -24,70 +26,37 @@ const main = async () => {
     // @ts-expect-error
     const wallet = provider.wallet.payer as Keypair;
 
-    //
+    // Define the currency mint
+    const currencyMintPubkey = new PublicKey(MOCK.SOL);  // SOL
+
     console.log("Initialize a qpool");
     const qPoolAdminTool = new QPoolsAdmin(
         wallet,
         connection,
         provider,
-        null
+        currencyMintPubkey
     );
 
-    // TODO: Before all else,
-    // double check if an account exists already
-    await qPoolAdminTool.loadExistingQPTReserve();
-    qPoolAdminTool.prettyPrintAccounts();
-    return;
+    // Check if an account exists already
+    const existingQPT = await qPoolAdminTool.loadExistingQPTReserve();
+    if (existingQPT) {
+        qPoolAdminTool.prettyPrintAccounts();
+        return
+    } else {
+        console.log("Creating new pool!");
+    }
 
-    // TODO: Only execute the following code if the accounts do not exist yet
-
-    let currencyMint: Token;
     if (
         cluster.toString().includes("dev") ||
         cluster.toString().includes("test") ||
         cluster.toString().includes("localhost") || cluster.toString().includes("127.0.0.1")
     ) {
-        // TODO: Take some hardcoded mint
-        // Airdrop some stuff to the wallet
-        // console.log("Requesting airdrop...");
-        // const tx = await connection.requestAirdrop(wallet.publicKey, 1e9);
-        // await connection.confirmTransaction(tx);
-
-        // Create a currency mint,
-        // that is currently owned by us
-        // if and only if devnet
-        // console.log("Creating a currency mint...");
-        // currencyMint = await createMint(
-        //     provider,
-        //     wallet,
-        //     wallet.publicKey,
-        //     9
-        // );
-        // await delay(1_000);
-        // console.log("Currency mint is: ", currencyMint.publicKey.toString());
+        console.log("Cluster is: ", cluster);
+        console.log("Initializing the QPT Reserve");
+        await qPoolAdminTool.initializeQPTReserve();
     } else {
         throw Error("mainnet definitely not implemented yet!!");
     }
-    currencyMint = new Token(
-        connection,
-        new PublicKey("68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK"),
-        new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
-        wallet
-    );
-
-    console.log("Initializing the QPT Reserve");
-    // await qPoolAdminTool.initializeQPTReserve();
-
-    // console.log("Initialize a qpool");
-    // const qPoolAdminTool = new QPoolsAdmin(
-    //     wallet,
-    //     connection,
-    //     provider,
-    //     currencyMint
-    // );
-
-    console.log("Account data is:");
-    console.log()
 
     console.log("Done!");
 }

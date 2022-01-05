@@ -5,12 +5,11 @@ import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import BN from 'bn.js'
 import { Pair } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
-import exp from "constants";
+import {BN} from "@project-serum/anchor";
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {

@@ -1,6 +1,5 @@
 import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
 import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
-import {Amm, IDL} from "@invariant-labs/sdk/src/idl/amm";
 import * as anchor from "@project-serum/anchor";
 import {
     calculate_price_sqrt,
@@ -17,7 +16,6 @@ import {
 import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {createStandardFeeTiers, createToken} from "../invariant-utils";
 import {FEE_TIERS, fromFee} from "@invariant-labs/sdk/lib/utils";
 
 import {assert} from "chai";
@@ -25,7 +23,8 @@ import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/mar
 import {QPoolsAdmin} from "./qpools-admin";
 import {getLiquidityByX} from "@invariant-labs/sdk/lib/math";
 import {QPair} from "./q-pair";
-import {createAssociatedTokenAccountSend, getAssociatedTokenAddress} from "./splpasta/tx/associated-token-account";
+import {createToken} from "./invariant-utils";
+import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'

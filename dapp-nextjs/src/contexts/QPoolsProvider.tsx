@@ -1,11 +1,12 @@
 import React, {useState, useContext, useEffect} from 'react';
-import {QPoolsUser} from "../qpools-sdk/qpools-user";
 import {Provider} from "@project-serum/anchor";
 import {clusterApiUrl, Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {solbondProgram} from "../programs/solbond";
-import {WalletI} from "../qpools-sdk/splpasta/types";
+import {WalletI} from "easy-spl";
+import {QPoolsUser} from "@qpools/sdk/src/qpools-user";
+import {MOCK} from "@qpools/sdk/src/const";
 
 export interface IQPool {
     qPoolsUser: any,
@@ -89,10 +90,13 @@ export function QPoolsProvider(props: any) {
 
         let _currencyMint = new Token(
             _connection,
-            new PublicKey("So11111111111111111111111111111111111111112"),
+            MOCK.SOL,
+            // new PublicKey("So11111111111111111111111111111111111111112"),
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
+        // Will be defined based on the specific pool account ...
+        // Actually, this will most likely be a PDA-based one ...
         let _QPTokenMint = new Token(
             _connection,
             new PublicKey("68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK"),

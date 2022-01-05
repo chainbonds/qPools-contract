@@ -5,7 +5,6 @@ import {clusterApiUrl, Connection} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 // web3, Wallet as AnchorWallet
 // import {BN} from "@project-serum/anchor";
-import {Wallet} from "../../splpasta";
 // import {solbondProgram} from "../../programs/solbond";
 // import {getTokenList} from "../../const";
 import {AiOutlineArrowDown} from "react-icons/ai";

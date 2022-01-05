@@ -5,20 +5,11 @@
 import {Connection, Keypair, PublicKey, Signer, Transaction} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import {IWallet, tou64} from "@invariant-labs/sdk";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import assert from "assert";
-import {Key} from "readline";
-import {Sign} from "crypto";
 import {BondPoolAccount} from "./types/bondPoolAccount";
-import {getSolbondProgram} from "./program";
-import {createAssociatedTokenAccountSendUnsigned} from "./utils";
-
-// can't remember what this is
-export interface Tickmap {
-    bitmap: Array<number>
-}
-
+import {getSolbondProgram} from "./solbond-program";
+import {createAssociatedTokenAccountSendUnsigned, IWallet, tou64} from "./utils";
+import {assert} from "chai";
 
 export class QPoolsUser {
 

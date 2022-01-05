@@ -41,7 +41,7 @@ import {QPair} from "./q-pair";
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 import {
     BondPoolAccount,
-    createAssociatedTokenAccountSendUnsigned,
+    createAssociatedTokenAccountSendUnsigned, createAssociatedTokenAccountUnsigned,
     createMint,
     getSolbondProgram
 } from "@qpools/sdk/lib/qpools-sdk/src";
@@ -82,7 +82,6 @@ export class QPoolsAdmin {
     public QPReserveTokens: Record<string, PublicKey> = {};
 
     constructor(
-        wallet: Keypair,
         connection: Connection,
         provider: Provider,
         currencyMint: PublicKey
@@ -131,7 +130,7 @@ export class QPoolsAdmin {
     async loadExistingQPTReserve() {
         console.log("Fetching QPT reserve...");
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         );
 
@@ -143,7 +142,6 @@ export class QPoolsAdmin {
 
         // Check if this is empty.
         // If empty, return false
-
         this.currencyMint = new Token(
             this.connection,
             bondPoolAccount.bondPoolCurrencyTokenAccount,
@@ -152,7 +150,7 @@ export class QPoolsAdmin {
         );
         this.QPTokenMint = new Token(
             this.connection,
-            bondPoolAccount.bondPoolCurrencyTokenMint,
+            bondPoolAccount.bondPoolRedeemableMint,
             this.solbondProgram.programId,
             this.wallet
         );
@@ -169,40 +167,30 @@ export class QPoolsAdmin {
 
         // Generate qPoolAccount
         console.log("BEGIN: initializeQPTReserve");
-        console.log("Creating QP reserve");
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
             [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         );
-        console.log("qPoolAccount is: ", this.qPoolAccount.toString());
-
-        console.log("Creating QPT Token");
-        // Generate Redeemable Mint which is owned by the program
         this.QPTokenMint = await createMint(
             this.provider,
             this.wallet,
             this.qPoolAccount,
             9
         );
-        await delay(1_000);
 
-        console.log('Creating associated token account (reserves QPT)');
-        // Create QPT Token Accounts
+        await delay(1_000);
         this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
             this.connection,
             this.QPTokenMint.publicKey,
             this.qPoolAccount,
             this.provider.wallet
         );
-        console.log('Creating associated token account (reserves Currency)');
         this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
             this.connection,
             this.currencyMint.publicKey,
             this.qPoolAccount,
             this.provider.wallet
         );
-
-        console.log('Creating associated token account (initializeBondPool RPC)');
         /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
             this.bumpQPoolAccount,

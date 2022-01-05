@@ -4,6 +4,10 @@ import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana
 import {PublicKey, Keypair, Transaction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
 import {createAssociatedTokenAccountTx} from "easy-spl/dist/tx/associated-token-account";
+import {
+    createAssociatedTokenAccountInstructions, createAssociatedTokenAccountRawInstructions,
+    getAssociatedTokenAddress
+} from "easy-spl/src/tx/associated-token-account";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
@@ -118,8 +122,11 @@ export const createAssociatedTokenAccountSendUnsigned = async (
     if (await account.exists(conn, address)) {
         return address
     }
-    const tx = await createAssociatedTokenAccountUnsigned(conn, mint, address, owner, wallet)
-    await util.sendAndConfirm(conn, tx)
+    console.log("Now creating token unsigned")
+    const tx = await createAssociatedTokenAccountUnsigned(conn, mint, address, owner, wallet);
+    console.log("Send and Confirm!");
+    await util.sendAndConfirm(conn, tx);
+    console.log("return!");
     return address
 }
 
@@ -127,7 +134,6 @@ export const getAssociatedTokenAddressOffCurve = async (
     mint: web3.PublicKey,
     user: web3.PublicKey
 ): Promise<web3.PublicKey> => {
-    //@ts-ignore
     return Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, user, true);
 }
 
@@ -138,7 +144,23 @@ export const createAssociatedTokenAccountUnsigned = async (
     owner: web3.PublicKey,
     wallet: WalletI,
 ): Promise<web3.Transaction> => {
-    const tx = await createAssociatedTokenAccountTx(conn, mint, owner, wallet.publicKey)
+
+    if (!address) {
+        address = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner, true);
+    }
+    let instructions = [
+            Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            mint,
+            address,
+            owner,
+            wallet.publicKey
+        )
+    ]
+    let tx = await util.wrapInstructions(conn, instructions, wallet.publicKey);
+    // const tx = await createAssociatedTokenAccountTx(conn, mint, owner, wallet.publicKey);
+    console.log("Now signing")
     return await wallet.signTransaction(tx);
 }
 

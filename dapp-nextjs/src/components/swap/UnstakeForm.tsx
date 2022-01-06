@@ -37,7 +37,7 @@ export default function UnstakeForm() {
         console.log(JSON.stringify(d));
 
         // TODO: All decimals should be registered somewhere!
-        const sendAmount: BN = new BN(valueInSol).mul(new BN(1e9));
+        const sendAmount: BN = new BN(valueInQPT).mul(new BN(1e9));
         console.log("send amount is: ", sendAmount.toString());
 
         if (!qPoolContext.userAccount!.publicKey) {

@@ -634,6 +634,51 @@ export type SolbondIdl = {
             "code": 311,
             "name": "Calculation",
             "msg": "Redeemable-calculation doesnt add up"
+        },
+        {
+            "code": 312,
+            "name": "ReturningNoCurrency",
+            "msg": "Returning no Tokens!"
+        },
+        {
+            "code": 313,
+            "name": "CustomMathError1",
+            "msg": "Custom Error 1!"
+        },
+        {
+            "code": 314,
+            "name": "CustomMathError2",
+            "msg": "Custom Error 2!"
+        },
+        {
+            "code": 315,
+            "name": "CustomMathError3",
+            "msg": "Custom Error 3!"
+        },
+        {
+            "code": 316,
+            "name": "CustomMathError4",
+            "msg": "Custom Error 4!"
+        },
+        {
+            "code": 317,
+            "name": "CustomMathError5",
+            "msg": "Custom Error 5!"
+        },
+        {
+            "code": 318,
+            "name": "CustomMathError6",
+            "msg": "Custom Error 6!"
+        },
+        {
+            "code": 319,
+            "name": "CustomMathError7",
+            "msg": "Custom Error 7!"
+        },
+        {
+            "code": 320,
+            "name": "CustomMathError8",
+            "msg": "Custom Error 8!"
         }
     ],
     "metadata": {
@@ -1277,6 +1322,51 @@ export const IDL: SolbondIdl = {
             "code": 311,
             "name": "Calculation",
             "msg": "Redeemable-calculation doesnt add up"
+        },
+        {
+            "code": 312,
+            "name": "ReturningNoCurrency",
+            "msg": "Returning no Tokens!"
+        },
+        {
+            "code": 313,
+            "name": "CustomMathError1",
+            "msg": "Custom Error 1!"
+        },
+        {
+            "code": 314,
+            "name": "CustomMathError2",
+            "msg": "Custom Error 2!"
+        },
+        {
+            "code": 315,
+            "name": "CustomMathError3",
+            "msg": "Custom Error 3!"
+        },
+        {
+            "code": 316,
+            "name": "CustomMathError4",
+            "msg": "Custom Error 4!"
+        },
+        {
+            "code": 317,
+            "name": "CustomMathError5",
+            "msg": "Custom Error 5!"
+        },
+        {
+            "code": 318,
+            "name": "CustomMathError6",
+            "msg": "Custom Error 6!"
+        },
+        {
+            "code": 319,
+            "name": "CustomMathError7",
+            "msg": "Custom Error 7!"
+        },
+        {
+            "code": 320,
+            "name": "CustomMathError8",
+            "msg": "Custom Error 8!"
         }
     ],
     "metadata": {

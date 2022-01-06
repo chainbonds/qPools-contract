@@ -1,5 +1,7 @@
+use std::ops::Div;
 use anchor_lang::prelude::*;
 use spl_token::{ui_amount_to_amount, amount_to_ui_amount};
+use crate::ErrorCode;
 use crate::utils::constants::DECIMALS;
 use crate::utils::constants::CUT_PERCENTAGE;
 
@@ -28,54 +30,76 @@ use crate::utils::constants::CUT_PERCENTAGE;
 * We follow the following formula to calculate how many more redeemables to add,
 * based on how much Solana was paid in by the user
 *
+* In the above formula, we are looking for R_delta
+* The formula for this is (expanding for R_delta)
 *
+* R_delta = (R_T / S_T) * (S_T + S_delta) - R_T
+*
+* Watch out for underflows, overflows, and truncation errors!
 *
 */
 pub fn calculate_redeemables_to_be_distributed(
-    token_total_supply_raw: u64,
+    currency_total_supply_raw: u64,
     redeemable_total_supply_raw: u64,
-    delta_token_added_raw: u64
-) -> u64 {
+    delta_currency_added_raw: u64
+) -> Result<u64, ErrorCode> {
 
-    if (token_total_supply_raw == 0) || (redeemable_total_supply_raw == 0) {
+    // TODO: Write rust unittests for these
+
+    // Turn everything into u128 first
+    let S_T = currency_total_supply_raw as u128;
+    let R_T = redeemable_total_supply_raw as u128;
+    let S_delta = delta_currency_added_raw as u128;
+
+    if (currency_total_supply_raw == 0) || (redeemable_total_supply_raw == 0) {
         // Return as many tokens as there is solana, if no solana has been paid in already
         msg!("Initiating a new pool TokenSupply: {}, PoolReserve: {}, Amount: {}",
             redeemable_total_supply_raw,
-            token_total_supply_raw,
-            delta_token_added_raw);
-        return delta_token_added_raw;
+            currency_total_supply_raw,
+            delta_currency_added_raw);
+        return Ok(delta_currency_added_raw);
     }
 
-    // TODO: Make sure there are no weird floatin point operations
-    let token_total_supply: f64 = amount_to_ui_amount(token_total_supply_raw, DECIMALS);
-    let redeemable_total_supply: f64 = amount_to_ui_amount(redeemable_total_supply_raw, DECIMALS);
-    let delta_token_added: f64 = amount_to_ui_amount(delta_token_added_raw, DECIMALS);
+    // Lamports should be automatically accounted for
+    // Make sure there are no weird floating point operations
+    // No floating points, no error
+    let m1 = S_T.checked_add(S_delta).ok_or_else( | | {ErrorCode::CustomMathError5})?;
+    let m2 = m1.checked_mul(R_T).ok_or_else( | | {ErrorCode::CustomMathError6})?;
+    let m3 = m2.checked_div(S_T).ok_or_else( | | {ErrorCode::CustomMathError7})?;
+    let out = m3.checked_sub(R_T).ok_or_else( | | {ErrorCode::CustomMathError8})?;
 
-    // Double-check this formula!
-    let market_rate_t0: f64 = redeemable_total_supply / token_total_supply;
-    let _out: f64 =  market_rate_t0 * (token_total_supply + delta_token_added);
-    let out = _out - redeemable_total_supply;
-    // R_T / S_T = ( R_T + R_delta )/ ( S_T + S_delta )
-    // Convert back to lamports
-    return ui_amount_to_amount(out, DECIMALS);
+    return Ok(out as u64);
+
 }
 
-pub fn calculate_token_to_be_distributed(
-    token_total_supply_raw: u64,
+/**
+*
+* We follow the following formula to calculate how many more redeemables to add,
+* based on how many redeemable-tokens were paid in by the user
+*
+* In the above formula, we are looking for R_delta
+* The formula for this is (expanding for R_delta)
+*
+* S_delta = (S_T / R_T) * (R_T + R_delta) - S_T
+*
+* * Watch out for underflows, overflows, and truncation errors!
+*/
+pub fn calculate_currency_token_to_be_distributed(
+    currency_total_supply_raw: u64,
     redeemable_total_supply_raw: u64,
     delta_redeemables_burned_raw: u64
-) -> u64 {
-    // TODO: Make sure there are no weird floatin point operations
-    let token_total_supply: f64 = amount_to_ui_amount(token_total_supply_raw, DECIMALS);
-    let redeemable_total_supply: f64 = amount_to_ui_amount(redeemable_total_supply_raw, DECIMALS);
-    let delta_redeemables_burned: f64 = amount_to_ui_amount(delta_redeemables_burned_raw, DECIMALS);
+) -> Result<u64, ErrorCode> {
 
-    let market_rate_t0: f64 = token_total_supply / redeemable_total_supply;
-    let _out: f64 = market_rate_t0 * (redeemable_total_supply - delta_redeemables_burned);
-    let out: f64 = _out - redeemable_total_supply;
+    let S_T = currency_total_supply_raw as u128;
+    let R_T= redeemable_total_supply_raw as u128;
+    let R_delta = delta_redeemables_burned_raw as u128;
 
-    // Convert back to lamports
-    return ui_amount_to_amount(out, DECIMALS);
+    let m1 = R_T.checked_add(R_delta).ok_or_else(| | {ErrorCode::CustomMathError1})?;
+    let m2 = m1.checked_mul(S_T).ok_or_else(| | {ErrorCode::CustomMathError2})?;
+    let m3 = m2.checked_div(R_T).ok_or_else(| | {ErrorCode::CustomMathError3})?;
+    let out = m3.checked_sub(S_T).ok_or_else(| | {ErrorCode::CustomMathError4})?;
+
+    return Ok(out as u64);
 }
 
 /**

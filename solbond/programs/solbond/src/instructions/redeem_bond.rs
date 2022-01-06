@@ -1,10 +1,11 @@
+use std::fmt::Error;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 use crate::ErrorCode;
 use crate::state::BondPoolAccount;
-use crate::utils::functional::calculate_token_to_be_distributed;
+use crate::utils::functional::calculate_currency_token_to_be_distributed;
 
 /*
 
@@ -77,21 +78,46 @@ pub fn handler(
         return Err(ErrorCode::LowBondRedeemableAmount.into());
     }
 
-
     // TODO: Double check that the user actually has less than this in their amount
-    let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_token_account.amount;
+    let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_mint.supply;
     let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
 
+    // TODO, these are not total supplies, but amounts for this pool
+    // Actually, these are total supplies
+
+    if (total_redeemable_supply == 0) {
+        return Err(ErrorCode::EmptyTotalTokenSupply.into());
+    }
 
     /*
     * Step 1: Calculate Market Rate
     *    How many SOL, per redeemable to distribute
     */
-    let currency_token_to_be_distributed: u64 = calculate_token_to_be_distributed(
+    let currency_token_to_be_distributed: u64;
+    match calculate_currency_token_to_be_distributed(
         total_currency_token_supply,
         total_redeemable_supply,
         redeemable_amount_raw
-    );
+    ) {
+        Ok(x) => {
+            currency_token_to_be_distributed = x;
+        },
+        Err(error) => {
+            return Err(error.into());
+        }
+    }
+
+    if (currency_token_to_be_distributed == 0) {
+        return Err(ErrorCode::ReturningNoCurrency.into());
+    }
+    msg!("currency_token_to_be_distributed");
+    msg!(&currency_token_to_be_distributed.to_string());
+    msg!("total_currency_token_supply");
+    msg!(&total_currency_token_supply.to_string());
+    msg!("total_redeemable_supply");
+    msg!(&total_redeemable_supply.to_string());
+    msg!("redeemable_amount_raw");
+    msg!(&redeemable_amount_raw.to_string());
 
     /*
      * Step 2: Burn Bond Token

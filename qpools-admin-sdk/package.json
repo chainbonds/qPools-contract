@@ -1,5 +1,5 @@
 {
-  "name": "@qpools/sdk",
+  "name": "@qpools/admin-sdk",
   "version": "0.0.1",
   "description": "",
   "main": "lib/index.js",

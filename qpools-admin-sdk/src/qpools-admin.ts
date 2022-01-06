@@ -33,6 +33,7 @@ import {getInvariantProgram} from "./invariant-program";
 import {QPair} from "./q-pair";
 
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
+// @ts-ignore
 import {BondPoolAccount, createAssociatedTokenAccountSendUnsigned, createMint, getSolbondProgram} from "@qpools/sdk";
 
 // import {

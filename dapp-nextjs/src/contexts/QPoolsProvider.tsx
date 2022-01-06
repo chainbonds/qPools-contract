@@ -113,15 +113,27 @@ export function QPoolsProvider(props: any) {
                 return new QPoolsUser(
                     _provider,
                     _connection,
-                    _QPTokenMint,
                     _currencyMint
                 );
             });
         } else {
-            console.log("qPoolUserToll already exists!");
+            console.log("qPoolUserTool already exists!");
             // alert("qPoolUserToll already exists!");
         }
+
     };
+
+    // useEffect(() => {
+    //     console.log("Loading existing QPT Reserve");
+    //     if (qPoolsUser) {
+    //         qPoolsUser!.loadExistingQPTReserve(currencyMint!.publicKey).then(() => {
+    //             console.log("Done!");
+    //         }).catch((err: any) => {
+    //             console.log("Error!");
+    //             console.log(JSON.stringify(err));
+    //         });
+    //     }
+    // }, [qPoolsUser]);
 
     const value: IQPool = {
         qPoolsUser,

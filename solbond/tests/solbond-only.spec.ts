@@ -66,7 +66,6 @@ describe('solbond', () => {
         qPoolsUserTool = new QPoolsUser(
             provider,
             provider.connection,
-            qPoolsAdminTool.QPTokenMint,
             currencyMint
         );
     });

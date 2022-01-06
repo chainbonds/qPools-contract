@@ -10,8 +10,8 @@
     },
     "devDependencies": {
         "@invariant-labs/sdk": "file:./deps/protocol/sdk",
-        "@qpools/admin-sdk": "file:../qpools-sdk",
-        "@qpools/sdk": "file:../qpools-admin-sdk",
+        "@qpools/admin-sdk": "link:../qpools-admin-sdk",
+        "@qpools/sdk": "link:../qpools-sdk",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.11.7",
         "chai": "^4.3.4",

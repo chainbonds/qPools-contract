@@ -41,7 +41,10 @@ export default function StakeForm() {
         // TODO: Implement RPC Call
         console.log(JSON.stringify(d));
 
-        const sendAmount: BN = new BN(d["amount"]);
+        // Should rather be d["amount"], but rn valueInSol is also OK
+        // Solana has 9 decimal points, so will add this
+        // TODO: All decimals should be registered somewhere!
+        const sendAmount: BN = new BN(valueInSol).mul(new BN(1e9));
         console.log("send amount is: ", sendAmount.toString());
         console.log("Will implement this stuff");
 
@@ -51,6 +54,8 @@ export default function StakeForm() {
         }
         // Initialize if not initialized yet
         await qPoolContext.initializeQPoolsUserTool(walletContext);
+        await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
+        await qPoolContext.qPoolsUser!.registerAccount();
         // Register accounts for this user then
         // Do some airdrop first I guess
         // there sohuld be a button or wallet that we can request an airdrop from ...
@@ -134,6 +139,13 @@ export default function StakeForm() {
             [airdropAdmin]
         );
         await connection.confirmTransaction(tx1);
+        console.log("Should have received: ", sendAmount.toNumber());
+
+        console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
+        const success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);
+        if (!success) {
+            console.log("Something went wrong! Check logs.");
+        }
 
         // // Should probably print the amount of tokens
         // const response = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber());
@@ -181,7 +193,7 @@ export default function StakeForm() {
                                     logoPath={"/Light 2 Square.png"}
                                     // QPT
                                     displayText={"qSOL"}
-                                    registerFunction={() => register("qpt_amount")}
+                                    registerFunction={() => {}}
                                     modifiable={false}
                                     value={valueInQPT}
                                 />

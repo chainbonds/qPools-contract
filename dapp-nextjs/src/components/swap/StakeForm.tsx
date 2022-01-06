@@ -24,12 +24,6 @@ export default function StakeForm() {
     const [valueInSol, setValueInSol] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
 
-    // useEffect(() => {
-    //
-    //     // User should connect wallet first ...
-    //
-    // }, []);
-
     useEffect(() => {
         setValueInQpt((_: number) => {
             return valueInSol * 1.;
@@ -38,15 +32,11 @@ export default function StakeForm() {
 
     const submitToContract = async (d: any) => {
 
-        // TODO: Implement RPC Call
         console.log(JSON.stringify(d));
 
-        // Should rather be d["amount"], but rn valueInSol is also OK
-        // Solana has 9 decimal points, so will add this
         // TODO: All decimals should be registered somewhere!
         const sendAmount: BN = new BN(valueInSol).mul(new BN(1e9));
         console.log("send amount is: ", sendAmount.toString());
-        console.log("Will implement this stuff");
 
         if (!qPoolContext.userAccount!.publicKey) {
             alert("Please connect your wallet first!");
@@ -56,58 +46,12 @@ export default function StakeForm() {
         await qPoolContext.initializeQPoolsUserTool(walletContext);
         await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
         await qPoolContext.qPoolsUser!.registerAccount();
-        // Register accounts for this user then
-        // Do some airdrop first I guess
-        // there sohuld be a button or wallet that we can request an airdrop from ...
 
         // Generate the mint authority
         console.log("Creating Wallet");
 
         console.log("Airdrop admin is: ");
         console.log(airdropAdmin);
-
-        /////////////
-        // Token must be owned by us ...
-        // let transaction = new Transaction();
-        // let mintToInstruction = Token.createMintToInstruction(
-        //     TOKEN_PROGRAM_ID,
-        //     MOCK.SOL,
-        //     qPoolContext.userAccount.publicKey,
-        //     airdropAdmin.publicKey,
-        //     [],
-        //     sendAmount.toNumber()
-        // )
-        // console.log("Mint to instruction", mintToInstruction);
-        // transaction.add(mintToInstruction);
-        // console.log("Getting blockhash");
-        // const blockhash = await qPoolContext.connection.getRecentBlockhash();
-        // // const blockhash = yield* call([connection, connection.getRecentBlockhash])
-        // // tx.feePayer = wallet.publicKey
-        // // tx.recentBlockhash = blockhash.blockhash
-        // transaction.feePayer = qPoolContext.provider.wallet.publicKey;
-        // transaction.recentBlockhash = blockhash.blockhash;
-        // console.log("Signing airdrop 1");
-        // transaction.sign(airdropAdmin);
-        // // airdropAdmin,
-        // // qPoolContext.provider.wallet
-        // console.log("Signing airdrop 2");
-        // // await qPoolContext.provider.wallet.signTransaction(transaction);
-        // console.log("Sending transaction");
-        // console.log("Connection is: ", qPoolContext.connection);
-        // let connection: Connection = qPoolContext.connection;
-        //
-        // console.log("Signer is: ");
-        // const signer = qPoolContext.provider.wallet;
-        // console.log("Wallet is: ", qPoolContext.provider.wallet);
-        // // console.log(signer);
-        // const tx1 = await connection.sendTransaction(
-        //     transaction,
-        //     [airdropAdmin]
-        // );
-        // // const tx2 = await qPoolContext.connection.confirmTransaction(tx1);
-        // console.log(tx1);
-        // console.log("Done!");
-
 
         ///////////////////////////
         // Create an associated token account for the currency if it doesn't exist yet
@@ -147,21 +91,7 @@ export default function StakeForm() {
             console.log("Something went wrong! Check logs.");
         }
 
-        // // Should probably print the amount of tokens
-        // const response = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber());
-        // if (!response) {
-        //     alert("Not enough balance!");
-        // }
-
-        // Assert that there is some wallet registered
-        // Modify button accordingly (in a context state or so)
-
-        // console.log("Phantom user account is: ", userAccount.publicKey.toString());
-
-        // Calculate the conversation ratio
-        // Assume a simple multiplication with a constant (market rate)
         console.log("Bought tokens! ", sendAmount.toString());
-
     }
 
     useEffect(() => {

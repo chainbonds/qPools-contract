@@ -10,14 +10,21 @@ import * as anchor from "@project-serum/anchor";
 import {AiOutlineArrowDown} from "react-icons/ai";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
+import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
+import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
+import {BN} from "@project-serum/anchor";
+import airdropAdmin from "@qpools/sdk/lib/airdropAdmin";
 
 export default function UnstakeForm() {
 
     const {register, handleSubmit} = useForm();
+    const walletContext: any = useWallet();
+    const qPoolContext: IQPool = useQPoolUserTool();
 
     const [valueInSol, setValueInSol] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
+
 
     useEffect(() => {
         setValueInSol((_: number) => {
@@ -26,7 +33,50 @@ export default function UnstakeForm() {
     }, [valueInQPT]);
 
     const submitToContract = async (d: any) => {
+
+        console.log(JSON.stringify(d));
+
+        // TODO: All decimals should be registered somewhere!
+        const sendAmount: BN = new BN(valueInSol).mul(new BN(1e9));
+        console.log("send amount is: ", sendAmount.toString());
+
+        if (!qPoolContext.userAccount!.publicKey) {
+            alert("Please connect your wallet first!");
+            return
+        }
+
+        // Initialize if not initialized yet
+        await qPoolContext.initializeQPoolsUserTool(walletContext);
+        await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
+        // Should not have to register any accounts!
+        // Do some asserts if no QPT is found
+        await qPoolContext.qPoolsUser!.registerAccount();
+
+        // Generate the mint authority
+        console.log("Creating Wallet");
+        ///////////////////////////
+        // Create an associated token account for the currency if it doesn't exist yet
+        console.log("QPool context is: ", qPoolContext);
+        console.log("Currency mint is: ", qPoolContext.currencyMint);
+
+        // Now we redeem the QPT TOkens
+        console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
+        const success = await qPoolContext.qPoolsUser!.redeemQPT(sendAmount.toNumber(), true);
+        if (!success) {
+            console.log("Something went wrong! Check logs.");
+        }
+
+        console.log("Bought tokens! ", sendAmount.toString());
+
     }
+
+    useEffect(() => {
+        if (walletContext.publicKey) {
+            console.log("Wallet pubkey wallet is:", walletContext.publicKey.toString());
+            qPoolContext.initializeQPoolsUserTool(walletContext);
+        }
+        // initializeQPoolsUserTool
+    }, [walletContext.publicKey]);
 
     return (
         <>
@@ -54,10 +104,22 @@ export default function UnstakeForm() {
                                 />
                             </div>
                         </div>
+                        {qPoolContext.qPoolsUser &&
                         <CallToActionButton
                             type={"submit"}
-                            text={"REDEEM"}
+                            text={"EARN"}
                         />
+                        }
+                        {!qPoolContext.qPoolsUser &&
+                        <div className={"flex w-full justify-center"}>
+                            <WalletMultiButton
+                                className={"btn btn-ghost"}
+                                onClick={() => {
+                                    console.log("click");
+                                }}
+                            />
+                        </div>
+                        }
                     </form>
 
                 </div>

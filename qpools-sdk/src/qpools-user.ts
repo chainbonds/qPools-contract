@@ -300,24 +300,51 @@ export class QPoolsUser {
 
     }
 
-    async redeemQPT(qpt_amount_raw: number) {
+    async redeemQPT(qpt_amount_raw: number, verbose=false) {
 
         console.log("Redeeming ", qpt_amount_raw);
 
         if (!(qpt_amount_raw > 0)) {
             // TODO: Also implement this in the contract
             console.log("Cannot buy negative token amounts!");
-            return
+            return false
+        }
+
+        if (verbose) {
+            console.log("Sending ...");
+            console.log(
+                {
+                    qpt_amount_raw: new BN(qpt_amount_raw),
+                    body: {
+                        accounts: {
+                            bondPoolAccount: this.qPoolAccount,
+                            bondPoolRedeemableMint: this.QPTokenMint.publicKey,
+                            bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
+                            bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
+                            bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
+                            purchaser: this.wallet.publicKey,
+                            purchaserCurrencyTokenAccount: this.purchaserCurrencyAccount,
+                            purchaserRedeemableTokenAccount: this.purchaserQPTAccount,
+
+                            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                            clock: web3.SYSVAR_CLOCK_PUBKEY,
+                            systemProgram: web3.SystemProgram.programId,
+                            tokenProgram: TOKEN_PROGRAM_ID
+                        },
+                        signers: [this.walletPayer]
+                    }
+            });
+
         }
 
         // console.log("Sending RPC call");
         // console.log("Transfers (Before)");
         // console.log("(Currency Mint PK) when buying QPT: ", this.currencyMint.publicKey);
 
-        let beforeQptFromAmount = (await this.QPTokenMint.getAccountInfo(this.qPoolQPAccount)).amount;
-        let beforeQptTargetAmount = (await this.QPTokenMint.getAccountInfo(this.purchaserQPTAccount)).amount;
-        let beforeCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
-        let beforeCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // let beforeQptFromAmount = (await this.QPTokenMint.getAccountInfo(this.qPoolQPAccount)).amount;
+        // let beforeQptTargetAmount = (await this.QPTokenMint.getAccountInfo(this.purchaserQPTAccount)).amount;
+        // let beforeCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
+        // let beforeCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
 
         // console.log("beforeQptFromAmount", beforeQptFromAmount.toString());
         // console.log("beforeQptTargetAmount", beforeQptTargetAmount.toString());
@@ -345,16 +372,15 @@ export class QPoolsUser {
                     systemProgram: web3.SystemProgram.programId,
                     tokenProgram: TOKEN_PROGRAM_ID
                 },
-                // @ts-expect-error
-                signers: [this.provider.wallet.payer as Keypair]
+                signers: [this.walletPayer]
             }
         );
         await this.connection.confirmTransaction(initializeTx);
 
-        let afterQptFromAmount = (await this.QPTokenMint.getAccountInfo(this.qPoolQPAccount)).amount;
-        let afterQptTargetAmount = (await this.QPTokenMint.getAccountInfo(this.purchaserQPTAccount)).amount;
-        let afterCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
-        let afterCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // let afterQptFromAmount = (await this.QPTokenMint.getAccountInfo(this.qPoolQPAccount)).amount;
+        // let afterQptTargetAmount = (await this.QPTokenMint.getAccountInfo(this.purchaserQPTAccount)).amount;
+        // let afterCurrencyFromAmount = (await this.currencyMint.getAccountInfo(this.purchaserCurrencyAccount)).amount;
+        // let afterCurrencyTargetAmount = (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
 
         // console.log("afterQptFromAmount", afterQptFromAmount.toString());
         // console.log("afterQptTargetAmount", afterQptTargetAmount.toString());
@@ -373,6 +399,8 @@ export class QPoolsUser {
         // assert.ok(afterCurrencyTargetAmount > tou64(0), String("(T5)" + afterCurrencyTargetAmount.toString()));
 
         // console.log("Bond pool currency account is: ", this.qPoolCurrencyAccount.toString());
+
+        return true
 
     }
 

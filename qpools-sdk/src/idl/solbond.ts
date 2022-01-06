@@ -679,6 +679,11 @@ export type SolbondIdl = {
             "code": 320,
             "name": "CustomMathError8",
             "msg": "Custom Error 8!"
+        },
+        {
+            "code": 321,
+            "name": "EmptyTotalTokenSupply",
+            "msg": "Total Token Supply seems empty!"
         }
     ],
     "metadata": {
@@ -1367,6 +1372,11 @@ export const IDL: SolbondIdl = {
             "code": 320,
             "name": "CustomMathError8",
             "msg": "Custom Error 8!"
+        },
+        {
+            "code": 321,
+            "name": "EmptyTotalTokenSupply",
+            "msg": "Total Token Supply seems empty!"
         }
     ],
     "metadata": {

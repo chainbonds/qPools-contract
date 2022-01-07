@@ -9,7 +9,6 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
-//    "emitDecoratorMetadata": true,
     "rootDir": "src"
   },
   "include": ["src"],

@@ -165,7 +165,7 @@ export interface IWallet {
     publicKey: PublicKey
 }
 
-export const tou64 = (amount) => {
+export const tou64 = (amount: any) => {
     // @ts-ignore
     // eslint-disable-next-line new-cap
     return new u64(amount.toString())

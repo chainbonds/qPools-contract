@@ -28,7 +28,9 @@ export class QPoolsUser {
     public qPoolAccount: PublicKey;
     // @ts-ignore
     public bumpQPoolAccount: number;
+    // @ts-ignore
     public QPTokenMint: Token;
+    // @ts-ignore
     public currencyMint: Token;
 
     // @ts-ignore
@@ -85,7 +87,7 @@ export class QPoolsUser {
     async loadExistingQPTReserve(currencyMintPubkey: PublicKey) {
         console.log("Fetching QPT reserve...");
         if (!currencyMintPubkey) {
-            throw Error("currencyMintPubkey: " + currencyMintPubkey.toString());
+            throw Error("currencyMintPubkey is empty!");
         }
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
             [currencyMintPubkey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],

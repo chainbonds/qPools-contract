@@ -24,8 +24,9 @@ RUN npx tsc
 WORKDIR $HOME/dapp-nextjs/
 RUN pwd
 RUN yarn
+RUN yarn build
 
 EXPOSE 3000
 
 # Running the app
-CMD "yarn" "dev"
+CMD "yarn" "start"

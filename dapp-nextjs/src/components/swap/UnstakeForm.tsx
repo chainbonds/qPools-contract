@@ -107,7 +107,7 @@ export default function UnstakeForm() {
                         {qPoolContext.qPoolsUser &&
                         <CallToActionButton
                             type={"submit"}
-                            text={"EARN"}
+                            text={"REDEEM"}
                         />
                         }
                         {!qPoolContext.qPoolsUser &&

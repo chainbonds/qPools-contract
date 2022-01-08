@@ -32,7 +32,7 @@ export default function InputFieldWithLogo(props: any) {
                         min="0"
                         onChange={(event) => {
                             let newValue = Number(event.target.value);
-                            console.log("New Sol is: ", newValue);
+                            console.log("New " + String(props.displayText) + " is: " + String(newValue));
                             props.setNewValue(newValue);
                         }}
                     />

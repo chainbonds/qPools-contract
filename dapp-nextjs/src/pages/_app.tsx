@@ -8,6 +8,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import "tailwindcss/tailwind.css";
 import "../styles/globals.css";
 import "../styles/App.css";
+import {QPoolsProvider} from "../contexts/QPoolsProvider";
 
 const SOLANA_NETWORK = WalletAdapterNetwork.Mainnet;
 // const SOLANA_NETWORK = WalletAdapterNetwork.Devnet;
@@ -29,7 +30,9 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider>
-        <Component {...pageProps} />
+          <QPoolsProvider>
+            <Component {...pageProps} />
+          </QPoolsProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

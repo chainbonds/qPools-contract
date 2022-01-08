@@ -192,6 +192,24 @@ pub mod solbond {
         )
     }
 
+    pub fn collect_fees(
+        ctx: Context<ClaimFeeInstruction>,
+        _bump_bond_pool_account: u8,
+        _index: u32,
+        lower_tick_index: i32, 
+        upper_tick_index: i32,
+    ) -> ProgramResult {
+
+        instructions::collect_fees::handler(
+            ctx,
+            _bump_bond_pool_account,
+            _index,
+            lower_tick_index,
+            upper_tick_index
+        )
+
+    }
+
 }
 
 

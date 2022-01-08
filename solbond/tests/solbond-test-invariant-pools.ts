@@ -208,6 +208,11 @@ describe('claim', () => {
         await market.createPositions()
     });
 
+    it("#CollectFeesFromInvariant()", async () => {
+        await market.claimFee(
+        )
+    });
+
     // it("#createLiquidityPositions()", async () => {
     //     console.log("Creating Liquidity Positions");
     //     // First, create a position list if it doesn't exist yet

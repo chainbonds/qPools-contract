@@ -728,12 +728,6 @@ export class QPoolsAdmin {
                     tx.add(await this.mockMarket.createTickInstruction(pair, upperTick, this.qPoolAccount));
                 }
 
-                const {positionListAddress} = await this.mockMarket.getPositionListAddress(this.qPoolAccount);
-                const account = await this.connection.getAccountInfo(positionListAddress);
-
-                if (account === null) {
-                    tx.add(await this.mockMarket.createPositionListInstruction(this.qPoolAccount));
-                }
 
                 await signAndSend(tx, [this.wallet], this.connection);
 
@@ -792,7 +786,6 @@ export class QPoolsAdmin {
                                 state: this.mockMarket.stateAddress.toString(),
                                 position: positionAddress.toString(),
                                 pool: poolAddress.toString(),
-                                positionList: positionListAddress.toString(),
                                 owner: this.qPoolAccount.toString(),
                                 lowerTick: lowerTickPDA.toString(),
                                 upperTick: upperTickPDA.toString(),

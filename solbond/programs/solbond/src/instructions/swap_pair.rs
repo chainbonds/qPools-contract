@@ -4,7 +4,7 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use crate::state::{BondPoolAccount, InvariantPoolAccount};
 use amm::cpi::accounts::Swap;
 use amm::program::Amm;
-use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
+//use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 // TODO: Not sure if initializer or owner sohuld be Signer now
 #[derive(Accounts)]
@@ -27,12 +27,15 @@ pub struct SwapPairInstruction<'info> {
     pub owner: AccountInfo<'info>,
 
     #[account(mut)]
-    pub pool: AccountLoader<'info, Pool>,
-    pub state: AccountLoader<'info, State>,
+    pub pool: AccountInfo<'info>,
+    pub state: AccountInfo<'info>,
+    //pub pool: AccountLoader<'info, Pool>,
+    //pub state: AccountLoader<'info, State>,
     #[account(
         mut
     )]
-    pub tickmap: AccountLoader<'info, Tickmap>,
+    pub tickmap: AccountInfo<'info>,
+    //pub tickmap: AccountLoader<'info, Tickmap>,
 
     pub token_x_mint: Account<'info, Mint>,
     pub token_y_mint: Account<'info, Mint>,
@@ -41,14 +44,14 @@ pub struct SwapPairInstruction<'info> {
         mut,
         constraint = &reserve_account_x.mint == token_x_mint.to_account_info().key,
         constraint = &reserve_account_x.owner == program_authority.key,
-        constraint = reserve_account_x.to_account_info().key == &pool.load()?.token_x_reserve
+        //constraint = reserve_account_x.to_account_info().key == &pool.load()?.token_x_reserve
     )]
     pub reserve_account_x: Account<'info, TokenAccount>,
     #[account(
         mut,
         constraint = &reserve_account_y.mint == token_y_mint.to_account_info().key,
         constraint = &reserve_account_y.owner == program_authority.key,
-        constraint = reserve_account_y.to_account_info().key == &pool.load()?.token_y_reserve
+        //constraint = reserve_account_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
     pub reserve_account_y: Account<'info, TokenAccount>,
     #[account(
@@ -62,7 +65,7 @@ pub struct SwapPairInstruction<'info> {
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
 
-    #[account(constraint = &state.load()?.authority == program_authority.key)]
+    //#[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,

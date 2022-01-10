@@ -1,11 +1,17 @@
 {
+    "scripts": {
+        "test:solbond-only": "anchor test tests/solbond-only.spec.ts"
+    },
     "dependencies": {
         "@project-serum/anchor": "^0.18.2",
         "@project-serum/serum": "^0.13.58",
-        "@solana/spl-token": "^0.1.8"
+        "@solana/spl-token": "^0.1.8",
+        "easy-spl": "^0.5.0"
     },
     "devDependencies": {
         "@invariant-labs/sdk": "file:./deps/protocol/sdk",
+        "@qpools/admin-sdk": "link:../qpools-admin-sdk",
+        "@qpools/sdk": "link:../qpools-sdk",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.11.7",
         "chai": "^4.3.4",

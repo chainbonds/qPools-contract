@@ -74,15 +74,23 @@ pub fn handler(
     *    P = (R_0 + X)/(S_0 + S_in) ==> X = (S_0 + S_in)*P - R_0
     */
     // TODO: Double check that the user actually has less than this in their amount
-    let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_token_account.amount;
+    let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_mint.supply;
     let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
 
     // checked in function, looks correct
-    let redeemable_to_be_distributed: u64 = calculate_redeemables_to_be_distributed(
+    let redeemable_to_be_distributed: u64;
+    match calculate_redeemables_to_be_distributed(
         total_currency_token_supply,
         total_redeemable_supply,
         currency_token_amount_raw
-    );
+    ) {
+        Ok(x) => {
+            redeemable_to_be_distributed = x;
+        },
+        Err(error) => {
+            return Err(error.into());
+        }
+    }
 
     /*
      * Step 2: Transfer SOL to the bond's reserve
@@ -119,7 +127,7 @@ pub fn handler(
             cpi_program,
             cpi_accounts,
             &[[
-                ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+                ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
             ].as_ref()],
         ),

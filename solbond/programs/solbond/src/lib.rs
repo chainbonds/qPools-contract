@@ -242,4 +242,24 @@ pub enum ErrorCode {
     PayoutError,
     #[msg("Redeemable-calculation doesnt add up")]
     Calculation,
+    #[msg("Returning no Tokens!")]
+    ReturningNoCurrency,
+    #[msg("Custom Error 1!")]
+    CustomMathError1,
+    #[msg("Custom Error 2!")]
+    CustomMathError2,
+    #[msg("Custom Error 3!")]
+    CustomMathError3,
+    #[msg("Custom Error 4!")]
+    CustomMathError4,
+    #[msg("Custom Error 5!")]
+    CustomMathError5,
+    #[msg("Custom Error 6!")]
+    CustomMathError6,
+    #[msg("Custom Error 7!")]
+    CustomMathError7,
+    #[msg("Custom Error 8!")]
+    CustomMathError8,
+    #[msg("Total Token Supply seems empty!")]
+    EmptyTotalTokenSupply,
 }

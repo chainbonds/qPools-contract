@@ -65,6 +65,7 @@ export default function StakeForm() {
         );
         console.log("Currency Mint User Account: ", currencyMintUserAccount.toString());
 
+        // TODO: Should delete this and turn this into the button
         let transaction = new Transaction();
         let mintToInstruction = Token.createMintToInstruction(
             TOKEN_PROGRAM_ID,

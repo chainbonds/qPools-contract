@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@qpools/sdk": "^0.0.1",
+    "@qpools/sdk": "link:../qpools-sdk",
     "@heroicons/react": "^1.0.5",
     "@nfteyez/sol-rayz-react": "^0.8.2",
     "@project-serum/anchor": "^0.18.2",

@@ -21,7 +21,7 @@ export function useLoad() {
 
 export function LoadProvider(props: any) {
 
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
     const [loadCounter, setLoadCounter] = useState<number>(0);
     // Use counter logic if the current logic seems to fail
     // const [loadingCounter, setLoadingCounter] = useState<number>(0);
@@ -32,6 +32,7 @@ export function LoadProvider(props: any) {
         }
         console.log("Loading is: ", loadCounter > 0);
         setLoading(() => {
+            // return true;
             return loadCounter > 0;
         });
     }, [loadCounter]);

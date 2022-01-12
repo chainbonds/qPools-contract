@@ -37,6 +37,13 @@ export const HomeView: FC = ({}) => {
                 // spinner={<BounceLoader />}
                 spinner={true}
                 text="Loading..."
+                styles={{
+                    wrapper: {
+                        // width: '400px',
+                        // height: '400px',
+                        overflow: loading ? 'hidden' : 'scroll'
+                    }
+                }}
             >
                 <div
                     className="h-screen h-full w-full w-screen flex text-white flex-col"

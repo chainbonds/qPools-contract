@@ -12,11 +12,24 @@ export const HomeView: FC = ({}) => {
 
     const onClick = () => {};
 
+    const devnetBanner = () => {
+        return (
+            <>
+                <div className={"flex w-full bg-pink-400"}>
+                    <div className={"mx-auto py-2 text-gray-900"}>
+                        We are on devnet! TVL Values are made up! Send any inquiries to contact@qpools.finance
+                    </div>
+                </div>
+            </>
+        )
+    };
+
     return (
         <div
             className="h-screen h-full w-full w-screen flex text-white flex-col"
             style={{ backgroundColor: "#1a202c" }}
         >
+            {devnetBanner()}
             <Header />
             <Main/>
             <Footer/>

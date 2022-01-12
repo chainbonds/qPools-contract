@@ -2,13 +2,15 @@
  * This is the file that can later on be shared with the frontend
  * The other qpools files will be used as an admin, and should probably not be open
  */
-import {Connection, Keypair, PublicKey} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BondPoolAccount} from "./types/bondPoolAccount";
 import {getSolbondProgram} from "./solbond-program";
 import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
+import airdropAdmin from "../lib/airdropAdmin";
+import {MOCK} from "../lib";
 
 export class QPoolsUser {
 
@@ -77,6 +79,68 @@ export class QPoolsUser {
         // this.purchaserCurrencyAccount = null;
         // this.purchaserQPTAccount = null;
         // this.qPoolCurrencyAccount = null;
+    }
+
+    async airdropTo(airdropAmountLamports: BN, currencyMint: PublicKey) {
+
+        let _airdropAmount: number = 3;
+        if (!this.walletPayer || !this.walletPayer!.publicKey) {
+            return false
+        }
+
+        await this.loadExistingQPTReserve(currencyMint);
+        await this.registerAccount();
+
+        console.log("Airdrop Admin is: ", airdropAdmin);
+        console.log(airdropAdmin);
+
+        ///////////////////////////
+        // Create an associated token account for the currency if it doesn't exist yet
+        // console.log("QPool context is: ", qPoolContext);
+        // console.log("Currency mint is: ", qPoolContext.currencyMint);
+        // // TODO: Might have to bundle this with the transaction below
+        // console.log("Inputs are: ");
+        // console.log({
+        //     "1": qPoolContext.connection!,
+        //     "2": qPoolContext.currencyMint!.publicKey,
+        //     "3": qPoolContext.provider!.wallet.publicKey,
+        //     "4": qPoolContext.provider!.wallet
+        // })
+        const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
+            this.connection!,
+            currencyMint,
+            this.provider!.wallet.publicKey,
+            this.provider!.wallet
+        );
+        console.log("Currency Mint User Account: ", currencyMintUserAccount.toString());
+
+        // TODO:
+        console.log("Working");
+        let transaction = new Transaction();
+        let mintToInstruction = Token.createMintToInstruction(
+            TOKEN_PROGRAM_ID,
+            MOCK.SOL,
+            currencyMintUserAccount,
+            airdropAdmin.publicKey,
+            [],
+            airdropAmountLamports.toNumber()
+        )
+        transaction.add(mintToInstruction);
+        const blockhash = await this.connection!.getRecentBlockhash();
+        transaction.recentBlockhash = blockhash.blockhash;
+        let connection: Connection = this.connection!;
+        const tx1 = await connection.sendTransaction(
+            transaction,
+            [airdropAdmin]
+        );
+        await connection.confirmTransaction(tx1);
+        console.log("Should have received: ", airdropAmountLamports.toNumber());
+        console.log("Airdropped tokens! ", airdropAmountLamports.toString());
+
+
+
+        return true
+
     }
 
     async loadExistingQPTReserve(currencyMintPubkey: PublicKey) {

@@ -27,52 +27,8 @@ export const TransparentButton: FC = ({}) => {
         }
 
         await qPoolContext.initializeQPoolsUserTool(walletContext);
-        await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
-        await qPoolContext.qPoolsUser!.registerAccount();
-        console.log(airdropAdmin);
+        await qPoolContext.qPoolsUser!.airdropTo(airdropAmount, qPoolContext.currencyMint!.publicKey!);
 
-        ///////////////////////////
-        // Create an associated token account for the currency if it doesn't exist yet
-        console.log("QPool context is: ", qPoolContext);
-        console.log("Currency mint is: ", qPoolContext.currencyMint);
-        // TODO: Might have to bundle this with the transaction below
-        console.log("Inputs are: ");
-        console.log({
-            "1": qPoolContext.connection!,
-            "2": qPoolContext.currencyMint!.publicKey,
-            "3": qPoolContext.provider!.wallet.publicKey,
-            "4": qPoolContext.provider!.wallet
-        })
-        const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
-            qPoolContext.connection!,
-            qPoolContext.currencyMint!.publicKey,
-            qPoolContext.provider!.wallet.publicKey,
-            qPoolContext.provider!.wallet
-        );
-        console.log("Currency Mint User Account: ", currencyMintUserAccount.toString());
-
-        // TODO:
-        console.log("Working");
-        let transaction = new Transaction();
-        let mintToInstruction = Token.createMintToInstruction(
-            TOKEN_PROGRAM_ID,
-            MOCK.SOL,
-            currencyMintUserAccount,
-            airdropAdmin.publicKey,
-            [],
-            airdropAmount.toNumber()
-        )
-        transaction.add(mintToInstruction);
-        const blockhash = await qPoolContext.connection!.getRecentBlockhash();
-        transaction.recentBlockhash = blockhash.blockhash;
-        let connection: Connection = qPoolContext.connection!;
-        const tx1 = await connection.sendTransaction(
-            transaction,
-            [airdropAdmin]
-        );
-        await connection.confirmTransaction(tx1);
-        console.log("Should have received: ", airdropAmount.toNumber());
-        console.log("Airdropped tokens! ", airdropAmount.toString());
     };
 
     return (

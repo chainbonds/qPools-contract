@@ -47,44 +47,38 @@ export default function StakeForm() {
         await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
         await qPoolContext.qPoolsUser!.registerAccount();
 
-        // Generate the mint authority
-        console.log("Creating Wallet");
-
-        console.log("Airdrop admin is: ");
-        console.log(airdropAdmin);
-
-        ///////////////////////////
-        // Create an associated token account for the currency if it doesn't exist yet
-        console.log("QPool context is: ", qPoolContext);
-        console.log("Currency mint is: ", qPoolContext.currencyMint);
-        const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
-            qPoolContext.connection!,
-            qPoolContext.currencyMint!.publicKey,
-            qPoolContext.provider!.wallet.publicKey,
-            qPoolContext.provider!.wallet
-        );
-        console.log("Currency Mint User Account: ", currencyMintUserAccount.toString());
-
-        // TODO: Should delete this and turn this into the button
-        let transaction = new Transaction();
-        let mintToInstruction = Token.createMintToInstruction(
-            TOKEN_PROGRAM_ID,
-            MOCK.SOL,
-            currencyMintUserAccount,
-            airdropAdmin.publicKey,
-            [],
-            sendAmount.toNumber()
-        )
-        transaction.add(mintToInstruction);
-        const blockhash = await qPoolContext.connection!.getRecentBlockhash();
-        transaction.recentBlockhash = blockhash.blockhash;
-        let connection: Connection = qPoolContext.connection!;
-        const tx1 = await connection.sendTransaction(
-            transaction,
-            [airdropAdmin]
-        );
-        await connection.confirmTransaction(tx1);
-        console.log("Should have received: ", sendAmount.toNumber());
+        // ///////////////////////////
+        // // Create an associated token account for the currency if it doesn't exist yet
+        // console.log("QPool context is: ", qPoolContext);
+        // console.log("Currency mint is: ", qPoolContext.currencyMint);
+        // const currencyMintUserAccount = await createAssociatedTokenAccountSendUnsigned(
+        //     qPoolContext.connection!,
+        //     qPoolContext.currencyMint!.publicKey,
+        //     qPoolContext.provider!.wallet.publicKey,
+        //     qPoolContext.provider!.wallet
+        // );
+        // console.log("Currency Mint User Account: ", currencyMintUserAccount.toString());
+        //
+        // // TODO: Should delete this and turn this into the button
+        // let transaction = new Transaction();
+        // let mintToInstruction = Token.createMintToInstruction(
+        //     TOKEN_PROGRAM_ID,
+        //     MOCK.SOL,
+        //     currencyMintUserAccount,
+        //     airdropAdmin.publicKey,
+        //     [],
+        //     sendAmount.toNumber()
+        // )
+        // transaction.add(mintToInstruction);
+        // const blockhash = await qPoolContext.connection!.getRecentBlockhash();
+        // transaction.recentBlockhash = blockhash.blockhash;
+        // let connection: Connection = qPoolContext.connection!;
+        // const tx1 = await connection.sendTransaction(
+        //     transaction,
+        //     [airdropAdmin]
+        // );
+        // await connection.confirmTransaction(tx1);
+        // console.log("Should have received: ", sendAmount.toNumber());
 
         console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
         const success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);

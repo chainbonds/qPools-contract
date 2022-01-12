@@ -16,12 +16,12 @@ export const Main: FC = ({}) => {
                     <h1 className="absolute text-4xl lg:text-7xl font-bold transform -translate-x-1 -translate-y-1">
                         Generate Yields
                         <br/>
-                        Stay Liquid
+                        Adjust Risk
                     </h1>
                     <h1 className="text-4xl lg:text-7xl font-bold text-pink-500">
                         Generate Yields
                         <br/>
-                        Stay Liquid
+                        Adjust Risk
                     </h1>
                 </div>
             </div>

@@ -7,12 +7,14 @@ import airdropAdmin from "@qpools/sdk/src/airdropAdmin";
 import {createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
 import {Connection, Transaction} from "@solana/web3.js";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {useLoad} from "../contexts/LoadingContext";
 
-export const TransparentButton: FC = ({}) => {
+export const AirdropButton: FC = ({}) => {
 
     // TODO Implement logic to airdrop some currency ...
     const walletContext: any = useWallet();
     const qPoolContext: IQPool = useQPoolUserTool();
+    const loadContext = useLoad();
 
     // Onclick, alert that the user must connect his wallet first!
     const airdropCurrency = async () => {
@@ -25,6 +27,8 @@ export const TransparentButton: FC = ({}) => {
             alert("Please connect your wallet first!");
             return
         }
+
+        await loadContext.increaseCounter();
 
         await qPoolContext.initializeQPoolsUserTool(walletContext);
         await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
@@ -73,6 +77,8 @@ export const TransparentButton: FC = ({}) => {
         await connection.confirmTransaction(tx1);
         console.log("Should have received: ", airdropAmount.toNumber());
         console.log("Airdropped tokens! ", airdropAmount.toString());
+
+        await loadContext.decreaseCounter();
     };
 
     return (

@@ -6,9 +6,13 @@ import {Main} from "../../components/Main";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {LogoWithTitle} from "../../components/LogoWithTitle";
 import {SocialIcon} from "react-social-icons";
+// @ts-ignore
+import LoadingOverlay from "react-loading-overlay";
+import {useLoad} from "../../contexts/LoadingContext";
 
 export const HomeView: FC = ({}) => {
     const {publicKey} = useWallet();
+    const {loading} = useLoad();
 
     const onClick = () => {};
 
@@ -24,15 +28,26 @@ export const HomeView: FC = ({}) => {
         )
     };
 
+    // Based on loading, add transparency ...
+
     return (
-        <div
-            className="h-screen h-full w-full w-screen flex text-white flex-col"
-            style={{ backgroundColor: "#1a202c" }}
-        >
-            {devnetBanner()}
-            <Header />
-            <Main/>
-            <Footer/>
-        </div>
+        <>
+            <LoadingOverlay
+                active={loading}
+                // spinner={<BounceLoader />}
+                spinner={true}
+                text="Loading..."
+            >
+                <div
+                    className="h-screen h-full w-full w-screen flex text-white flex-col"
+                    style={{ backgroundColor: "#1a202c" }}
+                >
+                    {devnetBanner()}
+                    <Header />
+                    <Main/>
+                    <Footer/>
+                </div>
+            </LoadingOverlay>
+        </>
     );
 };

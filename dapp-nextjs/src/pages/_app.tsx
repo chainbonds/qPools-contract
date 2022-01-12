@@ -9,6 +9,7 @@ import "tailwindcss/tailwind.css";
 import "../styles/globals.css";
 import "../styles/App.css";
 import {QPoolsProvider} from "../contexts/QPoolsProvider";
+import {LoadProvider} from "../contexts/LoadingContext";
 
 const SOLANA_NETWORK = WalletAdapterNetwork.Mainnet;
 // const SOLANA_NETWORK = WalletAdapterNetwork.Devnet;
@@ -28,13 +29,15 @@ function MyApp({ Component, pageProps }: AppProps) {
   const endpoint = useMemo(() => clusterApiUrl(network), []);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider>
-          <QPoolsProvider>
-            <Component {...pageProps} />
-          </QPoolsProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+      <LoadProvider>
+        <ConnectionProvider endpoint={endpoint}>
+          <WalletProvider>
+              <QPoolsProvider>
+                <Component {...pageProps} />
+              </QPoolsProvider>
+          </WalletProvider>
+        </ConnectionProvider>
+      </LoadProvider>
   );
 }
 

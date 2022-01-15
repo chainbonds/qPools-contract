@@ -3,11 +3,6 @@ import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
 import {PublicKey, Keypair, Transaction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
-import {createAssociatedTokenAccountTx} from "easy-spl/dist/tx/associated-token-account";
-import {
-    createAssociatedTokenAccountInstructions, createAssociatedTokenAccountRawInstructions,
-    getAssociatedTokenAddress
-} from "easy-spl/src/tx/associated-token-account";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;

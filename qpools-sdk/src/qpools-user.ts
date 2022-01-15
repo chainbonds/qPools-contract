@@ -2,18 +2,13 @@
  * This is the file that can later on be shared with the frontend
  * The other qpools files will be used as an admin, and should probably not be open
  */
-import {Connection, Keypair, PublicKey, Signer, Transaction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BondPoolAccount} from "./types/bondPoolAccount";
 import {getSolbondProgram} from "./solbond-program";
-import {createAssociatedTokenAccountSendUnsigned, IWallet, tou64} from "./utils";
-import {assert} from "chai";
-
-// export interface Tickmap {
-//     bitmap: Array<number>
-// }
+import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
 
 export class QPoolsUser {
 

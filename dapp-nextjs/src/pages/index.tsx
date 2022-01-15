@@ -7,7 +7,7 @@ const Home: NextPage = (props) => {
     return (
         <>
             <Head>
-                <title>qPools | Generate Yields - Stay Liquid | The most convenient way to generate passive income
+                <title>qPools | Generate Yields, Adjust Risk | The most convenient way to generate passive income
                     without locking in liquidity. Built on #Solana</title>
                 <meta
                     name="description"

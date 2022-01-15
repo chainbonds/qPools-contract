@@ -15,12 +15,14 @@ import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {BN} from "@project-serum/anchor";
 import airdropAdmin from "@qpools/sdk/lib/airdropAdmin";
+import {useLoad} from "../../contexts/LoadingContext";
 
 export default function UnstakeForm() {
 
     const {register, handleSubmit} = useForm();
     const walletContext: any = useWallet();
     const qPoolContext: IQPool = useQPoolUserTool();
+    const loadContext = useLoad();
 
     const [valueInSol, setValueInSol] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
@@ -45,6 +47,8 @@ export default function UnstakeForm() {
             return
         }
 
+        await loadContext.increaseCounter();
+
         // Initialize if not initialized yet
         await qPoolContext.initializeQPoolsUserTool(walletContext);
         await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
@@ -61,7 +65,11 @@ export default function UnstakeForm() {
 
         // Now we redeem the QPT TOkens
         console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
+        // Add a try-catch here (prob in the SDK)
         const success = await qPoolContext.qPoolsUser!.redeemQPT(sendAmount.toNumber(), true);
+
+        await loadContext.decreaseCounter();
+
         if (!success) {
             console.log("Something went wrong! Check logs.");
         }

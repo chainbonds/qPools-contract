@@ -9,10 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@qpools/sdk": "^0.0.1",
     "@heroicons/react": "^1.0.5",
     "@nfteyez/sol-rayz-react": "^0.8.2",
     "@project-serum/anchor": "^0.18.2",
+    "@qpools/sdk": "^0.0.4",
     "@solana/spl-token": "^0.1.8",
     "@solana/wallet-adapter-base": "^0.7.0",
     "@solana/wallet-adapter-phantom": "^0.7.0",
@@ -36,7 +36,10 @@
     "react-dom": "17.0.2",
     "react-hook-form": "^7.22.2",
     "react-icons": "^4.3.1",
-    "react-social-icons": "^5.6.1"
+    "react-loader-spinner": "^5.0.6",
+    "react-loading-overlay": "^1.0.1",
+    "react-social-icons": "^5.6.1",
+    "react-spinners": "^0.11.0"
   },
   "devDependencies": {
     "@project-serum/anchor": "^0.18.2",

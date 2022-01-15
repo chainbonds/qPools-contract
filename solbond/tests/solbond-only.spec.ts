@@ -4,10 +4,10 @@ import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {Keypair, PublicKey} from "@solana/web3.js";
 import {WalletI} from "easy-spl";
-import {QPoolsAdmin} from "@qpools/sdk/lib/qpools-admin-sdk/src";
 import {createToken} from "../deps/protocol/tests/testUtils";
-import {QPoolsUser} from "../../qpools-sdk/src";
 import {Key} from "readline";
+import {QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
+import {QPoolsUser} from "@qpools/sdk";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
@@ -17,10 +17,6 @@ const CURRENCY_TOKEN_PAYIN_AMOUNT = 5_000_000_000;
 const RESERVE_INCREASE_PHASE_1 = 10_000_000_000;
 const RESERVE_INCREASE_PHASE_2 = 13_000_000_000;
 const REDEEM_AMOUNT_TOKENS_PHASE_1 = 1_000_000_000;
-
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 describe('solbond', () => {
 
@@ -75,6 +71,7 @@ describe('solbond', () => {
         console.log("Purchasing bond...");
 
         // Do some currency airdrop
+        await qPoolsUserTool.loadExistingQPTReserve(currencyMint.publicKey);
         await qPoolsUserTool.registerAccount();
         await currencyMint.mintTo(qPoolsUserTool.purchaserCurrencyAccount, mintAuthority, [mintAuthority], CURRENCY_TOKEN_START_AMOUNT);
         // await delay(1_000);

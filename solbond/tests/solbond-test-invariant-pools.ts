@@ -15,10 +15,6 @@ import {createToken} from "./invariant-utils";
 // require('dotenv').config()
 const NUMBER_POOLS = 1;
 
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 describe('claim', () => {
 
     // Connection
@@ -221,7 +217,6 @@ describe('claim', () => {
     //
     // })
 
-
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
     //        admin,
@@ -232,11 +227,6 @@ describe('claim', () => {
     //        new anchor.BN(0)
     //    )
     // })
-
-
-
-
-
 
 
     // it("#registerInvariantPools()", async () => {

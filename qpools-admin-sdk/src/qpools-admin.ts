@@ -706,6 +706,7 @@ export class QPoolsAdmin {
                                 // Create liquidity accounts
                                 initializer: this.wallet.publicKey.toString(),
 
+                                bondPoolCurrencyTokenMint: this.currencyMint.publicKey.toString(),
                                 state: this.mockMarket!.stateAddress.toString(),
                                 position: positionAddress.toString(),
                                 pool: poolAddress.toString(),
@@ -742,6 +743,7 @@ export class QPoolsAdmin {
                                 // Create liquidity accounts
                                 initializer: this.wallet.publicKey,  // Again, remove initializer as a seed from the qPoolAccount!
 
+                                bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
                                 state: this.mockMarket.stateAddress,
                                 position: positionAddress,
                                 pool: poolAddress,

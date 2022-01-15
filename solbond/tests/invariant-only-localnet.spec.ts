@@ -122,17 +122,24 @@ describe('invariant-localnet', () => {
         )
     })
 
+    /** Create the QPT Reserve Object, which covers data such as currencyMint, QPTMint, etc. */
+    it("initializeQPTReserve()", async () => {
+        await market.initializeQPTReserve();
+        await market.loadExistingQPTReserve();
+    })
+
     // TODO: The above function doesn't create position lists, nor positions. Do we require these?
     /** Create a position list to keep track of all positions */
-    // it("#createPositionList()", async () => {
-    //     // Get the data for the createPool list
-    //     console.log("First market position is..");
-    //     await market.createPositionList()
-    // });
-    // /** Create a liquidity-providing position */
-    // it("#createPositionList()", async () => {
-    //     await market.createPositions()
-    // });
+    it("#createPositionList()", async () => {
+        // Get the data for the createPool list
+        // Will probably have to load the existing QPT Reserve (if any exists...)
+        await market.createPositionList()
+    });
+
+    /** Create a liquidity-providing position */
+    it("#createPositionList()", async () => {
+        await market.createPositions()
+    });
 
     // I guess one person should claim the fees now
 

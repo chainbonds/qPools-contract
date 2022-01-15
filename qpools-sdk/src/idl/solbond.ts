@@ -245,6 +245,11 @@ export type SolbondIdl = {
                     "isSigner": false
                 },
                 {
+                    "name": "bondPoolCurrencyTokenMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "pool",
                     "isMut": true,
                     "isSigner": false
@@ -362,6 +367,11 @@ export type SolbondIdl = {
                     "isSigner": false
                 },
                 {
+                    "name": "bondPoolCurrencyTokenMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "owner",
                     "isMut": true,
                     "isSigner": false
@@ -452,6 +462,119 @@ export type SolbondIdl = {
                 {
                     "name": "liquidityDelta",
                     "type": "u128"
+                }
+            ]
+        },
+        {
+            "name": "collectFees",
+            "accounts": [
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "state",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pool",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "position",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "lowerTick",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "upperTick",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "bondPoolCurrencyTokenMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenX",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenY",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "accountX",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "accountY",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserveX",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserveY",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "programAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "invariantProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "bumpBondPoolAccount",
+                    "type": "u8"
+                },
+                {
+                    "name": "index",
+                    "type": "u32"
+                },
+                {
+                    "name": "lowerTickIndex",
+                    "type": "i32"
+                },
+                {
+                    "name": "upperTickIndex",
+                    "type": "i32"
                 }
             ]
         }
@@ -938,6 +1061,11 @@ export const IDL: SolbondIdl = {
                     "isSigner": false
                 },
                 {
+                    "name": "bondPoolCurrencyTokenMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "pool",
                     "isMut": true,
                     "isSigner": false
@@ -1055,6 +1183,11 @@ export const IDL: SolbondIdl = {
                     "isSigner": false
                 },
                 {
+                    "name": "bondPoolCurrencyTokenMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "owner",
                     "isMut": true,
                     "isSigner": false
@@ -1145,6 +1278,119 @@ export const IDL: SolbondIdl = {
                 {
                     "name": "liquidityDelta",
                     "type": "u128"
+                }
+            ]
+        },
+        {
+            "name": "collectFees",
+            "accounts": [
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "state",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pool",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "position",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "lowerTick",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "upperTick",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "bondPoolCurrencyTokenMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenX",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenY",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "accountX",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "accountY",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserveX",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserveY",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "programAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "invariantProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "bumpBondPoolAccount",
+                    "type": "u8"
+                },
+                {
+                    "name": "index",
+                    "type": "u32"
+                },
+                {
+                    "name": "lowerTickIndex",
+                    "type": "i32"
+                },
+                {
+                    "name": "upperTickIndex",
+                    "type": "i32"
                 }
             ]
         }

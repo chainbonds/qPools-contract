@@ -413,6 +413,7 @@ export class QPoolsAdmin {
                     {
                         initializer: this.wallet.publicKey.toString(),
                         owner: this.qPoolAccount!.toString(),
+                        bondPoolCurrencyTokenMint: this.currencyMint.publicKey.toString(),
 
                         tickmap: pool.tickmap.toString(),
                         token_x_mint: pair.tokenX.toString(),
@@ -478,6 +479,7 @@ export class QPoolsAdmin {
                         accounts: {
                             initializer: this.wallet.publicKey,
                             owner: this.qPoolAccount,
+                            bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
 
                             pool: poolAddress,
                             state: this.mockMarket.stateAddress,
@@ -748,7 +750,7 @@ export class QPoolsAdmin {
                                 position: positionAddress,
                                 pool: poolAddress,
                                 positionList: positionListAddress,
-                                owner: this.qPoolAccount,
+                                owner: this.qPoolAccount!,
                                 lowerTick: lowerTickPDA,
                                 upperTick: upperTickPDA,
                                 tokenX: pool.tokenX,
@@ -858,6 +860,7 @@ export class QPoolsAdmin {
                                 state: this.mockMarket.stateAddress.toString(),
                                 position: positionAddress.toString(),
                                 pool: poolAddress.toString(),
+                                bondPoolCurrencyTokenMint: this.currencyMint.publicKey.toString(),
                                 owner: this.qPoolAccount.toString(),
                                 lowerTick: lowerTickPDA.toString(),
                                 upperTick: upperTickPDA.toString(),
@@ -889,6 +892,7 @@ export class QPoolsAdmin {
                                 initializer: this.wallet.publicKey,  // Again, remove initializer as a seed from the qPoolAccount!
                                 state: this.mockMarket.stateAddress,
                                 pool: poolAddress,
+                                bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
                                 position: positionAddress,
                                 lowerTick: lowerTickPDA,
                                 upperTick: upperTickPDA,

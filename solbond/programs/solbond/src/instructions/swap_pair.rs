@@ -21,10 +21,13 @@ pub struct SwapPairInstruction<'info> {
 
     // seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
     #[account(
-        seeds=[initializer.key.as_ref(), b"bondPoolAccount"],
+        seeds=[bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1"],
         bump = _bump_bond_pool_account
     )]
     pub owner: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub bond_pool_currency_token_mint: AccountInfo<'info>,
 
     #[account(mut)]
     pub pool: AccountInfo<'info>,
@@ -128,7 +131,7 @@ pub fn handler(
             swap_accounts,
         &[
                 [
-                    ctx.accounts.initializer.key.as_ref(), b"bondPoolAccount",
+                    ctx.accounts.bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1",
                     &[_bump_bond_pool_account]
                 ].as_ref()
             ]

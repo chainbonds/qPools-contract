@@ -29,10 +29,12 @@ pub struct ClaimFeeInstruction<'info> {
     pub upper_tick: AccountInfo<'info>,
 
     #[account(
-        seeds=[initializer.key.as_ref(), b"bondPoolAccount"],
+        seeds=[bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1"],
         bump = _bump_bond_pool_account
     )]
     pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub bond_pool_currency_token_mint: AccountInfo<'info>,
 
     //#[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
@@ -122,7 +124,7 @@ pub fn handler(
             claim_fee_accounts,
         &[
                 [
-                    ctx.accounts.initializer.key.as_ref(), b"bondPoolAccount",
+                    ctx.accounts.bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1",
                     &[_bump_bond_pool_account]
                 ].as_ref()
             ]

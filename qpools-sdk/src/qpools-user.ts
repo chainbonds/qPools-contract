@@ -19,22 +19,22 @@ export class QPoolsUser {
     public provider: Provider;
 
     // Accounts
-    // @ts-ignore
+    // // @ts-ignore
     public qPoolAccount: PublicKey;
-    // @ts-ignore
+    // // @ts-ignore
     public bumpQPoolAccount: number;
-    // @ts-ignore
+    // // @ts-ignore
     public QPTokenMint: Token;
-    // @ts-ignore
+    // // @ts-ignore
     public currencyMint: Token;
 
-    // @ts-ignore
+    // // @ts-ignore
     public qPoolQPAccount: PublicKey;
-    // @ts-ignore
+    // // @ts-ignore
     public purchaserCurrencyAccount: PublicKey;
-    // @ts-ignore
+    // // @ts-ignore
     public purchaserQPTAccount: PublicKey;
-    // @ts-ignore
+    // // @ts-ignore
     public qPoolCurrencyAccount: PublicKey;
 
     constructor(
@@ -63,7 +63,7 @@ export class QPoolsUser {
         });
 
         this.loadExistingQPTReserve(this.currencyMint.publicKey).then(() => {
-            console.log("Successfully loaded QPT Reserv!");
+            console.log("Successfully loaded QPT Reserve!");
 
         }).catch((error: any) => {
             console.log("error loading existing QPT reserve!");
@@ -118,8 +118,7 @@ export class QPoolsUser {
         this.qPoolCurrencyAccount = bondPoolAccount.bondPoolCurrencyTokenAccount;
 
         console.log("Pretty printing loaded accounts...");
-        this.prettyPrintAccounts();
-
+        await this.prettyPrintAccounts();
     }
 
     async registerAccount() {
@@ -127,9 +126,10 @@ export class QPoolsUser {
         // Purchaser
         if (!this.qPoolQPAccount) {
             console.log("Creating a qPoolQPAccount");
+            console.log("this.QPTokenMint", this.QPTokenMint);
             this.qPoolQPAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
-                this.QPTokenMint.publicKey,
+                this.QPTokenMint!.publicKey,
                 this.qPoolAccount,
                 this.provider.wallet
             );
@@ -139,7 +139,7 @@ export class QPoolsUser {
             console.log("Creating a qPoolCurrencyAccount");
             this.qPoolCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
-                this.currencyMint.publicKey,
+                this.currencyMint!.publicKey,
                 this.qPoolAccount,
                 this.provider.wallet
             );
@@ -151,7 +151,7 @@ export class QPoolsUser {
             console.log("Creating a purchaserCurrencyAccount");
             this.purchaserCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
-                this.currencyMint.publicKey,
+                this.currencyMint!.publicKey,
                 this.wallet.publicKey,
                 this.wallet
             );
@@ -163,7 +163,7 @@ export class QPoolsUser {
             console.log("Creating a purchaserQPTAccount");
             this.purchaserQPTAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
-                this.QPTokenMint.publicKey,
+                this.QPTokenMint!.publicKey,
                 this.wallet.publicKey,
                 this.wallet
             );

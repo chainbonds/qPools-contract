@@ -30,7 +30,6 @@ pub struct CreateLiquidityPosition<'info> {
 
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
-    pub bond_pool_currency_token_mint: AccountInfo<'info>,
     pub state: AccountInfo<'info>,
     #[account(mut)]
     pub position: AccountInfo<'info>,
@@ -38,12 +37,14 @@ pub struct CreateLiquidityPosition<'info> {
     pub pool: AccountInfo<'info>,
     #[account(mut)]
     pub position_list: AccountInfo<'info>,
-    // #[account(
-    //     mut,
-    //     seeds=[bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1"],
-    //     bump = _bump_bond_pool_account
-    // )]
-    // pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub bond_pool_currency_token_mint: AccountInfo<'info>,
+    #[account(
+        mut,
+        seeds=[bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1"],
+        bump = _bump_bond_pool_account
+    )]
+    pub owner: AccountInfo<'info>,
     #[account(mut)]
     pub lower_tick: AccountInfo<'info>,
     #[account(mut)]
@@ -99,53 +100,53 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("Depositing reserve to pools!");
 
-    // let liquidity_delta: Decimal = Decimal {
-    // v: _liquidity_delta
-    // };
-    //
-    //
-    // let create_position_accounts = CreatePosition {
-    //     state: ctx.accounts.state.to_account_info(),
-    //     position: ctx.accounts.position.to_account_info(),
-    //     pool: ctx.accounts.pool.to_account_info(),
-    //     position_list: ctx.accounts.position_list.to_account_info(),
-    //     owner: ctx.accounts.owner.to_account_info(),
-    //     payer: ctx.accounts.initializer.to_account_info(),
-    //     lower_tick: ctx.accounts.lower_tick.to_account_info(),
-    //     upper_tick: ctx.accounts.upper_tick.to_account_info(),
-    //     token_x: ctx.accounts.token_x.to_account_info(),
-    //     token_y: ctx.accounts.token_y.to_account_info(),
-    //     account_x: ctx.accounts.account_x.to_account_info(),
-    //     account_y: ctx.accounts.account_y.to_account_info(),
-    //     reserve_x: ctx.accounts.reserve_x.to_account_info(),
-    //     reserve_y: ctx.accounts.reserve_y.to_account_info(),
-    //     program_authority: ctx.accounts.program_authority.to_account_info(),
-    //     token_program: ctx.accounts.token_program.to_account_info(),
-    //     rent: ctx.accounts.rent.to_account_info(),
-    //     system_program: ctx.accounts.system_program.to_account_info(),
-    // };
-    // let invariant_program = ctx.accounts.invariant_program.to_account_info();
+    let liquidity_delta: Decimal = Decimal {
+        v: _liquidity_delta
+    };
+
+
+    let create_position_accounts = CreatePosition {
+        state: ctx.accounts.state.to_account_info(),
+        position: ctx.accounts.position.to_account_info(),
+        pool: ctx.accounts.pool.to_account_info(),
+        position_list: ctx.accounts.position_list.to_account_info(),
+        owner: ctx.accounts.owner.to_account_info(),
+        payer: ctx.accounts.initializer.to_account_info(),
+        lower_tick: ctx.accounts.lower_tick.to_account_info(),
+        upper_tick: ctx.accounts.upper_tick.to_account_info(),
+        token_x: ctx.accounts.token_x.to_account_info(),
+        token_y: ctx.accounts.token_y.to_account_info(),
+        account_x: ctx.accounts.account_x.to_account_info(),
+        account_y: ctx.accounts.account_y.to_account_info(),
+        reserve_x: ctx.accounts.reserve_x.to_account_info(),
+        reserve_y: ctx.accounts.reserve_y.to_account_info(),
+        program_authority: ctx.accounts.program_authority.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        rent: ctx.accounts.rent.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+    };
+    let invariant_program = ctx.accounts.invariant_program.to_account_info();
 
     // Try borrow lamports to pay for account initialization of the position if not existent
     // **ctx.accounts.initializer.to_account_info().try_borrow_mut_lamports()? -= 100_000;
     // **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += 100_000;
 
-    // amm::cpi::create_position(
-    //     CpiContext::new_with_signer(
-    //         invariant_program,
-    //         create_position_accounts,
-    //         &[
-    //             [
-    //                 ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
-    //                 &[_bump_bond_pool_account]
-    //             ].as_ref()
-    //         ]
-    //     ),
-    //     _position_bump,
-    //     lower_tick_index,
-    //     upper_tick_index,
-    //     liquidity_delta,
-    // )?;
+    amm::cpi::create_position(
+        CpiContext::new_with_signer(
+            invariant_program,
+            create_position_accounts,
+            &[
+                [
+                    ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
+                    &[_bump_bond_pool_account]
+                ].as_ref()
+            ]
+        ),
+        _position_bump,
+        lower_tick_index,
+        upper_tick_index,
+        liquidity_delta,
+    )?;
 
 
     // // Calculate how much currency is in the bond

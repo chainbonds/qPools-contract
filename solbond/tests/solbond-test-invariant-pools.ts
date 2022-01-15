@@ -209,14 +209,6 @@ describe('claim', () => {
         )
     });
 
-    // it("#createLiquidityPositions()", async () => {
-    //     console.log("Creating Liquidity Positions");
-    //     // First, create a position list if it doesn't exist yet
-    //     // Then, dissolve the position if it exists already, if it doesn't exist yet
-    //     // Then, create a new position, if it doesn't exist already
-    //
-    // })
-
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
     //        admin,
@@ -228,63 +220,7 @@ describe('claim', () => {
     //    )
     // })
 
-
-    // it("#registerInvariantPools()", async () => {
-    //
-    //     // Get the addresses of some of the pools that we generated
-    //     [poolList, poolListBump] = await anchor.web3.PublicKey.findProgramAddress(
-    //         [wallet.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("poolList"))],
-    //         solbondProgram.programId
-    //     );
-    //
-    //     // TODO: Replace these with actual values
-    //     let _bump_register_position = 5;
-    //     let _curr_idx = 5;
-    //     let _max_idx = 5;
-    //     let weight = 5;
-    //
-    //     // Call the health-checkpoint
-    //     await solbondProgram.rpc.registerInvariantPools(
-    //         // poolListBump,
-    //         // [new BN(10), new BN(10), new BN(10), new BN(10), new BN(10)],
-    //         _bump_register_position,
-    //         _curr_idx,
-    //         _max_idx,
-    //         weight,
-    //         {
-    //             accounts: {
-    //
-    //                 invariantPoolAccount: null,
-    //                 poolAddress: null,
-    //                 state: null,
-    //                 tickmap: null,
-    //                 currencyTokenMint: null,
-    //                 tokenXMint: null,
-    //                 reserveCurrencyToken: null,
-    //                 reserveX: null,
-    //                 reserveY: null,
-    //                 accountCurrencyReserve: null,
-    //                 accountXReserve: null,
-    //                 initializer: null,
-    //                 positionInPool: null,
-    //                 positionListInPool: null,
-    //                 upperTick: null,
-    //                 lowerTick: null,
-    //
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //                 clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 tokenProgram: TOKEN_PROGRAM_ID
-    //             },
-    //             signers: [wallet]
-    //         }
-    //     );
-    // })
-
-
     // Now do all the swaps ...
-
-    //
     // it('#claim', async () => {
     //     const upperTick = 10
     //     const lowerTick = -20

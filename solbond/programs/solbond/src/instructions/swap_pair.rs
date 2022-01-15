@@ -34,9 +34,7 @@ pub struct SwapPairInstruction<'info> {
     pub state: AccountInfo<'info>,
     //pub pool: AccountLoader<'info, Pool>,
     //pub state: AccountLoader<'info, State>,
-    #[account(
-        mut
-    )]
+    #[account(mut)]
     pub tickmap: AccountInfo<'info>,
     //pub tickmap: AccountLoader<'info, Tickmap>,
 

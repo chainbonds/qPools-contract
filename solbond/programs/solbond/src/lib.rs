@@ -207,6 +207,24 @@ pub mod solbond {
 
     }
 
+    pub fn close_liquidity_position(
+        ctx: Context<CloseLiquidityPosition>,
+        _position_bump: u8,
+        _bump_bond_pool_account: u8,
+        position_index: u32,
+        lower_tick_index: i32,
+        upper_tick_index: i32
+    ) -> ProgramResult {
+        instructions::close_liquidity_position::handler(
+            ctx,
+            _position_bump,
+            _bump_bond_pool_account,
+            position_index,
+            lower_tick_index,
+            upper_tick_index
+        )
+    }
+
 }
 
 

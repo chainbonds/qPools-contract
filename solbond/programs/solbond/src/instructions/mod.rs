@@ -6,6 +6,7 @@ pub mod healthcheck;
 pub mod create_liquidity_position;
 pub mod swap_pair;
 pub mod collect_fees;
+pub mod close_liquidity_position;
 
 pub use purchase_bond::*;
 pub use redeem_bond::*;
@@ -14,3 +15,4 @@ pub use healthcheck::*;
 pub use create_liquidity_position::*;
 pub use swap_pair::*;
 pub use collect_fees::*;
+pub use close_liquidity_position::*;

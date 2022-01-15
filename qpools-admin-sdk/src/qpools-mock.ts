@@ -167,14 +167,16 @@ export class MockQPools extends QPoolsAdmin {
         await Promise.all(
                 this.pairs.map(async (pair: Pair) => {
 
-                console.log("(Currency Mint PK) First pair mint is: ", pair.tokenX.toString());
-                console.log("(Target Mint PK) when swapping to Pairs: ", pair.tokenY.toString());
+                console.log("First pair mint is: ", pair.tokenX.toString());
+                console.log("When swapping to Pairs: ", pair.tokenY.toString());
 
                 // 0.6% / 10 Fees, according to pair
                 await this.mockMarket.create({
                     pair: pair,
                     signer: admin
                 });
+
+                console.log("After create");
 
                 const createdPool = await this.mockMarket.get(pair);
                 const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, admin);

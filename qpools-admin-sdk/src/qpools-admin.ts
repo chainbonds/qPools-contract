@@ -85,9 +85,8 @@ export class QPoolsAdmin {
     ) {
         this.connection = connection;
 
-        this.solbondProgram = getSolbondProgram(connection, provider); // anchor.workspace.Solbond;
+        this.solbondProgram = getSolbondProgram(connection, provider);
         this.invariantProgram = getInvariantProgram(connection, provider);
-        // this.invariantProgram = anchor.workspace.Amm as Program;  //  as Program<Amm>;
         this.provider = provider;
 
         // @ts-expect-error

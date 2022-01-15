@@ -15,10 +15,6 @@ import {createToken} from "./invariant-utils";
 // require('dotenv').config()
 const NUMBER_POOLS = 1;
 
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 describe('claim', () => {
 
     // Connection
@@ -208,15 +204,6 @@ describe('claim', () => {
         await market.createPositions()
     });
 
-    // it("#createLiquidityPositions()", async () => {
-    //     console.log("Creating Liquidity Positions");
-    //     // First, create a position list if it doesn't exist yet
-    //     // Then, dissolve the position if it exists already, if it doesn't exist yet
-    //     // Then, create a new position, if it doesn't exist already
-    //
-    // })
-
-
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
     //        admin,
@@ -227,11 +214,6 @@ describe('claim', () => {
     //        new anchor.BN(0)
     //    )
     // })
-
-
-
-
-
 
 
     // it("#registerInvariantPools()", async () => {

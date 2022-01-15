@@ -204,6 +204,19 @@ describe('claim', () => {
         await market.createPositions()
     });
 
+    it("#CollectFeesFromInvariant()", async () => {
+        await market.claimFee(
+        )
+    });
+
+    // it("#createLiquidityPositions()", async () => {
+    //     console.log("Creating Liquidity Positions");
+    //     // First, create a position list if it doesn't exist yet
+    //     // Then, dissolve the position if it exists already, if it doesn't exist yet
+    //     // Then, create a new position, if it doesn't exist already
+    //
+    // })
+
     // it("#swapWithInvariant()", async () => {
     //    await market.swapWithInvariant(
     //        admin,

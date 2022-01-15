@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use amm::structs::pool::Pool;
+//use amm::structs::pool::Pool;
 
 #[account]
 pub struct InvariantPoolAccount {

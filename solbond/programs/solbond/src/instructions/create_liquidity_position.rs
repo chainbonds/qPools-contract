@@ -137,6 +137,8 @@ pub struct CreateLiquidityPosition<'info> {
 
     Frontend should be respondible for creating all the required token accounts!
  */
+
+
 pub fn handler(
     ctx: Context<CreateLiquidityPosition>,
     _position_bump: u8,
@@ -148,8 +150,9 @@ pub fn handler(
     msg!("Depositing reserve to pools!");
 
     let liquidity_delta: Decimal = Decimal {
-        v: _liquidity_delta
+    v: _liquidity_delta
     };
+
 
     let create_position_accounts = CreatePosition {
         state: ctx.accounts.state.to_account_info(),
@@ -191,7 +194,7 @@ pub fn handler(
         _position_bump,
         lower_tick_index,
         upper_tick_index,
-        liquidity_delta
+        liquidity_delta,
     )?;
 
 

@@ -60,7 +60,6 @@ pub struct RedeemBond<'info> {
     #[account(mut, constraint = purchaser_currency_token_account.owner == purchaser.key())]
     pub purchaser_currency_token_account: Box<Account<'info, TokenAccount>>,
 
-
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
@@ -132,9 +131,8 @@ pub fn handler(
         CpiContext::new_with_signer(
             cpi_program,
             cpi_accounts,
-            &[
-                [
-                    ctx.accounts.bond_pool_account.generator.key().as_ref(), b"bondPoolAccount",
+    &[[
+                    ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
             ],

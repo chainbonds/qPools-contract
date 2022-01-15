@@ -124,13 +124,15 @@ describe('invariant-localnet', () => {
 
     // TODO: The above function doesn't create position lists, nor positions. Do we require these?
     /** Create a position list to keep track of all positions */
-    it("#createPositionList()", async () => {
-        await market.createPositionList()
-    });
-    /** Create a liquidity-providing position */
-    it("#createPositionList()", async () => {
-        await market.createPositions()
-    });
+    // it("#createPositionList()", async () => {
+    //     // Get the data for the createPool list
+    //     console.log("First market position is..");
+    //     await market.createPositionList()
+    // });
+    // /** Create a liquidity-providing position */
+    // it("#createPositionList()", async () => {
+    //     await market.createPositions()
+    // });
 
     // I guess one person should claim the fees now
 

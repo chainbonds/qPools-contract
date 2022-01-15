@@ -575,10 +575,19 @@ export class QPoolsAdmin {
 
     async createPositionList() {
 
+        console.log("Creating a position list", this.qPoolAccount);
         const {positionListAddress, positionListBump} = await this.mockMarket!.getPositionListAddress(
             this.qPoolAccount!
         );
 
+        console.log("Inputs are: ");
+        console.log({
+            "positionListAddress,": positionListAddress,
+            "this.qPoolAccount,": this.qPoolAccount,
+            "this.wallet.publicKey,": this.wallet.publicKey,
+            "SYSVAR_RENT_PUBKEY,": SYSVAR_RENT_PUBKEY,
+            "SystemProgram.programId": SystemProgram.programId
+        })
         const ix = this.invariantProgram.instruction.createPositionList(positionListBump, {
             accounts: {
                 positionList: positionListAddress,

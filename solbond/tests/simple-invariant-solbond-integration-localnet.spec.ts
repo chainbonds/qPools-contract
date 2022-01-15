@@ -10,8 +10,8 @@
  */
 
 import * as anchor from '@project-serum/anchor';
-import {BN, Provider, workspace} from "@project-serum/anchor";
-import {Token} from "@solana/spl-token";
+import {BN, Provider, web3, workspace} from "@project-serum/anchor";
+import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {Keypair, PublicKey, Signer} from "@solana/web3.js";
 import {getInvariantProgram, MockQPools} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
 import {assert} from "chai";
@@ -120,6 +120,18 @@ describe('invariant-localnet', () => {
             currencyOwner,
             liquidityProvidingAmount
         )
+    })
+
+    it("#solbondHealthCheckpoint()", async () => {
+        // Call the health-checkpoint
+        await solbondProgram.rpc.healthcheck({
+            accounts: {
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                clock: web3.SYSVAR_CLOCK_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        });
     })
 
     /** Create the QPT Reserve Object, which covers data such as currencyMint, QPTMint, etc. */

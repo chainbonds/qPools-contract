@@ -11,7 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src"
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "lib": ["dom", "dom.iterable", "esnext", "es2017"],
   "exclude": ["node_modules", "../dapp-nextjs/*", "../solbond/*"]
 }

@@ -35,6 +35,7 @@ import {QPair} from "./q-pair";
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 // @ts-ignore
 import {BondPoolAccount, createAssociatedTokenAccountSendUnsigned, createMint, getSolbondProgram} from "@qpools/sdk";
+import {NETWORK} from "@qpools/sdk/lib/cluster";
 
 // import {
 //     BondPoolAccount,
@@ -81,12 +82,13 @@ export class QPoolsAdmin {
     constructor(
         connection: Connection,
         provider: Provider,
-        currencyMint: PublicKey
+        currencyMint: PublicKey,
+        network: NETWORK = NETWORK.LOCALNET
     ) {
         this.connection = connection;
 
-        this.solbondProgram = getSolbondProgram(connection, provider);
-        this.invariantProgram = getInvariantProgram(connection, provider);
+        this.solbondProgram = getSolbondProgram(connection, provider, network);
+        this.invariantProgram = getInvariantProgram(connection, provider, network);
         this.provider = provider;
 
         // @ts-expect-error

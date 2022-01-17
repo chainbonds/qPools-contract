@@ -8,7 +8,7 @@ amm = { address  = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z", idl = "./deps
 
 [programs.devnet]
 solbond = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
-amm = { address = "R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc", idl = "./deps/protocol/target/idl/amm.json" }
+amm = { address = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj", idl = "./deps/protocol/target/idl/amm.json" }
 
 [registry]
 url = "https://anchor.projectserum.com"

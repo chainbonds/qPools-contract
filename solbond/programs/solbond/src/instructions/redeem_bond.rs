@@ -84,7 +84,7 @@ pub fn handler(
     // TODO, these are not total supplies, but amounts for this pool
     // Actually, these are total supplies
 
-    if (total_redeemable_supply == 0) {
+    if total_redeemable_supply == 0 {
         return Err(ErrorCode::EmptyTotalTokenSupply.into());
     }
 
@@ -106,7 +106,7 @@ pub fn handler(
         }
     }
 
-    if (currency_token_to_be_distributed == 0) {
+    if currency_token_to_be_distributed == 0 {
         return Err(ErrorCode::ReturningNoCurrency.into());
     }
     msg!("currency_token_to_be_distributed");

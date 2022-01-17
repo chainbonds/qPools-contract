@@ -12,14 +12,14 @@
  */
 
 import {BN, Provider} from "@project-serum/anchor";
-import {Keypair, PublicKey} from "@solana/web3.js";
+import {Keypair, PublicKey, SystemProgram} from "@solana/web3.js";
 import {airdropAdmin, getSolbondProgram, MOCK} from "@qpools/sdk";
 import {getInvariantProgram, QPair, QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {Token} from "@solana/spl-token";
 import {assert} from "chai";
-import {getMarketAddress, Market, Network} from "@invariant-labs/sdk";
-import {CreatePool, FeeTier, PoolStructure, State} from "@invariant-labs/sdk/lib/market";
+import {getMarketAddress, Market, Network, Pair} from "@invariant-labs/sdk";
+import {CreatePool, Decimal, FeeTier, PoolStructure, State} from "@invariant-labs/sdk/lib/market";
 import {fromFee} from "@invariant-labs/sdk/lib/utils";
 
 describe('invariant-devnet', () => {
@@ -119,23 +119,22 @@ describe('invariant-devnet', () => {
 
     let protocolFee = {v: fromFee(new BN(10000))};
     /** Create a state, if it doesn't exist yet... */
-    it('#createState()', async () => {
-        // Retrieve state from the invariant contract
-        let {address, bump} = await invariantMarket.getStateAddress();
-        stateAddress = address;
-        stateAddressBump = bump;
-
-        try {
-            let stateAccount = (await invariantProgram.account.state.fetch(address)) as State;
-            console.log("State account is: ", stateAccount);
-        } catch (e) {
-            console.log("Error fetching state account!");
-            console.log(e);
-            // Load, if it doesn't exist, create state
-            await invariantMarket.createState(genericPayer, protocolFee);
-        }
-
-    })
+    // it('#createState()', async () => {
+    //     // Retrieve state from the invariant contract
+    //     let {address, bump} = await invariantMarket.getStateAddress();
+    //     stateAddress = address;
+    //     stateAddressBump = bump;
+    //
+    //     try {
+    //         let stateAccount = (await invariantProgram.account.state.fetch(address)) as State;
+    //         console.log("State account is: ", stateAccount);
+    //     } catch (e) {
+    //         console.log("Error fetching state account!");
+    //         console.log(e);
+    //         // Load, if it doesn't exist, create state
+    //         await invariantMarket.createState(genericPayer, protocolFee);
+    //     }
+    // })
 
     /**
      * Create Trade Pairs
@@ -201,12 +200,18 @@ describe('invariant-devnet', () => {
                 console.log("Error trying to fetch pool account!");
                 console.log(e)
                 // let's just assume that the initial tick is at zero
+                let tokenX = new Token(connection, qpair.tokenX, invariantProgram.programId, genericPayer);
+                let tokenY = new Token(connection, qpair.tokenY, invariantProgram.programId, genericPayer);
                 let createPool: CreatePool = {
                     pair: qpair,
-                    signer: genericPayer,
-                    initTick: 0
+                    payer: genericPayer,
+                    protocolFee: protocolFee,
+                    tokenX: tokenX,
+                    tokenY: tokenY
                 };
-                await invariantMarket.create(createPool);
+                console.log("Create pool is: ", qpair, JSON.stringify(protocolFee), tokenX.publicKey.toString(), tokenY.publicKey.toString());
+                await invariantMarket.createPool(createPool);
+                console.log("Created pool!");
                 poolAccount = (await invariantProgram.account.pool.fetch(poolAddress)) as PoolStructure;
             }
 

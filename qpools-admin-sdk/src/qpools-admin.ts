@@ -11,20 +11,16 @@ import {
 import {BN, Program, Provider, utils, Wallet, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {
-    calculate_price_sqrt, DENOMINATOR,
-    IWallet,
+    DENOMINATOR,
     Market,
-    MAX_TICK,
-    MIN_TICK,
-    Network,
     Pair,
-    SEED, signAndSend,
-    TICK_LIMIT, tou64
+    signAndSend,
+    tou64
 } from "@invariant-labs/sdk";
-import {CreatePool, Decimal, FeeTier, InitPosition, Tick,} from "@invariant-labs/sdk/lib/market";
+import {CreateTick, FeeTier} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
-import {FEE_TIERS, fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
+import {fromFee, toDecimal} from "@invariant-labs/sdk/lib/utils";
 
 import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
@@ -34,7 +30,13 @@ import {QPair} from "./q-pair";
 
 import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 // @ts-ignore
-import {BondPoolAccount, createAssociatedTokenAccountSendUnsigned, createMint, getSolbondProgram} from "@qpools/sdk";
+import {
+    BondPoolAccount,
+    createAssociatedTokenAccountSendUnsigned,
+    createMint,
+    getPayer,
+    getSolbondProgram
+} from "@qpools/sdk";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 
 // import {
@@ -620,7 +622,7 @@ export class QPoolsAdmin {
                     const upperTick = 50;
 
                     const poolAddress = await pair.getAddress(this.invariantProgram.programId);
-                    const [tickmap, pool] = await Promise.all([this.mockMarket!.getTickmap(pair), this.mockMarket!.get(pair)])
+                    const [tickmap, pool] = await Promise.all([this.mockMarket!.getTickmap(pair), this.mockMarket!.getPool(pair)])
 
                     const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
                     const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)
@@ -630,10 +632,20 @@ export class QPoolsAdmin {
                     // TODO: Who is the owner here
                     // Let's assume its the reserve / qPoolAccount
                     if (!lowerExists) {
-                        tx.add(await this.mockMarket!.createTickInstruction(pair, lowerTick, this.qPoolAccount!));
+                        let createTick: CreateTick = {
+                            index: lowerTick,
+                            pair: pair,
+                            payer: getPayer().publicKey
+                        }
+                        tx.add(await this.mockMarket!.createTickInstruction(createTick));
                     }
                     if (!upperExists) {
-                        tx.add(await this.mockMarket!.createTickInstruction(pair, upperTick, this.qPoolAccount!));
+                        let createTick: CreateTick = {
+                            index: upperTick,
+                            pair: pair,
+                            payer: getPayer().publicKey
+                        }
+                        tx.add(await this.mockMarket!.createTickInstruction(createTick));
                     }
 
                     const {positionListAddress} = await this.mockMarket!.getPositionListAddress(this.qPoolAccount!);
@@ -788,7 +800,7 @@ export class QPoolsAdmin {
                 const upperTick = 50;
 
                 const poolAddress = await pair.getAddress(this.invariantProgram.programId);
-                const [tickmap, pool] = await Promise.all([this.mockMarket.getTickmap(pair), this.mockMarket.get(pair)])
+                const [tickmap, pool] = await Promise.all([this.mockMarket.getTickmap(pair), this.mockMarket.getPool(pair)])
 
                 const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
                 const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)
@@ -798,10 +810,20 @@ export class QPoolsAdmin {
                 // TODO: Who is the owner here
                 // Let's assume its the reserve / qPoolAccount
                 if (!lowerExists) {
-                    tx.add(await this.mockMarket.createTickInstruction(pair, lowerTick, this.qPoolAccount));
+                    let createTick: CreateTick = {
+                        index: lowerTick,
+                        pair: pair,
+                        payer: getPayer().publicKey
+                    }
+                    tx.add(await this.mockMarket.createTickInstruction(createTick));
                 }
                 if (!upperExists) {
-                    tx.add(await this.mockMarket.createTickInstruction(pair, upperTick, this.qPoolAccount));
+                    let createTick: CreateTick = {
+                        index: upperTick,
+                        pair: pair,
+                        payer: getPayer().publicKey
+                    }
+                    tx.add(await this.mockMarket.createTickInstruction(createTick));
                 }
 
 

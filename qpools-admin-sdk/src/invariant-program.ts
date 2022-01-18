@@ -14,11 +14,11 @@ export const getInvariantProgram = (connection: Connection, provider: Provider, 
     if (network == NETWORK.LOCALNET) {
         programAddress = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z";
     } else if (network == NETWORK.DEVNET) {
-        programAddress = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj";
+        programAddress = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z";
     } else if (network == NETWORK.TESTNET) {
-        programAddress = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj";
+        programAddress = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z";
     } else if (network == NETWORK.MAINNET) {
-        programAddress = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj";
+        programAddress = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z";
     } else {
         throw Error("Solana Cluster not specified!" + String(network));
     }

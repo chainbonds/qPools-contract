@@ -607,7 +607,7 @@ export class QPoolsAdmin {
         // const ix = await this.mockMarket.createPositionListInstruction(this.qPoolAccount);
         const tx = await signAndSend(new Transaction().add(ix), [this.wallet], this.connection);
         await this.connection.confirmTransaction(tx);
-
+        return tx;
     }
 
     async createPositions() {
@@ -706,7 +706,7 @@ export class QPoolsAdmin {
                     //     this.qPoolAccount,
                     //     (await this.mockMarket.getPositionList(this.qPoolAccount)).head
                     // );
-
+                    const tickmapData = await this.mockMarket.getTickmap(pair);
                     // TODO: Figure out how to calculate the liquidity delta
                     const liquidityDelta = new BN(1);
                     // I guess liquidity delta is calculated globally

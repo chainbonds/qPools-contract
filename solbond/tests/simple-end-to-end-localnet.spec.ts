@@ -100,103 +100,113 @@ describe('invariant-localnet', () => {
         // Create 10 pools, one for each pair
         await market.createPairs();
     })
+    // /** Create state */
+    it('#createState()', async () => {
+        await market.createState(genericPayer);
+        const state = await market.mockMarket.getState()
+        const { bump } = await market.mockMarket.getStateAddress()
+        const { programAuthority, nonce } = await market.mockMarket.getProgramAuthority()
+
+        assert.ok(state.admin.equals(genericPayer.publicKey))
+        assert.ok(state.authority.equals(programAuthority))
+        assert.ok(state.nonce === nonce)
+        assert.ok(state.bump === bump)
+    })
+
     /** Create Trade Pairs */
     it("#createFeeTier()", async () => {
         await market.createFeeTier(genericPayer);
     })
-    /** Create state */
-    it('#createState()', async () => {
-        await market.createState(genericPayer);
-    })
-    // /** Create Markets */
-    // it("#createMarketsFromPairs()", async () => {
-    //     // Get network and wallet from the adapter somewhere
-    //     await market.creatMarketsFromPairs(genericPayer)
-    // })
 
-    // /** Provide third party liquidity to markets */
-    // it("#provideThirdPartyLiquidity()", async () => {
-    //     console.log("Before amount");
-    //     let liquidityProvidingAmount = new BN(2).pow(new BN(63)).subn(1);
-    //     console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
-    //     await market.provideThirdPartyLiquidityToAllPairs(
-    //         liquidityProvider,
-    //         currencyOwner,
-    //         liquidityProvidingAmount
-    //     )
-    // })
-    //
-    // it("#solbondHealthCheckpoint()", async () => {
-    //     // Call the health-checkpoint
-    //     await solbondProgram.rpc.healthcheck({
-    //         accounts: {
-    //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //             clock: web3.SYSVAR_CLOCK_PUBKEY,
-    //             systemProgram: web3.SystemProgram.programId,
-    //             tokenProgram: TOKEN_PROGRAM_ID
-    //         }
-    //     });
-    // })
-    //
-    // /** Create the QPT Reserve Object, which covers data such as currencyMint, QPTMint, etc. */
-    // it("initializeQPTReserve()", async () => {
-    //     await market.initializeQPTReserve();
-    //     let result = await market.loadExistingQPTReserve();
-    //     if (!result) {
-    //         throw Error("QPT Reserve must be initialized first!");
-    //     }
-    // })
-    //
-    // // TODO: The above function doesn't create position lists, nor positions. Do we require these?
-    // /** Create a position list to keep track of all positions */
-    // it("#createPositionList()", async () => {
-    //     // Get the data for the createPool list
-    //     // Will probably have to load the existing QPT Reserve (if any exists...)
-    //     await market.createPositionList()
-    // });
-    //
-    // let qpools: QPoolsUser;
-    // /** Purchase some bonds, this means that the currency is paid into the reserve */
-    // it("#buyQPT()", async () => {
-    //     // As a new, third-party user (A), (A) wants to buy QPT!
-    //     // // Create the QPools Object
-    //     console.log("Creating QPoolsUser");
-    //     qpools = new QPoolsUser(
-    //         provider,
-    //         connection,
-    //         market.currencyMint
-    //     );
-    //     console.log("Registering Account");
-    //     // TODO: Gotta load QPT Reserves first.
-    //     // Async inside sync sucks
-    //     await qpools.loadExistingQPTReserve(currencyMint.publicKey);
-    //     await qpools.registerAccount();
-    //     // console.log("Loading etc..")
-    //     // console.log("Loading QPT Reserve Currency pubkey", currencyMint);
-    //     // console.log("Loading QPT Reserve Currency pubkey", currencyMint.publicKey);
-    //     // console.log("Loading QPT Reserve (2) Currency pubkey", currencyMint.publicKey);
-    //     let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
-    //     // console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
-    //     await currencyMint.mintTo(qpools.purchaserCurrencyAccount, currencyOwner.publicKey, [currencyOwner as Signer], airdropBuyAmount);
-    //     await qpools.buyQPT(airdropBuyAmount);
-    // })
-    //
-    // /** Swap some of the currency against some token items */
-    // it("swapReserveToAllPairs()", async() => {
-    //     console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
-    //     await market.swapReserveToAllAssetPairs(100);
-    // })
-    //
-    // // Gotta airdrop some currency
-    // /** Create a liquidity-providing position */
-    // it("#createLiquidityPosition()", async () => {
-    //     await market.createPositions()
-    // });
-    //
-    // /** Claim the fees that were accumulated from trades */
-    // it("#CollectFeesFromInvariant()", async () => {
-    //     await market.claimFee()
-    // });
+    /** Create Markets */
+    it("#createMarketsFromPairs()", async () => {
+        // Get network and wallet from the adapter somewhere
+        await market.creatMarketsFromPairs(genericPayer);
+    })
+
+    /** Provide third party liquidity to markets */
+    it("#provideThirdPartyLiquidity()", async () => {
+        console.log("Before amount");
+        let liquidityProvidingAmount = new BN(2).pow(new BN(63)).subn(1);
+        console.log("Liquidity providing amount is: ", liquidityProvidingAmount.toString());
+        await market.provideThirdPartyLiquidityToAllPairs(
+            liquidityProvider,
+            currencyOwner,
+            liquidityProvidingAmount
+        )
+    })
+
+    it("#solbondHealthCheckpoint()", async () => {
+        // Call the health-checkpoint
+        await solbondProgram.rpc.healthcheck({
+            accounts: {
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                clock: web3.SYSVAR_CLOCK_PUBKEY,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID
+            }
+        });
+    })
+
+    /** Create the QPT Reserve Object, which covers data such as currencyMint, QPTMint, etc. */
+    it("initializeQPTReserve()", async () => {
+        await market.initializeQPTReserve();
+        let result = await market.loadExistingQPTReserve();
+        if (!result) {
+            throw Error("QPT Reserve must be initialized first!");
+        }
+    })
+
+    // TODO: The above function doesn't create position lists, nor positions. Do we require these?
+    /** Create a position list to keep track of all positions */
+    it("#createPositionList()", async () => {
+        // Get the data for the createPool list
+        // Will probably have to load the existing QPT Reserve (if any exists...)
+        await market.createPositionList()
+    });
+
+    let qpools: QPoolsUser;
+    /** Purchase some bonds, this means that the currency is paid into the reserve */
+    it("#buyQPT()", async () => {
+        // As a new, third-party user (A), (A) wants to buy QPT!
+        // // Create the QPools Object
+        console.log("Creating QPoolsUser");
+        qpools = new QPoolsUser(
+            provider,
+            connection,
+            market.currencyMint
+        );
+        console.log("Registering Account");
+        // TODO: Gotta load QPT Reserves first.
+        // Async inside sync sucks
+        await qpools.loadExistingQPTReserve(currencyMint.publicKey);
+        await qpools.registerAccount();
+        // console.log("Loading etc..")
+        // console.log("Loading QPT Reserve Currency pubkey", currencyMint);
+        // console.log("Loading QPT Reserve Currency pubkey", currencyMint.publicKey);
+        // console.log("Loading QPT Reserve (2) Currency pubkey", currencyMint.publicKey);
+        let airdropBuyAmount = new BN(2).pow(new BN(50)).subn(1).toNumber();
+        // console.log("(Currency Mint PK) airdropping is: ", currencyMint.publicKey.toString())
+        await currencyMint.mintTo(qpools.purchaserCurrencyAccount, currencyOwner.publicKey, [currencyOwner as Signer], airdropBuyAmount);
+        await qpools.buyQPT(airdropBuyAmount);
+    })
+
+    /** Swap some of the currency against some token items */
+    it("swapReserveToAllPairs()", async() => {
+        console.log("Currency has: ", (await currencyMint.getAccountInfo(qpools.purchaserCurrencyAccount)).amount.toString());
+        await market.swapReserveToAllAssetPairs(100);
+    })
+
+    // Gotta airdrop some currency
+    /** Create a liquidity-providing position */
+    it("#createLiquidityPosition()", async () => {
+        await market.createPositions()
+    });
+
+    /** Claim the fees that were accumulated from trades */
+    it("#CollectFeesFromInvariant()", async () => {
+        await market.claimFee()
+    });
 
     // And I guess the same person should close the position now
 

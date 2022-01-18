@@ -84,7 +84,8 @@ export class MockQPools extends QPoolsAdmin {
     async createState(admin: Keypair) {
         this.protocolFee = {v: fromFee(new BN(10000))};
         const tx = await this.mockMarket.createStateTransaction(admin.publicKey);
-        await this.connection.sendTransaction(tx, [admin]);
+        const sg = await this.connection.sendTransaction(tx, [admin]);
+        await this.connection.confirmTransaction(sg);
     }
 
     async createFeeTier(admin: Keypair) {
@@ -97,7 +98,8 @@ export class MockQPools extends QPoolsAdmin {
             feeTier: this.feeTier
         }
         const tx = await this.mockMarket.createFeeTierTransaction(createFeeTier);
-        await this.connection.sendTransaction(tx, [admin]);
+        const sg = await this.connection.sendTransaction(tx, [admin]);
+        await this.connection.confirmTransaction(sg);
         // Get fee tier
         assert.ok((await this.mockMarket.getFeeTierAddress(this.feeTier)).address)
     }
@@ -168,9 +170,7 @@ export class MockQPools extends QPoolsAdmin {
         );
     }
 
-    async creatMarketsFromPairs(
-        admin: Keypair,
-    ) {
+    async creatMarketsFromPairs(admin: Keypair) {
 
         await Promise.all(
                 this.pairs.map(async (pair: Pair) => {

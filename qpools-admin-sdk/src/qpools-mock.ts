@@ -60,9 +60,6 @@ export class MockQPools extends QPoolsAdmin {
         if (!this.tokens) {
             throw Error("Token Mints were not generated yet");
         }
-        if (!this.feeTier) {
-            throw Error("Token Mints were not generated yet");
-        }
 
         this.pairs = this.tokens.map((token: Token) => {
             let pair: QPair = new QPair(
@@ -91,6 +88,10 @@ export class MockQPools extends QPoolsAdmin {
     }
 
     async createFeeTier(admin: Keypair) {
+        if (!this.feeTier) {
+            throw Error("FeeTier was not generated yet");
+        }
+        console.log("Herro")
         let createFeeTier: CreateFeeTier = {
             admin: admin.publicKey,
             feeTier: this.feeTier

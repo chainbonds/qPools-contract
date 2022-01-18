@@ -41,6 +41,8 @@ describe('invariant-localnet', () => {
     const invariantProgram = getInvariantProgram(connection, provider, NETWORK.LOCALNET);
     console.log("Invariant Program");
     console.log(invariantProgram.programId.toString());
+    console.log("Solbond Program");
+    console.log(solbondProgram.programId.toString());
 
     let market: MockQPools;
     let currencyMint: Token;
@@ -98,13 +100,13 @@ describe('invariant-localnet', () => {
         // Create 10 pools, one for each pair
         await market.createPairs();
     })
-    /** Create state */
-    it('#createState()', async () => {
-        await market.createState(genericPayer);
-    })
     /** Create Trade Pairs */
     it("#createFeeTier()", async () => {
         await market.createFeeTier(genericPayer);
+    })
+    /** Create state */
+    it('#createState()', async () => {
+        await market.createState(genericPayer);
     })
     // /** Create Markets */
     // it("#createMarketsFromPairs()", async () => {

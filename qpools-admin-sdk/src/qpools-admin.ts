@@ -808,7 +808,6 @@ export class QPoolsAdmin {
                 const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)
 
                 const tx = new Transaction();
-
                 // TODO: Who is the owner here
                 // Let's assume its the reserve / qPoolAccount
                 if (!lowerExists) {
@@ -827,9 +826,8 @@ export class QPoolsAdmin {
                     }
                     tx.add(await this.mockMarket.createTickInstruction(createTick));
                 }
-
-
-                await signAndSend(tx, [this.wallet], this.connection);
+                const sg = await signAndSend(tx, [this.wallet], this.connection);
+                await this.connection.confirmTransaction(sg);
 
                 // Retrieve tick addresses
                 const {
@@ -842,6 +840,7 @@ export class QPoolsAdmin {
                 } = await this.mockMarket.getTickAddress(pair, upperTick);
 
                 // Get AccountX and AccountY
+                console.log("Creating Associated Token Accounts..");
                 const QPTokenXAccount = await createAssociatedTokenAccountSendUnsigned(
                     this.connection,
                     pool.tokenX,

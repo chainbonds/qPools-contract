@@ -19,8 +19,9 @@ import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {Token} from "@solana/spl-token";
 import {assert} from "chai";
 import {getMarketAddress, Market, Network, Pair} from "@invariant-labs/sdk";
-import {CreatePool, Decimal, FeeTier, PoolStructure, State} from "@invariant-labs/sdk/lib/market";
+import {CreateFeeTier, CreatePool, Decimal, FeeTier, PoolStructure, State} from "@invariant-labs/sdk/lib/market";
 import {fromFee} from "@invariant-labs/sdk/lib/utils";
+import {delay} from "@qpools/sdk/lib/utils";
 
 describe('invariant-devnet', () => {
 
@@ -119,22 +120,24 @@ describe('invariant-devnet', () => {
 
     let protocolFee = {v: fromFee(new BN(10000))};
     /** Create a state, if it doesn't exist yet... */
-    // it('#createState()', async () => {
-    //     // Retrieve state from the invariant contract
-    //     let {address, bump} = await invariantMarket.getStateAddress();
-    //     stateAddress = address;
-    //     stateAddressBump = bump;
-    //
-    //     try {
-    //         let stateAccount = (await invariantProgram.account.state.fetch(address)) as State;
-    //         console.log("State account is: ", stateAccount);
-    //     } catch (e) {
-    //         console.log("Error fetching state account!");
-    //         console.log(e);
-    //         // Load, if it doesn't exist, create state
-    //         await invariantMarket.createState(genericPayer, protocolFee);
-    //     }
-    // })
+    it('#createState()', async () => {
+        // Retrieve state from the invariant contract
+        let {address, bump} = await invariantMarket.getStateAddress();
+        stateAddress = address;
+        stateAddressBump = bump;
+
+        try {
+            let stateAccount = (await invariantProgram.account.state.fetch(address)) as State;
+            console.log("State account is: ", stateAccount);
+        } catch (e) {
+            console.log("Error fetching state account!");
+            console.log(e);
+            // Load, if it doesn't exist, create state
+            let tx = await invariantMarket.createStateTransaction(genericPayer.publicKey);
+            let sg = await connection.sendTransaction(tx, [genericPayer]);
+            await connection.confirmTransaction(sg);
+        }
+    })
 
     /**
      * Create Trade Pairs
@@ -142,8 +145,7 @@ describe('invariant-devnet', () => {
      * */
     let pairs: {[index: string]: any;} = {};
     let feeTier: FeeTier = {
-        fee: fromFee(new BN(600)),
-        tickSpacing: 10
+        fee: fromFee(new BN(40))
     };
 
     /** Create Pairs */
@@ -179,17 +181,29 @@ describe('invariant-devnet', () => {
 
             // If either exists, then
             // If the fee tier does not exist yet, create the feeTier
-            // let feeTierAccount;
-            let feeTierAddress = await qpair.getFeeTierAddress(invariantProgram.programId);
-            // try {
-            //     feeTierAccount = (await invariantProgram.account.feeTier.fetch(feeTierAddress)) as FeeTier;
-            // } catch (e) {
-            //     console.log("Error trying to fetch fee-tier!");
-            //     console.log(e);
-            //     await invariantMarket.createFeeTier(feeTier, genericPayer);
-            //     await delay(2000);
-            //     feeTierAccount = (await invariantProgram.account.feeTier.fetch(feeTierAddress)) as FeeTier;
-            // }
+            let feeTierAccount;
+            // let feeTierAddress = await qpair.getFeeTierAddress(invariantProgram.programId);
+            let {address, bump} = await invariantMarket.getFeeTierAddress(market.feeTier);
+            let feeTierAddress = address;
+            try {
+                feeTierAccount = (await invariantProgram.account.feeTier.fetch(feeTierAddress)) as FeeTier;
+            } catch (e) {
+                console.log("Error trying to fetch fee-tier!");
+                console.log(e);
+                let createFeeTier: CreateFeeTier = {
+                    admin: genericPayer.publicKey,
+                    feeTier: feeTier
+                };
+                let tx = await invariantMarket.createFeeTierTransaction(createFeeTier);
+                console.log("Creating fee tier..");
+                let sg = await connection.sendTransaction(tx, [genericPayer]);
+                console.log("TX Sig: ", sg);
+                await connection.confirmTransaction(sg, "finalized");
+                // await invariantMarket.createFeeTier(createFeeTier, genericPayer);
+                // await delay(2000);
+                console.log("Fetch again...");
+                feeTierAccount = (await invariantProgram.account.feeTier.fetch(feeTierAddress)) as FeeTier;
+            }
 
             // If the pool does not exist yet, create the pool
             let poolAccount;
@@ -210,9 +224,9 @@ describe('invariant-devnet', () => {
                     tokenY: tokenY
                 };
                 console.log("Create pool is: ", qpair, JSON.stringify(protocolFee), tokenX.publicKey.toString(), tokenY.publicKey.toString());
-                await invariantMarket.createPool(createPool);
-                console.log("Created pool!");
-                poolAccount = (await invariantProgram.account.pool.fetch(poolAddress)) as PoolStructure;
+                // await invariantMarket.createPool(createPool);
+                // console.log("Created pool!");
+                // poolAccount = (await invariantProgram.account.pool.fetch(poolAddress)) as PoolStructure;
             }
 
             // For each of these pairs, create a pool if it doesn't exist yet

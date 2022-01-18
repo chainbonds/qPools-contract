@@ -105,8 +105,7 @@ export class QPoolsAdmin {
         );
 
         this.feeTier = {
-            fee: fromFee(new BN(600)),
-            tickSpacing: 10
+            fee: fromFee(new BN(40))
         }
 
         // Do a bunch of assert OKs
@@ -774,7 +773,7 @@ export class QPoolsAdmin {
                                 accountY: QPTokenYAccount,
                                 reserveX: pool.tokenXReserve,
                                 reserveY: pool.tokenYReserve,
-                                tickmap: pool.tickmap.toString(),
+                                tickmap: pool.tickmap,
 
                                 // Auxiliary Accounts
                                 programAuthority: this.mockMarket.programAuthority,
@@ -792,7 +791,7 @@ export class QPoolsAdmin {
         );
 
     }
-
+7
     async claimFee() {
         console.log("claimFee gawd of ta trap")
         await Promise.all(

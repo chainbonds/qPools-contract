@@ -736,6 +736,7 @@ export class QPoolsAdmin {
                                 accountY: QPTokenYAccount.toString(),
                                 reserveX: pool.tokenXReserve.toString(),
                                 reserveY: pool.tokenYReserve.toString(),
+                                tickmap: pool.tickmap.toString(),
 
                                 // Auxiliary Accounts
                                 programAuthority: this.mockMarket!.programAuthority.toString(),
@@ -773,6 +774,7 @@ export class QPoolsAdmin {
                                 accountY: QPTokenYAccount,
                                 reserveX: pool.tokenXReserve,
                                 reserveY: pool.tokenYReserve,
+                                tickmap: pool.tickmap.toString(),
 
                                 // Auxiliary Accounts
                                 programAuthority: this.mockMarket.programAuthority,

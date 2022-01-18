@@ -1,5 +1,34 @@
+import {useEffect, useState} from "react";
+import {calculateTVL} from "@qpools/sdk/lib/statistics";
+import {IQPool, useQPoolUserTool} from "../contexts/QPoolsProvider";
 
 export default function Statistics(props: any) {
+
+    // Just run a lop where you update TVL every couple times
+    const qPoolContext: IQPool = useQPoolUserTool();
+    const [Tvl, setTvl] = useState<number>(0.);
+
+    useEffect(() => {
+        console.log("Loaded qpoolsuser");
+        // Initialize the qpoolStats
+        qPoolContext.initializeQPoolsStatsTool();
+    }, []);
+
+    useEffect(() => {
+        // let tvl = qPoolContext.qPoolsStats?.calculateTVL();
+        // console.log("TVL is: ", tvl);
+        if (
+            qPoolContext.qPoolsStats &&
+            qPoolContext.qPoolsStats!.currencyMint &&
+            qPoolContext.qPoolsStats!.qPoolCurrencyAccount
+        ) {
+            qPoolContext.initializeQPoolsStatsTool().then(() => {
+                qPoolContext.qPoolsStats!.calculateTVL().then(tvl => {
+                    setTvl((_) => tvl);
+                })
+            })
+        }
+    }, [qPoolContext.qPoolsStats, qPoolContext.qPoolsStats?.currencyMint])
 
     const singleBox = (title: String, value: String) => {
 
@@ -20,7 +49,7 @@ export default function Statistics(props: any) {
     return (
         <>
             <div className={"flex flex-col md:flex-row items-center lg:items-begin"}>
-                {singleBox("Total Value Locked", "$147.84M USD")}
+                {singleBox("Total Value Locked", "$" + String(Tvl) + " USD")}
                 {singleBox("Total QTP Minted", "712.03 QTP")}
                 {singleBox("7 Day APY", "8.02%")}
             </div>

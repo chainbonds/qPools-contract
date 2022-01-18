@@ -5,7 +5,7 @@
         "test:invariant-only-devnet": "anchor test tests/simple-end-to-end-devnet.spec.ts"
     },
     "dependencies": {
-        "@project-serum/anchor": "^0.18.2",
+        "@project-serum/anchor": "^0.20.1",
         "@project-serum/serum": "^0.13.58",
         "@qpools/admin-sdk": "file:../qpools-admin-sdk",
         "@qpools/sdk": "file:../qpools-sdk",

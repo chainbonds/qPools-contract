@@ -11,7 +11,7 @@ import {
 import {BN, Program, Provider, utils, Wallet, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {
-    DENOMINATOR,
+    DENOMINATOR, IWallet,
     Market,
     Pair,
     signAndSend,
@@ -236,7 +236,7 @@ export class QPoolsAdmin {
 
     async createQPTReservePoolAccounts(
         positionOwner: Keypair,
-        payer: Wallet
+        payer: IWallet
     ) {
 
         await Promise.all(

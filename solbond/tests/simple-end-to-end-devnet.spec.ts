@@ -18,7 +18,7 @@ import {getInvariantProgram, QPair, QPoolsAdmin} from "@qpools/admin-sdk/lib/qpo
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {Token} from "@solana/spl-token";
 import {assert} from "chai";
-import {getMarketAddress, Market, Network, Pair} from "@invariant-labs/sdk";
+import {FEE_TIER, getMarketAddress, Market, Network, Pair} from "@invariant-labs/sdk";
 import {CreateFeeTier, CreatePool, Decimal, FeeTier, PoolStructure, State} from "@invariant-labs/sdk/lib/market";
 import {fromFee} from "@invariant-labs/sdk/lib/utils";
 import {delay} from "@qpools/sdk/lib/utils";
@@ -147,6 +147,15 @@ describe('invariant-devnet', () => {
     let feeTier: FeeTier = {
         fee: fromFee(new BN(40))
     };
+    // let feeTier = FEE_TIER[0];
+
+
+    //
+    let addr1 = "5i";
+    let addr2 = "4c";
+    let addr3 = "BJ";
+    let addr4 = "4r8";
+    //
 
     /** Create Pairs */
     it('#createPairs', async () => {
@@ -223,10 +232,11 @@ describe('invariant-devnet', () => {
                     tokenX: tokenX,
                     tokenY: tokenY
                 };
+                // sha256("global:your_ix_name")[..8] this part is missing in the function ix ...
                 console.log("Create pool is: ", qpair, JSON.stringify(protocolFee), tokenX.publicKey.toString(), tokenY.publicKey.toString());
-                // await invariantMarket.createPool(createPool);
-                // console.log("Created pool!");
-                // poolAccount = (await invariantProgram.account.pool.fetch(poolAddress)) as PoolStructure;
+                await invariantMarket.createPool(createPool);
+                console.log("Created pool!");
+                poolAccount = (await invariantProgram.account.pool.fetch(poolAddress)) as PoolStructure;
             }
 
             // For each of these pairs, create a pool if it doesn't exist yet

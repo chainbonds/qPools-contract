@@ -8,8 +8,8 @@
 import {Provider} from "@project-serum/anchor";
 import {clusterApiUrl, Keypair, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
-import {MOCK} from "../../qpools-sdk";
-import {QPoolsAdmin} from "@qpools/sdk/lib/qpools-admin-sdk/src";
+import {QPoolsAdmin} from "@qpools/admin-sdk";
+import {MOCK} from "@qpools/sdk";
 
 const main = async () => {
 
@@ -30,7 +30,7 @@ const main = async () => {
     const qPoolAdminTool = new QPoolsAdmin(
         connection,
         provider,
-        MOCK.SOL
+        MOCK.DEV.SOL
     );
 
     // Check if an account exists already

@@ -11,7 +11,7 @@ import {
 import {BN, Program, Provider, utils, Wallet, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {
-    DENOMINATOR, IWallet,
+    DENOMINATOR, FEE_TIER, IWallet,
     Market,
     Pair,
     signAndSend,
@@ -107,6 +107,7 @@ export class QPoolsAdmin {
         this.feeTier = {
             fee: fromFee(new BN(40))
         }
+        // this.feeTier = FEE_TIER[0];
 
         // Do a bunch of assert OKs
     }

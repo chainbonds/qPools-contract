@@ -121,10 +121,11 @@ export class QPoolsStats {
         console.log("qPoolCurrencyAccount", this.qPoolCurrencyAccount.toString())
 
         // Right now,
-        let reserveSol = (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
-        console.log("Reserve SOL is: ", reserveSol);
-
-        return reserveSol.toNumber();
+        // let reserveSol = (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // console.log("Reserve SOL is: ", reserveSol);
+        //
+        // return reserveSol.toNumber();
+        return 0.;
     }
 
 }

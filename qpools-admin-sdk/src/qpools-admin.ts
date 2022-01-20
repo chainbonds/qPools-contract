@@ -1059,5 +1059,4 @@ export class QPoolsAdmin {
 
     }
 
-
 }

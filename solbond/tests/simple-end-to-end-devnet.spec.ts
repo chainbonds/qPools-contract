@@ -149,14 +149,6 @@ describe('invariant-devnet', () => {
     };
     // let feeTier = FEE_TIER[0];
 
-
-    //
-    let addr1 = "5i";
-    let addr2 = "4c";
-    let addr3 = "BJ";
-    let addr4 = "4r8";
-    //
-
     /** Create Pairs */
     it('#createPairs', async () => {
         // Create a couple pairs one for each market
@@ -168,12 +160,12 @@ describe('invariant-devnet', () => {
         )
         pairs["SOL/mSOL"] = new QPair(
             MOCK.DEV.SOL,
-            MOCK.DEV.mSOL,
+            MOCK.DEV.MSOL,
             feeTier
         )
         pairs["USDC/mSOL"] = new QPair(
             MOCK.DEV.USDC,
-            MOCK.DEV.mSOL,
+            MOCK.DEV.MSOL,
             feeTier
         )
         pairs["USDC/SOL"] = pairs["SOL/USDC"]

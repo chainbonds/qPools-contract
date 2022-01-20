@@ -95,6 +95,7 @@ export class MockQPools extends QPoolsAdmin {
         console.log("Herro")
         let createFeeTier: CreateFeeTier = {
             admin: admin.publicKey,
+            // feeTier: {...this.feeTier, tickSpacing: 10}
             feeTier: this.feeTier
         }
         const tx = await this.mockMarket.createFeeTierTransaction(createFeeTier);

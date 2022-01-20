@@ -18,13 +18,13 @@ import {assert} from "chai";
 import {airdropAdmin, createMint, getSolbondProgram, MOCK, QPoolsUser} from "@qpools/sdk";
 import {Network} from "@invariant-labs/sdk";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
+import {fromFee} from "@invariant-labs/sdk/lib/utils";
 
 const NUMBER_POOLS = 1;
 
 describe('invariant-localnet', () => {
 
     // Get connection and provider
-    // "http://localhost:8889"
     const provider = Provider.local();
     const connection = provider.connection;
 
@@ -84,10 +84,15 @@ describe('invariant-localnet', () => {
             currencyMint.publicKey
         );
         await market.createMockMarket(
-            Network.LOCAL,
-            genericWallet,
+            Network.LOCAL, genericWallet,
             invariantProgram.programId
         )
+
+        // TODO: I need to modify the feeTier, because for some reason, the one on devnet does not work when running locally!
+        market.feeTier = {
+            fee: fromFee(new BN(40)),
+            tickSpacing: 10
+        }
     })
 
     // Some of these we don't have to do in devnet, so we leave this out
@@ -112,6 +117,7 @@ describe('invariant-localnet', () => {
         assert.ok(state.nonce === nonce)
         assert.ok(state.bump === bump)
     })
+
 
     /** Create Trade Pairs */
     it("#createFeeTier()", async () => {
@@ -204,9 +210,14 @@ describe('invariant-localnet', () => {
     });
 
     /** Claim the fees that were accumulated from trades */
-    it("#CollectFeesFromInvariant()", async () => {
+    it("#collectFeesFromInvariant()", async () => {
         await market.claimFee()
     });
+
+    // Finally, close positions
+    it("#closePosition()", async() => {
+        await market.closePosition()
+    })
 
     // And I guess the same person should close the position now
 

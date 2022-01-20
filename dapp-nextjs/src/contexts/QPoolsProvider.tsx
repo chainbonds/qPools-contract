@@ -72,18 +72,14 @@ export function QPoolsProvider(props: any) {
         } else {
             throw Error("Cluster is not defined properly! {$clusterName}");
         }
-        setConnection(() => {
-            return _connection
-        });
+        setConnection(_connection);
         let _currencyMint = new Token(
             _connection,
             MOCK.DEV.SOL,
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             airdropAdmin
         );
-        setCurrencyMint(() => {
-            return _currencyMint;
-        });
+        setCurrencyMint(_currencyMint);
         let newQpoolsStates = new QPoolsStats(_connection, _currencyMint);
         console.log("Setting the qpools stats newly, ", newQpoolsStates);
         setQPoolsStats(newQpoolsStates);
@@ -142,10 +138,9 @@ export function QPoolsProvider(props: any) {
         );
         // Will be defined based on the specific pool account ...
         // Actually, this will most likely be a PDA-based one ...
-        // TODO: Load this from the protocol?
         let _QPTokenMint = new Token(
             _connection,
-            new PublicKey("68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK"),
+            new PublicKey("9UbV6cUch9die3EwEaJpPBjQmP6J5TyYdmVGAkZCowdY"),  // 9UbV6cUch9die3EwEaJpPBjQmP6J5TyYdmVGAkZCowdY  // 68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );

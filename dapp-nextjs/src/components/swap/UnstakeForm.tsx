@@ -14,7 +14,6 @@ import React, {useEffect, useState} from "react";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {BN} from "@project-serum/anchor";
-import airdropAdmin from "@qpools/sdk/lib/airdropAdmin";
 import {useLoad} from "../../contexts/LoadingContext";
 
 export default function UnstakeForm() {

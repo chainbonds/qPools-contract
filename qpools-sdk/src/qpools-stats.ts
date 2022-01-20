@@ -10,6 +10,10 @@ import airdropAdmin from "./airdropAdmin";
 import {SimpleWallet} from "easy-spl";
 import NodeWallet from "@project-serum/anchor/dist/esm/nodewallet";
 import InternalWallet from "easy-spl/dist/wallet/internal";
+import {MOCK} from "./const";
+import {getPythProgramKeyForCluster, PythConnection} from "@pythnetwork/client";
+import {delay, getAssociatedTokenAddressOffCurve} from "./utils";
+import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 
 export class QPoolsStats {
 
@@ -27,6 +31,37 @@ export class QPoolsStats {
     public qPoolQPTAccount: PublicKey;
     public qPoolCurrencyAccount: PublicKey;
 
+    // Calculate TVL, and other statistics
+    public priceFeed: any;
+
+    // Logic to collect price feed
+    async collectPriceFeed() {
+        const pythConnection = new PythConnection(this.connection, getPythProgramKeyForCluster("devnet"))
+        pythConnection.onPriceChange((product, price) => {
+            // sample output:
+            // SRM/USD: $8.68725 ±$0.0131
+            if (product.symbol.includes("Crypto.MSOL/USD")) {
+                console.log("Price change MSOL/USD");
+                if (price.price) {
+                    this.priceFeed["Crypto.MSOL/USD"] = price.price!;
+                    console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
+                }
+            } else if (product.symbol.includes("Crypto.SOL/USD")) {
+                console.log("Price change SOL/USD");
+                if (price.price) {
+                    this.priceFeed["Crypto.SOL/USD"] = price.price!;
+                    console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
+                }
+            } else {
+                // console.log("Price not changed");
+                // console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
+            }
+        })
+        pythConnection.start();
+        await delay(2000);
+        await pythConnection.stop();
+    }
+
     constructor(
         connection: Connection,
         currencyMint: Token
@@ -43,6 +78,11 @@ export class QPoolsStats {
             {skipPreflight: true}
         );
         this.solbondProgram = getSolbondProgram(this.connection, this.provider);
+
+        this.priceFeed = {
+            "Crypto.MSOL/USD": 0.,
+            "Crypto.SOL/USD": 0.,
+        };
 
         this.currencyMint = currencyMint;
         // Now get the associated token addresses for all the other accounts
@@ -93,6 +133,7 @@ export class QPoolsStats {
             });
 
         });
+        this.collectPriceFeed();
     }
 
     /**
@@ -129,16 +170,32 @@ export class QPoolsStats {
 
         // Iterate over each pool
         // Get
-
+        // From each currency, get the balance
         let _response;
+        let tvl = 0.;
 
         // (1) Get the reserve currency's mint +
-        console.log("Gotta check this in devnet...");
-        console.log("currencyMint", this.currencyMint.publicKey.toString());
-        console.log("qPoolCurrencyAccount", this.qPoolCurrencyAccount.toString())
 
-        _response = await this.connection.getTokenAccountBalance(this.qPoolCurrencyAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
-        let tvl = Number(_response.value.amount) / (10**9);  // Shouldn't hardcode decimals...
+        // This is the amount of currencyMint, we should multiple this by the currency's/USD price
+        // _response = await this.connection.getTokenAccountBalance(this.qPoolCurrencyAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // tvl += price_SOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
+
+
+        // Now also calculate for all the other assets
+        let associatedTokenAccount: PublicKey;
+        // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.MSOL, this.qPoolAccount);
+        // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // tvl += price_MSOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
+        associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SOL, this.qPoolAccount);
+        _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        tvl += this.priceFeed["Crypto.SOL/USD"] * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
+        // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.USDT, this.qPoolAccount);
+        // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // tvl += (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
+        // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.USDC, this.qPoolAccount);
+        // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
+        // tvl += (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
+
 
         // _response = await this.connection.getTokenSupply();
         _response = await this.connection.getTokenSupply(this.QPTokenMint.publicKey);

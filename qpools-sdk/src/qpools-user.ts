@@ -9,7 +9,6 @@ import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BondPoolAccount} from "./types/bondPoolAccount";
 import {getSolbondProgram} from "./solbond-program";
 import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
-import {calculateTVL} from "./statistics";
 
 export class QPoolsUser {
 
@@ -407,19 +406,6 @@ export class QPoolsUser {
         // console.log("Bond pool currency account is: ", this.qPoolCurrencyAccount.toString());
 
         return true
-
-    }
-
-    async calculateTVL() {
-        return await calculateTVL(
-            this.connection,
-            "SOL/USDC",
-            this.currencyMint,
-            this.qPoolCurrencyAccount
-        );
-    }
-
-    async calculateAmountOfqSOL() {
 
     }
 

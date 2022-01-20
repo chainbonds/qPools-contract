@@ -1,54 +1,58 @@
 import {useEffect, useState} from "react";
 import {IQPool, useQPoolUserTool} from "../contexts/QPoolsProvider";
+import {delay} from "@qpools/sdk/lib/utils";
 
 export default function Statistics(props: any) {
 
     // Just run a lop where you update TVL every couple times
     const qPoolContext: IQPool = useQPoolUserTool();
     const [tvl, setTvl] = useState<number>(0.);
+    const [totalQPT, setTotalQPT] = useState<number>(0.);
+
+    const initializeQPoolsAndCalculateTVL = async () => {
+        console.log("Loaded qpoolsuser");
+        await qPoolContext.initializeQPoolsStatsTool();
+        await delay(5000);
+    }
 
     useEffect(() => {
-        console.log("Loaded qpoolsuser");
-        // Initialize the qpoolStats
-        qPoolContext.initializeQPoolsStatsTool();
 
-        // Do a periodic fetching of the data
-        setInterval(() => {
-            console.log("Should have loaded qpoolstats!", qPoolContext.qPoolsStats);
-            if (
-                qPoolContext.qPoolsStats &&
-                qPoolContext.qPoolsStats!.currencyMint &&
-                qPoolContext.qPoolsStats!.qPoolCurrencyAccount
-            ) {
-                qPoolContext.qPoolsStats!.calculateTVL().then(out => {
-                    setTvl((_) => out.tvl);
-                })
-            } else {
-                console.log("One of the three doesn't exist yet");
-                console.log(qPoolContext.qPoolsStats);
-                console.log(qPoolContext.qPoolsStats && qPoolContext.qPoolsStats.currencyMint);
-                console.log(qPoolContext.qPoolsStats && qPoolContext.qPoolsStats.qPoolCurrencyAccount);
-            }
-        }, 2000);
+        initializeQPoolsAndCalculateTVL();
+
+        // // Do a periodic fetching of the data
+        // setInterval(() => {
+        //     // Initialize the qpoolStats
+        //     delay(10000).then(() => {
+        //
+        //     });
+        // }, 2000);
 
     }, []);
 
+    useEffect(() => {
 
-    // useEffect(() => {
-    //     // let tvl = qPoolContext.qPoolsStats?.calculateTVL();
-    //     // console.log("TVL is: ", tvl);
-    //     if (
-    //         qPoolContext.qPoolsStats &&
-    //         qPoolContext.qPoolsStats!.currencyMint &&
-    //         qPoolContext.qPoolsStats!.qPoolCurrencyAccount
-    //     ) {
-    //         qPoolContext.initializeQPoolsStatsTool().then(() => {
-    //             qPoolContext.qPoolsStats!.calculateTVL().then(_tvl => {
-    //                 setTvl((_) => _tvl);
-    //             })
-    //         })
-    //     }
-    // }, [qPoolContext.qPoolsStats, qPoolContext.qPoolsStats?.currencyMint])
+        setInterval(() => {
+            if (qPoolContext && qPoolContext.qPoolsStats) {
+
+                // if (!qPoolContext.qPoolsStats) {
+                //     throw Error("Something went wrong loading qPoolsStats!");
+                // }
+
+                if (qPoolContext.qPoolsStats) {
+                    qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
+                        qPoolContext.qPoolsStats!.calculateTVL().then(out => {
+                            setTvl((_) => out.tvl);
+                            setTotalQPT((_) => out.totalQPT);
+                        })
+                    });
+                } else {
+                    console.log("Stats now loaded yet!", qPoolContext, qPoolContext.qPoolsStats)
+                }
+
+            }
+        }, 2000);
+
+    }, [qPoolContext, qPoolContext.qPoolsStats])
 
     const singleBox = (title: String, value: String) => {
 
@@ -70,8 +74,9 @@ export default function Statistics(props: any) {
         <>
             <div className={"flex flex-col md:flex-row items-center lg:items-begin"}>
                 {singleBox("Total Value Locked", "$" + String((tvl / 1000).toFixed(3) ) + "M USD")}
-                {singleBox("Total QTP Minted", "712.03 QTP")}
-                {singleBox("7 Day APY", "8.02%")}
+                {singleBox("Total QTP Minted", String(totalQPT.toFixed(2)) + " QTP")}
+                {singleBox("7 Day APY", "Coming Soon")}
+                {/*8.02%*/}
             </div>
         </>
     )

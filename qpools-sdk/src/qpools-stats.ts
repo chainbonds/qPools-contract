@@ -1,7 +1,7 @@
 import {ConfirmOptions, Connection, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
-import {BN, Program, Provider} from "@project-serum/anchor";
+import {BN, Program, Provider, utils} from "@project-serum/anchor";
 import {NETWORK} from "./cluster";
 import {getSolbondProgram} from "./solbond-program";
 import {Wallet} from "@project-serum/anchor/dist/cjs/provider";
@@ -58,7 +58,7 @@ export class QPoolsStats {
             }
         })
         pythConnection.start();
-        await delay(2000);
+        await delay(5000);
         await pythConnection.stop();
     }
 
@@ -161,6 +161,27 @@ export class QPoolsStats {
     //     }
     // }
 
+    async getInvariantPositionListAddress() {
+        // TODO: Replace the address by the mainnet address, for example
+        const POSITION_LIST_SEED = 'positionlistv1';
+        const [positionListAddress, positionListBump] = await PublicKey.findProgramAddress(
+            [Buffer.from(utils.bytes.utf8.encode(POSITION_LIST_SEED)), this.qPoolAccount.toBuffer()],
+            new PublicKey("5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj")
+        )
+
+        return {
+            positionListAddress,
+            positionListBump
+        }
+    }
+
+    async getAllTokensLockedInInvariant() {
+        let {positionListAddress, positionListBump} = await this.getInvariantPositionListAddress();
+
+        let positionListContents = await this.connection.getAccountInfo(positionListAddress);
+
+
+    }
 
     async calculateTVL(): Promise<{tvl: number, totalQPT: number}> {
 
@@ -181,14 +202,20 @@ export class QPoolsStats {
         // tvl += price_SOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
 
 
+        /** (1) Iterate over all of the token-accounts owned by qPoolAccount */
+
+        /** (2) Iterate over all the invariant positions */
+
         // Now also calculate for all the other assets
         let associatedTokenAccount: PublicKey;
         // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.MSOL, this.qPoolAccount);
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += price_MSOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
         associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SOL, this.qPoolAccount);
+
         _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
-        tvl += this.priceFeed["Crypto.SOL/USD"] * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
+        console.log("First response is: ", _response);
+        tvl += this.priceFeed["Crypto.SOL/USD"] * (Number(_response.value.amount) / (10**(_response.value.decimals)));  // Shouldn't hardcode decimals...
         // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.USDT, this.qPoolAccount);
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
@@ -196,10 +223,15 @@ export class QPoolsStats {
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
 
+        // For invariant, iterate through all positionList items (generate seeds until it doesn't find addresses anymore)
+        // And get the respective token balance
+
+        // TODO: Get all tokens locked in invariant-accounts ...
+
 
         // _response = await this.connection.getTokenSupply();
         _response = await this.connection.getTokenSupply(this.QPTokenMint.publicKey);
-        let totalQPT = Number(_response.value.amount) / (10**9);
+        let totalQPT = Number(_response.value.amount) / (10**(_response.value.decimals));
         console.log("Second response is: ", _response);
 
 

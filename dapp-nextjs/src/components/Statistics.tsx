@@ -29,29 +29,34 @@ export default function Statistics(props: any) {
 
     }, []);
 
-    useEffect(() => {
+    const updateStatistics = () => {
+        if (qPoolContext && qPoolContext.qPoolsStats) {
 
-        setInterval(() => {
-            if (qPoolContext && qPoolContext.qPoolsStats) {
+            // if (!qPoolContext.qPoolsStats) {
+            //     throw Error("Something went wrong loading qPoolsStats!");
+            // }
 
-                // if (!qPoolContext.qPoolsStats) {
-                //     throw Error("Something went wrong loading qPoolsStats!");
-                // }
-
-                if (qPoolContext.qPoolsStats) {
-                    qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
-                        qPoolContext.qPoolsStats!.calculateTVL().then(out => {
-                            setTvl((_) => out.tvl);
-                            setTotalQPT((_) => out.totalQPT);
-                        })
-                    });
-                } else {
-                    console.log("Stats now loaded yet!", qPoolContext, qPoolContext.qPoolsStats)
-                }
-
+            if (qPoolContext.qPoolsStats) {
+                qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
+                    qPoolContext.qPoolsStats!.calculateTVL().then(out => {
+                        setTvl((_) => out.tvl);
+                        setTotalQPT((_) => out.totalQPT);
+                    })
+                });
+            } else {
+                console.log("Stats now loaded yet!", qPoolContext, qPoolContext.qPoolsStats)
             }
-        }, 2000);
 
+        }
+    }
+
+    useEffect(() => {
+        updateStatistics();
+        // setInterval(() => {
+        //     updateStatistics();
+        // }, 30000);
+
+    // qPoolContext, qPoolContext.qPoolsStats
     }, [qPoolContext, qPoolContext.qPoolsStats])
 
     const singleBox = (title: String, value: String) => {
@@ -73,8 +78,8 @@ export default function Statistics(props: any) {
     return (
         <>
             <div className={"flex flex-col md:flex-row items-center lg:items-begin"}>
-                {singleBox("Total Value Locked", "$" + String((tvl / 1000).toFixed(3) ) + "M USD")}
-                {singleBox("Total QTP Minted", String(totalQPT.toFixed(2)) + " QTP")}
+                {singleBox("Total Value Locked", "$" + String((tvl / 1e3).toFixed(2) ) + " K USD")}
+                {singleBox("Total QPT Minted", String(totalQPT.toFixed(2)) + " QPT")}
                 {singleBox("7 Day APY", "Coming Soon")}
                 {/*8.02%*/}
             </div>

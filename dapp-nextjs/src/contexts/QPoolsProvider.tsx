@@ -55,7 +55,8 @@ export function QPoolsProvider(props: any) {
     const [currencyMint, setCurrencyMint] = useState<Token | undefined>(undefined);
     const [QPTokenMint, setQPTokenMint] = useState<Token | undefined>(undefined);
 
-    const initializeQPoolsStatsTool = async () => {
+    const initializeQPoolsStatsTool = () => {
+        console.log("InitializeQPoolsStatsTool");
         console.log("Cluster URL is: ", String(process.env.NEXT_PUBLIC_CLUSTER_URL));
         let _connection: Connection;
         let clusterName = String(process.env.NEXT_PUBLIC_CLUSTER_NAME);console.log("Cluster name is: ", clusterName);
@@ -71,16 +72,23 @@ export function QPoolsProvider(props: any) {
         } else {
             throw Error("Cluster is not defined properly! {$clusterName}");
         }
-        setConnection(() => _connection);
+        setConnection(() => {
+            return _connection
+        });
         let _currencyMint = new Token(
             _connection,
             MOCK.DEV.SOL,
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             airdropAdmin
         );
-        setQPoolsStats(() => {
-           return new QPoolsStats(_connection, _currencyMint);
+        setCurrencyMint(() => {
+            return _currencyMint;
         });
+        let newQpoolsStates = new QPoolsStats(_connection, _currencyMint);
+        console.log("Setting the qpools stats newly, ", newQpoolsStates);
+        setQPoolsStats(newQpoolsStates);
+
+        return;
 
     }
 

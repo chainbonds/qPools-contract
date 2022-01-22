@@ -30,7 +30,7 @@ const main = async () => {
     const qPoolAdminTool = new QPoolsAdmin(
         connection,
         provider,
-        MOCK.DEV.SOL
+        MOCK.DEV.SABER_USDC
     );
 
     // Check if an account exists already

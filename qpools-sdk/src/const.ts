@@ -10,7 +10,24 @@ export const MOCK = {
         SOL: new PublicKey('BJVjNqQzM1fywLWzzKbQEZ2Jsx9AVyhSLWzko3yF68PH'),
         USDC: new PublicKey('5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW'),
         USDT: new PublicKey('4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm'),
-        MSOL: new PublicKey('4r8WDEvBntEr3dT69p7ua1rsaWcpTSHnKpY5JugDkcPQ')
+        MSOL: new PublicKey('4r8WDEvBntEr3dT69p7ua1rsaWcpTSHnKpY5JugDkcPQ'),
+
+        SABER_USDC: new PublicKey('2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8'),
+        SABER_TESTUSD: new PublicKey('4QgnWUPQmfGB5dTDCcc4ZFeZDK7xNVhCUFoNmmYFwAme'),
+        SABER_PAI: new PublicKey('4ry1pMstKzMJvMZSms62HduTyCbbqkUyrz17x1dajBmL'),
+        SABER_sWBTC: new PublicKey('BtceyXMo5kwg8u6es4NoukBWQuMwtcBCZpFWUfZgVuZs'),
+        SABER_CASH: new PublicKey('CASHVDm2wsJXfhj6VWxb7GiMdoLc17Du7paH4bNr5woT'),
+        SABER_USDT: new PublicKey('EJwZgeZrdC8TXTQbQBoL6bfuAnFUUy1PVCMB4DYPzVaS'),
+        SABER_RENBTC: new PublicKey('Ren3RLPCG6hpKay86d2fQccQLuGG331UNxwn2VTw3GJ'),
+        SABER_SABER: new PublicKey('Saber2gLauYim4Mvftnrasomsv6NvAuncvMEZwcLpD1'),
+        SABER_WBTC: new PublicKey('Wbt2CgkkD3eVckD5XxWJmT8pTnFTyWrwvGM7bUMLvsM'),
+        SABER_POOL: {
+            USDC_USDT: new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL"),
+            USDC_CASH: new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA"),
+            USDC_PAI: new PublicKey("DoycojcYVwc42yCpGb4CvkbuKJkQ6KBTugLdJXv3U8ZE"),
+            USDT_CASH: new PublicKey("TEJVTFTsqFEuoNNGu864ED4MJuZr8weByrsYYpZGCfQ"),
+            TEST_USDC: new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x"),
+        }
     },
     MAIN: {
         SOL: new PublicKey('So11111111111111111111111111111111111111112'),

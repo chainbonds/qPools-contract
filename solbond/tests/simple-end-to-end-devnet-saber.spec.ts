@@ -221,59 +221,60 @@ describe('invariant-devnet', () => {
         await connection.confirmTransaction(sg);
     })
 
-    // it("#depsitsToTheSaberPools()", async () => {
-    //
-    //     stableSwap.config.authority
-    //
-    //     let tx = new Transaction();
-    //     let depositIx: DepositInstruction = {
-    //         config: stableSwap.config,
-    //         userAuthority: qPoolAccount,
-    //         // What is Token A and Token B, does the order matter?
-    //         sourceA: currencyAccount,
-    //         sourceB: userUsdtAccount,
-    //         tokenAccountA: stableSwap.state.tokenA.reserve,
-    //         tokenAccountB: stableSwap.state.tokenB.reserve,
-    //         poolTokenMint: stableSwap.state.poolTokenMint,
-    //         // User
-    //         poolTokenAccount: poolUserAccount,
-    //         // Provide these in an equal ratio ...
-    //         tokenAmountA: tou64(50),
-    //         tokenAmountB: tou64(50),
-    //         minimumPoolTokenAmount: tou64(30)
-    //     }
-    //     let swapTx = await saber.depositInstruction(depositIx);
-    //     tx = tx.add(swapTx);
-    //     const sg = await connection.sendTransaction(tx, [genericPayer]);
-    //     await connection.confirmTransaction(sg);
-    //
-    // });
-    //
-    // it("#withdrawFromTheSaberPools()", async () => {
-    //
-    //     let tx = new Transaction();
-    //     let withdrawIx: WithdrawInstruction = {
-    //         config: stableSwap.config,
-    //         userAuthority: qPoolAccount,
-    //         poolMint: stableSwap.state.poolTokenMint,
-    //         tokenAccountA: stableSwap.state.tokenA.reserve,
-    //         tokenAccountB: stableSwap.state.tokenB.reserve,
-    //         // what are these?
-    //         adminFeeAccountA: stableSwap.state.tokenA.adminFeeAccount,
-    //         adminFeeAccountB: stableSwap.state.tokenB.adminFeeAccount,
-    //         sourceAccount: poolUserAccount,
-    //         userAccountA: currencyAccount,
-    //         userAccountB: userUsdtAccount,
-    //         poolTokenAmount: tou64(50),
-    //         minimumTokenA: tou64(50),
-    //         minimumTokenB: tou64(50),
-    //     }
-    //     let swapTx = saber.withdrawInstruction(withdrawIx);
-    //     tx = tx.add(swapTx);
-    //     const sg = await connection.sendTransaction(tx, [genericPayer]);
-    //     await connection.confirmTransaction(sg);
-    //
-    // })
+    it("#depsitsToTheSaberPools()", async () => {
+
+        // Solana get how many USDC is provided ...
+
+
+        let tx = new Transaction();
+        let depositIx: DepositInstruction = {
+            config: stableSwap.config,
+            userAuthority: qPoolAccount,
+            // What is Token A and Token B, does the order matter?
+            sourceA: currencyAccount,
+            sourceB: userUsdtAccount,
+            tokenAccountA: stableSwap.state.tokenA.reserve,
+            tokenAccountB: stableSwap.state.tokenB.reserve,
+            poolTokenMint: stableSwap.state.poolTokenMint,
+            // User
+            poolTokenAccount: poolUserAccount,
+            // Provide these in an equal ratio ...
+            tokenAmountA: tou64(10),
+            tokenAmountB: tou64(10),
+            minimumPoolTokenAmount: tou64(3)
+        }
+        let swapTx = await saber.depositInstruction(depositIx);
+        tx = tx.add(swapTx);
+        const sg = await connection.sendTransaction(tx, [genericPayer]);
+        await connection.confirmTransaction(sg);
+
+    });
+
+    it("#withdrawFromTheSaberPools()", async () => {
+
+        let tx = new Transaction();
+        let withdrawIx: WithdrawInstruction = {
+            config: stableSwap.config,
+            userAuthority: qPoolAccount,
+            poolMint: stableSwap.state.poolTokenMint,
+            tokenAccountA: stableSwap.state.tokenA.reserve,
+            tokenAccountB: stableSwap.state.tokenB.reserve,
+            // what are these?
+            adminFeeAccountA: stableSwap.state.tokenA.adminFeeAccount,
+            adminFeeAccountB: stableSwap.state.tokenB.adminFeeAccount,
+            sourceAccount: poolUserAccount,
+            userAccountA: currencyAccount,
+            userAccountB: userUsdtAccount,
+            poolTokenAmount: tou64(10),
+            minimumTokenA: tou64(3),
+            minimumTokenB: tou64(3),
+        }
+        let swapTx = saber.withdrawInstruction(withdrawIx);
+        tx = tx.add(swapTx);
+        const sg = await connection.sendTransaction(tx, [genericPayer]);
+        await connection.confirmTransaction(sg);
+
+    })
 
     // /** Initialize a mock market object*/
     // it('#initializeMockMarket()', async () => {

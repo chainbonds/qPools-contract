@@ -1,5 +1,63 @@
+import {useEffect, useState} from "react";
+import {IQPool, useQPoolUserTool} from "../contexts/QPoolsProvider";
+import {delay} from "@qpools/sdk/lib/utils";
 
 export default function Statistics(props: any) {
+
+    // Just run a lop where you update TVL every couple times
+    const qPoolContext: IQPool = useQPoolUserTool();
+    const [tvl, setTvl] = useState<number>(0.);
+    const [totalQPT, setTotalQPT] = useState<number>(0.);
+
+    const initializeQPoolsAndCalculateTVL = async () => {
+        console.log("Loaded qpoolsuser");
+        await qPoolContext.initializeQPoolsStatsTool();
+        await delay(5000);
+    }
+
+    useEffect(() => {
+
+        initializeQPoolsAndCalculateTVL();
+
+        // // Do a periodic fetching of the data
+        // setInterval(() => {
+        //     // Initialize the qpoolStats
+        //     delay(10000).then(() => {
+        //
+        //     });
+        // }, 2000);
+
+    }, []);
+
+    const updateStatistics = () => {
+        if (qPoolContext && qPoolContext.qPoolsStats) {
+
+            // if (!qPoolContext.qPoolsStats) {
+            //     throw Error("Something went wrong loading qPoolsStats!");
+            // }
+
+            if (qPoolContext.qPoolsStats) {
+                qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
+                    qPoolContext.qPoolsStats!.calculateTVL().then(out => {
+                        setTvl((_) => out.tvl.toNumber());
+                        setTotalQPT((_) => out.totalQPT);
+                    })
+                });
+            } else {
+                console.log("Stats now loaded yet!", qPoolContext, qPoolContext.qPoolsStats)
+            }
+
+        }
+    }
+
+    useEffect(() => {
+        updateStatistics();
+        // setInterval(() => {
+        //     updateStatistics();
+        // }, 30000);
+
+    // qPoolContext, qPoolContext.qPoolsStats
+    }, [qPoolContext, qPoolContext.qPoolsStats])
 
     const singleBox = (title: String, value: String) => {
 
@@ -20,9 +78,10 @@ export default function Statistics(props: any) {
     return (
         <>
             <div className={"flex flex-col md:flex-row items-center lg:items-begin"}>
-                {singleBox("Total Value Locked", "$147.84M USD")}
-                {singleBox("Total QTP Minted", "712.03 QTP")}
-                {singleBox("7 Day APY", "8.02%")}
+                {singleBox("Total Value Locked", "$" + String((tvl / 1e3).toFixed(2) ) + " K USD")}
+                {singleBox("Total QPT Minted", String(totalQPT.toFixed(2)) + " QPT")}
+                {singleBox("7 Day APY", "Coming Soon")}
+                {/*8.02%*/}
             </div>
         </>
     )

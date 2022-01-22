@@ -2,7 +2,6 @@ import {Connection, Keypair, PublicKey, Signer} from "@solana/web3.js";
 import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {
-    calculate_price_sqrt,
     DENOMINATOR,
     IWallet,
     Market,
@@ -13,7 +12,7 @@ import {
     SEED,
     TICK_LIMIT, tou64
 } from "@invariant-labs/sdk";
-import {CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
+import {CreateFeeTier, CreatePool, Decimal, FeeTier, Tick,} from "@invariant-labs/sdk/lib/market";
 import * as net from "net";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {FEE_TIERS, fromFee} from "@invariant-labs/sdk/lib/utils";
@@ -25,6 +24,8 @@ import {getLiquidityByX} from "@invariant-labs/sdk/lib/math";
 import {QPair} from "./q-pair";
 import {createToken} from "./invariant-utils";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
+import {getPayer} from "@qpools/sdk";
+import {CreateStake} from "../../solbond/deps/protocol/sdk-staker/src/staker";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'
@@ -59,9 +60,6 @@ export class MockQPools extends QPoolsAdmin {
         if (!this.tokens) {
             throw Error("Token Mints were not generated yet");
         }
-        if (!this.feeTier) {
-            throw Error("Token Mints were not generated yet");
-        }
 
         this.pairs = this.tokens.map((token: Token) => {
             let pair: QPair = new QPair(
@@ -85,11 +83,24 @@ export class MockQPools extends QPoolsAdmin {
 
     async createState(admin: Keypair) {
         this.protocolFee = {v: fromFee(new BN(10000))};
-        await this.mockMarket.createState(admin, this.protocolFee);
+        const tx = await this.mockMarket.createStateTransaction(admin.publicKey);
+        const sg = await this.connection.sendTransaction(tx, [admin]);
+        await this.connection.confirmTransaction(sg);
     }
 
     async createFeeTier(admin: Keypair) {
-        await this.mockMarket.createFeeTier(this.feeTier, admin);
+        if (!this.feeTier) {
+            throw Error("FeeTier was not generated yet");
+        }
+        console.log("Herro")
+        let createFeeTier: CreateFeeTier = {
+            admin: admin.publicKey,
+            // feeTier: {...this.feeTier, tickSpacing: 10}
+            feeTier: this.feeTier
+        }
+        const tx = await this.mockMarket.createFeeTierTransaction(createFeeTier);
+        const sg = await this.connection.sendTransaction(tx, [admin]);
+        await this.connection.confirmTransaction(sg);
         // Get fee tier
         assert.ok((await this.mockMarket.getFeeTierAddress(this.feeTier)).address)
     }
@@ -160,9 +171,7 @@ export class MockQPools extends QPoolsAdmin {
         );
     }
 
-    async creatMarketsFromPairs(
-        admin: Keypair,
-    ) {
+    async creatMarketsFromPairs(admin: Keypair) {
 
         await Promise.all(
                 this.pairs.map(async (pair: Pair) => {
@@ -170,19 +179,26 @@ export class MockQPools extends QPoolsAdmin {
                 console.log("First pair mint is: ", pair.tokenX.toString());
                 console.log("When swapping to Pairs: ", pair.tokenY.toString());
 
-                // 0.6% / 10 Fees, according to pair
-                await this.mockMarket.create({
-                    pair: pair,
-                    signer: admin
-                });
-
                 console.log("After create");
 
-                const createdPool = await this.mockMarket.get(pair);
                 const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, admin);
                 const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, admin);
 
-                // Run a bunch of tests to make sure the market creation went through successfully
+                // Are these associated token accounts ?
+
+                // 0.6% / 10 Fees, according to pair
+                let createPool: CreatePool = {
+                    pair: pair,
+                    payer: admin,
+                    protocolFee: this.protocolFee,
+                    tokenX: tokenX,
+                    tokenY: tokenY
+                };
+                await this.mockMarket.createPool(createPool);
+                const createdPool = await this.mockMarket.getPool(pair);
+
+
+                    // Run a bunch of tests to make sure the market creation went through successfully
                 assert.ok(createdPool.tokenX.equals(tokenX.publicKey), ("createdPool.tokenX === tokenX.publicKey) " + createdPool.tokenX.toString() + " " + tokenX.publicKey.toString()));
                 assert.ok(createdPool.tokenY.equals(tokenY.publicKey), ("createdPool.tokenY === tokenY.publicKey) " + createdPool.tokenY.toString() + " " + tokenY.publicKey.toString()));
                 // Passed in through the pair
@@ -210,7 +226,10 @@ export class MockQPools extends QPoolsAdmin {
         tokenMintAuthority: Keypair,
         airdropAmountX: BN,
     ) {
-        await this.mockMarket.createPositionList(liquidityProvider);
+
+        let tx = await this.mockMarket.createPositionListTransaction(liquidityProvider.publicKey);
+        await this.connection.sendTransaction(tx, [liquidityProvider]);
+        // await this.mockMarket.createPositionList(liquidityProvider);
 
         // Generate the upper and lower ticks, if they don't exist yet
         const upperTick = 50;
@@ -231,7 +250,7 @@ export class MockQPools extends QPoolsAdmin {
                 const tokenXAccount = await getAssociatedTokenAddress(tokenX.publicKey, liquidityProvider.publicKey);
                 const tokenYAccount = await getAssociatedTokenAddress(tokenY.publicKey, liquidityProvider.publicKey);
 
-                const pool = await this.mockMarket.get(pair);
+                const pool = await this.mockMarket.getPool(pair);
 
                 // Calculate how much to airdrop, etc.
                 // Calculate liquidity based
@@ -273,7 +292,8 @@ export class MockQPools extends QPoolsAdmin {
                 assert.ok(amountY.eq(airdropAmountY), (String(amountY) + " Assert (2) " + airdropAmountY.toString()));
 
                 // Now initialize the position
-                await this.mockMarket.initPosition(
+                // liquidityProvider
+                const tx = await this.mockMarket.initPositionTx(
                     {
                         pair: pair,
                         owner: liquidityProvider.publicKey,
@@ -282,13 +302,13 @@ export class MockQPools extends QPoolsAdmin {
                         lowerTick: lowerTick,
                         upperTick: upperTick,
                         liquidityDelta: liquidityDelta
-                    },
-                    liquidityProvider
+                    }
                 )
+                await this.connection.sendTransaction(tx, [liquidityProvider]);
 
                 // console.log("First (9)");
                 // Do a bunch of tests to check if liquidity was successfully provided
-                const poolData = await this.mockMarket.get(pair);
+                const poolData = await this.mockMarket.getPool(pair);
 
                 // console.log(String(" Assert (3) " + poolData.feeGrowthGlobalX.v.toString()));
                 // console.log(String(" Assert (4) " + poolData.feeGrowthGlobalY.v.toString()));

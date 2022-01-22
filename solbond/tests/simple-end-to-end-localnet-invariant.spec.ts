@@ -17,6 +17,8 @@ import {getInvariantProgram, MockQPools} from "@qpools/admin-sdk/lib/qpools-admi
 import {assert} from "chai";
 import {airdropAdmin, createMint, getSolbondProgram, MOCK, QPoolsUser} from "@qpools/sdk";
 import {Network} from "@invariant-labs/sdk";
+import {NETWORK} from "@qpools/sdk/lib/cluster";
+import {fromFee} from "@invariant-labs/sdk/lib/utils";
 
 const NUMBER_POOLS = 1;
 
@@ -35,10 +37,12 @@ describe('invariant-localnet', () => {
     const liquidityProvider = Keypair.generate();
     const currencyOwner = airdropAdmin;
 
-    const solbondProgram = getSolbondProgram(connection, provider);
-    const invariantProgram = getInvariantProgram(connection, provider);
+    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.LOCALNET);
+    const invariantProgram = getInvariantProgram(connection, provider, NETWORK.LOCALNET);
     console.log("Invariant Program");
     console.log(invariantProgram.programId.toString());
+    console.log("Solbond Program");
+    console.log(solbondProgram.programId.toString());
 
     let market: MockQPools;
     let currencyMint: Token;
@@ -55,10 +59,10 @@ describe('invariant-localnet', () => {
 
         let traderBalance = await provider.connection.getBalance(trader.publicKey)
         let liquidityProviderBalance = await provider.connection.getBalance(liquidityProvider.publicKey)
-        let currencyOwnerBalance = await provider.connection.getBalance(liquidityProvider.publicKey)
+        let currencyOwnerBalance = await provider.connection.getBalance(currencyOwner.publicKey)
         assert.equal(traderBalance, 3e9, String(traderBalance));
         assert.equal(liquidityProviderBalance, 3e9, String(liquidityProviderBalance));
-        assert.equal(currencyOwnerBalance, 3e9, String(currencyOwnerBalance));
+        assert.ok(currencyOwnerBalance >= 3e9, String(currencyOwnerBalance));
     })
 
     /** Assign the currency mint */
@@ -80,10 +84,15 @@ describe('invariant-localnet', () => {
             currencyMint.publicKey
         );
         await market.createMockMarket(
-            Network.LOCAL,
-            genericWallet,
+            Network.LOCAL, genericWallet,
             invariantProgram.programId
         )
+
+        // TODO: I need to modify the feeTier, because for some reason, the one on devnet does not work when running locally!
+        market.feeTier = {
+            fee: fromFee(new BN(40)),
+            tickSpacing: 10
+        }
     })
 
     // Some of these we don't have to do in devnet, so we leave this out
@@ -91,23 +100,34 @@ describe('invariant-localnet', () => {
     it("#createTradedToken()", async () => {
         await market.createTokens(NUMBER_POOLS, currencyOwner);
     })
-    /** Create state */
-    it('#createState()', async () => {
-        await market.createState(genericPayer);
-    })
-    /** Create Trade Pairs */
-    it("#createFeeTier()", async () => {
-        await market.createFeeTier(genericPayer);
-    })
     /** Create Pairs */
     it("#createTradePairs()", async () => {
         // Create 10 pools, one for each pair
         await market.createPairs();
     })
+    // /** Create state */
+    it('#createState()', async () => {
+        await market.createState(genericPayer);
+        const state = await market.mockMarket.getState()
+        const { bump } = await market.mockMarket.getStateAddress()
+        const { programAuthority, nonce } = await market.mockMarket.getProgramAuthority()
+
+        assert.ok(state.admin.equals(genericPayer.publicKey))
+        assert.ok(state.authority.equals(programAuthority))
+        assert.ok(state.nonce === nonce)
+        assert.ok(state.bump === bump)
+    })
+
+
+    /** Create Trade Pairs */
+    it("#createFeeTier()", async () => {
+        await market.createFeeTier(genericPayer);
+    })
+
     /** Create Markets */
     it("#createMarketsFromPairs()", async () => {
         // Get network and wallet from the adapter somewhere
-        await market.creatMarketsFromPairs(genericPayer)
+        await market.creatMarketsFromPairs(genericPayer);
     })
 
     /** Provide third party liquidity to markets */
@@ -190,9 +210,14 @@ describe('invariant-localnet', () => {
     });
 
     /** Claim the fees that were accumulated from trades */
-    it("#CollectFeesFromInvariant()", async () => {
+    it("#collectFeesFromInvariant()", async () => {
         await market.claimFee()
     });
+
+    // Finally, close positions
+    it("#closePosition()", async() => {
+        await market.closePosition()
+    })
 
     // And I guess the same person should close the position now
 

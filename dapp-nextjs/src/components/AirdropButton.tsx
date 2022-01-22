@@ -4,10 +4,10 @@ import {useWallet} from "@solana/wallet-adapter-react";
 import {BN} from "@project-serum/anchor";
 import {IQPool, useQPoolUserTool} from "../contexts/QPoolsProvider";
 import airdropAdmin from "@qpools/sdk/src/airdropAdmin";
-import {createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
 import {Connection, Transaction} from "@solana/web3.js";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {useLoad} from "../contexts/LoadingContext";
+import {createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
 
 export const AirdropButton: FC = ({}) => {
 
@@ -21,7 +21,7 @@ export const AirdropButton: FC = ({}) => {
         console.log("Requesting airdrop...");
 
         // Let's airdrop 3 SOL to the user
-        let _airdropAmount: number = 3;
+        let _airdropAmount: number = 100;
         let airdropAmount: BN = new BN(_airdropAmount).mul(new BN(1e9));
         if (!qPoolContext.userAccount || !qPoolContext.userAccount!.publicKey) {
             alert("Please connect your wallet first!");
@@ -60,7 +60,7 @@ export const AirdropButton: FC = ({}) => {
         let transaction = new Transaction();
         let mintToInstruction = Token.createMintToInstruction(
             TOKEN_PROGRAM_ID,
-            MOCK.SOL,
+            MOCK.DEV.SOL,
             currencyMintUserAccount,
             airdropAdmin.publicKey,
             [],

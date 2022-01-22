@@ -38,6 +38,8 @@ pub struct CreateLiquidityPosition<'info> {
     #[account(mut)]
     pub position_list: AccountInfo<'info>,
     #[account(mut)]
+    pub tickmap: AccountInfo<'info>,
+    #[account(mut)]
     pub bond_pool_currency_token_mint: AccountInfo<'info>,
     #[account(
         mut,
@@ -104,7 +106,6 @@ pub fn handler(
         v: _liquidity_delta
     };
 
-
     let create_position_accounts = CreatePosition {
         state: ctx.accounts.state.to_account_info(),
         position: ctx.accounts.position.to_account_info(),
@@ -120,6 +121,7 @@ pub fn handler(
         account_y: ctx.accounts.account_y.to_account_info(),
         reserve_x: ctx.accounts.reserve_x.to_account_info(),
         reserve_y: ctx.accounts.reserve_y.to_account_info(),
+        tickmap: ctx.accounts.tickmap.to_account_info(),
         program_authority: ctx.accounts.program_authority.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),

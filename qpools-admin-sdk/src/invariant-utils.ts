@@ -73,51 +73,6 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
   )
 }
 
-export const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
-  Promise.all(
-    FEE_TIERS.map(async (feeTier) => {
-      await market.createFeeTier(feeTier, payer)
-    })
-  )
-}
-
-export const createTokensAndPool = async (
-  market: Market,
-  connection: Connection,
-  payer: Keypair,
-  initTick: number = 0,
-  fee: BN = new BN(600),
-  tickSpacing: number = 10
-) => {
-  const mintAuthority = Keypair.generate()
-
-  const promiseResults = await Promise.all([
-    createToken(connection, payer, mintAuthority),
-    createToken(connection, payer, mintAuthority),
-    connection.requestAirdrop(mintAuthority.publicKey, 1e9)
-  ])
-
-  const feeTier: FeeTier = {
-    fee: fromFee(fee),
-    tickSpacing
-  }
-  const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
-  const feeTierAccount = await connection.getAccountInfo((await market.getFeeTierAddress(feeTier)).address)
-  if (feeTierAccount === null) {
-    await market.createFeeTier(pair.feeTier, payer)
-  }
-  
-  await market.create({
-    pair,
-    signer: payer,
-    initTick
-  })
-
-  return { tokenX, tokenY, pair, mintAuthority }
-}
-
 export const createUserWithTokens = async (
   pair: Pair,
   connection: Connection,
@@ -141,39 +96,6 @@ export const createUserWithTokens = async (
   ])
 
   return { owner, userAccountX, userAccountY }
-}
-
-export const createPoolWithLiquidity = async (
-  market: Market,
-  connection: Connection,
-  payer: Keypair,
-  liquidity: Decimal = { v: new BN(10).pow(new BN(22)) },
-  initialTick: number = 0,
-  lowerTick: number = -1000,
-  upperTick: number = 1000
-) => {
-  const { pair, mintAuthority } = await createTokensAndPool(market, connection, payer, initialTick)
-  const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-    pair,
-    connection,
-    mintAuthority,
-    new BN(10).pow(new BN(14))
-  )
-
-  await market.initPosition(
-    {
-      pair,
-      owner: owner.publicKey,
-      userTokenX: userAccountX,
-      userTokenY: userAccountY,
-      lowerTick,
-      upperTick,
-      liquidityDelta: liquidity
-    },
-    owner
-  )
-
-  return { pair, mintAuthority }
 }
 
 export const setInitialized = (bitmap: number[], index: number) => {

@@ -7,10 +7,14 @@ import {solbondProgram} from "../programs/solbond";
 import {WalletI} from "easy-spl";
 import {QPoolsUser} from "@qpools/sdk/src/qpools-user";
 import {MOCK} from "@qpools/sdk/src/const";
+import {QPoolsStats} from "@qpools/sdk/lib/qpools-stats";
+import {airdropAdmin} from "@qpools/sdk";
 
 export interface IQPool {
     qPoolsUser: QPoolsUser | undefined,
+    qPoolsStats: QPoolsStats | undefined,
     initializeQPoolsUserTool: any,
+    initializeQPoolsStatsTool: any,
     connection: Connection | undefined,
     provider: Provider | undefined,
     _solbondProgram: any,
@@ -21,7 +25,9 @@ export interface IQPool {
 
 const defaultValue: IQPool = {
     qPoolsUser: undefined,
+    qPoolsStats: undefined,
     initializeQPoolsUserTool: () => console.error("attempting to use AuthContext outside of a valid provider"),
+    initializeQPoolsStatsTool: () => console.error("attempting to use AuthContext outside of a valid provider"),
     connection: undefined,
     provider: undefined,
     _solbondProgram: () => console.error("attempting to use AuthContext outside of a valid provider"),
@@ -39,6 +45,7 @@ export function useQPoolUserTool() {
 export function QPoolsProvider(props: any) {
 
     const [qPoolsUser, setQPoolsUser] = useState<QPoolsUser | undefined>(undefined);
+    const [qPoolsStats, setQPoolsStats] = useState<QPoolsStats | undefined>(undefined);
 
     const [connection, setConnection] = useState<Connection | undefined>(undefined);
     const [provider, setProvider] = useState<Provider | undefined>(undefined);
@@ -47,6 +54,39 @@ export function QPoolsProvider(props: any) {
 
     const [currencyMint, setCurrencyMint] = useState<Token | undefined>(undefined);
     const [QPTokenMint, setQPTokenMint] = useState<Token | undefined>(undefined);
+
+    const initializeQPoolsStatsTool = () => {
+        console.log("InitializeQPoolsStatsTool");
+        console.log("Cluster URL is: ", String(process.env.NEXT_PUBLIC_CLUSTER_URL));
+        let _connection: Connection;
+        let clusterName = String(process.env.NEXT_PUBLIC_CLUSTER_NAME);console.log("Cluster name is: ", clusterName);
+        if (clusterName === "localnet") {
+            let localClusterUrl = String(process.env.NEXT_PUBLIC_CLUSTER_URL);
+            _connection = new Connection(localClusterUrl, 'confirmed');
+        } else if (clusterName === "devnet") {
+            _connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+        } else if (clusterName === "testnet") {
+            _connection = new Connection(clusterApiUrl('testnet'), 'confirmed');
+        } else if (clusterName === "mainnet") {
+            _connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
+        } else {
+            throw Error("Cluster is not defined properly! {$clusterName}");
+        }
+        setConnection(_connection);
+        let _currencyMint = new Token(
+            _connection,
+            MOCK.DEV.SOL,
+            new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
+            airdropAdmin
+        );
+        setCurrencyMint(_currencyMint);
+        let newQpoolsStates = new QPoolsStats(_connection, _currencyMint);
+        console.log("Setting the qpools stats newly, ", newQpoolsStates);
+        setQPoolsStats(newQpoolsStates);
+
+        return;
+
+    }
 
     // Make a creator that loads the qPoolObject if it not created yet
     const initializeQPoolsUserTool = async (walletContext: any) => {
@@ -92,16 +132,15 @@ export function QPoolsProvider(props: any) {
 
         let _currencyMint = new Token(
             _connection,
-            MOCK.SOL,
+            MOCK.DEV.SOL,
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
         // Will be defined based on the specific pool account ...
         // Actually, this will most likely be a PDA-based one ...
-        // TODO: Load this from the protocol?
         let _QPTokenMint = new Token(
             _connection,
-            new PublicKey("68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK"),
+            new PublicKey("9UbV6cUch9die3EwEaJpPBjQmP6J5TyYdmVGAkZCowdY"),  // 9UbV6cUch9die3EwEaJpPBjQmP6J5TyYdmVGAkZCowdY  // 68wyW3CDdreuwxxE8VcbhdZSGodfrEHQqVWTzuzYp4ZK
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );
@@ -137,7 +176,9 @@ export function QPoolsProvider(props: any) {
 
     const value: IQPool = {
         qPoolsUser,
+        qPoolsStats,
         initializeQPoolsUserTool,
+        initializeQPoolsStatsTool,
         connection,
         provider,
         _solbondProgram,

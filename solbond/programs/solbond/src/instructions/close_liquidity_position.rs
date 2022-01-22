@@ -103,8 +103,6 @@ pub fn handler(
         reserve_y: ctx.accounts.reserve_y.to_account_info(),
         program_authority: ctx.accounts.program_authority.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
-
-        // payer: ctx.accounts.initializer.to_account_info(),
     };
     let invariant_program = ctx.accounts.invariant_program.to_account_info();
 
@@ -124,19 +122,6 @@ pub fn handler(
         lower_tick_index,
         upper_tick_index
     )?;
-
-
-    // // Calculate how much currency is in the bond
-    // let available_currency: u64 = ctx.accounts.bond_pool_currency_account.amount;
-    //
-    // // For now, assume we provide the same amount of liquidity to all pools
-    // // So we don't have to calculate the weightings
-    // let fraction_per_pool = calculate_amount_per_pool(available_currency);
-    //
-    // // Make swaps, and deposit this much to the pool
-    // for i in 0..fraction_per_pool.len() {
-    //
-    // }
 
     Ok(())
 }

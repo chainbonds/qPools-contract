@@ -225,6 +225,28 @@ pub mod solbond {
         )
     }
 
+    pub fn create_tvl(
+        ctx: Context<CreateTvl>,
+        tvl_account_bump: u8
+    ) -> ProgramResult {
+        instructions::create_tvl_account::handler(
+            ctx,
+            tvl_account_bump
+        )
+    }
+
+    pub fn set_tvl(
+        ctx: Context<SetTvl>,
+        new_tvl_in_usd: u64,
+        tvl_account_bump: u8
+    ) -> ProgramResult {
+        instructions::set_tvl::handler(
+            ctx,
+            new_tvl_in_usd,
+            tvl_account_bump
+        )
+    }
+
 }
 
 

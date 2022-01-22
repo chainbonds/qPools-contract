@@ -719,6 +719,92 @@ export type SolbondIdl = {
                     "type": "i32"
                 }
             ]
+        },
+        {
+            "name": "createTvl",
+            "accounts": [
+                {
+                    "name": "tvlAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "poolAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "clock",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "tvlAccountBump",
+                    "type": "u8"
+                }
+            ]
+        },
+        {
+            "name": "setTvl",
+            "accounts": [
+                {
+                    "name": "tvlAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "poolAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "clock",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newTvlInUsd",
+                    "type": "u64"
+                },
+                {
+                    "name": "tvlAccountBump",
+                    "type": "u8"
+                }
+            ]
         }
     ],
     "accounts": [
@@ -834,6 +920,18 @@ export type SolbondIdl = {
                     {
                         "name": "bumpPoolList",
                         "type": "u8"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "TvlInfoAccount",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "tvlInUsdc",
+                        "type": "u64"
                     }
                 ]
             }
@@ -1677,6 +1775,92 @@ export const IDL: SolbondIdl = {
                     "type": "i32"
                 }
             ]
+        },
+        {
+            "name": "createTvl",
+            "accounts": [
+                {
+                    "name": "tvlAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "poolAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "clock",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "tvlAccountBump",
+                    "type": "u8"
+                }
+            ]
+        },
+        {
+            "name": "setTvl",
+            "accounts": [
+                {
+                    "name": "tvlAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "poolAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "clock",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newTvlInUsd",
+                    "type": "u64"
+                },
+                {
+                    "name": "tvlAccountBump",
+                    "type": "u8"
+                }
+            ]
         }
     ],
     "accounts": [
@@ -1792,6 +1976,18 @@ export const IDL: SolbondIdl = {
                     {
                         "name": "bumpPoolList",
                         "type": "u8"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "TvlInfoAccount",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "tvlInUsdc",
+                        "type": "u64"
                     }
                 ]
             }

@@ -5,11 +5,13 @@ use crate::state::TvlInfoAccount;
 
 #[derive(Accounts)]
 #[instruction(
-    new_tvl_in_usd: u64,
     tvl_account_bump: u8
 )]
-pub struct SetTvl<'info> {
+pub struct CreateTvl<'info> {
     #[account(
+        init,
+        payer = initializer,
+        space = 64,
         seeds = [pool_account.key().as_ref(), b"tvlInfoAccount1"],
         bump = tvl_account_bump
     )]
@@ -25,15 +27,11 @@ pub struct SetTvl<'info> {
 }
 
 pub fn handler(
-    ctx: Context<SetTvl>,
-    new_tvl_in_usd: u64,
+    ctx: Context<CreateTvl>,
     tvl_account_bump: u8
 ) -> ProgramResult {
 
     let tvl_account = &mut ctx.accounts.tvl_account;
-    if new_tvl_in_usd > 0 {
-        tvl_account.tvl_in_usdc = new_tvl_in_usd;
-    }
 
     Ok(())
 }

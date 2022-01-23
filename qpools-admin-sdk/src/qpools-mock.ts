@@ -21,7 +21,7 @@ import {assert} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {QPoolsAdmin} from "./qpools-admin";
 import {getLiquidityByX} from "@invariant-labs/sdk/lib/math";
-import {QPair} from "./q-pair";
+import {QPair} from "@qpools/sdk/q-pair";
 import {createToken} from "./invariant-utils";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 import {getPayer} from "@qpools/sdk";

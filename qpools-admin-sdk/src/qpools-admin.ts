@@ -26,7 +26,7 @@ import {assert, use} from "chai";
 import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
 import {calculatePriceAfterSlippage, isInitialized} from "@invariant-labs/sdk/lib/math";
 import {getInvariantProgram} from "./invariant-program";
-import {QPair} from "./q-pair";
+import {QPair} from "@qpools/sdk/q-pair";
 
 import {createAssociatedTokenAccountSend, getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 // @ts-ignore

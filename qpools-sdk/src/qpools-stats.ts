@@ -1,23 +1,23 @@
-import {ConfirmOptions, Connection, PublicKey} from "@solana/web3.js";
+import {Connection, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {BN, Program, Provider, utils} from "@project-serum/anchor";
-import {NETWORK} from "./cluster";
 import {getSolbondProgram} from "./solbond-program";
-import {Wallet} from "@project-serum/anchor/dist/cjs/provider";
 import {BondPoolAccount} from "./types/bondPoolAccount";
 import airdropAdmin from "./airdropAdmin";
 import {SimpleWallet} from "easy-spl";
-import NodeWallet from "@project-serum/anchor/dist/esm/nodewallet";
-import InternalWallet from "easy-spl/dist/wallet/internal";
 import {MOCK} from "./const";
 import {getPythProgramKeyForCluster, PythConnection} from "@pythnetwork/client";
 import {delay, getAssociatedTokenAddressOffCurve} from "./utils";
-import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
-import {Network, Pair} from "../../solbond/deps/protocol/sdk";
-import {Market} from "@invariant-labs/sdk";
-import {PoolStructure, Position, PositionList} from "../../solbond/deps/protocol/sdk/lib/market";
-import {fromFee} from "../../solbond/deps/protocol/sdk/lib/utils";
+import {Market, Pair} from "@invariant-labs/sdk";
+import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
+import {fromFee} from "@invariant-labs/sdk/lib/utils";
+
+export enum Network {
+    LOCAL,
+    DEV
+}
+
 
 export class QPoolsStats {
 

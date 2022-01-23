@@ -19,22 +19,22 @@ export class QPoolsUser {
     public provider: Provider;
 
     // Accounts
-    // // @ts-ignore
+    // @ts-ignore
     public qPoolAccount: PublicKey;
-    // // @ts-ignore
+    // @ts-ignore
     public bumpQPoolAccount: number;
-    // // @ts-ignore
+    // @ts-ignore
     public QPTokenMint: Token;
-    // // @ts-ignore
+    // @ts-ignore
     public currencyMint: Token;
 
-    // // @ts-ignore
+    // @ts-ignore
     public qPoolQPAccount: PublicKey;
-    // // @ts-ignore
+    // @ts-ignore
     public purchaserCurrencyAccount: PublicKey;
-    // // @ts-ignore
+    // @ts-ignore
     public purchaserQPTAccount: PublicKey;
-    // // @ts-ignore
+    // @ts-ignore
     public qPoolCurrencyAccount: PublicKey;
 
     constructor(

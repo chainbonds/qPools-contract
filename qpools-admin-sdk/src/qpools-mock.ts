@@ -25,7 +25,6 @@ import {QPair} from "@qpools/sdk/src/q-pair";
 import {createToken} from "./invariant-utils";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 import {getPayer} from "@qpools/sdk";
-import {CreateStake} from "../../solbond/deps/protocol/sdk-staker/src/staker";
 
 // some invariant seeds
 const POSITION_SEED = 'positionv1'

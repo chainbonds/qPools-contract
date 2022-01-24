@@ -15,7 +15,6 @@
         "easy-spl": "^0.5.0"
     },
     "devDependencies": {
-        "@invariant-labs/sdk": "file:./deps/protocol/sdk",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.11.7",
         "chai": "^4.3.4",

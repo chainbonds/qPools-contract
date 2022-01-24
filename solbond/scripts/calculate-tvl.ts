@@ -6,7 +6,6 @@ import {getSolbondProgram, MOCK} from "@qpools/sdk";
 import {Token} from "@solana/spl-token";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {delay} from "@qpools/sdk/lib/utils";
-import {signAndSend} from "@invariant-labs/sdk";
 
 /**
  * Calculate TVL and
@@ -101,7 +100,7 @@ const main = async () => {
             }
         )
         txs.add(tx1);
-        let sg = await signAndSend(txs, [wallet], connection);
+        let sg = await connection.sendTransaction(txs, [wallet]);
         await connection.confirmTransaction(sg);
         console.log("Transaction is: ", sg);
     } catch (error) {
@@ -125,7 +124,7 @@ const main = async () => {
         }
     )
     txs.add(tx1);
-    let sg = await signAndSend(txs, [wallet], connection);
+    let sg = await connection.sendTransaction(txs, [wallet]);
     await connection.confirmTransaction(sg);
     console.log("Transaction is: ", sg);
 

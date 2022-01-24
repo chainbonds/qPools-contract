@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 use crate::state::TvlInfoAccount;
+use crate::utils::seeds;
 
 #[derive(Accounts)]
 #[instruction(
@@ -10,7 +11,7 @@ use crate::state::TvlInfoAccount;
 )]
 pub struct SetTvl<'info> {
     #[account(
-        seeds = [pool_account.key().as_ref(), b"tvlInfoAccount1"],
+        seeds = [pool_account.key().as_ref(), seeds::TVL_INFO_ACCOUNT],
         bump = tvl_account_bump
     )]
     pub tvl_account: Account<'info, TvlInfoAccount>,

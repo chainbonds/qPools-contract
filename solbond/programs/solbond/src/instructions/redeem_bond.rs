@@ -6,6 +6,7 @@ use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 use crate::ErrorCode;
 use crate::state::{BondPoolAccount, TvlInfoAccount};
 use crate::utils::functional::calculate_currency_token_to_be_distributed;
+use crate::utils::seeds;
 
 /*
 
@@ -62,7 +63,7 @@ pub struct RedeemBond<'info> {
     pub purchaser_currency_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
-        seeds = [bond_pool_account.key().as_ref(), b"tvlInfoAccount1"],
+        seeds = [bond_pool_account.key().as_ref(), seeds::TVL_INFO_ACCOUNT],
         bump = _bump_tvl_account
     )]
     pub tvl_account: Account<'info, TvlInfoAccount>,
@@ -140,7 +141,7 @@ pub fn handler(
             cpi_program,
             cpi_accounts,
     &[[
-                    ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
+                    ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), seeds::BOND_POOL_ACCOUNT,
                     &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
                 ].as_ref()
             ],
@@ -163,7 +164,7 @@ pub fn handler(
             cpi_program,
             cpi_accounts,
             &[[
-                ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1",
+                ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), seeds::BOND_POOL_ACCOUNT,
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
             ].as_ref()],
         ), currency_token_to_be_distributed)?;

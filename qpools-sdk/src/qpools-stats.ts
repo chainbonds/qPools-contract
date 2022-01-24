@@ -10,6 +10,7 @@ import {MOCK} from "./const";
 import {getPythProgramKeyForCluster, PythConnection} from "@pythnetwork/client";
 import {delay, getAssociatedTokenAddressOffCurve} from "./utils";
 import {TvlInUsdc} from "./types/tvlAccount";
+import {SEED} from "./seeds";
 
 export enum Network {
     LOCAL,
@@ -93,13 +94,13 @@ export class QPoolsStats {
         // Now get the associated token addresses for all the other accounts
         // TODO: Refactor this!
         PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
 
 
             PublicKey.findProgramAddress(
-                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
                 this.solbondProgram.programId
             ).then(([tvlAccount, bumpTvlAccount]) => {
                 this.tvlAccount = tvlAccount;

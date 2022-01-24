@@ -9,6 +9,7 @@ import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BondPoolAccount} from "./types/bondPoolAccount";
 import {getSolbondProgram} from "./solbond-program";
 import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
+import {SEED} from "./seeds";
 
 export class QPoolsUser {
 
@@ -64,12 +65,12 @@ export class QPoolsUser {
         this.currencyMint = currencyMint;
 
         PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
 
             PublicKey.findProgramAddress(
-                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
                 this.solbondProgram.programId
             ).then(([tvlAccount, bumpTvlAccount]) => {
                 this.tvlAccount = tvlAccount;
@@ -103,11 +104,11 @@ export class QPoolsUser {
             throw Error("currencyMintPubkey is empty!");
         }
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [currencyMintPubkey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [currencyMintPubkey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
         [this.tvlAccount, this.bumpTvlAccount] = await PublicKey.findProgramAddress(
-            [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+            [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
             this.solbondProgram.programId
         );
 

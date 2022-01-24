@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use crate::state::{BondPoolAccount, TvlInfoAccount};
+use crate::utils::seeds;
 
 #[derive(Accounts)]
 #[instruction(
@@ -16,7 +17,7 @@ pub struct InitializeBondPool<'info> {
         init,
         payer = initializer,
         space = 8 + BondPoolAccount::LEN,
-        seeds = [bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1"], bump = _bump_bond_pool_account
+        seeds = [bond_pool_currency_token_mint.key().as_ref(), seeds::BOND_POOL_ACCOUNT], bump = _bump_bond_pool_account
     )]
     pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
 
@@ -52,7 +53,7 @@ pub struct InitializeBondPool<'info> {
         init,
         payer = initializer,
         space = 64,
-        seeds = [bond_pool_account.key().as_ref(), b"tvlInfoAccount1"],
+        seeds = [bond_pool_account.key().as_ref(), seeds::TVL_INFO_ACCOUNT],
         bump = _bump_tvl_account
     )]
     pub tvl_account: Account<'info, TvlInfoAccount>,

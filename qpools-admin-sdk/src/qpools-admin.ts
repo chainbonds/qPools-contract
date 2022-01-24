@@ -14,6 +14,7 @@ import {
 } from "@qpools/sdk";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {IWallet} from "@qpools/sdk/lib/utils";
+import {SEED} from "@qpools/sdk/lib/seeds";
 
 
 function delay(ms: number) {
@@ -87,7 +88,7 @@ export class QPoolsAdmin {
     async loadExistingQPTReserve() {
         console.log("Fetching QPT reserve...");
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
 
@@ -133,11 +134,11 @@ export class QPoolsAdmin {
         // Generate qPoolAccount
         console.log("BEGIN: initializeQPTReserve");
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
         [this.tvlAccount, this.bumpTvlAccount] = await PublicKey.findProgramAddress(
-            [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+            [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
             this.solbondProgram.programId
         );
 

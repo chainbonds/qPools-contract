@@ -7,6 +7,7 @@ import {Token} from "@solana/spl-token";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {delay} from "@qpools/sdk/lib/utils";
 import {TvlInUsdc} from "@qpools/sdk/lib/types/tvlAccount";
+import {SEED} from "@qpools/sdk/lib/seeds";
 
 /**
  * Calculate TVL and
@@ -70,14 +71,14 @@ const main = async () => {
         // Get the qPoolAccount
         console.log("QPoolAccount");
         let [qPoolAccount, bumpQPoolAccount] = await PublicKey.findProgramAddress(
-            [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             solbondProgram.programId
         );
 
         // Get the account addresses
         console.log("TVL");
         let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
-            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
             solbondProgram.programId
         );
 

@@ -239,8 +239,8 @@ export class QPoolsStats {
         // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.MSOL, this.qPoolAccount);
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += price_MSOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
-        console.log("Balances are: ", MOCK.DEV.SOL.toString(), this.qPoolAccount.toString());
-        associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SOL, this.qPoolAccount);
+        console.log("Balances are: ", MOCK.DEV.SABER_USDC.toString(), this.qPoolAccount.toString());
+        associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.qPoolAccount);
 
         console.log("account fetched is: ", associatedTokenAccount.toString());
         _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;

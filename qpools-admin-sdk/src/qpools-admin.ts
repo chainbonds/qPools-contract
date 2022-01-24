@@ -133,6 +133,12 @@ export class QPoolsAdmin {
 
         // Generate qPoolAccount
         console.log("BEGIN: initializeQPTReserve");
+
+        console.log("Using seeds: ");
+        console.log(SEED.BOND_POOL_ACCOUNT);
+        console.log(SEED.TVL_INFO_ACCOUNT);
+        console.log(this.currencyMint.publicKey.toString());
+
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
             [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
@@ -141,6 +147,10 @@ export class QPoolsAdmin {
             [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
             this.solbondProgram.programId
         );
+
+        console.log("Retrieved accounts: ");
+        console.log(this.qPoolAccount.toString());
+        console.log(this.tvlAccount.toString());
 
         this.QPTokenMint = await createMint(
             this.provider,

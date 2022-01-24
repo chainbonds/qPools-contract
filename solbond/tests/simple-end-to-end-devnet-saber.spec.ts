@@ -105,8 +105,8 @@ describe('saber-devnet', () => {
     it("#createCurrencyMint", async () => {
         assert.ok(solbondProgram.programId, String(solbondProgram.programId));
         // Take the currency mint from the user SDK
-        currencyMint = new Token(connection, MOCK.DEV.SOL, solbondProgram.programId, currencyOwner);
-        assert.ok(currencyMint.publicKey.equals(MOCK.DEV.SOL), currencyMint.publicKey.toString());
+        currencyMint = new Token(connection, MOCK.DEV.SABER_USDC, solbondProgram.programId, currencyOwner);
+        assert.ok(currencyMint.publicKey.equals(MOCK.DEV.SABER_USDC), currencyMint.publicKey.toString());
     })
 
     // All token accounts

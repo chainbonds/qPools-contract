@@ -75,7 +75,7 @@ export function QPoolsProvider(props: any) {
         setConnection(_connection);
         let _currencyMint = new Token(
             _connection,
-            MOCK.DEV.SOL,
+            MOCK.DEV.SABER_USDC,
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             airdropAdmin
         );
@@ -132,7 +132,7 @@ export function QPoolsProvider(props: any) {
 
         let _currencyMint = new Token(
             _connection,
-            MOCK.DEV.SOL,
+            MOCK.DEV.SABER_USDC,
             new PublicKey("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"),
             payer
         );

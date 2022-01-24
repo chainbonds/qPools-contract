@@ -47,7 +47,7 @@ const main = async () => {
         console.log("Create Token");
         let currencyMint: Token = new Token(
             connection,
-            MOCK.DEV.SOL,
+            MOCK.DEV.SABER_USDC,
             solbondProgram.programId,
             wallet
         );
@@ -104,6 +104,7 @@ const main = async () => {
         console.log("Transaction is: ", sg);
 
         console.log("Tvl set!");
+        console.log("TVL Account is:", tvlAccount.toString());
 
         let tvlInUsdc = (await solbondProgram.account.TvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
         console.log("TVL in USDC is: ", tvlInUsdc);

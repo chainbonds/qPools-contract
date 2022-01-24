@@ -60,7 +60,7 @@ export const AirdropButton: FC = ({}) => {
         let transaction = new Transaction();
         let mintToInstruction = Token.createMintToInstruction(
             TOKEN_PROGRAM_ID,
-            MOCK.DEV.SOL,
+            MOCK.DEV.SABER_USDC,
             currencyMintUserAccount,
             airdropAdmin.publicKey,
             [],

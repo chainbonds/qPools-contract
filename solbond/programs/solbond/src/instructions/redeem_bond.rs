@@ -4,7 +4,7 @@ use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 use crate::ErrorCode;
-use crate::state::BondPoolAccount;
+use crate::state::{BondPoolAccount, TvlInfoAccount};
 use crate::utils::functional::calculate_currency_token_to_be_distributed;
 
 /*
@@ -31,12 +31,13 @@ use crate::utils::functional::calculate_currency_token_to_be_distributed;
 #[derive(Accounts)]
 #[instruction(
 reedemable_amount_in_lamports: u64,
+_bump_tvl_account: u8
 )]
 pub struct RedeemBond<'info> {
 
     // Any Bond Pool Accounts
     #[account(mut)]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
     #[account(
         mut,
         // constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
@@ -60,6 +61,12 @@ pub struct RedeemBond<'info> {
     #[account(mut, constraint = purchaser_currency_token_account.owner == purchaser.key())]
     pub purchaser_currency_token_account: Box<Account<'info, TokenAccount>>,
 
+    #[account(
+        seeds = [bond_pool_account.key().as_ref(), b"tvlInfoAccount1"],
+        bump = _bump_tvl_account
+    )]
+    pub tvl_account: Account<'info, TvlInfoAccount>,
+
     // The standard accounts
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
@@ -69,7 +76,8 @@ pub struct RedeemBond<'info> {
 
 pub fn handler(
     ctx: Context<RedeemBond>,
-    redeemable_amount_raw: u64
+    redeemable_amount_raw: u64,
+    _bump_tvl_account: u8
 ) -> ProgramResult {
     msg!("SOLBOND: REDEEM_BOND");
 

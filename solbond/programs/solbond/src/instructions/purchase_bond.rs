@@ -3,20 +3,20 @@ use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 
 use crate::ErrorCode;
-use crate::state::BondPoolAccount;
+use crate::state::{BondPoolAccount, TvlInfoAccount};
 use crate::utils::functional::calculate_redeemables_to_be_distributed;
 
 #[derive(Accounts)]
 #[instruction(
     currency_token_amount_raw: u64,
+    _bump_tvl_account: u8
 )]
 pub struct PurchaseBond<'info> {
 
     // All Bond Pool Accounts
     #[account(mut)]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
-    // Checking for seeds here is probably overkill honestly... right?
-    // seeds = [bond_pool_account.key().as_ref(), b"bondPoolSolanaAccount"], bump = _bump_bond_pool_solana_accounz
+    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
+
     #[account(
         mut,
         constraint = bond_pool_redeemable_mint.mint_authority == COption::Some(bond_pool_account.key())
@@ -29,6 +29,12 @@ pub struct PurchaseBond<'info> {
     pub bond_pool_currency_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub bond_pool_redeemable_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        seeds = [bond_pool_account.key().as_ref(), b"tvlInfoAccount1"],
+        bump = _bump_tvl_account
+    )]
+    pub tvl_account: Account<'info, TvlInfoAccount>,
 
     // All Purchaser Accounts
     #[account(signer, mut)]
@@ -53,7 +59,8 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
 
 pub fn handler(
     ctx: Context<PurchaseBond>,
-    currency_token_amount_raw: u64
+    currency_token_amount_raw: u64,
+    _bump_tvl_account: u8
 ) -> ProgramResult {
 
     if currency_token_amount_raw <= 0 {

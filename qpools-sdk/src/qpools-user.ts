@@ -18,6 +18,9 @@ export class QPoolsUser {
     public solbondProgram: Program;
     public provider: Provider;
 
+    public tvlAccount: PublicKey;
+    public bumpTvlAccount: number;
+
     // Accounts
     // @ts-ignore
     public qPoolAccount: PublicKey;
@@ -64,6 +67,15 @@ export class QPoolsUser {
             [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
+
+            PublicKey.findProgramAddress(
+                [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+                this.solbondProgram.programId
+            ).then(([tvlAccount, bumpTvlAccount]) => {
+                this.tvlAccount = tvlAccount;
+                this.bumpTvlAccount = bumpTvlAccount;
+            });
+
             this.qPoolAccount = _qPoolAccount;
             this.bumpQPoolAccount = _bumpQPoolAccount;
         });
@@ -92,6 +104,10 @@ export class QPoolsUser {
         }
         [this.qPoolAccount, this.bumpQPoolAccount] = await PublicKey.findProgramAddress(
             [currencyMintPubkey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            this.solbondProgram.programId
+        );
+        [this.tvlAccount, this.bumpTvlAccount] = await PublicKey.findProgramAddress(
+            [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
             this.solbondProgram.programId
         );
 
@@ -214,10 +230,12 @@ export class QPoolsUser {
             console.log("Sending ...");
             console.log({
                 currency_amount_raw: new BN(currency_amount_raw),
+                bumpTvlAccount: this.bumpTvlAccount,
                 body: {
                     accounts: {
 
                         bondPoolAccount: this.qPoolAccount,
+                        tvlAccount: this.tvlAccount,
 
                         bondPoolRedeemableMint: this.QPTokenMint.publicKey,
                         bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
@@ -254,10 +272,12 @@ export class QPoolsUser {
 
         const tx = await this.solbondProgram.rpc.purchaseBond(
             new BN(currency_amount_raw),
+            this.bumpTvlAccount,
             {
                 accounts: {
 
                     bondPoolAccount: this.qPoolAccount,
+                    tvlAccount: this.tvlAccount,
 
                     bondPoolRedeemableMint: this.QPTokenMint.publicKey,
                     bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
@@ -320,8 +340,10 @@ export class QPoolsUser {
             console.log(
                 {
                     qpt_amount_raw: new BN(qpt_amount_raw),
+                    bumpTvlAccount: this.bumpTvlAccount,
                     body: {
                         accounts: {
+                            tvlAccount: this.tvlAccount,
                             bondPoolAccount: this.qPoolAccount,
                             bondPoolRedeemableMint: this.QPTokenMint.publicKey,
                             bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
@@ -361,9 +383,11 @@ export class QPoolsUser {
         const initializeTx = await this.solbondProgram.rpc.redeemBond(
             // Need to assign less than there is ...
             new BN(qpt_amount_raw),
+            this.bumpTvlAccount,
             {
                 accounts: {
                     bondPoolAccount: this.qPoolAccount,
+                    tvlAccount: this.tvlAccount,
                     bondPoolRedeemableMint: this.QPTokenMint.publicKey,
                     bondPoolCurrencyTokenMint: this.currencyMint.publicKey,
                     bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,

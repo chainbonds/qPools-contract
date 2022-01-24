@@ -39,6 +39,9 @@ export class QPoolsAdmin {
     public qPoolQPAccount: PublicKey | undefined;
     public qPoolCurrencyAccount: PublicKey | undefined;
 
+    public tvlAccount: PublicKey |  null = null;
+    public bumpTvlAccount: number | null = null;
+
     public pairs: QPair[] | undefined;
 
     public QPReserveTokens: Record<string, PublicKey> = {};
@@ -133,6 +136,11 @@ export class QPoolsAdmin {
             [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         );
+        [this.tvlAccount, this.bumpTvlAccount] = await PublicKey.findProgramAddress(
+            [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+            this.solbondProgram.programId
+        );
+
         this.QPTokenMint = await createMint(
             this.provider,
             this.wallet,
@@ -156,6 +164,7 @@ export class QPoolsAdmin {
         /* Now make the RPC call, to initialize a qPool */
         const initializeTx = await this.solbondProgram.rpc.initializeBondPool(
             this.bumpQPoolAccount,
+            this.bumpTvlAccount,
             {
                 accounts: {
                     bondPoolAccount: this.qPoolAccount,
@@ -164,6 +173,7 @@ export class QPoolsAdmin {
                     bondPoolRedeemableTokenAccount: this.qPoolQPAccount,
                     bondPoolCurrencyTokenAccount: this.qPoolCurrencyAccount,
                     initializer: this.wallet.publicKey,
+                    tvlAccount: this.tvlAccount,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: web3.SYSVAR_CLOCK_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,

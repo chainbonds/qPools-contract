@@ -18,7 +18,7 @@ pub struct InitializeBondPool<'info> {
         space = 8 + BondPoolAccount::LEN,
         seeds = [bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1"], bump = _bump_bond_pool_account
     )]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
 
     // #[account(
     //     init,

@@ -122,9 +122,14 @@ pub mod solbond {
     pub fn purchase_bond(
         ctx: Context<PurchaseBond>,
         amount_raw: u64,
+        _bump_tvl_account: u8
     ) -> ProgramResult {
 
-        instructions::purchase_bond::handler(ctx, amount_raw)
+        instructions::purchase_bond::handler(
+            ctx,
+            amount_raw,
+            _bump_tvl_account
+        )
     }
 
     /**
@@ -137,10 +142,15 @@ pub mod solbond {
     */
     pub fn redeem_bond(
         ctx: Context<RedeemBond>,
-        redeemable_amount_raw: u64
+        redeemable_amount_raw: u64,
+        _bump_tvl_account: u8
     ) -> ProgramResult {
 
-        instructions::redeem_bond::handler(ctx, redeemable_amount_raw)
+        instructions::redeem_bond::handler(
+            ctx,
+            redeemable_amount_raw,
+            _bump_tvl_account
+        )
     }
 
     pub fn set_tvl(

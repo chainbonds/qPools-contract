@@ -6,88 +6,86 @@ import {getSolbondProgram, MOCK} from "@qpools/sdk";
 import {Token} from "@solana/spl-token";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {delay} from "@qpools/sdk/lib/utils";
+import {TvlInUsdc} from "@qpools/sdk/lib/types/tvlAccount";
 
 /**
  * Calculate TVL and
  *
  */
 
-interface TvlInUsdc {
-    tvlInUsdc: BN
-}
-
 const main = async () => {
 
     // I guess wrap this in a setInterval call?
     // Or do the setInterval through bash
 
-    let cluster: string = clusterApiUrl('devnet');
+    setInterval(async () => {
 
-    console.log("Cluster is: ", cluster);
-    const provider = Provider.local(cluster,
-        {
-            skipPreflight: true
-        }
-    );
-    const connection = provider.connection;
-    // @ts-expect-error
-    const wallet = provider.wallet.payer as Keypair;
-    // const walletSigner = provider.wallet;
-    // // @ts-expect-error
-    // const wallet = provider.wallet.payer as Signer;
+        console.log("Triggering TVL Calculation and writing ...");
+        let cluster: string = clusterApiUrl('devnet');
 
-    // Get the rpc calls
-    console.log("GetSolbondProgram");
-    let solbondProgram = await getSolbondProgram(
-        connection, provider, NETWORK.DEVNET
-    );
+        console.log("Cluster is: ", cluster);
+        const provider = Provider.local(cluster,
+            {
+                skipPreflight: true
+            }
+        );
+        const connection = provider.connection;
+        // @ts-expect-error
+        const wallet = provider.wallet.payer as Keypair;
+        // const walletSigner = provider.wallet;
+        // // @ts-expect-error
+        // const wallet = provider.wallet.payer as Signer;
 
-    // Create a new currency mint token
-    console.log("Create Token");
-    let currencyMint: Token = new Token(
-        connection,
-        MOCK.DEV.SOL,
-        solbondProgram.programId,
-        wallet
-    );
+        // Get the rpc calls
+        console.log("GetSolbondProgram");
+        let solbondProgram = await getSolbondProgram(
+            connection, provider, NETWORK.DEVNET
+        );
 
-    // Calculate TVL
-    console.log("Create QPoolsStats");
-    let qpoolsStats: QPoolsStats = new QPoolsStats(
-        connection,
-        currencyMint
-    );
+        // Create a new currency mint token
+        console.log("Create Token");
+        let currencyMint: Token = new Token(
+            connection,
+            MOCK.DEV.SOL,
+            solbondProgram.programId,
+            wallet
+        );
 
-    // TODO: The program address inside is not finishing when this is triggered!!
-    // Maybe put this in a separately
-    await delay(2000);
-    // Damn, dafuq, this was it really! I guess this is also what caused issues on the frontend!
+        // Calculate TVL
+        console.log("Create QPoolsStats");
+        let qpoolsStats: QPoolsStats = new QPoolsStats(
+            connection,
+            currencyMint
+        );
+        // TODO: The program address inside is not finishing when this is triggered!!
+        // Maybe put this in a separately
+        await delay(2000);
+        // Damn, dafuq, this was it really! I guess this is also what caused issues on the frontend!
 
-    console.log("Calculate TVL");
-    let {tvl} = await qpoolsStats.calculateTVL();
+        console.log("Calculate TVL");
+        let {tvl} = await qpoolsStats.calculateTVL();
 
-    // Run the RPC call
+        // Run the RPC call
 
-    // Get the qPoolAccount
-    console.log("QPoolAccount");
-    let [qPoolAccount, bumpQPoolAccount] = await PublicKey.findProgramAddress(
-        [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
-        solbondProgram.programId
-    );
+        // Get the qPoolAccount
+        console.log("QPoolAccount");
+        let [qPoolAccount, bumpQPoolAccount] = await PublicKey.findProgramAddress(
+            [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            solbondProgram.programId
+        );
 
-    // Get the account addresses
-    console.log("TVL");
-    let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
-        [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
-        solbondProgram.programId
-    );
+        // Get the account addresses
+        console.log("TVL");
+        let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+            solbondProgram.programId
+        );
 
-    // Create TVL, if it doesn't exist yet
-
-    try {
         console.log("RPC");
+        console.log("Writing TVL: ", tvl.toString());
         let txs = new Transaction();
-        const tx1 = solbondProgram.instruction.createTvl(
+        const tx1 = solbondProgram.instruction.setTvl(
+            new BN(tvl),
             tvlAccountBump, {
                 accounts: {
                     tvlAccount: tvlAccount,
@@ -103,35 +101,13 @@ const main = async () => {
         let sg = await connection.sendTransaction(txs, [wallet]);
         await connection.confirmTransaction(sg);
         console.log("Transaction is: ", sg);
-    } catch (error) {
-        console.log(error);
-    }
 
+        console.log("Tvl set!");
 
-    console.log("RPC");
-    let txs = new Transaction();
-    const tx1 = solbondProgram.instruction.setTvl(
-        new BN(tvl),
-        tvlAccountBump, {
-            accounts: {
-                tvlAccount: tvlAccount,
-                initializer: wallet.publicKey,
-                poolAccount: qPoolAccount,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
-                systemProgram: anchor.web3.SystemProgram.programId
-            },
-        }
-    )
-    txs.add(tx1);
-    let sg = await connection.sendTransaction(txs, [wallet]);
-    await connection.confirmTransaction(sg);
-    console.log("Transaction is: ", sg);
+        let tvlInUsdc = (await solbondProgram.account.TvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
+        console.log("TVL in USDC is: ", tvlInUsdc);
 
-    console.log("Tvl set!");
-
-    let tvlInUsdc = (await solbondProgram.account.TvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
-    console.log("TVL in USDC is: ", tvlInUsdc);
+    }, 10000);
 
 }
 

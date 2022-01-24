@@ -69,7 +69,7 @@ export class QPoolsUser {
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
 
             PublicKey.findProgramAddress(
-                [this.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
                 this.solbondProgram.programId
             ).then(([tvlAccount, bumpTvlAccount]) => {
                 this.tvlAccount = tvlAccount;

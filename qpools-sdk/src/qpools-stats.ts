@@ -9,6 +9,7 @@ import {SimpleWallet} from "easy-spl";
 import {MOCK} from "./const";
 import {getPythProgramKeyForCluster, PythConnection} from "@pythnetwork/client";
 import {delay, getAssociatedTokenAddressOffCurve} from "./utils";
+import {TvlInUsdc} from "./types/tvlAccount";
 
 export enum Network {
     LOCAL,
@@ -22,6 +23,9 @@ export class QPoolsStats {
     public provider: Provider;
     public connection: Connection;
     public solbondProgram: Program;
+
+    public tvlAccount: PublicKey;
+    public bumpTvlAccount: number;
 
     public qPoolAccount: PublicKey;
     public bumpQPoolAccount: number;
@@ -92,6 +96,17 @@ export class QPoolsStats {
             [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
+
+
+            PublicKey.findProgramAddress(
+                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("tvlInfoAccount1"))],
+                this.solbondProgram.programId
+            ).then(([tvlAccount, bumpTvlAccount]) => {
+                this.tvlAccount = tvlAccount;
+                this.bumpTvlAccount = bumpTvlAccount;
+            });
+
+
             this.qPoolAccount = _qPoolAccount;
             this.bumpQPoolAccount = _bumpQPoolAccount;
 
@@ -181,6 +196,19 @@ export class QPoolsStats {
 
         let positionListContents = await this.connection.getAccountInfo(positionListAddress);
 
+
+    }
+
+    async fetchTVL(): Promise<{tvl: BN, totalQPT: number}> {
+
+        let tvlInUsdc = (await this.solbondProgram.account.TvlInfoAccount.fetch(this.tvlAccount)) as TvlInUsdc;
+        let tvl = tvlInUsdc.tvlInUsdc;
+
+        // _response = await this.connection.getTokenSupply();
+        let _response = await this.connection.getTokenSupply(this.QPTokenMint.publicKey);
+        let totalQPT = Number(_response.value.amount) / (10**(_response.value.decimals));
+
+        return {tvl, totalQPT};
 
     }
 

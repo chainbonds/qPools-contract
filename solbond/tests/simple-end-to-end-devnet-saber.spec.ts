@@ -20,11 +20,10 @@ import {
     getSolbondProgram,
     MOCK
 } from "@qpools/sdk";
-import {getInvariantProgram, QPair, QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
+import {QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {Token} from "@solana/spl-token";
 import {assert} from "chai";
-import {FEE_TIER, getMarketAddress, Market, Network, Pair} from "@invariant-labs/sdk";
 import * as saber from "@saberhq/stableswap-sdk";
 import {DepositInstruction, SwapInstruction} from "@saberhq/stableswap-sdk/src/instructions/swap";
 import {
@@ -38,7 +37,7 @@ import {
 import {tou64} from "@qpools/sdk/lib/utils";
 import {token} from "easy-spl";
 
-describe('invariant-devnet', () => {
+describe('saber-devnet', () => {
 
     // Get connection and provider
     const provider = Provider.local("https://api.devnet.solana.com");
@@ -71,7 +70,6 @@ describe('invariant-devnet', () => {
     console.log(solbondProgram.programId.toString());
 
     let market: QPoolsAdmin;
-    let invariantMarket: Market;
     let currencyMint: Token;
 
     /** Get a bunch of airdrops to pay for transactions */

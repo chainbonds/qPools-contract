@@ -1,8 +1,6 @@
 {
     "scripts": {
         "test:solbond-only": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/solbond-only.spec.ts",
-        "test:invariant-only-localnet": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/simple-end-to-end-localnet-invariant.spec.ts",
-        "test:invariant-only-devnet": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/simple-end-to-end-devnet-invariant.spec.ts",
         "test:saber-only-devnet": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/simple-end-to-end-devnet-saber.spec.ts",
         "deploy:reserve": "ANCHOR_WALLET=~/.config/solana/id.json npx ts-node scripts/deploy-qpool-reserve.ts",
         "calculate:tvl": "ANCHOR_WALLET=~/.config/solana/id.json npx ts-node scripts/calculate-tvl.ts"

@@ -2,11 +2,12 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::state::BondPoolAccount;
+use crate::state::{BondPoolAccount, TvlInfoAccount};
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_bond_pool_account: u8
+    _bump_bond_pool_account: u8,
+    _bump_tvl_account: u8
 )]
 pub struct InitializeBondPool<'info> {
 
@@ -47,6 +48,15 @@ pub struct InitializeBondPool<'info> {
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
 
+    #[account(
+        init,
+        payer = initializer,
+        space = 64,
+        seeds = [bond_pool_account.key().as_ref(), b"tvlInfoAccount1"],
+        bump = _bump_tvl_account
+    )]
+    pub tvl_account: Account<'info, TvlInfoAccount>,
+
     // The standards accounts
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
@@ -56,7 +66,8 @@ pub struct InitializeBondPool<'info> {
 
 pub fn handler(
     ctx: Context<InitializeBondPool>,
-    _bump_bond_pool_account: u8
+    _bump_bond_pool_account: u8,
+    _bump_tvl_account: u8
 ) -> ProgramResult {
 
     let bond_account = &mut ctx.accounts.bond_pool_account;
@@ -66,6 +77,10 @@ pub fn handler(
     bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
     bond_account.bond_pool_currency_token_account = ctx.accounts.bond_pool_currency_token_account.key();
     bond_account.bump_bond_pool_account = _bump_bond_pool_account;
+
+    // The also set the TVL Account to 0., because right now nothing is in the pool
+    let tvl_account = &mut ctx.accounts.tvl_account;
+    tvl_account.tvl_in_usdc = 0;
 
     Ok(())
 }

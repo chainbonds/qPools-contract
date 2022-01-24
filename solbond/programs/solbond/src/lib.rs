@@ -103,12 +103,14 @@ pub mod solbond {
     */
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
-        _bump_bond_pool_account: u8
+        _bump_bond_pool_account: u8,
+        _bump_tvl_account: u8
     ) -> ProgramResult {
 
         instructions::initialize_bond_pool::handler(
             ctx,
-            _bump_bond_pool_account
+            _bump_bond_pool_account,
+            _bump_tvl_account
         )
     }
 
@@ -139,100 +141,6 @@ pub mod solbond {
     ) -> ProgramResult {
 
         instructions::redeem_bond::handler(ctx, redeemable_amount_raw)
-    }
-
-    /**
-    * Register all the pools that are defined by invariant
-    *
-    */
-    pub fn swap_pair(
-        ctx: Context<SwapPairInstruction>,
-        _bump_bond_pool_account: u8,
-        x_to_y: bool,
-        amount: u64,
-        by_amount_in: bool,
-        sqrt_price_limit: u128,
-    ) -> ProgramResult {
-        instructions::swap_pair::handler(
-            ctx,
-            _bump_bond_pool_account,
-            x_to_y,
-            amount,
-            by_amount_in,
-            sqrt_price_limit,
-        )
-    }
-
-
-    /**
-     * Register all the pools that are defined by invariant
-     *
-     */
-    // Should probably import the Decimal types?
-    pub fn create_liquidity_position(
-        ctx: Context<CreateLiquidityPosition>,
-        _position_bump: u8,
-        _bump_bond_pool_account: u8,
-        _lower_tick_index: i32,
-        _upper_tick_index: i32,
-        liquidity_delta: u128
-    ) -> ProgramResult {
-
-        // For now assume that our portfolio has an equal weight across all pools
-        instructions::create_liquidity_position::handler(
-            ctx,
-            _position_bump,
-            _bump_bond_pool_account,
-            _lower_tick_index,
-            _upper_tick_index,
-            liquidity_delta
-        )
-    }
-
-    pub fn collect_fees(
-        ctx: Context<ClaimFeeInstruction>,
-        _bump_bond_pool_account: u8,
-        _index: u32,
-        lower_tick_index: i32, 
-        upper_tick_index: i32,
-    ) -> ProgramResult {
-
-        instructions::collect_fees::handler(
-            ctx,
-            _bump_bond_pool_account,
-            _index,
-            lower_tick_index,
-            upper_tick_index
-        )
-
-    }
-
-    pub fn close_liquidity_position(
-        ctx: Context<CloseLiquidityPosition>,
-        _position_bump: u8,
-        _bump_bond_pool_account: u8,
-        position_index: u32,
-        lower_tick_index: i32,
-        upper_tick_index: i32
-    ) -> ProgramResult {
-        instructions::close_liquidity_position::handler(
-            ctx,
-            _position_bump,
-            _bump_bond_pool_account,
-            position_index,
-            lower_tick_index,
-            upper_tick_index
-        )
-    }
-
-    pub fn create_tvl(
-        ctx: Context<CreateTvl>,
-        tvl_account_bump: u8
-    ) -> ProgramResult {
-        instructions::create_tvl_account::handler(
-            ctx,
-            tvl_account_bump
-        )
     }
 
     pub fn set_tvl(

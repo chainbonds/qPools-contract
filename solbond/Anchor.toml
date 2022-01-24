@@ -1,24 +1,15 @@
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
 solbond = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
-amm = { address  = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z", idl = "./deps/protocol/target/idl/amm.json" }
 
 [programs.devnet]
 solbond = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
-amm = { address = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj", idl = "./deps/protocol/target/idl/amm.json" }
 
 [registry]
 url = "https://anchor.projectserum.com"
 
-[[test.genesis]]
-address = "77yFpTqxesQNz7Styk6yTRBaEcW9LxDKPvA46HfuA77z"
-program = "./deps/protocol/target/deploy/amm.so"
-
 [scripts]
-#test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/*.ts"
 test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register"
-# tests/**/solbond-test-invariant-pools.ts
-#test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/solbond-initialize-position.ts"

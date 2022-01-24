@@ -18,5 +18,4 @@ default = []
 anchor-lang = "0.20.1"
 anchor-spl = "0.20.1"
 solana-program = "1.8.12"
-amm = { path = "../../deps/protocol/programs/amm" , features = ["cpi"]}
 spl-token = { version = "3.1.4", features = ["no-entrypoint"] }

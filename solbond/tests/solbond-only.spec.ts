@@ -3,11 +3,10 @@ import {BN, Program, web3} from '@project-serum/anchor';
 import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {WalletI} from "easy-spl";
-import {createToken} from "../deps/protocol/tests/testUtils";
-import {Key} from "readline";
 import {QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
 import {QPoolsUser} from "@qpools/sdk";
+import {createToken} from "@qpools/admin-sdk/lib/invariant-utils";
+import {WalletI} from "easy-spl";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");

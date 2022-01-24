@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import {clusterApiUrl, Connection} from "@solana/web3.js";
+import {Connection} from "@solana/web3.js";
 import {Provider} from "@project-serum/anchor";
 import {IDL} from "./idl/solbond";
 import {NETWORK} from "./cluster";

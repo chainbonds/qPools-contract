@@ -16,17 +16,7 @@ export default function Statistics(props: any) {
     }
 
     useEffect(() => {
-
         initializeQPoolsAndCalculateTVL();
-
-        // // Do a periodic fetching of the data
-        // setInterval(() => {
-        //     // Initialize the qpoolStats
-        //     delay(10000).then(() => {
-        //
-        //     });
-        // }, 2000);
-
     }, []);
 
     const updateStatistics = () => {

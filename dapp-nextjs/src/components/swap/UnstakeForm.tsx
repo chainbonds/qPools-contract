@@ -29,6 +29,7 @@ export default function UnstakeForm() {
 
     useEffect(() => {
         setValueInSol((_: number) => {
+            // Get the exchange rate between QPT and USDC
             return valueInQPT * 1.;
         });
     }, [valueInQPT]);
@@ -39,7 +40,7 @@ export default function UnstakeForm() {
 
         // TODO: All decimals should be registered somewhere!
         const sendAmount: BN = new BN(valueInQPT).mul(new BN(1e9));
-        console.log("send amount is: ", sendAmount.toString());
+        console.log("send amount qpt is: ", sendAmount.toString());
 
         if (!qPoolContext.userAccount!.publicKey) {
             alert("Please connect your wallet first!");
@@ -65,6 +66,8 @@ export default function UnstakeForm() {
         // Now we redeem the QPT TOkens
         console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
         // Add a try-catch here (prob in the SDK)
+        console.log("Before sendAmount is: ", sendAmount.toString());
+        console.log("Before sendAmount is: ", sendAmount.toNumber());
         const success = await qPoolContext.qPoolsUser!.redeemQPT(sendAmount.toNumber(), true);
 
         await loadContext.decreaseCounter();
@@ -103,8 +106,8 @@ export default function UnstakeForm() {
                                     <AiOutlineArrowDown size={24}/>
                                 </div>
                                 <InputFieldWithLogo
-                                    logoPath={"/solana-logo.png"}
-                                    displayText={"SOL"}
+                                    logoPath={"/usdc.png"}
+                                    displayText={"USDC"}
                                     registerFunction={() => register("solana_amount")}
                                     modifiable={false}
                                     value={valueInSol}

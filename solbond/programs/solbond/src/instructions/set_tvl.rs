@@ -11,6 +11,7 @@ use crate::utils::seeds;
 )]
 pub struct SetTvl<'info> {
     #[account(
+        mut,
         seeds = [pool_account.key().as_ref(), seeds::TVL_INFO_ACCOUNT],
         bump = tvl_account_bump
     )]

@@ -176,20 +176,22 @@ export class QPoolsStats {
     //     }
     // }
 
-    async fetchTVL(): Promise<{tvl: BN, totalQPT: number}> {
+    async fetchTVL(): Promise<{tvl: BN, tvlInSol: BN, totalQPT: number}> {
 
         let tvlInUsdc = (await this.solbondProgram.account.tvlInfoAccount.fetch(this.tvlAccount)) as TvlInUsdc;
         let tvl = tvlInUsdc.tvlInUsdc;
+        let tvlInSol = this.priceFeed["Crypto.SOL/USD"].mul(tvlInUsdc);
+        console.log("Fetched TVLs: ", tvlInUsdc, tvl.toString(), tvlInSol.toString())
 
         // _response = await this.connection.getTokenSupply();
         let _response = await this.connection.getTokenSupply(this.QPTokenMint.publicKey);
         let totalQPT = Number(_response.value.amount) / (10**(_response.value.decimals));
 
-        return {tvl, totalQPT};
+        return {tvl, tvlInSol, totalQPT};
 
     }
 
-    async calculateTVL(): Promise<{tvl: BN, totalQPT: number}> {
+    async calculateTVL(): Promise<{tvl: BN, tvlInSol: BN, totalQPT: number}> {
 
         console.log("Calculate TVL");
         // Iterate over each mint
@@ -200,6 +202,8 @@ export class QPoolsStats {
         // From each currency, get the balance
         let _response;
         let tvl = new BN(0.);
+        let tvlInSol = new BN(0.);
+
 
         // (1) Get the reserve currency's mint +
 
@@ -222,7 +226,9 @@ export class QPoolsStats {
         console.log("account fetched is: ", associatedTokenAccount.toString());
         _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         console.log("First response is: ", _response);
-        tvl = tvl.add(this.priceFeed["Crypto.SOL/USD"].mul(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals))))));  // Shouldn't hardcode decimals...
+        // tvl = tvl.add(this.priceFeed["Crypto.SOL/USD"].mul(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals))))));  // Shouldn't hardcode decimals...
+        tvl = tvl.add(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals)))));  // Shouldn't hardcode decimals...
+        tvlInSol = tvl.add(this.priceFeed["Crypto.SOL/USD"].mul(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals))))));  // Shouldn't hardcode decimals...
         // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.USDT, this.qPoolAccount);
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
@@ -331,7 +337,7 @@ export class QPoolsStats {
         console.log("Reserve SOL is: ", tvl);
 
         // return reserveSol.toNumber();
-        return {tvl, totalQPT};
+        return {tvl, tvlInSol, totalQPT};
 
     }
 

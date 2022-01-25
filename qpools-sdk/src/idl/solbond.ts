@@ -263,7 +263,7 @@ export type SolbondIdl = {
             "accounts": [
                 {
                     "name": "tvlAccount",
-                    "isMut": false,
+                    "isMut": true,
                     "isSigner": false
                 },
                 {
@@ -453,7 +453,7 @@ export type SolbondIdl = {
         {
             "code": 6003,
             "name": "MinPurchaseAmount",
-            "msg": "Need to send more than 0 SOL!"
+            "msg": "Not enough credits!"
         },
         {
             "code": 6004,
@@ -816,7 +816,7 @@ export const IDL: SolbondIdl = {
             "accounts": [
                 {
                     "name": "tvlAccount",
-                    "isMut": false,
+                    "isMut": true,
                     "isSigner": false
                 },
                 {
@@ -1006,7 +1006,7 @@ export const IDL: SolbondIdl = {
         {
             "code": 6003,
             "name": "MinPurchaseAmount",
-            "msg": "Need to send more than 0 SOL!"
+            "msg": "Not enough credits!"
         },
         {
             "code": 6004,

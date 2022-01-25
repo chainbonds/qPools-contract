@@ -88,7 +88,8 @@ pub fn handler(
 
     // TODO: Double check that the user actually has less than this in their amount
     let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_mint.supply;
-    let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
+    // let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
+    let total_currency_token_supply: u64 = ctx.accounts.tvl_account.tvl_in_usdc;
 
     // TODO, these are not total supplies, but amounts for this pool
     // Actually, these are total supplies

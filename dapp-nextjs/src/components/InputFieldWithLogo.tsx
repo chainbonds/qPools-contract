@@ -28,7 +28,7 @@ export default function InputFieldWithLogo(props: any) {
                         {...props.registerFunction()}
                         autoComplete="stake_amount"
                         placeholder="0.0"
-                        step={"0.001"}
+                        step={"0.0001"}
                         min="0"
                         onChange={(event) => {
                             let newValue = Number(event.target.value);

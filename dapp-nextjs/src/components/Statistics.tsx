@@ -38,7 +38,7 @@ export default function Statistics(props: any) {
 
             if (qPoolContext.qPoolsStats) {
                 qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
-                    qPoolContext.qPoolsStats!.calculateTVL().then(out => {
+                    qPoolContext.qPoolsStats!.fetchTVL().then(out => {
                         setTvl((_) => out.tvl.toNumber());
                         setTotalQPT((_) => out.totalQPT);
                     })

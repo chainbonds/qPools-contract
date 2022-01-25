@@ -179,7 +179,7 @@ pub enum ErrorCode {
     LowBondTokAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
-    #[msg("Need to send more than 0 SOL!")]
+    #[msg("Not enough credits!")]
     MinPurchaseAmount,
     #[msg("Provided times are not an interval (end-time before start-time!)")]
     TimeFrameIsNotAnInterval,

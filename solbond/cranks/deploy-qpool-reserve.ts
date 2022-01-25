@@ -52,6 +52,8 @@ const main = async () => {
         await qPoolAdminTool.initializeQPTReserve();
         // Create an associated token account for the currency ...
 
+        // Create all associated token accounts ...
+
     } else {
         throw Error("mainnet definitely not implemented yet!!");
     }

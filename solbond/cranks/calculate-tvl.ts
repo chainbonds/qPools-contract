@@ -2,12 +2,18 @@ import * as anchor from "@project-serum/anchor";
 import {clusterApiUrl, Keypair, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction} from "@solana/web3.js";
 import {BN, Provider, workspace} from "@project-serum/anchor";
 import {QPoolsStats} from "@qpools/sdk/lib/qpools-stats";
-import {getSolbondProgram, MOCK} from "@qpools/sdk";
+import {
+    createAssociatedTokenAccountSendUnsigned,
+    getAssociatedTokenAddressOffCurve,
+    getSolbondProgram,
+    MOCK
+} from "@qpools/sdk";
 import {Token} from "@solana/spl-token";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {delay} from "@qpools/sdk/lib/utils";
 import {TvlInUsdc} from "@qpools/sdk/lib/types/tvlAccount";
 import {SEED} from "@qpools/sdk/lib/seeds";
+import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 
 /**
  * Calculate TVL and
@@ -35,7 +41,7 @@ const main = async () => {
         const wallet = provider.wallet.payer as Keypair;
         // const walletSigner = provider.wallet;
         // // @ts-expect-error
-        // const wallet = provider.wallet.payer as Signer;
+        // const walletPayer = provider.wallet.payer as Signer;
 
         // Get the rpc calls
         console.log("GetSolbondProgram");
@@ -82,6 +88,58 @@ const main = async () => {
             solbondProgram.programId
         );
 
+        // try {
+        // Create a couple of these associated toke accounts ...
+        // We should do this at deploy, actually
+
+         await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_USDC,
+            qPoolAccount,
+            provider.wallet
+        );
+        const usdc_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, qPoolAccount);
+
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_USDT,
+            qPoolAccount,
+            provider.wallet
+        );
+        const usdt_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDT, qPoolAccount);
+
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_CASH,
+            qPoolAccount,
+            provider.wallet
+        );
+        const cash_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_CASH, qPoolAccount);
+
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_PAI,
+            qPoolAccount,
+            provider.wallet
+        );
+        const pai_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_PAI, qPoolAccount);
+
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_TESTUSD,
+            qPoolAccount,
+            provider.wallet
+        );
+        const testUsd_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_TESTUSD, qPoolAccount);
+
+        console.log("usdc account is: ", usdc_account.toString());
+
+        // } catch (error) {
+        //     console.log("Error is: ", error);
+        // }
+
+
+        // Create associated token account for the respective
         console.log("RPC");
         console.log("Writing TVL: ", tvl.toString());
         let txs = new Transaction();
@@ -106,7 +164,7 @@ const main = async () => {
         console.log("Tvl set!");
         console.log("TVL Account is:", tvlAccount.toString());
 
-        let tvlInUsdc = (await solbondProgram.account.TvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
+        let tvlInUsdc = (await solbondProgram.account.tvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
         console.log("TVL in USDC is: ", tvlInUsdc);
 
     }, 10000);

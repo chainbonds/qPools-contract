@@ -104,8 +104,8 @@ export default function StakeForm() {
                         <div className="py-5 bg-slate-800 bg-gray">
                             <div>
                                 <InputFieldWithLogo
-                                    logoPath={"/solana-logo.png"}
-                                    displayText={"SOL"}
+                                    logoPath={"/usdc.png"}
+                                    displayText={"USDC"}
                                     registerFunction={() => register("solana_amount")}
                                     modifiable={true}
                                     setNewValue={setValueInSol}
@@ -116,7 +116,7 @@ export default function StakeForm() {
                                 <InputFieldWithLogo
                                     logoPath={"/Light 2 Square.png"}
                                     // QPT
-                                    displayText={"qSOL"}
+                                    displayText={"QPT"}
                                     registerFunction={() => {}}
                                     modifiable={false}
                                     value={valueInQPT}

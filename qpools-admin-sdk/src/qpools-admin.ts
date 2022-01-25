@@ -25,7 +25,6 @@ export class QPoolsAdmin {
 
     public connection: Connection;
     public solbondProgram: Program;
-    public invariantProgram: Program;  // <Amm>
     public provider: Provider;
     public wallet: Keypair;
 

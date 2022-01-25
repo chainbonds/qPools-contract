@@ -20,7 +20,6 @@ import {
     getSolbondProgram,
     MOCK
 } from "@qpools/sdk";
-import {QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {Token} from "@solana/spl-token";
 import {assert} from "chai";
@@ -36,6 +35,7 @@ import {
 } from "@saberhq/stableswap-sdk";
 import {tou64} from "@qpools/sdk/lib/utils";
 import {token} from "easy-spl";
+import {QPoolsAdmin} from "@qpools/admin-sdk";
 
 describe('saber-devnet', () => {
 

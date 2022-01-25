@@ -98,7 +98,6 @@ export class QPoolsStats {
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
 
-
             PublicKey.findProgramAddress(
                 [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
                 this.solbondProgram.programId
@@ -106,7 +105,6 @@ export class QPoolsStats {
                 this.tvlAccount = tvlAccount;
                 this.bumpTvlAccount = bumpTvlAccount;
             });
-
 
             this.qPoolAccount = _qPoolAccount;
             this.bumpQPoolAccount = _bumpQPoolAccount;
@@ -178,31 +176,9 @@ export class QPoolsStats {
     //     }
     // }
 
-    async getInvariantPositionListAddress() {
-        // TODO: Replace the address by the mainnet address, for example
-        const POSITION_LIST_SEED = 'positionlistv1';
-        const [positionListAddress, positionListBump] = await PublicKey.findProgramAddress(
-            [Buffer.from(utils.bytes.utf8.encode(POSITION_LIST_SEED)), this.qPoolAccount.toBuffer()],
-            new PublicKey("5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj")
-        )
-
-        return {
-            positionListAddress,
-            positionListBump
-        }
-    }
-
-    async getAllTokensLockedInInvariant() {
-        let {positionListAddress, positionListBump} = await this.getInvariantPositionListAddress();
-
-        let positionListContents = await this.connection.getAccountInfo(positionListAddress);
-
-
-    }
-
     async fetchTVL(): Promise<{tvl: BN, totalQPT: number}> {
 
-        let tvlInUsdc = (await this.solbondProgram.account.TvlInfoAccount.fetch(this.tvlAccount)) as TvlInUsdc;
+        let tvlInUsdc = (await this.solbondProgram.account.tvlInfoAccount.fetch(this.tvlAccount)) as TvlInUsdc;
         let tvl = tvlInUsdc.tvlInUsdc;
 
         // _response = await this.connection.getTokenSupply();
@@ -240,6 +216,7 @@ export class QPoolsStats {
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += price_MSOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
         console.log("Balances are: ", MOCK.DEV.SABER_USDC.toString(), this.qPoolAccount.toString());
+        // Create these associated token accounts if they don't exist yet ... on the frontend
         associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.qPoolAccount);
 
         console.log("account fetched is: ", associatedTokenAccount.toString());

@@ -9,7 +9,7 @@ import {Provider} from "@project-serum/anchor";
 import {clusterApiUrl, Keypair, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
 import {QPoolsAdmin} from "@qpools/admin-sdk";
-import {MOCK} from "@qpools/sdk";
+import {createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
 
 const main = async () => {
 
@@ -50,6 +50,8 @@ const main = async () => {
         console.log("Cluster is: ", cluster);
         console.log("Initializing the QPT Reserve");
         await qPoolAdminTool.initializeQPTReserve();
+        // Create an associated token account for the currency ...
+
     } else {
         throw Error("mainnet definitely not implemented yet!!");
     }

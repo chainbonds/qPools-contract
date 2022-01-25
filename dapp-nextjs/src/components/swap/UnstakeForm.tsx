@@ -15,6 +15,7 @@ import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {BN} from "@project-serum/anchor";
 import {useLoad} from "../../contexts/LoadingContext";
+import {MATH_DENOMINATOR} from "@qpools/sdk/lib/const";
 
 export default function UnstakeForm() {
 
@@ -23,14 +24,24 @@ export default function UnstakeForm() {
     const qPoolContext: IQPool = useQPoolUserTool();
     const loadContext = useLoad();
 
-    const [valueInSol, setValueInSol] = useState<number>(0.0);
+    const [valueInUsdc, setValueInUsdc] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
 
 
+    // useEffect(() => {
+    //     setValueInSol((_: number) => {
+    //         // Get the exchange rate between QPT and USDC
+    //         return valueInQPT * 1.;
+    //     });
+    // }, [valueInQPT]);
     useEffect(() => {
-        setValueInSol((_: number) => {
-            // Get the exchange rate between QPT and USDC
-            return valueInQPT * 1.;
+        qPoolContext.qPoolsStats?.fetchTVL().then(out => {
+
+            // Calculate the conversion rate ...
+            let newValueBasedOnConversionRateUsdcPerQpt = out.tvl.mul(new BN(valueInQPT)).div(new BN(out.totalQPT));
+            setValueInUsdc((_: number) => {
+                return newValueBasedOnConversionRateUsdcPerQpt.toNumber();
+            });
         });
     }, [valueInQPT]);
 
@@ -107,10 +118,10 @@ export default function UnstakeForm() {
                                 </div>
                                 <InputFieldWithLogo
                                     logoPath={"/usdc.png"}
-                                    displayText={"USDC"}
+                                    displayText={"estimated USDC"}
                                     registerFunction={() => register("solana_amount")}
                                     modifiable={false}
-                                    value={valueInSol}
+                                    value={valueInUsdc}
                                 />
                             </div>
                         </div>

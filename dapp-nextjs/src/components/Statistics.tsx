@@ -37,12 +37,14 @@ export default function Statistics(props: any) {
             // }
 
             if (qPoolContext.qPoolsStats) {
+
                 qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
                     qPoolContext.qPoolsStats!.fetchTVL().then(out => {
                         setTvl((_) => out.tvl.toNumber());
                         setTotalQPT((_) => out.totalQPT);
                     })
                 });
+
             } else {
                 console.log("Stats now loaded yet!", qPoolContext, qPoolContext.qPoolsStats)
             }
@@ -52,11 +54,10 @@ export default function Statistics(props: any) {
 
     useEffect(() => {
         updateStatistics();
-        // setInterval(() => {
-        //     updateStatistics();
-        // }, 30000);
+        setInterval(() => {
+            updateStatistics();
+        }, 5000);
 
-    // qPoolContext, qPoolContext.qPoolsStats
     }, [qPoolContext, qPoolContext.qPoolsStats])
 
     const singleBox = (title: String, value: String) => {
@@ -78,8 +79,8 @@ export default function Statistics(props: any) {
     return (
         <>
             <div className={"flex flex-col md:flex-row items-center lg:items-begin"}>
-                {singleBox("Total Value Locked", "$" + String((tvl / 1e3).toFixed(2) ) + " K USD")}
-                {singleBox("Total QPT Minted", String(totalQPT.toFixed(2)) + " QPT")}
+                {singleBox("Total Value Locked", "$ " + String((tvl).toFixed(2) ) + " USD")}
+                {singleBox("Total QPT Minted", String(totalQPT.toFixed(0)) + " QPT")}
                 {singleBox("7 Day APY", "Coming Soon")}
                 {/*8.02%*/}
             </div>

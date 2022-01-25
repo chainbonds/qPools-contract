@@ -1,4 +1,5 @@
 import {PublicKey} from "@solana/web3.js";
+import {BN} from "@project-serum/anchor";
 
 export const MOCK = {
     // DEV: {
@@ -47,3 +48,5 @@ export const PYTH_PRODUCTS = {
         price: "E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9"
     },
 }
+
+export const MATH_DENOMINATOR = new BN(1e12);

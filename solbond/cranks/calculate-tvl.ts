@@ -117,7 +117,7 @@ const main = async () => {
 
         // TODO: The program address inside is not finishing when this is triggered!!
         // Maybe put this in a separately
-        await qpoolsStats.collectPriceFeed();
+        // await qpoolsStats.collectPriceFeed();
         await delay(5000);
         // Damn, dafuq, this was it really! I guess this is also what caused issues on the frontend!
 

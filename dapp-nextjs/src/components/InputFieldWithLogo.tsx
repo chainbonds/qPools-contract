@@ -17,7 +17,6 @@ export default function InputFieldWithLogo(props: any) {
                             {props.displayText}
                         </text>
                     </div>
-
                     </span>
                     {props.modifiable &&
                     <input

@@ -176,14 +176,17 @@ export class QPoolsStats {
     //     }
     // }
 
+    // Introduce the decimal class
+
     async fetchTVL(): Promise<{tvl: BN, tvlInSol: BN, totalQPT: number}> {
 
         let tvlInUsdc = (await this.solbondProgram.account.tvlInfoAccount.fetch(this.tvlAccount)) as TvlInUsdc;
         let tvl = tvlInUsdc.tvlInUsdc;
-        let tvlInSol = this.priceFeed["Crypto.SOL/USD"].mul(tvlInUsdc);
+        let tvlInSol = (this.priceFeed["Crypto.SOL/USD"]).mul(tvl);
         console.log("Fetched TVLs: ", tvlInUsdc, tvl.toString(), tvlInSol.toString())
 
         // _response = await this.connection.getTokenSupply();
+        console.log("QPT mint ", this.QPTokenMint.publicKey.toString());
         let _response = await this.connection.getTokenSupply(this.QPTokenMint.publicKey);
         let totalQPT = Number(_response.value.amount) / (10**(_response.value.decimals));
 

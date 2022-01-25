@@ -13,7 +13,7 @@ import {Mint} from "easy-spl";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import airdropAdmin from "@qpools/sdk/src/airdropAdmin";
 import {createAssociatedTokenAccountSendUnsigned} from "@qpools/sdk/src/utils";
-import {MOCK} from "@qpools/sdk/src/const";
+import {MATH_DENOMINATOR, MOCK} from "@qpools/sdk/src/const";
 import {useLoad} from "../../contexts/LoadingContext";
 
 export default function StakeForm() {
@@ -23,21 +23,29 @@ export default function StakeForm() {
     const qPoolContext: IQPool = useQPoolUserTool();
     const loadContext = useLoad();
 
-    const [valueInSol, setValueInSol] = useState<number>(0.0);
+    const [valueInUsd, setValueInUsd] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
 
+    const [balanceUsd, setBalanceUsd] = useState<number>(0.0);
+    const [balanceQpt, setBalanceQpt] = useState<number>(0.0);
+
     useEffect(() => {
-        setValueInQpt((_: number) => {
-            return valueInSol * 1.;
+        qPoolContext.qPoolsStats?.fetchTVL().then(out => {
+
+            // Calculate the conversion rate ...
+            let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(valueInUsd)).div(out.tvl);
+            setValueInQpt((_: number) => {
+                return newValueBasedOnConversionRateQptPerUsd.toNumber();
+            });
         });
-    }, [valueInSol]);
+    }, [valueInUsd]);
 
     const submitToContract = async (d: any) => {
 
         console.log(JSON.stringify(d));
 
         // TODO: All decimals should be registered somewhere!
-        const sendAmount: BN = new BN(valueInSol).mul(new BN(1e6));
+        const sendAmount: BN = new BN(valueInUsd).mul(new BN(1e6));
         console.log("send amount is: ", sendAmount.toString());
 
         if (!qPoolContext.userAccount!.publicKey) {
@@ -103,12 +111,20 @@ export default function StakeForm() {
                     <form action="#" method="POST" onSubmit={handleSubmit(submitToContract)}>
                         <div className="py-5 bg-slate-800 bg-gray">
                             <div>
+                                <div className={"flex flex-row w-full justify-center"}>
+                                    {/*<div className={"flex flew-row w-full px-8 text-gray-400 justify-center"}>*/}
+                                    {/*    Balance: */}
+                                    {/*</div>*/}
+                                    {/*<div className={"flex flew-row w-full px-8 text-gray-400 justify-center"}>*/}
+                                    {/*    Balance:*/}
+                                    {/*</div>*/}
+                                </div>
                                 <InputFieldWithLogo
                                     logoPath={"/usdc.png"}
                                     displayText={"USDC"}
                                     registerFunction={() => register("solana_amount")}
                                     modifiable={true}
-                                    setNewValue={setValueInSol}
+                                    setNewValue={setValueInUsd}
                                 />
                                 <div className={"ml-4"}>
                                     <AiOutlineArrowDown size={24}/>
@@ -116,7 +132,7 @@ export default function StakeForm() {
                                 <InputFieldWithLogo
                                     logoPath={"/Light 2 Square.png"}
                                     // QPT
-                                    displayText={"QPT"}
+                                    displayText={"estimated QPT"}
                                     registerFunction={() => {}}
                                     modifiable={false}
                                     value={valueInQPT}

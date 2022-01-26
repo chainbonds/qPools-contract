@@ -57,7 +57,9 @@ pub fn calculate_redeemables_to_be_distributed(
             redeemable_total_supply_raw,
             currency_total_supply_raw,
             delta_currency_added_raw);
-        return Ok(delta_currency_added_raw);
+        // Modify this with the decimal numbers ...
+        let decimal_difference: u64 = 1000;
+        return Ok(delta_currency_added_raw.checked_mul(decimal_difference).ok_or_else( | | {ErrorCode::CustomMathError8})?);
     }
 
     // Lamports should be automatically accounted for
@@ -67,6 +69,10 @@ pub fn calculate_redeemables_to_be_distributed(
     let m2 = m1.checked_mul(R_T).ok_or_else( | | {ErrorCode::CustomMathError6})?;
     let m3 = m2.checked_div(S_T).ok_or_else( | | {ErrorCode::CustomMathError7})?;
     let out = m3.checked_sub(R_T).ok_or_else( | | {ErrorCode::CustomMathError8})?;
+
+    // Gotta divide by the inverse decimal difference this time
+    let decimal_difference: u128 = 1_000_000;
+    out.checked_div(decimal_difference).ok_or_else( | | {ErrorCode::CustomMathError8})?;
 
     return Ok(out as u64);
 

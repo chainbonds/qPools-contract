@@ -70,7 +70,8 @@ export class QPoolsStats {
 
     constructor(
         connection: Connection,
-        currencyMint: Token
+        currencyMint: Token,
+        collectPriceFeed: boolean = true
     ) {
         this.connection = connection;
 
@@ -98,8 +99,7 @@ export class QPoolsStats {
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
 
-            PublicKey.findProgramAddress(
-                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+            PublicKey.findProgramAddress([_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
                 this.solbondProgram.programId
             ).then(([tvlAccount, bumpTvlAccount]) => {
                 this.tvlAccount = tvlAccount;
@@ -148,7 +148,9 @@ export class QPoolsStats {
             });
 
         });
-        this.collectPriceFeed();
+        if (collectPriceFeed) {
+            this.collectPriceFeed();
+        }
     }
 
     /**

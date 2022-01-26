@@ -79,7 +79,14 @@ export default function UnstakeForm() {
         // Add a try-catch here (prob in the SDK)
         console.log("Before sendAmount is: ", sendAmount.toString());
         console.log("Before sendAmount is: ", sendAmount.toNumber());
-        const success = await qPoolContext.qPoolsUser!.redeemQPT(sendAmount.toNumber(), true);
+
+        let success;
+        try {
+            success = await qPoolContext.qPoolsUser!.redeemQPT(sendAmount.toNumber(), true);
+        } catch (error) {
+            console.log("Error happened!");
+            alert("Error took place, please show post this in the discord or on twitter: " + JSON.stringify(error));
+        }
 
         await loadContext.decreaseCounter();
 

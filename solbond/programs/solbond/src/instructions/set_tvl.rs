@@ -32,10 +32,13 @@ pub fn handler(
     tvl_account_bump: u8
 ) -> ProgramResult {
 
+    msg!("Fetching the account");
     let tvl_account = &mut ctx.accounts.tvl_account;
     if new_tvl_in_usd > 0 {
+        msg!("Writing ...");
         tvl_account.tvl_in_usdc = new_tvl_in_usd;
     }
+    msg!("Done!");
 
     Ok(())
 }

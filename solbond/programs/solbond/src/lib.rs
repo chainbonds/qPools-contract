@@ -7,11 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-// declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
-// declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
-declare_id!("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
-// static KEY: &str = env!("PROGRAM_ID");
-// declare_id!(KEY);
+declare_id!("Bv9aWUSsGfBdkuYG7q4qAWMoYhHKXq4CZpD3rupLEUwf");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 

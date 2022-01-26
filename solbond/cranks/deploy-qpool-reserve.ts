@@ -9,7 +9,8 @@ import {Provider} from "@project-serum/anchor";
 import {clusterApiUrl, Keypair, PublicKey} from "@solana/web3.js";
 import {Token} from "@solana/spl-token";
 import {QPoolsAdmin} from "@qpools/admin-sdk";
-import {createAssociatedTokenAccountSendUnsigned, MOCK} from "@qpools/sdk";
+import {createAssociatedTokenAccountSendUnsigned, getAssociatedTokenAddressOffCurve, MOCK} from "@qpools/sdk";
+import {delay} from "@qpools/sdk/lib/utils";
 
 const main = async () => {
 
@@ -51,8 +52,39 @@ const main = async () => {
         console.log("Initializing the QPT Reserve");
         await qPoolAdminTool.initializeQPTReserve();
         // Create an associated token account for the currency ...
-
+        await delay(10000);
+        console.log("Creating associated toke accounts ...");
         // Create all associated token accounts ...
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_USDC,
+            qPoolAdminTool.qPoolAccount,
+            provider.wallet
+        );
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_USDT,
+            qPoolAdminTool.qPoolAccount,
+            provider.wallet
+        );
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_CASH,
+            qPoolAdminTool.qPoolAccount,
+            provider.wallet
+        );
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_PAI,
+            qPoolAdminTool.qPoolAccount,
+            provider.wallet
+        );
+        await createAssociatedTokenAccountSendUnsigned(
+            connection,
+            MOCK.DEV.SABER_TESTUSD,
+            qPoolAdminTool.qPoolAccount,
+            provider.wallet
+        );
 
     } else {
         throw Error("mainnet definitely not implemented yet!!");

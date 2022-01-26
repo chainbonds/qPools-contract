@@ -32,11 +32,16 @@ export default function StakeForm() {
     useEffect(() => {
         qPoolContext.qPoolsStats?.fetchTVL().then(out => {
 
-            // Calculate the conversion rate ...
-            let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(valueInUsd)).div(out.tvl);
-            setValueInQpt((_: number) => {
-                return newValueBasedOnConversionRateQptPerUsd.toNumber();
-            });
+            if (out.tvl.gt(new BN(0))) {
+                // Calculate the conversion rate ...
+                let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(valueInUsd)).div(out.tvl);
+                setValueInQpt((_: number) => {
+                    return newValueBasedOnConversionRateQptPerUsd.toNumber();
+                });
+            } else {
+                setValueInQpt(valueInUsd);
+            }
+
         });
     }, [valueInUsd]);
 
@@ -88,11 +93,16 @@ export default function StakeForm() {
         // TODO: Check the balance to be non-zero
 
         console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
-        const success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);
-        await loadContext.decreaseCounter();
-        if (!success) {
-            alert("Something went wrong! Check logs.");
+
+        let success;
+        try {
+            success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);
+        } catch (error) {
+            console.log("Error happened!");
+            alert("Error took place, please show post this in the discord or on twitter: " + JSON.stringify(error));
         }
+
+        await loadContext.decreaseCounter();
         console.log("Bought tokens! ", sendAmount.toString());
     }
 

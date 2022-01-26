@@ -39,17 +39,18 @@ use crate::utils::constants::CUT_PERCENTAGE;
 *
 */
 pub fn calculate_redeemables_to_be_distributed(
-    currency_total_supply_raw: u64,
-    redeemable_total_supply_raw: u64,
-    delta_currency_added_raw: u64
-) -> Result<u64, ErrorCode> {
+    currency_total_supply_raw: u128,
+    redeemable_total_supply_raw: u128,
+    delta_currency_added_raw: u128,
+    redeemable_decimals: u128,
+) -> Result<u128, ErrorCode> {
 
     // TODO: Write rust unittests for these
 
     // Turn everything into u128 first
-    let S_T = currency_total_supply_raw as u128;
-    let R_T = redeemable_total_supply_raw as u128;
-    let S_delta = delta_currency_added_raw as u128;
+    let S_T = currency_total_supply_raw;
+    let R_T = redeemable_total_supply_raw;
+    let S_delta = delta_currency_added_raw;
 
     if (currency_total_supply_raw == 0) || (redeemable_total_supply_raw == 0) {
         // Return as many tokens as there is solana, if no solana has been paid in already
@@ -57,7 +58,9 @@ pub fn calculate_redeemables_to_be_distributed(
             redeemable_total_supply_raw,
             currency_total_supply_raw,
             delta_currency_added_raw);
-        return Ok(delta_currency_added_raw);
+        // Modify this with the decimal numbers ...
+        let out = delta_currency_added_raw.checked_mul(redeemable_decimals).ok_or_else( | | {ErrorCode::CustomMathError20})?;
+        return Ok(out);
     }
 
     // Lamports should be automatically accounted for
@@ -68,7 +71,11 @@ pub fn calculate_redeemables_to_be_distributed(
     let m3 = m2.checked_div(S_T).ok_or_else( | | {ErrorCode::CustomMathError7})?;
     let out = m3.checked_sub(R_T).ok_or_else( | | {ErrorCode::CustomMathError8})?;
 
-    return Ok(out as u64);
+    // Gotta divide by the inverse decimal difference this time
+    // let decimal_difference: u128 = 1_000_000;
+    // out.checked_div(decimal_difference).ok_or_else( | | {ErrorCode::CustomMathError8})?;
+
+    return Ok(out);
 
 }
 
@@ -85,21 +92,21 @@ pub fn calculate_redeemables_to_be_distributed(
 * * Watch out for underflows, overflows, and truncation errors!
 */
 pub fn calculate_currency_token_to_be_distributed(
-    currency_total_supply_raw: u64,
-    redeemable_total_supply_raw: u64,
-    delta_redeemables_burned_raw: u64
-) -> Result<u64, ErrorCode> {
+    currency_total_supply_raw: u128,
+    redeemable_total_supply_raw: u128,
+    delta_redeemables_burned_raw: u128
+) -> Result<u128, ErrorCode> {
 
-    let S_T = currency_total_supply_raw as u128;
-    let R_T= redeemable_total_supply_raw as u128;
-    let R_delta = delta_redeemables_burned_raw as u128;
+    let S_T = currency_total_supply_raw;
+    let R_T= redeemable_total_supply_raw;
+    let R_delta = delta_redeemables_burned_raw;
 
     let m1 = R_T.checked_add(R_delta).ok_or_else(| | {ErrorCode::CustomMathError1})?;
     let m2 = m1.checked_mul(S_T).ok_or_else(| | {ErrorCode::CustomMathError2})?;
     let m3 = m2.checked_div(R_T).ok_or_else(| | {ErrorCode::CustomMathError3})?;
     let out = m3.checked_sub(S_T).ok_or_else(| | {ErrorCode::CustomMathError4})?;
 
-    return Ok(out as u64);
+    return Ok(out);
 }
 
 /**

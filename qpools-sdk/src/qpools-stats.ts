@@ -9,9 +9,8 @@ import {SimpleWallet} from "easy-spl";
 import {MOCK} from "./const";
 import {getPythProgramKeyForCluster, PythConnection} from "@pythnetwork/client";
 import {delay, getAssociatedTokenAddressOffCurve} from "./utils";
-import {Market, Pair} from "@invariant-labs/sdk";
-import {PoolStructure, Position, PositionList} from "@invariant-labs/sdk/lib/market";
-import {fromFee} from "@invariant-labs/sdk/lib/utils";
+import {TvlInUsdc} from "./types/tvlAccount";
+import {SEED} from "./seeds";
 
 export enum Network {
     LOCAL,
@@ -25,6 +24,9 @@ export class QPoolsStats {
     public provider: Provider;
     public connection: Connection;
     public solbondProgram: Program;
+
+    public tvlAccount: PublicKey;
+    public bumpTvlAccount: number;
 
     public qPoolAccount: PublicKey;
     public bumpQPoolAccount: number;
@@ -68,7 +70,8 @@ export class QPoolsStats {
 
     constructor(
         connection: Connection,
-        currencyMint: Token
+        currencyMint: Token,
+        collectPriceFeed: boolean = true
     ) {
         this.connection = connection;
 
@@ -92,9 +95,17 @@ export class QPoolsStats {
         // Now get the associated token addresses for all the other accounts
         // TODO: Refactor this!
         PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("bondPoolAccount1"))],
+            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
             this.solbondProgram.programId
         ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
+
+            PublicKey.findProgramAddress([_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+                this.solbondProgram.programId
+            ).then(([tvlAccount, bumpTvlAccount]) => {
+                this.tvlAccount = tvlAccount;
+                this.bumpTvlAccount = bumpTvlAccount;
+            });
+
             this.qPoolAccount = _qPoolAccount;
             this.bumpQPoolAccount = _bumpQPoolAccount;
 
@@ -137,7 +148,9 @@ export class QPoolsStats {
             });
 
         });
-        this.collectPriceFeed();
+        if (collectPriceFeed) {
+            this.collectPriceFeed();
+        }
     }
 
     /**
@@ -165,29 +178,26 @@ export class QPoolsStats {
     //     }
     // }
 
-    async getInvariantPositionListAddress() {
-        // TODO: Replace the address by the mainnet address, for example
-        const POSITION_LIST_SEED = 'positionlistv1';
-        const [positionListAddress, positionListBump] = await PublicKey.findProgramAddress(
-            [Buffer.from(utils.bytes.utf8.encode(POSITION_LIST_SEED)), this.qPoolAccount.toBuffer()],
-            new PublicKey("5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj")
-        )
+    // Introduce the decimal class
 
-        return {
-            positionListAddress,
-            positionListBump
-        }
-    }
+    async fetchTVL(): Promise<{tvl: BN, tvlDecimals: number, tvlInSol: BN, totalQPT: number}> {
 
-    async getAllTokensLockedInInvariant() {
-        let {positionListAddress, positionListBump} = await this.getInvariantPositionListAddress();
+        let tvlInUsdc = (await this.solbondProgram.account.tvlInfoAccount.fetch(this.tvlAccount)) as TvlInUsdc;
+        let tvl = tvlInUsdc.tvlInUsdc;
+        let tvlDecimals = tvlInUsdc.decimals;
+        let tvlInSol = (this.priceFeed["Crypto.SOL/USD"]).mul(tvl);
+        console.log("Fetched TVLs: ", tvlInUsdc, tvl.toString(), tvlInSol.toString())
 
-        let positionListContents = await this.connection.getAccountInfo(positionListAddress);
+        // _response = await this.connection.getTokenSupply();
+        console.log("QPT mint ", this.QPTokenMint.publicKey.toString());
+        let _response = await this.connection.getTokenSupply(this.QPTokenMint.publicKey);
+        let totalQPT = Number(_response.value.amount) / (10**(_response.value.decimals));
 
+        return {tvl, tvlDecimals, tvlInSol, totalQPT};
 
     }
 
-    async calculateTVL(): Promise<{tvl: BN, totalQPT: number}> {
+    async calculateTVL(): Promise<{tvl: BN, tvlDecimals: number, tvlInSol: BN, totalQPT: number}> {
 
         console.log("Calculate TVL");
         // Iterate over each mint
@@ -198,6 +208,8 @@ export class QPoolsStats {
         // From each currency, get the balance
         let _response;
         let tvl = new BN(0.);
+        let tvlInSol = new BN(0.);
+
 
         // (1) Get the reserve currency's mint +
 
@@ -213,13 +225,17 @@ export class QPoolsStats {
         // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.MSOL, this.qPoolAccount);
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += price_MSOL_USDC * (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
-        console.log("Balances are: ", MOCK.DEV.SOL.toString(), this.qPoolAccount.toString());
-        associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SOL, this.qPoolAccount);
+        console.log("Balances are: ", MOCK.DEV.SABER_USDC.toString(), this.qPoolAccount.toString());
+        // Create these associated token accounts if they don't exist yet ... on the frontend
+        associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.qPoolAccount);
 
         console.log("account fetched is: ", associatedTokenAccount.toString());
         _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         console.log("First response is: ", _response);
-        tvl = tvl.add(this.priceFeed["Crypto.SOL/USD"].mul(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals))))));  // Shouldn't hardcode decimals...
+        // tvl = tvl.add(this.priceFeed["Crypto.SOL/USD"].mul(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals))))));  // Shouldn't hardcode decimals...
+        tvl = tvl.add(((new BN(_response.value.amount))));  // Shouldn't hardcode decimals...
+        let tvlDecimals = _response.value.decimals;
+        tvlInSol = tvl.add(this.priceFeed["Crypto.SOL/USD"].mul(((new BN(_response.value.amount)).div((new BN(10**_response.value.decimals))))));  // Shouldn't hardcode decimals...
         // associatedTokenAccount = await getAssociatedTokenAddressOffCurve(MOCK.DEV.USDT, this.qPoolAccount);
         // _response = await this.connection.getTokenAccountBalance(associatedTokenAccount);  // (await this.currencyMint.getAccountInfo(this.qPoolCurrencyAccount)).amount;
         // tvl += (Number(_response.value.amount) / (10**9));  // Shouldn't hardcode decimals...
@@ -236,86 +252,77 @@ export class QPoolsStats {
         console.log("Creating market");
         /** (2) Iterate over all the invariant positions */
         // Can the wallet be null with the wallet, for all operations that we are using?
-        let market = await Market.build(Network.DEV, null, this.connection);
-        console.log("Getting position list address");
-        const { positionListAddress } = await market.getPositionListAddress(this.qPoolAccount);
-        console.log("Getting position list");
-        let positionList: PositionList = await market.getPositionList(this.qPoolAccount);
+        // let market = await Market.build(Network.DEV, null, this.connection);
+        // console.log("Getting position list address");
+        // const { positionListAddress } = await market.getPositionListAddress(this.qPoolAccount);
+        // console.log("Getting position list");
 
-        let feeTier = {
-            fee: fromFee(new BN(40))
-        }
-
-        // For each position, until positionHead
-        let maxPosition = positionList.head - 1;
-
-        for (let positionIndex: number = 0; positionIndex <= maxPosition; positionIndex++) {
-            // Get the pool position
-            console.log("Getting position address");
-
-            const { positionAddress } = await market.getPositionAddress(this.qPoolAccount, positionIndex);
-            console.log("Position address is: ", positionAddress.toString());
-            let position: Position = await market.getPosition(this.qPoolAccount, positionIndex);
-            console.log("Position is: ", position);
-
-            let pool: PoolStructure = (await market.program.account.pool.fetch(position.pool)) as PoolStructure;
-            console.log("Pool is: ", pool);
-
-            let pair: Pair = new Pair(pool.tokenX, pool.tokenY, feeTier);
-            console.log("Pair is: ", pair);
-
-            // TODO: Then collect the price
-
-            // And receive the respective price index
-
-            // Cross-compare the pair tokenX and tokenY to the saved addresses in pyth
-
-            // Just do a hard-compare
-            // Much include both orders ...
-            // TODO: Double check this calculation !!!
-            let tmp: BN = new BN(0.);
-            if (pool.tokenX.equals(MOCK.DEV.MSOL) && pool.tokenY.equals(MOCK.DEV.USDC)) {
-                tmp = tmp.add(this.priceFeed["Crypto.MSOL/USD"].mul(position.tokensOwedX.v).div(new BN(1e9)));
-                tmp = tmp.add(position.tokensOwedY.v);
-
-                if (!tmp) {throw Error("tmp is nan 1!")}
-
-            } else if (pool.tokenX.equals(MOCK.DEV.SOL) && pool.tokenY.equals(MOCK.DEV.USDC)) {
-                tmp = tmp.add(this.priceFeed["Crypto.SOL/USD"].mul(position.tokensOwedX.v).div(new BN(1e9)));
-                tmp = tmp.add(position.tokensOwedY.v);
-
-                if (!tmp) {throw Error("tmp is nan 2!")}
-
-            } else if (pool.tokenX.equals(MOCK.DEV.USDT) && pool.tokenY.equals(MOCK.DEV.USDC)) {
-                tmp = tmp.add(position.tokensOwedX.v);
-                tmp = tmp.add(position.tokensOwedY.v);
-
-                if (!tmp) {throw Error("tmp is nan 3!")}
-
-            } else if (pool.tokenY.equals(MOCK.DEV.MSOL) && pool.tokenX.equals(MOCK.DEV.USDC)) {
-                tmp = tmp.add(this.priceFeed["Crypto.MSOL/USD"].mul(position.tokensOwedY.v).div(new BN(1e9)));
-                tmp = tmp.add(position.tokensOwedX.v);
-
-                if (!tmp) {throw Error("tmp is nan 4!")}
-
-            } else if (pool.tokenY.equals(MOCK.DEV.SOL) && pool.tokenX.equals(MOCK.DEV.USDC)) {
-                tmp = tmp.add(this.priceFeed["Crypto.SOL/USD"].mul(position.tokensOwedY.v).div(new BN(1e9)));
-                tmp = tmp.add(position.tokensOwedX.v);
-
-                if (!tmp) {throw Error("tmp is nan 5!")}
-
-            } else if (pool.tokenY.equals(MOCK.DEV.USDT) && pool.tokenX.equals(MOCK.DEV.USDC)) {
-                tmp = tmp.add(position.tokensOwedX.v);
-                tmp = tmp.add(position.tokensOwedY.v);
-
-                if (!tmp) {throw Error("tmp is nan 6!")}
-
-            }
-
-            tvl = tvl.add(tmp);
-
-        }
-
+        // for (let positionIndex: number = 0; positionIndex <= maxPosition; positionIndex++) {
+        //     // Get the pool position
+        //     console.log("Getting position address");
+        //
+        //     const { positionAddress } = await market.getPositionAddress(this.qPoolAccount, positionIndex);
+        //     console.log("Position address is: ", positionAddress.toString());
+        //     let position: Position = await market.getPosition(this.qPoolAccount, positionIndex);
+        //     console.log("Position is: ", position);
+        //
+        //     let pool: PoolStructure = (await market.program.account.pool.fetch(position.pool)) as PoolStructure;
+        //     console.log("Pool is: ", pool);
+        //
+        //     // let pair: Pair = new Pair(pool.tokenX, pool.tokenY, feeTier);
+        //     // console.log("Pair is: ", pair);
+        //
+        //     // TODO: Then collect the price
+        //
+        //     // And receive the respective price index
+        //
+        //     // Cross-compare the pair tokenX and tokenY to the saved addresses in pyth
+        //
+        //     // Just do a hard-compare
+        //     // Much include both orders ...
+        //     // TODO: Double check this calculation !!!
+        //     let tmp: BN = new BN(0.);
+        //     // if (pool.tokenX.equals(MOCK.DEV.MSOL) && pool.tokenY.equals(MOCK.DEV.USDC)) {
+        //     //     tmp = tmp.add(this.priceFeed["Crypto.MSOL/USD"].mul(position.tokensOwedX.v).div(new BN(1e9)));
+        //     //     tmp = tmp.add(position.tokensOwedY.v);
+        //     //
+        //     //     if (!tmp) {throw Error("tmp is nan 1!")}
+        //     //
+        //     // } else if (pool.tokenX.equals(MOCK.DEV.SOL) && pool.tokenY.equals(MOCK.DEV.USDC)) {
+        //     //     tmp = tmp.add(this.priceFeed["Crypto.SOL/USD"].mul(position.tokensOwedX.v).div(new BN(1e9)));
+        //     //     tmp = tmp.add(position.tokensOwedY.v);
+        //     //
+        //     //     if (!tmp) {throw Error("tmp is nan 2!")}
+        //     //
+        //     // } else if (pool.tokenX.equals(MOCK.DEV.USDT) && pool.tokenY.equals(MOCK.DEV.USDC)) {
+        //     //     tmp = tmp.add(position.tokensOwedX.v);
+        //     //     tmp = tmp.add(position.tokensOwedY.v);
+        //     //
+        //     //     if (!tmp) {throw Error("tmp is nan 3!")}
+        //     //
+        //     // } else if (pool.tokenY.equals(MOCK.DEV.MSOL) && pool.tokenX.equals(MOCK.DEV.USDC)) {
+        //     //     tmp = tmp.add(this.priceFeed["Crypto.MSOL/USD"].mul(position.tokensOwedY.v).div(new BN(1e9)));
+        //     //     tmp = tmp.add(position.tokensOwedX.v);
+        //     //
+        //     //     if (!tmp) {throw Error("tmp is nan 4!")}
+        //     //
+        //     // } else if (pool.tokenY.equals(MOCK.DEV.SOL) && pool.tokenX.equals(MOCK.DEV.USDC)) {
+        //     //     tmp = tmp.add(this.priceFeed["Crypto.SOL/USD"].mul(position.tokensOwedY.v).div(new BN(1e9)));
+        //     //     tmp = tmp.add(position.tokensOwedX.v);
+        //     //
+        //     //     if (!tmp) {throw Error("tmp is nan 5!")}
+        //     //
+        //     // } else if (pool.tokenY.equals(MOCK.DEV.USDT) && pool.tokenX.equals(MOCK.DEV.USDC)) {
+        //     //     tmp = tmp.add(position.tokensOwedX.v);
+        //     //     tmp = tmp.add(position.tokensOwedY.v);
+        //     //
+        //     //     if (!tmp) {throw Error("tmp is nan 6!")}
+        //     //
+        //     // }
+        //
+        //     tvl = tvl.add(tmp);
+        //
+        // }
 
 
         /** (3) Get the QPT Supply */
@@ -337,7 +344,7 @@ export class QPoolsStats {
         console.log("Reserve SOL is: ", tvl);
 
         // return reserveSol.toNumber();
-        return {tvl, totalQPT};
+        return {tvl, tvlDecimals, tvlInSol, totalQPT};
 
     }
 

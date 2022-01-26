@@ -5,6 +5,7 @@ use crate::state::{BondPoolAccount, InvariantPoolAccount};
 use amm::cpi::accounts::Swap;
 use amm::program::Amm;
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
+use crate::utils::seeds;
 
 // TODO: Not sure if initializer or owner sohuld be Signer now
 #[derive(Accounts)]
@@ -21,7 +22,7 @@ pub struct SwapPairInstruction<'info> {
 
     // seeds = [initializer.key.as_ref(), b"bondPoolAccount"], bump = _bump_bond_pool_account
     #[account(
-        seeds=[bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1"],
+        seeds=[bond_pool_currency_token_mint.key.as_ref(), seeds::BOND_POOL_ACCOUNT],
         bump = _bump_bond_pool_account
     )]
     pub owner: AccountInfo<'info>,
@@ -129,7 +130,7 @@ pub fn handler(
             swap_accounts,
         &[
                 [
-                    ctx.accounts.bond_pool_currency_token_mint.key.as_ref(), b"bondPoolAccount1",
+                    ctx.accounts.bond_pool_currency_token_mint.key.as_ref(), seeds::BOND_POOL_ACCOUNT,
                     &[_bump_bond_pool_account]
                 ].as_ref()
             ]

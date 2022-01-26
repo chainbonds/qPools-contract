@@ -20,11 +20,9 @@ import {
     getSolbondProgram,
     MOCK
 } from "@qpools/sdk";
-import {getInvariantProgram, QPair, QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 import {Token} from "@solana/spl-token";
 import {assert} from "chai";
-import {FEE_TIER, getMarketAddress, Market, Network, Pair} from "@invariant-labs/sdk";
 import * as saber from "@saberhq/stableswap-sdk";
 import {DepositInstruction, SwapInstruction} from "@saberhq/stableswap-sdk/src/instructions/swap";
 import {
@@ -37,8 +35,9 @@ import {
 } from "@saberhq/stableswap-sdk";
 import {tou64} from "@qpools/sdk/lib/utils";
 import {token} from "easy-spl";
+import {QPoolsAdmin} from "@qpools/admin-sdk";
 
-describe('invariant-devnet', () => {
+describe('saber-devnet', () => {
 
     // Get connection and provider
     const provider = Provider.local("https://api.devnet.solana.com");
@@ -71,7 +70,6 @@ describe('invariant-devnet', () => {
     console.log(solbondProgram.programId.toString());
 
     let market: QPoolsAdmin;
-    let invariantMarket: Market;
     let currencyMint: Token;
 
     /** Get a bunch of airdrops to pay for transactions */
@@ -107,8 +105,8 @@ describe('invariant-devnet', () => {
     it("#createCurrencyMint", async () => {
         assert.ok(solbondProgram.programId, String(solbondProgram.programId));
         // Take the currency mint from the user SDK
-        currencyMint = new Token(connection, MOCK.DEV.SOL, solbondProgram.programId, currencyOwner);
-        assert.ok(currencyMint.publicKey.equals(MOCK.DEV.SOL), currencyMint.publicKey.toString());
+        currencyMint = new Token(connection, MOCK.DEV.SABER_USDC, solbondProgram.programId, currencyOwner);
+        assert.ok(currencyMint.publicKey.equals(MOCK.DEV.SABER_USDC), currencyMint.publicKey.toString());
     })
 
     // All token accounts

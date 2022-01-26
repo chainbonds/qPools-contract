@@ -2,12 +2,15 @@ import * as anchor from '@project-serum/anchor';
 import {BN, Program, web3} from '@project-serum/anchor';
 import {Solbond} from '../target/types/solbond';
 import {Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
-import {Keypair, PublicKey} from "@solana/web3.js";
-import {WalletI} from "easy-spl";
-import {createToken} from "../deps/protocol/tests/testUtils";
-import {Key} from "readline";
-import {QPoolsAdmin} from "@qpools/admin-sdk/lib/qpools-admin-sdk/src";
+import {Keypair, PublicKey, Transaction} from "@solana/web3.js";
 import {QPoolsUser} from "@qpools/sdk";
+import {createToken} from "@qpools/admin-sdk/lib/invariant-utils";
+import {WalletI} from "easy-spl";
+import {QPoolsAdmin} from "@qpools/admin-sdk";
+import {solbondProgram} from "../../dapp-nextjs/src/programs/solbond";
+import {SEED} from "@qpools/sdk/lib/seeds";
+import {QPoolsStats} from "@qpools/sdk/lib/qpools-stats";
+import {delay} from "@qpools/sdk/lib/utils";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
@@ -107,6 +110,88 @@ describe('solbond', () => {
 
     });
 
+    // Make a purchase of the bond / staking
+    it('run function: calculateTvl', async () => {
+        console.log("Purchasing bond...");
+
+        // Do some currency airdrop
+        await qPoolsUserTool.loadExistingQPTReserve(currencyMint.publicKey);
+        await qPoolsUserTool.registerAccount();
+        await currencyMint.mintTo(qPoolsUserTool.purchaserCurrencyAccount, mintAuthority, [mintAuthority], CURRENCY_TOKEN_START_AMOUNT);
+        // await delay(1_000);
+
+        // BEGIN Some statistics BEFORE
+        console.log("Initial and final are: ");
+        const redeemableAmount_0 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsAdminTool.qPoolQPAccount)).amount);
+        console.log("Initial Redeemable Amount", redeemableAmount_0.toString());
+        const currencyAmount_0 = new BN((await currencyMint.getAccountInfo(qPoolsAdminTool.qPoolCurrencyAccount)).amount)
+        console.log("Initial Token Amount", currencyAmount_0.toString());
+        const payerSolAmount_0: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        console.log("Initial Payer Sol Amount", payerSolAmount_0.toString());
+        const payerTokenAmount_0 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsUserTool.purchaserQPTAccount)).amount);
+        console.log("Initial Payer Token Amount", payerTokenAmount_0.toString());
+        const payerCurrencyAmount_0 = new BN((await currencyMint.getAccountInfo(qPoolsUserTool.purchaserCurrencyAccount)).amount);
+        console.log("Initial Payer Currency Amount", payerCurrencyAmount_0.toString());
+        // END Some statistics BEFORE
+
+        let qpoolsStats: QPoolsStats = new QPoolsStats(
+            qPoolsAdminTool.connection,
+            currencyMint,
+            false
+        );
+
+        await delay(2000);
+        await PublicKey.findProgramAddress(
+            [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
+            qPoolsAdminTool.solbondProgram.programId
+        )
+        const [tvlAccount, bumpTvlAccount] = await PublicKey.findProgramAddress([qPoolsAdminTool.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+            qPoolsAdminTool.solbondProgram.programId
+        )
+
+        console.log("Creating transaction...");
+        // Set TVL to be different ...
+        console.log("tvlAccount", tvlAccount);
+        console.log("provider.wallet.publicKey", provider.wallet.publicKey);
+        console.log("qPoolsAdminTool.qPoolAccount", qPoolsAdminTool.qPoolAccount);
+
+        let txs = new Transaction();
+        const tx1 = qPoolsAdminTool.solbondProgram.instruction.setTvl(
+            new BN(currencyAmount_0),
+            bumpTvlAccount,
+            {
+                accounts: {
+                    tvlAccount: tvlAccount,
+                    initializer: provider.wallet.publicKey,
+                    poolAccount: qPoolsAdminTool.qPoolAccount,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: anchor.web3.SystemProgram.programId
+                },
+            }
+        )
+        txs.add(tx1);
+        console.log("Signing ...");
+        console.log("Wallet is: ");
+        let sg = await qPoolsAdminTool.connection.sendTransaction(txs, [qPoolsAdminTool.wallet]);
+        console.log("Confirming..")
+        await qPoolsAdminTool.connection.confirmTransaction(sg);
+
+        // BEGIN Some statistics AFTER
+        const redeemableAmount_1 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsAdminTool.qPoolQPAccount)).amount);
+        console.log("Final Redeemable Amount", redeemableAmount_1.toString());
+        const currencyAmount_1 = new BN((await currencyMint.getAccountInfo(qPoolsAdminTool.qPoolCurrencyAccount)).amount)
+        console.log("Final Token Amount", currencyAmount_1.toString());
+        const payerSolAmount_1: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        console.log("Final Payer Sol Amount", payerSolAmount_1.toString());
+        const payerTokenAmount_1 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsUserTool.purchaserQPTAccount)).amount);
+        console.log("Final Payer Token Amount", payerTokenAmount_1.toString());
+        const payerCurrencyAmount_1 = new BN((await currencyMint.getAccountInfo(qPoolsUserTool.purchaserCurrencyAccount)).amount);
+        console.log("Final Payer Currency Amount", payerCurrencyAmount_1.toString());
+        // END Some statistics AFTER
+
+    });
+
     // Redeem part of the bond, and simulate that the bond has generated yields
     it('#redeemBondInstance(1)', async () => {
         console.log("Redeeming bond...");
@@ -141,6 +226,88 @@ describe('solbond', () => {
         const payerCurrencyAmount_4 = new BN((await currencyMint.getAccountInfo(qPoolsUserTool.purchaserCurrencyAccount)).amount);
         console.log("Final Payer Currency Amount", payerCurrencyAmount_4.toString());
         // END Some statistics BEGIN
+    });
+
+    // Make a purchase of the bond / staking
+    it('run function: updateTvl', async () => {
+        console.log("Purchasing bond...");
+
+        // Do some currency airdrop
+        await qPoolsUserTool.loadExistingQPTReserve(currencyMint.publicKey);
+        await qPoolsUserTool.registerAccount();
+        await currencyMint.mintTo(qPoolsUserTool.purchaserCurrencyAccount, mintAuthority, [mintAuthority], CURRENCY_TOKEN_START_AMOUNT);
+        // await delay(1_000);
+
+        // BEGIN Some statistics BEFORE
+        console.log("Initial and final are: ");
+        const redeemableAmount_0 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsAdminTool.qPoolQPAccount)).amount);
+        console.log("Initial Redeemable Amount", redeemableAmount_0.toString());
+        const currencyAmount_0 = new BN((await currencyMint.getAccountInfo(qPoolsAdminTool.qPoolCurrencyAccount)).amount)
+        console.log("Initial Token Amount", currencyAmount_0.toString());
+        const payerSolAmount_0: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        console.log("Initial Payer Sol Amount", payerSolAmount_0.toString());
+        const payerTokenAmount_0 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsUserTool.purchaserQPTAccount)).amount);
+        console.log("Initial Payer Token Amount", payerTokenAmount_0.toString());
+        const payerCurrencyAmount_0 = new BN((await currencyMint.getAccountInfo(qPoolsUserTool.purchaserCurrencyAccount)).amount);
+        console.log("Initial Payer Currency Amount", payerCurrencyAmount_0.toString());
+        // END Some statistics BEFORE
+
+        let qpoolsStats: QPoolsStats = new QPoolsStats(
+            qPoolsAdminTool.connection,
+            currencyMint,
+            false
+        );
+
+        await delay(2000);
+        await PublicKey.findProgramAddress(
+            [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
+            qPoolsAdminTool.solbondProgram.programId
+        )
+        const [tvlAccount, bumpTvlAccount] = await PublicKey.findProgramAddress([qPoolsAdminTool.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+            qPoolsAdminTool.solbondProgram.programId
+        )
+
+        console.log("Creating transaction...");
+        // Set TVL to be different ...
+        console.log("tvlAccount", tvlAccount);
+        console.log("provider.wallet.publicKey", provider.wallet.publicKey);
+        console.log("qPoolsAdminTool.qPoolAccount", qPoolsAdminTool.qPoolAccount);
+
+        let txs = new Transaction();
+        const tx1 = qPoolsAdminTool.solbondProgram.instruction.setTvl(
+            new BN(currencyAmount_0),
+            bumpTvlAccount,
+            {
+                accounts: {
+                    tvlAccount: tvlAccount,
+                    initializer: provider.wallet.publicKey,
+                    poolAccount: qPoolsAdminTool.qPoolAccount,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                    systemProgram: anchor.web3.SystemProgram.programId
+                },
+            }
+        )
+        txs.add(tx1);
+        console.log("Signing ...");
+        console.log("Wallet is: ");
+        let sg = await qPoolsAdminTool.connection.sendTransaction(txs, [qPoolsAdminTool.wallet]);
+        console.log("Confirming..")
+        await qPoolsAdminTool.connection.confirmTransaction(sg);
+
+        // BEGIN Some statistics AFTER
+        const redeemableAmount_1 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsAdminTool.qPoolQPAccount)).amount);
+        console.log("Final Redeemable Amount", redeemableAmount_1.toString());
+        const currencyAmount_1 = new BN((await currencyMint.getAccountInfo(qPoolsAdminTool.qPoolCurrencyAccount)).amount)
+        console.log("Final Token Amount", currencyAmount_1.toString());
+        const payerSolAmount_1: BN = new BN(String(await provider.connection.getBalance(payer.publicKey)));
+        console.log("Final Payer Sol Amount", payerSolAmount_1.toString());
+        const payerTokenAmount_1 = new BN((await qPoolsAdminTool.QPTokenMint.getAccountInfo(qPoolsUserTool.purchaserQPTAccount)).amount);
+        console.log("Final Payer Token Amount", payerTokenAmount_1.toString());
+        const payerCurrencyAmount_1 = new BN((await currencyMint.getAccountInfo(qPoolsUserTool.purchaserCurrencyAccount)).amount);
+        console.log("Final Payer Currency Amount", payerCurrencyAmount_1.toString());
+        // END Some statistics AFTER
+
     });
 
     it('#redeemBondInstance(2)', async () => {

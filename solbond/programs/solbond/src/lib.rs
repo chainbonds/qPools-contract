@@ -7,11 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-// declare_id!( Pubkey::from_str(env!("PROGRAM_ID")) );
-// declare_id!( "Bqv9hG1f9e3V4w5BfQu6Sqf2Su8dH8Y7ZJcy7XyZyk4A" );
-declare_id!("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
-// static KEY: &str = env!("PROGRAM_ID");
-// declare_id!(KEY);
+declare_id!("32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
@@ -103,12 +99,14 @@ pub mod solbond {
     */
     pub fn initialize_bond_pool(
         ctx: Context<InitializeBondPool>,
-        _bump_bond_pool_account: u8
+        _bump_bond_pool_account: u8,
+        _bump_tvl_account: u8
     ) -> ProgramResult {
 
         instructions::initialize_bond_pool::handler(
             ctx,
-            _bump_bond_pool_account
+            _bump_bond_pool_account,
+            _bump_tvl_account
         )
     }
 
@@ -120,9 +118,14 @@ pub mod solbond {
     pub fn purchase_bond(
         ctx: Context<PurchaseBond>,
         amount_raw: u64,
+        _bump_tvl_account: u8
     ) -> ProgramResult {
 
-        instructions::purchase_bond::handler(ctx, amount_raw)
+        instructions::purchase_bond::handler(
+            ctx,
+            amount_raw,
+            _bump_tvl_account
+        )
     }
 
     /**
@@ -135,103 +138,14 @@ pub mod solbond {
     */
     pub fn redeem_bond(
         ctx: Context<RedeemBond>,
-        redeemable_amount_raw: u64
+        redeemable_amount_raw: u64,
+        _bump_tvl_account: u8
     ) -> ProgramResult {
 
-        instructions::redeem_bond::handler(ctx, redeemable_amount_raw)
-    }
-
-    /**
-    * Register all the pools that are defined by invariant
-    *
-    */
-    pub fn swap_pair(
-        ctx: Context<SwapPairInstruction>,
-        _bump_bond_pool_account: u8,
-        x_to_y: bool,
-        amount: u64,
-        by_amount_in: bool,
-        sqrt_price_limit: u128,
-    ) -> ProgramResult {
-        instructions::swap_pair::handler(
+        instructions::redeem_bond::handler(
             ctx,
-            _bump_bond_pool_account,
-            x_to_y,
-            amount,
-            by_amount_in,
-            sqrt_price_limit,
-        )
-    }
-
-
-    /**
-     * Register all the pools that are defined by invariant
-     *
-     */
-    // Should probably import the Decimal types?
-    pub fn create_liquidity_position(
-        ctx: Context<CreateLiquidityPosition>,
-        _position_bump: u8,
-        _bump_bond_pool_account: u8,
-        _lower_tick_index: i32,
-        _upper_tick_index: i32,
-        liquidity_delta: u128
-    ) -> ProgramResult {
-
-        // For now assume that our portfolio has an equal weight across all pools
-        instructions::create_liquidity_position::handler(
-            ctx,
-            _position_bump,
-            _bump_bond_pool_account,
-            _lower_tick_index,
-            _upper_tick_index,
-            liquidity_delta
-        )
-    }
-
-    pub fn collect_fees(
-        ctx: Context<ClaimFeeInstruction>,
-        _bump_bond_pool_account: u8,
-        _index: u32,
-        lower_tick_index: i32, 
-        upper_tick_index: i32,
-    ) -> ProgramResult {
-
-        instructions::collect_fees::handler(
-            ctx,
-            _bump_bond_pool_account,
-            _index,
-            lower_tick_index,
-            upper_tick_index
-        )
-
-    }
-
-    pub fn close_liquidity_position(
-        ctx: Context<CloseLiquidityPosition>,
-        _position_bump: u8,
-        _bump_bond_pool_account: u8,
-        position_index: u32,
-        lower_tick_index: i32,
-        upper_tick_index: i32
-    ) -> ProgramResult {
-        instructions::close_liquidity_position::handler(
-            ctx,
-            _position_bump,
-            _bump_bond_pool_account,
-            position_index,
-            lower_tick_index,
-            upper_tick_index
-        )
-    }
-
-    pub fn create_tvl(
-        ctx: Context<CreateTvl>,
-        tvl_account_bump: u8
-    ) -> ProgramResult {
-        instructions::create_tvl_account::handler(
-            ctx,
-            tvl_account_bump
+            redeemable_amount_raw,
+            _bump_tvl_account
         )
     }
 
@@ -261,7 +175,7 @@ pub enum ErrorCode {
     LowBondTokAmount,
     #[msg("Asking for too much SOL when redeeming!")]
     RedeemCapacity,
-    #[msg("Need to send more than 0 SOL!")]
+    #[msg("Not enough credits!")]
     MinPurchaseAmount,
     #[msg("Provided times are not an interval (end-time before start-time!)")]
     TimeFrameIsNotAnInterval,
@@ -281,22 +195,52 @@ pub enum ErrorCode {
     Calculation,
     #[msg("Returning no Tokens!")]
     ReturningNoCurrency,
-    #[msg("Custom Error 1!")]
+    #[msg("Custom Math Error 1!")]
     CustomMathError1,
-    #[msg("Custom Error 2!")]
+    #[msg("Custom Math Error 2!")]
     CustomMathError2,
-    #[msg("Custom Error 3!")]
+    #[msg("Custom Math Error 3!")]
     CustomMathError3,
-    #[msg("Custom Error 4!")]
+    #[msg("Custom Math Error 4!")]
     CustomMathError4,
-    #[msg("Custom Error 5!")]
+    #[msg("Custom Math Error 5!")]
     CustomMathError5,
-    #[msg("Custom Error 6!")]
+    #[msg("Custom Math Error 6!")]
     CustomMathError6,
-    #[msg("Custom Error 7!")]
+    #[msg("Custom Math Error 7!")]
     CustomMathError7,
-    #[msg("Custom Error 8!")]
+    #[msg("Custom Math Error 8!")]
     CustomMathError8,
+    #[msg("Custom Math Error 9!")]
+    CustomMathError9,
+    #[msg("Custom Math Error 10!")]
+    CustomMathError10,
+    #[msg("Custom Math Error 11!")]
+    CustomMathError11,
+    #[msg("Custom Math Error 12!")]
+    CustomMathError12,
+    #[msg("Custom Math Error 13!")]
+    CustomMathError13,
+    #[msg("Custom Math Error 14!")]
+    CustomMathError14,
+    #[msg("Custom Math Error 15!")]
+    CustomMathError15,
+    #[msg("Custom Math Error 16!")]
+    CustomMathError16,
+    #[msg("Custom Math Error 17!")]
+    CustomMathError17,
+    #[msg("Custom Math Error 18!")]
+    CustomMathError18,
+    #[msg("Custom Math Error 19!")]
+    CustomMathError19,
+    #[msg("Custom Math Error 20!")]
+    CustomMathError20,
+    #[msg("Custom Math Error 21!")]
+    CustomMathError21,
+    #[msg("Custom Math Error 22!")]
+    CustomMathError22,
     #[msg("Total Token Supply seems empty!")]
     EmptyTotalTokenSupply,
+    #[msg("Total Currency Supply seems empty!")]
+    EmptyTotalCurrencySupply,
 }

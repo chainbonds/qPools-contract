@@ -2,11 +2,13 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::state::BondPoolAccount;
+use crate::state::{BondPoolAccount, TvlInfoAccount};
+use crate::utils::seeds;
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_bond_pool_account: u8
+    _bump_bond_pool_account: u8,
+    _bump_tvl_account: u8
 )]
 pub struct InitializeBondPool<'info> {
 
@@ -14,10 +16,10 @@ pub struct InitializeBondPool<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 8 + BondPoolAccount::LEN,
-        seeds = [bond_pool_currency_token_mint.key().as_ref(), b"bondPoolAccount1"], bump = _bump_bond_pool_account
+        space = BondPoolAccount::LEN,
+        seeds = [bond_pool_currency_token_mint.key().as_ref(), seeds::BOND_POOL_ACCOUNT], bump = _bump_bond_pool_account
     )]
-    pub bond_pool_account: Account<'info, BondPoolAccount>,
+    pub bond_pool_account: Box<Account<'info, BondPoolAccount>>,
 
     // #[account(
     //     init,
@@ -47,6 +49,15 @@ pub struct InitializeBondPool<'info> {
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
 
+    #[account(
+        init,
+        payer = initializer,
+        space = 8 + 64 + 8,
+        seeds = [bond_pool_account.key().as_ref(), seeds::TVL_INFO_ACCOUNT],
+        bump = _bump_tvl_account
+    )]
+    pub tvl_account: Account<'info, TvlInfoAccount>,
+
     // The standards accounts
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
@@ -56,7 +67,8 @@ pub struct InitializeBondPool<'info> {
 
 pub fn handler(
     ctx: Context<InitializeBondPool>,
-    _bump_bond_pool_account: u8
+    _bump_bond_pool_account: u8,
+    _bump_tvl_account: u8
 ) -> ProgramResult {
 
     let bond_account = &mut ctx.accounts.bond_pool_account;
@@ -66,6 +78,12 @@ pub fn handler(
     bond_account.bond_pool_redeemable_token_account = ctx.accounts.bond_pool_redeemable_token_account.key();
     bond_account.bond_pool_currency_token_account = ctx.accounts.bond_pool_currency_token_account.key();
     bond_account.bump_bond_pool_account = _bump_bond_pool_account;
+
+    // // The also set the TVL Account to 0., because right now nothing is in the pool
+    let tvl_account = &mut ctx.accounts.tvl_account;
+    tvl_account.tvl_in_usdc = 0;
+    tvl_account.decimals = ctx.accounts.bond_pool_currency_token_mint.decimals;
+    tvl_account.tvl_mint = ctx.accounts.bond_pool_currency_token_mint.key();
 
     Ok(())
 }

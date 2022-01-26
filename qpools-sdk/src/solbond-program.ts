@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import {clusterApiUrl, Connection} from "@solana/web3.js";
+import {Connection} from "@solana/web3.js";
 import {Provider} from "@project-serum/anchor";
 import {IDL} from "./idl/solbond";
 import {NETWORK} from "./cluster";
@@ -9,9 +9,9 @@ export const getSolbondProgram = (connection: Connection, provider: Provider, ne
     // Have a list of all addresses, based on DEVNET, MAINNET, ETC.
     let programAddress;
     if (network == NETWORK.LOCALNET) {
-        programAddress = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E";
+        programAddress = "32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt";
     } else if (network == NETWORK.DEVNET) {
-        programAddress = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E";
+        programAddress = "32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt";
     } else if (network == NETWORK.TESTNET) {
         programAddress = "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E";
     } else if (network == NETWORK.MAINNET) {

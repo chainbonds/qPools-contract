@@ -111,3 +111,18 @@ Debugging:
 -------
 
 At least one portfolio assignment has to have been done
+
+
+-----
+
+Before running the cranks, or deploy pools, make sure you build and deployed your smart contract ...
+
+
+----
+
+Whenever an address changes, there's three places where it needs to be changed:
+```
+lib.rs
+solbond-program.ts
+Anchor.toml
+```

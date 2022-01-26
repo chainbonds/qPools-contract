@@ -23,7 +23,7 @@ export const AirdropButton: FC = ({}) => {
         // Let's airdrop 3 SOL to the user
         let _airdropAmount: number = 5;
         // TODO: USDC has 6 decimal items, gotta consider this!
-        let airdropAmount: BN = new BN(_airdropAmount).mul(new BN(1e6));
+        let airdropAmount: BN = new BN(_airdropAmount).mul(new BN(10 ** MOCK.DEV.SABER_USDC_DECIMALS));
         if (!qPoolContext.userAccount || !qPoolContext.userAccount!.publicKey) {
             alert("Please connect your wallet first!");
             return

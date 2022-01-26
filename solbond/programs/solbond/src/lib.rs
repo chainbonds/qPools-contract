@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-declare_id!("Bv9aWUSsGfBdkuYG7q4qAWMoYhHKXq4CZpD3rupLEUwf");
+declare_id!("32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
@@ -195,22 +195,50 @@ pub enum ErrorCode {
     Calculation,
     #[msg("Returning no Tokens!")]
     ReturningNoCurrency,
-    #[msg("Custom Error 1!")]
+    #[msg("Custom Math Error 1!")]
     CustomMathError1,
-    #[msg("Custom Error 2!")]
+    #[msg("Custom Math Error 2!")]
     CustomMathError2,
-    #[msg("Custom Error 3!")]
+    #[msg("Custom Math Error 3!")]
     CustomMathError3,
-    #[msg("Custom Error 4!")]
+    #[msg("Custom Math Error 4!")]
     CustomMathError4,
-    #[msg("Custom Error 5!")]
+    #[msg("Custom Math Error 5!")]
     CustomMathError5,
-    #[msg("Custom Error 6!")]
+    #[msg("Custom Math Error 6!")]
     CustomMathError6,
-    #[msg("Custom Error 7!")]
+    #[msg("Custom Math Error 7!")]
     CustomMathError7,
-    #[msg("Custom Error 8!")]
+    #[msg("Custom Math Error 8!")]
     CustomMathError8,
+    #[msg("Custom Math Error 9!")]
+    CustomMathError9,
+    #[msg("Custom Math Error 10!")]
+    CustomMathError10,
+    #[msg("Custom Math Error 11!")]
+    CustomMathError11,
+    #[msg("Custom Math Error 12!")]
+    CustomMathError12,
+    #[msg("Custom Math Error 13!")]
+    CustomMathError13,
+    #[msg("Custom Math Error 14!")]
+    CustomMathError14,
+    #[msg("Custom Math Error 15!")]
+    CustomMathError15,
+    #[msg("Custom Math Error 16!")]
+    CustomMathError16,
+    #[msg("Custom Math Error 17!")]
+    CustomMathError17,
+    #[msg("Custom Math Error 18!")]
+    CustomMathError18,
+    #[msg("Custom Math Error 19!")]
+    CustomMathError19,
+    #[msg("Custom Math Error 20!")]
+    CustomMathError20,
+    #[msg("Custom Math Error 21!")]
+    CustomMathError21,
+    #[msg("Custom Math Error 22!")]
+    CustomMathError22,
     #[msg("Total Token Supply seems empty!")]
     EmptyTotalTokenSupply,
 }

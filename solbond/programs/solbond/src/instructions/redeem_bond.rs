@@ -87,9 +87,10 @@ pub fn handler(
     }
 
     // TODO: Double check that the user actually has less than this in their amount
-    let total_redeemable_supply: u64 = ctx.accounts.bond_pool_redeemable_mint.supply;
+    let total_redeemable_supply: u128 = ctx.accounts.bond_pool_redeemable_mint.supply as u128;
     // let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
-    let total_currency_token_supply: u64 = ctx.accounts.tvl_account.tvl_in_usdc;
+    let total_currency_token_supply: u128 = ctx.accounts.tvl_account.tvl_in_usdc as u128;
+    let redeemable_amount_raw: u128 = redeemable_amount_raw as u128;
 
     // TODO, these are not total supplies, but amounts for this pool
     // Actually, these are total supplies
@@ -98,23 +99,32 @@ pub fn handler(
         return Err(ErrorCode::EmptyTotalTokenSupply.into());
     }
 
+    let currency_decimals: u128 = 10_i32.checked_pow(ctx.accounts.tvl_account.decimals as u32).ok_or_else( | | {ErrorCode::CustomMathError15})? as u128;
+    let redeemables_decimals: u128 = 10_i32.checked_pow(ctx.accounts.bond_pool_redeemable_mint.decimals as u32).ok_or_else( | | {ErrorCode::CustomMathError16})? as u128;
+
+    total_redeemable_supply.checked_mul(currency_decimals).ok_or_else( | | {ErrorCode::CustomMathError17})?;
+    total_currency_token_supply.checked_mul(redeemables_decimals).ok_or_else( | | {ErrorCode::CustomMathError18})?;
+    redeemable_amount_raw.checked_mul(currency_decimals).ok_or_else( | | {ErrorCode::CustomMathError19})?;
+
     /*
     * Step 1: Calculate Market Rate
     *    How many SOL, per redeemable to distribute
     */
-    let currency_token_to_be_distributed: u64;
+    let _currency_token_to_be_distributed: u128;
     match calculate_currency_token_to_be_distributed(
         total_currency_token_supply,
         total_redeemable_supply,
         redeemable_amount_raw
     ) {
         Ok(x) => {
-            currency_token_to_be_distributed = x;
+            _currency_token_to_be_distributed = x;
         },
         Err(error) => {
             return Err(error.into());
         }
     }
+
+    let currency_token_to_be_distributed: u64 = _currency_token_to_be_distributed.checked_div(redeemables_decimals).ok_or_else( | | {ErrorCode::CustomMathError20})? as u64;
 
     if currency_token_to_be_distributed == 0 {
         return Err(ErrorCode::ReturningNoCurrency.into());
@@ -147,7 +157,7 @@ pub fn handler(
                 ].as_ref()
             ],
         ),
-        redeemable_amount_raw,
+        redeemable_amount_raw as u64,
     )?;
 
     /*
@@ -168,7 +178,7 @@ pub fn handler(
                 ctx.accounts.bond_pool_currency_token_mint.key().as_ref(), seeds::BOND_POOL_ACCOUNT,
                 &[ctx.accounts.bond_pool_account.bump_bond_pool_account]
             ].as_ref()],
-        ), currency_token_to_be_distributed)?;
+        ), currency_token_to_be_distributed as u64)?;
 
 
     Ok(())

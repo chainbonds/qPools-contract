@@ -1,6 +1,8 @@
 import {PublicKey} from "@solana/web3.js";
 import {BN} from "@project-serum/anchor";
 
+export const REDEEMABLES_DECIMALS = 9;
+
 export const MOCK = {
     // DEV: {
     //     SOL: new PublicKey("F8G26LpQSBUvdoYtAXJccLKUqQqzTdHwaoHixTDhcLJ1"),
@@ -14,6 +16,7 @@ export const MOCK = {
         MSOL: new PublicKey('4r8WDEvBntEr3dT69p7ua1rsaWcpTSHnKpY5JugDkcPQ'),
 
         SABER_USDC: new PublicKey('2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8'),
+        SABER_USDC_DECIMALS: 6,
         SABER_TESTUSD: new PublicKey('4QgnWUPQmfGB5dTDCcc4ZFeZDK7xNVhCUFoNmmYFwAme'),
         SABER_PAI: new PublicKey('4ry1pMstKzMJvMZSms62HduTyCbbqkUyrz17x1dajBmL'),
         SABER_sWBTC: new PublicKey('BtceyXMo5kwg8u6es4NoukBWQuMwtcBCZpFWUfZgVuZs'),

@@ -44,9 +44,9 @@ export default function Statistics(props: any) {
 
     useEffect(() => {
         updateStatistics();
-        setInterval(() => {
-            updateStatistics();
-        }, 5000);
+        // setInterval(() => {
+        //     updateStatistics();
+        // }, 30000);
 
     }, [qPoolContext, qPoolContext.qPoolsStats])
 

@@ -427,8 +427,16 @@ export type SolbondIdl = {
                 "kind": "struct",
                 "fields": [
                     {
+                        "name": "tvlMint",
+                        "type": "publicKey"
+                    },
+                    {
                         "name": "tvlInUsdc",
                         "type": "u64"
+                    },
+                    {
+                        "name": "decimals",
+                        "type": "u8"
                     }
                 ]
             }
@@ -503,51 +511,121 @@ export type SolbondIdl = {
         {
             "code": 6013,
             "name": "CustomMathError1",
-            "msg": "Custom Error 1!"
+            "msg": "Custom Math Error 1!"
         },
         {
             "code": 6014,
             "name": "CustomMathError2",
-            "msg": "Custom Error 2!"
+            "msg": "Custom Math Error 2!"
         },
         {
             "code": 6015,
             "name": "CustomMathError3",
-            "msg": "Custom Error 3!"
+            "msg": "Custom Math Error 3!"
         },
         {
             "code": 6016,
             "name": "CustomMathError4",
-            "msg": "Custom Error 4!"
+            "msg": "Custom Math Error 4!"
         },
         {
             "code": 6017,
             "name": "CustomMathError5",
-            "msg": "Custom Error 5!"
+            "msg": "Custom Math Error 5!"
         },
         {
             "code": 6018,
             "name": "CustomMathError6",
-            "msg": "Custom Error 6!"
+            "msg": "Custom Math Error 6!"
         },
         {
             "code": 6019,
             "name": "CustomMathError7",
-            "msg": "Custom Error 7!"
+            "msg": "Custom Math Error 7!"
         },
         {
             "code": 6020,
             "name": "CustomMathError8",
-            "msg": "Custom Error 8!"
+            "msg": "Custom Math Error 8!"
         },
         {
             "code": 6021,
+            "name": "CustomMathError9",
+            "msg": "Custom Math Error 9!"
+        },
+        {
+            "code": 6022,
+            "name": "CustomMathError10",
+            "msg": "Custom Math Error 10!"
+        },
+        {
+            "code": 6023,
+            "name": "CustomMathError11",
+            "msg": "Custom Math Error 11!"
+        },
+        {
+            "code": 6024,
+            "name": "CustomMathError12",
+            "msg": "Custom Math Error 12!"
+        },
+        {
+            "code": 6025,
+            "name": "CustomMathError13",
+            "msg": "Custom Math Error 13!"
+        },
+        {
+            "code": 6026,
+            "name": "CustomMathError14",
+            "msg": "Custom Math Error 14!"
+        },
+        {
+            "code": 6027,
+            "name": "CustomMathError15",
+            "msg": "Custom Math Error 15!"
+        },
+        {
+            "code": 6028,
+            "name": "CustomMathError16",
+            "msg": "Custom Math Error 16!"
+        },
+        {
+            "code": 6029,
+            "name": "CustomMathError17",
+            "msg": "Custom Math Error 17!"
+        },
+        {
+            "code": 6030,
+            "name": "CustomMathError18",
+            "msg": "Custom Math Error 18!"
+        },
+        {
+            "code": 6031,
+            "name": "CustomMathError19",
+            "msg": "Custom Math Error 19!"
+        },
+        {
+            "code": 6032,
+            "name": "CustomMathError20",
+            "msg": "Custom Math Error 20!"
+        },
+        {
+            "code": 6033,
+            "name": "CustomMathError21",
+            "msg": "Custom Math Error 21!"
+        },
+        {
+            "code": 6034,
+            "name": "CustomMathError22",
+            "msg": "Custom Math Error 22!"
+        },
+        {
+            "code": 6035,
             "name": "EmptyTotalTokenSupply",
             "msg": "Total Token Supply seems empty!"
         }
     ],
     "metadata": {
-        "address": "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
+        "address": "32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt"
     }
 }
 
@@ -980,8 +1058,16 @@ export const IDL: SolbondIdl = {
                 "kind": "struct",
                 "fields": [
                     {
+                        "name": "tvlMint",
+                        "type": "publicKey"
+                    },
+                    {
                         "name": "tvlInUsdc",
                         "type": "u64"
+                    },
+                    {
+                        "name": "decimals",
+                        "type": "u8"
                     }
                 ]
             }
@@ -1056,50 +1142,120 @@ export const IDL: SolbondIdl = {
         {
             "code": 6013,
             "name": "CustomMathError1",
-            "msg": "Custom Error 1!"
+            "msg": "Custom Math Error 1!"
         },
         {
             "code": 6014,
             "name": "CustomMathError2",
-            "msg": "Custom Error 2!"
+            "msg": "Custom Math Error 2!"
         },
         {
             "code": 6015,
             "name": "CustomMathError3",
-            "msg": "Custom Error 3!"
+            "msg": "Custom Math Error 3!"
         },
         {
             "code": 6016,
             "name": "CustomMathError4",
-            "msg": "Custom Error 4!"
+            "msg": "Custom Math Error 4!"
         },
         {
             "code": 6017,
             "name": "CustomMathError5",
-            "msg": "Custom Error 5!"
+            "msg": "Custom Math Error 5!"
         },
         {
             "code": 6018,
             "name": "CustomMathError6",
-            "msg": "Custom Error 6!"
+            "msg": "Custom Math Error 6!"
         },
         {
             "code": 6019,
             "name": "CustomMathError7",
-            "msg": "Custom Error 7!"
+            "msg": "Custom Math Error 7!"
         },
         {
             "code": 6020,
             "name": "CustomMathError8",
-            "msg": "Custom Error 8!"
+            "msg": "Custom Math Error 8!"
         },
         {
             "code": 6021,
+            "name": "CustomMathError9",
+            "msg": "Custom Math Error 9!"
+        },
+        {
+            "code": 6022,
+            "name": "CustomMathError10",
+            "msg": "Custom Math Error 10!"
+        },
+        {
+            "code": 6023,
+            "name": "CustomMathError11",
+            "msg": "Custom Math Error 11!"
+        },
+        {
+            "code": 6024,
+            "name": "CustomMathError12",
+            "msg": "Custom Math Error 12!"
+        },
+        {
+            "code": 6025,
+            "name": "CustomMathError13",
+            "msg": "Custom Math Error 13!"
+        },
+        {
+            "code": 6026,
+            "name": "CustomMathError14",
+            "msg": "Custom Math Error 14!"
+        },
+        {
+            "code": 6027,
+            "name": "CustomMathError15",
+            "msg": "Custom Math Error 15!"
+        },
+        {
+            "code": 6028,
+            "name": "CustomMathError16",
+            "msg": "Custom Math Error 16!"
+        },
+        {
+            "code": 6029,
+            "name": "CustomMathError17",
+            "msg": "Custom Math Error 17!"
+        },
+        {
+            "code": 6030,
+            "name": "CustomMathError18",
+            "msg": "Custom Math Error 18!"
+        },
+        {
+            "code": 6031,
+            "name": "CustomMathError19",
+            "msg": "Custom Math Error 19!"
+        },
+        {
+            "code": 6032,
+            "name": "CustomMathError20",
+            "msg": "Custom Math Error 20!"
+        },
+        {
+            "code": 6033,
+            "name": "CustomMathError21",
+            "msg": "Custom Math Error 21!"
+        },
+        {
+            "code": 6034,
+            "name": "CustomMathError22",
+            "msg": "Custom Math Error 22!"
+        },
+        {
+            "code": 6035,
             "name": "EmptyTotalTokenSupply",
             "msg": "Total Token Supply seems empty!"
         }
     ],
     "metadata": {
-        "address": "3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E"
+        "address": "32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt"
     }
 }

@@ -15,7 +15,7 @@ import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {BN} from "@project-serum/anchor";
 import {useLoad} from "../../contexts/LoadingContext";
-import {MATH_DENOMINATOR} from "@qpools/sdk/lib/const";
+import {MATH_DENOMINATOR, REDEEMABLES_DECIMALS} from "@qpools/sdk/lib/const";
 
 export default function UnstakeForm() {
 
@@ -50,7 +50,7 @@ export default function UnstakeForm() {
         console.log(JSON.stringify(d));
 
         // TODO: All decimals should be registered somewhere!
-        const sendAmount: BN = new BN(valueInQPT).mul(new BN(1e9));
+        const sendAmount: BN = new BN(valueInQPT).mul(new BN(10**REDEEMABLES_DECIMALS));
         console.log("send amount qpt is: ", sendAmount.toString());
 
         if (!qPoolContext.userAccount!.publicKey) {

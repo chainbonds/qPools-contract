@@ -50,7 +50,7 @@ export default function StakeForm() {
         console.log(JSON.stringify(d));
 
         // TODO: All decimals should be registered somewhere!
-        const sendAmount: BN = new BN(valueInUsd).mul(new BN(1e6));
+        const sendAmount: BN = new BN(valueInUsd).mul(new BN(10**MOCK.DEV.SABER_USDC_DECIMALS));
         console.log("send amount is: ", sendAmount.toString());
 
         if (!qPoolContext.userAccount!.publicKey) {

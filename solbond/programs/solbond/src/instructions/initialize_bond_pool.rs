@@ -52,7 +52,7 @@ pub struct InitializeBondPool<'info> {
     #[account(
         init,
         payer = initializer,
-        space = 8 + 64,
+        space = 8 + 64 + 8,
         seeds = [bond_pool_account.key().as_ref(), seeds::TVL_INFO_ACCOUNT],
         bump = _bump_tvl_account
     )]
@@ -80,8 +80,10 @@ pub fn handler(
     bond_account.bump_bond_pool_account = _bump_bond_pool_account;
 
     // // The also set the TVL Account to 0., because right now nothing is in the pool
-    // let tvl_account = &mut ctx.accounts.tvl_account;
-    // tvl_account.tvl_in_usdc = 0;
+    let tvl_account = &mut ctx.accounts.tvl_account;
+    tvl_account.tvl_in_usdc = 0;
+    tvl_account.decimals = ctx.accounts.bond_pool_currency_token_mint.decimals;
+    tvl_account.tvl_mint = ctx.accounts.bond_pool_currency_token_mint.key();
 
     Ok(())
 }

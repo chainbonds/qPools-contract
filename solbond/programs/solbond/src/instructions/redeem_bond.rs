@@ -87,9 +87,9 @@ pub fn handler(
     }
 
     // TODO: Double check that the user actually has less than this in their amount
-    let total_redeemable_supply: u128 = ctx.accounts.bond_pool_redeemable_mint.supply as u128;
+    let mut total_redeemable_supply: u128 = ctx.accounts.bond_pool_redeemable_mint.supply as u128;
     // let total_currency_token_supply: u64 = ctx.accounts.bond_pool_currency_token_account.amount;
-    let total_currency_token_supply: u128 = ctx.accounts.tvl_account.tvl_in_usdc as u128;
+    let mut total_currency_token_supply: u128 = ctx.accounts.tvl_account.tvl_in_usdc as u128;
     let redeemable_amount_raw: u128 = redeemable_amount_raw as u128;
 
     // TODO, these are not total supplies, but amounts for this pool
@@ -98,23 +98,35 @@ pub fn handler(
     if total_redeemable_supply == 0 {
         return Err(ErrorCode::EmptyTotalTokenSupply.into());
     }
+    if total_currency_token_supply == 0 {
+        return Err(ErrorCode::EmptyTotalCurrencySupply.into());
+    }
 
     let currency_decimals: u128 = 10_i32.checked_pow(ctx.accounts.tvl_account.decimals as u32).ok_or_else( | | {ErrorCode::CustomMathError15})? as u128;
     let redeemables_decimals: u128 = 10_i32.checked_pow(ctx.accounts.bond_pool_redeemable_mint.decimals as u32).ok_or_else( | | {ErrorCode::CustomMathError16})? as u128;
 
-    total_redeemable_supply.checked_mul(currency_decimals).ok_or_else( | | {ErrorCode::CustomMathError17})?;
-    total_currency_token_supply.checked_mul(redeemables_decimals).ok_or_else( | | {ErrorCode::CustomMathError18})?;
-    redeemable_amount_raw.checked_mul(currency_decimals).ok_or_else( | | {ErrorCode::CustomMathError19})?;
+    msg!("deimals ctx is: {}", ctx.accounts.bond_pool_redeemable_mint.decimals);
+    msg!("deimals converted is: {}", ctx.accounts.bond_pool_redeemable_mint.decimals as u32);
 
+    msg!("Redeemable decimals before are: {}", redeemables_decimals);
+    total_redeemable_supply = total_redeemable_supply.checked_mul(currency_decimals).ok_or_else( | | {ErrorCode::CustomMathError17})?;
+    total_currency_token_supply = total_currency_token_supply.checked_mul(redeemables_decimals).ok_or_else( | | {ErrorCode::CustomMathError18})?;
+    let exponential_redeemable_amount_raw = redeemable_amount_raw.checked_mul(currency_decimals).ok_or_else( | | {ErrorCode::CustomMathError19})?;
+    msg!("Redeemable decimals after multi are: {}", redeemables_decimals);
     /*
     * Step 1: Calculate Market Rate
     *    How many SOL, per redeemable to distribute
     */
+    msg!("Inputs are");
+    msg!("{}", total_currency_token_supply);
+    msg!("{}", total_redeemable_supply);
+    msg!("{}", exponential_redeemable_amount_raw);
+
     let _currency_token_to_be_distributed: u128;
     match calculate_currency_token_to_be_distributed(
         total_currency_token_supply,
         total_redeemable_supply,
-        redeemable_amount_raw
+        exponential_redeemable_amount_raw
     ) {
         Ok(x) => {
             _currency_token_to_be_distributed = x;
@@ -124,7 +136,11 @@ pub fn handler(
         }
     }
 
+    msg!("Total amount items are: ");
+    msg!("{}", _currency_token_to_be_distributed);
+    msg!("{}", redeemables_decimals);
     let currency_token_to_be_distributed: u64 = _currency_token_to_be_distributed.checked_div(redeemables_decimals).ok_or_else( | | {ErrorCode::CustomMathError20})? as u64;
+    msg!("{}", currency_token_to_be_distributed);
 
     if currency_token_to_be_distributed == 0 {
         return Err(ErrorCode::ReturningNoCurrency.into());
@@ -136,7 +152,7 @@ pub fn handler(
     msg!("total_redeemable_supply");
     msg!(&total_redeemable_supply.to_string());
     msg!("redeemable_amount_raw");
-    msg!(&redeemable_amount_raw.to_string());
+    msg!(&exponential_redeemable_amount_raw.to_string());
 
     /*
      * Step 2: Burn Bond Token
@@ -183,3 +199,5 @@ pub fn handler(
 
     Ok(())
 }
+
+

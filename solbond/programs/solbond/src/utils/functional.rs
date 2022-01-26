@@ -41,7 +41,8 @@ use crate::utils::constants::CUT_PERCENTAGE;
 pub fn calculate_redeemables_to_be_distributed(
     currency_total_supply_raw: u128,
     redeemable_total_supply_raw: u128,
-    delta_currency_added_raw: u128
+    delta_currency_added_raw: u128,
+    redeemable_decimals: u128,
 ) -> Result<u128, ErrorCode> {
 
     // TODO: Write rust unittests for these
@@ -58,7 +59,8 @@ pub fn calculate_redeemables_to_be_distributed(
             currency_total_supply_raw,
             delta_currency_added_raw);
         // Modify this with the decimal numbers ...
-        return Ok(delta_currency_added_raw);
+        let out = delta_currency_added_raw.checked_mul(redeemable_decimals).ok_or_else( | | {ErrorCode::CustomMathError20})?;
+        return Ok(out);
     }
 
     // Lamports should be automatically accounted for

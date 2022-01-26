@@ -5,6 +5,6 @@
  */
 
 export const SEED = {
-    BOND_POOL_ACCOUNT: "bondPoolAccount5",
-    TVL_INFO_ACCOUNT: "tvlInfoAccount5",
+    BOND_POOL_ACCOUNT: "bondPoolAccount6",
+    TVL_INFO_ACCOUNT: "tvlInfoAccount6",
 }

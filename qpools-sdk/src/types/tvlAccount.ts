@@ -1,5 +1,8 @@
 import {BN} from "@project-serum/anchor";
+import {PublicKey} from "@solana/web3.js";
 
 export interface TvlInUsdc {
-    tvlInUsdc: BN
+    tvlMint: PublicKey,
+    tvlInUsdc: BN,
+    decimals: number
 }

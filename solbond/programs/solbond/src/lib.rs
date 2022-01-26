@@ -241,4 +241,6 @@ pub enum ErrorCode {
     CustomMathError22,
     #[msg("Total Token Supply seems empty!")]
     EmptyTotalTokenSupply,
+    #[msg("Total Currency Supply seems empty!")]
+    EmptyTotalCurrencySupply,
 }

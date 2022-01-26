@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {IQPool, useQPoolUserTool} from "../contexts/QPoolsProvider";
 import {delay} from "@qpools/sdk/lib/utils";
+import {BN} from "@project-serum/anchor";
 
 export default function Statistics(props: any) {
 
@@ -8,6 +9,7 @@ export default function Statistics(props: any) {
     const qPoolContext: IQPool = useQPoolUserTool();
     const [tvl, setTvl] = useState<number>(0.);
     const [totalQPT, setTotalQPT] = useState<number>(0.);
+    const [tvlDecimals, setTvlDecimals] = useState<number>(0.);
 
     const initializeQPoolsAndCalculateTVL = async () => {
         console.log("Loaded qpoolsuser");
@@ -30,8 +32,10 @@ export default function Statistics(props: any) {
 
                 qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
                     qPoolContext.qPoolsStats!.fetchTVL().then(out => {
+                        console.log("Tvl decimals are: ", out.tvlDecimals);
                         setTvl((_) => out.tvl.toNumber());
                         setTotalQPT((_) => out.totalQPT);
+                        setTvlDecimals((_) => out.tvlDecimals);
                     })
                 });
 
@@ -69,7 +73,7 @@ export default function Statistics(props: any) {
     return (
         <>
             <div className={"flex flex-col md:flex-row items-center lg:items-begin"}>
-                {singleBox("Total Value Locked", "$ " + String((tvl).toFixed(2) ) + " USD")}
+                {singleBox("Total Value Locked", "$ " + String((tvl / (10 ** tvlDecimals)).toFixed(2) ) + " USD")}
                 {singleBox("Total QPT Minted", String(totalQPT.toFixed(0)) + " QPT")}
                 {singleBox("7 Day APY", "Coming Soon")}
                 {/*8.02%*/}

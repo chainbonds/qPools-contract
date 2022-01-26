@@ -622,11 +622,13 @@ export type SolbondIdl = {
             "code": 6035,
             "name": "EmptyTotalTokenSupply",
             "msg": "Total Token Supply seems empty!"
+        },
+        {
+            "code": 6036,
+            "name": "EmptyTotalCurrencySupply",
+            "msg": "Total Currency Supply seems empty!"
         }
-    ],
-    "metadata": {
-        "address": "32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt"
-    }
+    ]
 }
 
 export const IDL: SolbondIdl = {
@@ -1253,9 +1255,11 @@ export const IDL: SolbondIdl = {
             "code": 6035,
             "name": "EmptyTotalTokenSupply",
             "msg": "Total Token Supply seems empty!"
+        },
+        {
+            "code": 6036,
+            "name": "EmptyTotalCurrencySupply",
+            "msg": "Total Currency Supply seems empty!"
         }
-    ],
-    "metadata": {
-        "address": "32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt"
-    }
+    ]
 }

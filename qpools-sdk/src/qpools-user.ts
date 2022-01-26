@@ -19,7 +19,9 @@ export class QPoolsUser {
     public solbondProgram: Program;
     public provider: Provider;
 
+    // @ts-ignore
     public tvlAccount: PublicKey;
+    // @ts-ignore
     public bumpTvlAccount: number;
 
     // Accounts

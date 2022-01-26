@@ -27,7 +27,6 @@ export default function UnstakeForm() {
     const [valueInUsdc, setValueInUsdc] = useState<number>(0.0);
     const [valueInQPT, setValueInQpt] = useState<number>(0.0);
 
-
     // useEffect(() => {
     //     setValueInSol((_: number) => {
     //         // Get the exchange rate between QPT and USDC

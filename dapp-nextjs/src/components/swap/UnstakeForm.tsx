@@ -6,7 +6,6 @@ import * as anchor from "@project-serum/anchor";
 // web3, Wallet as AnchorWallet
 // import {BN} from "@project-serum/anchor";
 // import {solbondProgram} from "../../programs/solbond";
-// import {getTokenList} from "../../const";
 import {AiOutlineArrowDown} from "react-icons/ai";
 import InputFieldWithLogo from "../InputFieldWithLogo";
 import CallToActionButton from "../CallToActionButton";

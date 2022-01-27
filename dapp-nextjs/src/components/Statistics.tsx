@@ -31,7 +31,7 @@ export default function Statistics(props: any) {
             if (qPoolContext.qPoolsStats) {
 
                 qPoolContext.qPoolsStats.collectPriceFeed().then(() => {
-                    qPoolContext.qPoolsStats!.fetchTVL().then(out => {
+                    qPoolContext.qPoolsStats!.calculateTVL().then(out => {
                         console.log("Tvl decimals are: ", out.tvlDecimals);
                         setTvl((_) => out.tvl.toNumber());
                         setTotalQPT((_) => out.totalQPT);

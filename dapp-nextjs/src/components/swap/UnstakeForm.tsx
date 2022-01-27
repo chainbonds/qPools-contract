@@ -1,7 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
-import {clusterApiUrl, Connection} from "@solana/web3.js";
+import {clusterApiUrl, Connection, PublicKey, Transaction} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 // web3, Wallet as AnchorWallet
 // import {BN} from "@project-serum/anchor";
@@ -15,6 +15,8 @@ import {IQPool, useQPoolUserTool} from "../../contexts/QPoolsProvider";
 import {BN} from "@project-serum/anchor";
 import {useLoad} from "../../contexts/LoadingContext";
 import {MATH_DENOMINATOR, REDEEMABLES_DECIMALS} from "@qpools/sdk/lib/const";
+import {sendAndConfirm} from "easy-spl/dist/util";
+import {SEED} from "@qpools/sdk/lib/seeds";
 
 export default function UnstakeForm() {
 
@@ -79,21 +81,44 @@ export default function UnstakeForm() {
         console.log("Before sendAmount is: ", sendAmount.toString());
         console.log("Before sendAmount is: ", sendAmount.toNumber());
 
-        let success;
+        // Calculate TVL
+        let out = await qPoolContext.qPoolsStats!.calculateTVL();
+
+        let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
+            [qPoolContext.qPoolsUser!.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+            qPoolContext.qPoolsStats!.solbondProgram.programId
+        );
+
         try {
-            success = await qPoolContext.qPoolsUser!.redeemQPT(sendAmount.toNumber(), true);
+
+            let tx = new Transaction();
+            console.log("Updating TVL");
+            let calculateTvlIx = await qPoolContext.qPoolsUser!.updateTvlInstruction(out.tvl.toNumber(), tvlAccountBump);
+            console.log("Updating buyQPT");
+            tx.add(calculateTvlIx);
+            let redeemQPTIx = await qPoolContext.qPoolsUser!.redeemQPTInstruction(sendAmount.toNumber(), true);
+            if (!redeemQPTIx) {
+                console.log("Bad output..");
+                throw Error("Something went wrong creating the buy QPT instruction");
+            }
+            tx.add(redeemQPTIx);
+            console.log("Sending Transactions");
+
+            // Add things like recent blockhash, and payer
+            const blockhash = await qPoolContext.connection!.getRecentBlockhash();
+            console.log("Added blockhash");
+            tx.recentBlockhash = blockhash.blockhash;
+            tx.feePayer = qPoolContext.qPoolsUser!.wallet.publicKey;
+            await qPoolContext.qPoolsUser!.wallet.signTransaction(tx);
+            await sendAndConfirm(qPoolContext.qPoolsUser!.connection, tx);
+
         } catch (error) {
             console.log("Error happened!");
             alert("Error took place, please show post this in the discord or on twitter: " + JSON.stringify(error));
         }
 
         await loadContext.decreaseCounter();
-
-        if (!success) {
-            console.log("Something went wrong! Check logs.");
-        }
-
-        console.log("Bought tokens! ", sendAmount.toString());
+        console.log("Redeemed tokens! ", sendAmount.toString());
 
     }
 

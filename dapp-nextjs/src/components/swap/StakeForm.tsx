@@ -121,8 +121,6 @@ export default function StakeForm() {
             }
             tx.add(buyQPTIx);
             console.log("Sending Transactions");
-            // walletPayer
-            // walletContext.wallet
 
             // Add things like recent blockhash, and payer
             const blockhash = await qPoolContext.connection!.getRecentBlockhash();
@@ -130,20 +128,7 @@ export default function StakeForm() {
             tx.recentBlockhash = blockhash.blockhash;
             tx.feePayer = qPoolContext.qPoolsUser!.wallet.publicKey;
             await qPoolContext.qPoolsUser!.wallet.signTransaction(tx);
-            // tx.recentBlockhash =
-
-            // let signer = qPoolContext.qPoolsUser!.wallet.payer;
-            // let signer = qPoolContext.qPoolsUser!. ;
-            // @ts-expect-error
-            let signer = qPoolContext.provider!.wallet.payer;
             await sendAndConfirm(qPoolContext.qPoolsUser!.connection, tx);
-            // const sg = await qPoolContext.qPoolsUser!.connection..sendTransaction(tx, [signer] );
-            // console.log("Buy Transaction ..", sg);
-            // await qPoolContext.qPoolsUser!.connection.confirmTransaction(sg);
-
-            // await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), out.tvl.toNumber(), true);
-
-            // success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);
         } catch (error) {
             console.log("Error happened!");
             console.log(error);

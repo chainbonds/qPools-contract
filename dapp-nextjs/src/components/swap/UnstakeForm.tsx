@@ -36,7 +36,7 @@ export default function UnstakeForm() {
     // }, [valueInQPT]);
 
     useEffect(() => {
-        qPoolContext.qPoolsStats?.fetchTVL().then(out => {
+        qPoolContext.qPoolsStats?.calculateTVL().then(out => {
 
             // Calculate the conversion rate ...
             let newValueBasedOnConversionRateUsdcPerQpt = out.tvl.mul(new BN(valueInQPT)).div(new BN(out.totalQPT)).div(new BN(10**out.tvlDecimals));

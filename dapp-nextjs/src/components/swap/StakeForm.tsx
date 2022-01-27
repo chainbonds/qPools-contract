@@ -33,7 +33,7 @@ export default function StakeForm() {
     const [balanceQpt, setBalanceQpt] = useState<number>(0.0);
 
     useEffect(() => {
-        qPoolContext.qPoolsStats?.fetchTVL().then(out => {
+        qPoolContext.qPoolsStats?.calculateTVL().then(out => {
 
             if (out.tvl.gt(new BN(0))) {
                 // Calculate the conversion rate ...

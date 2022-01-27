@@ -42,30 +42,30 @@ export class QPoolsStats {
 
     // Logic to collect price feed
     async collectPriceFeed() {
-        const pythConnection = new PythConnection(this.connection, getPythProgramKeyForCluster("devnet"))
-        pythConnection.onPriceChange((product, price) => {
-            // sample output:
-            // SRM/USD: $8.68725 ±$0.0131
-            if (product.symbol.includes("Crypto.MSOL/USD")) {
-                console.log("Price change MSOL/USD");
-                if (price.price) {
-                    this.priceFeed["Crypto.MSOL/USD"] = new BN(price.price!);
-                    console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
-                }
-            } else if (product.symbol.includes("Crypto.SOL/USD")) {
-                console.log("Price change SOL/USD");
-                if (price.price) {
-                    this.priceFeed["Crypto.SOL/USD"] = new BN(price.price!);
-                    console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
-                }
-            } else {
-                // console.log("Price not changed");
-                // console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
-            }
-        })
-        pythConnection.start();
-        await delay(5000);
-        await pythConnection.stop();
+        // const pythConnection = new PythConnection(this.connection, getPythProgramKeyForCluster("devnet"))
+        // pythConnection.onPriceChange((product, price) => {
+        //     // sample output:
+        //     // SRM/USD: $8.68725 ±$0.0131
+        //     if (product.symbol.includes("Crypto.MSOL/USD")) {
+        //         console.log("Price change MSOL/USD");
+        //         if (price.price) {
+        //             this.priceFeed["Crypto.MSOL/USD"] = new BN(price.price!);
+        //             console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
+        //         }
+        //     } else if (product.symbol.includes("Crypto.SOL/USD")) {
+        //         console.log("Price change SOL/USD");
+        //         if (price.price) {
+        //             this.priceFeed["Crypto.SOL/USD"] = new BN(price.price!);
+        //             console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
+        //         }
+        //     } else {
+        //         // console.log("Price not changed");
+        //         // console.log(`${product.symbol}: $${price.price} \xB1$${price.confidence}`)
+        //     }
+        // })
+        // pythConnection.start();
+        // await delay(5000);
+        // await pythConnection.stop();
     }
 
     constructor(

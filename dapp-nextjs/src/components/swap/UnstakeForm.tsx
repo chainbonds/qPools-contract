@@ -39,7 +39,8 @@ export default function UnstakeForm() {
         qPoolContext.qPoolsStats?.calculateTVL().then(out => {
 
             // Calculate the conversion rate ...
-            let newValueBasedOnConversionRateUsdcPerQpt = out.tvl.mul(new BN(valueInQPT)).div(new BN(out.totalQPT)).div(new BN(10**out.tvlDecimals));
+            // Add this depending on decimals // .div(new BN(10**out.tvlDecimals))
+            let newValueBasedOnConversionRateUsdcPerQpt = out.tvl.mul(new BN(valueInQPT)).div(new BN(out.totalQPT));
             setValueInUsdc((_: number) => {
                 return newValueBasedOnConversionRateUsdcPerQpt.toNumber();
             });

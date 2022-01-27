@@ -37,7 +37,9 @@ export default function StakeForm() {
 
             if (out.tvl.gt(new BN(0))) {
                 // Calculate the conversion rate ...
-                let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(valueInUsd)).mul(new BN(10 ** out.tvlDecimals)).div(out.tvl);
+                // Add .div(new BN(10 ** out.tvlDecimals))
+                // Add a .mul(new BN(10 ** out.tvlDecimals))
+                let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(valueInUsd)).div(out.tvl);
                 setValueInQpt((_: number) => {
                     return newValueBasedOnConversionRateQptPerUsd.toNumber();
                 });

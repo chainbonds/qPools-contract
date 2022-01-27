@@ -39,8 +39,8 @@ export default function UnstakeForm() {
         qPoolContext.qPoolsStats?.calculateTVL().then(out => {
 
             // Calculate the conversion rate ...
-            // Add this depending on decimals // .div(new BN(10**out.tvlDecimals))
-            let newValueBasedOnConversionRateUsdcPerQpt = out.tvl.mul(new BN(valueInQPT)).div(new BN(out.totalQPT));
+            // Add this depending on decimals //
+            let newValueBasedOnConversionRateUsdcPerQpt = out.tvl.mul(new BN(valueInQPT)).div(new BN(10**out.tvlDecimals)).div(new BN(out.totalQPT));
             setValueInUsdc((_: number) => {
                 return newValueBasedOnConversionRateUsdcPerQpt.toNumber();
             });
@@ -149,8 +149,8 @@ export default function UnstakeForm() {
                                     <AiOutlineArrowDown size={24}/>
                                 </div>
                                 <InputFieldWithLogo
-                                    logoPath={"/usdc.png"}
-                                    displayText={"estimated USDC"}
+                                    logoPath={"/usdt.png"}
+                                    displayText={"estimated USDT"}
                                     registerFunction={() => register("solana_amount")}
                                     modifiable={false}
                                     value={valueInUsdc}

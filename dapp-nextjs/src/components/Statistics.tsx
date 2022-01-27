@@ -36,6 +36,10 @@ export default function Statistics(props: any) {
                         setTvl((_) => out.tvl.toNumber());
                         setTotalQPT((_) => out.totalQPT);
                         setTvlDecimals((_) => out.tvlDecimals);
+                        delay(5000).then(() => {
+                            // delay a bit, and call itself again ...
+                            updateStatistics();
+                        });
                     })
                 });
 

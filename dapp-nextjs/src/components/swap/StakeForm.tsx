@@ -38,8 +38,8 @@ export default function StakeForm() {
             if (out.tvl.gt(new BN(0))) {
                 // Calculate the conversion rate ...
                 // Add .div(new BN(10 ** out.tvlDecimals))
-                // Add a .mul(new BN(10 ** out.tvlDecimals))
-                let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(valueInUsd)).div(out.tvl);
+                // Add a
+                let newValueBasedOnConversionRateQptPerUsd = new BN(out.totalQPT).mul(new BN(10 ** out.tvlDecimals)).mul(new BN(valueInUsd)).div(out.tvl);
                 setValueInQpt((_: number) => {
                     return newValueBasedOnConversionRateQptPerUsd.toNumber();
                 });
@@ -165,8 +165,8 @@ export default function StakeForm() {
                                     {/*</div>*/}
                                 </div>
                                 <InputFieldWithLogo
-                                    logoPath={"/usdc.png"}
-                                    displayText={"USDC"}
+                                    logoPath={"/usdt.png"}
+                                    displayText={"USDT"}
                                     registerFunction={() => register("solana_amount")}
                                     modifiable={true}
                                     setNewValue={setValueInUsd}

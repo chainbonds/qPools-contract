@@ -1,6 +1,7 @@
 /* This example requires Tailwind CSS v2.0+ */
 import {useForm} from "react-hook-form";
 import {useWallet} from '@solana/wallet-adapter-react';
+import * as anchor from "@project-serum/anchor";
 import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {AiOutlineArrowDown} from "react-icons/ai";
 import InputFieldWithLogo from "../InputFieldWithLogo";
@@ -12,9 +13,11 @@ import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 import {Mint} from "easy-spl";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import airdropAdmin from "@qpools/sdk/src/airdropAdmin";
-import {createAssociatedTokenAccountSendUnsigned} from "@qpools/sdk/src/utils";
+import {createAssociatedTokenAccountSendUnsigned, delay} from "@qpools/sdk/src/utils";
 import {MATH_DENOMINATOR, MOCK} from "@qpools/sdk/src/const";
 import {useLoad} from "../../contexts/LoadingContext";
+import {SEED} from "@qpools/sdk/lib/seeds";
+import {sendAndConfirm} from "easy-spl/dist/util";
 
 export default function StakeForm() {
 
@@ -65,6 +68,8 @@ export default function StakeForm() {
         await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
         await qPoolContext.qPoolsUser!.registerAccount();
 
+        // Wallet Payer is:
+
         // TODO: Double check (1) existence of the token account and (2) balance
         await qPoolContext.initializeQPoolsUserTool(walletContext);
         await qPoolContext.qPoolsUser!.loadExistingQPTReserve(qPoolContext.currencyMint!.publicKey!);
@@ -94,11 +99,54 @@ export default function StakeForm() {
 
         console.log("qPoolContext.qPoolsUser", qPoolContext.qPoolsUser);
 
-        let success;
+        // Calculate TVL
+        let out = await qPoolContext.qPoolsStats!.calculateTVL();
+
+        let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
+            [qPoolContext.qPoolsUser!.qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+            qPoolContext.qPoolsStats!.solbondProgram.programId
+        );
+
         try {
-            success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);
+
+            let tx = new Transaction();
+            console.log("Updating TVL");
+            let calculateTvlIx = await qPoolContext.qPoolsUser!.updateTvlInstruction(out.tvl.toNumber(), tvlAccountBump);
+            console.log("Updating buyQPT");
+            tx.add(calculateTvlIx);
+            let buyQPTIx = await qPoolContext.qPoolsUser!.buyQPTInstruction(sendAmount.toNumber(), true);
+            if (!buyQPTIx) {
+                console.log("Bad output..");
+                throw Error("Something went wrong creating the buy QPT instruction");
+            }
+            tx.add(buyQPTIx);
+            console.log("Sending Transactions");
+            // walletPayer
+            // walletContext.wallet
+
+            // Add things like recent blockhash, and payer
+            const blockhash = await qPoolContext.connection!.getRecentBlockhash();
+            console.log("Added blockhash");
+            tx.recentBlockhash = blockhash.blockhash;
+            tx.feePayer = qPoolContext.qPoolsUser!.wallet.publicKey;
+            await qPoolContext.qPoolsUser!.wallet.signTransaction(tx);
+            // tx.recentBlockhash =
+
+            // let signer = qPoolContext.qPoolsUser!.wallet.payer;
+            // let signer = qPoolContext.qPoolsUser!. ;
+            // @ts-expect-error
+            let signer = qPoolContext.provider!.wallet.payer;
+            await sendAndConfirm(qPoolContext.qPoolsUser!.connection, tx);
+            // const sg = await qPoolContext.qPoolsUser!.connection..sendTransaction(tx, [signer] );
+            // console.log("Buy Transaction ..", sg);
+            // await qPoolContext.qPoolsUser!.connection.confirmTransaction(sg);
+
+            // await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), out.tvl.toNumber(), true);
+
+            // success = await qPoolContext.qPoolsUser!.buyQPT(sendAmount.toNumber(), true);
         } catch (error) {
             console.log("Error happened!");
+            console.log(error);
             alert("Error took place, please show post this in the discord or on twitter: " + JSON.stringify(error));
         }
 
@@ -108,7 +156,7 @@ export default function StakeForm() {
 
     useEffect(() => {
         if (walletContext.publicKey) {
-            console.log("Wallet pubkey wallet is:", walletContext.publicKey.toString());
+            console.log("Walle1t pubkey wallet is:", walletContext.publicKey.toString());
             qPoolContext.initializeQPoolsUserTool(walletContext);
         }
         // initializeQPoolsUserTool

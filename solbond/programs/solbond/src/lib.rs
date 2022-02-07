@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-declare_id!("32jEsmA7t9yiX8MTr6TXmyKDC32rHBQ62ANciJA4g6wt");
+declare_id!("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 
@@ -97,35 +97,30 @@ pub mod solbond {
     /**
     * Initializes the reserve / vault
     */
-    pub fn initialize_bond_pool(
-        ctx: Context<InitializeBondPool>,
-        _bump_bond_pool_account: u8,
-        _bump_tvl_account: u8
+    pub fn initialize_pool_account(
+        ctx: Context<InitializeLpPoolAccount>,
+        _bump: u8,
     ) -> ProgramResult {
-
-        instructions::initialize_bond_pool::handler(
-            ctx,
-            _bump_bond_pool_account,
-            _bump_tvl_account
-        )
+        instructions::initialize_lp_pool::handler(ctx,_bump)
     }
 
-    // Should probably also include logic to remove how much you want to put into the bond...
-    /**
-    * Pay in some SOL into the bond that way created with initialize_bond_context.
-    * amount_in_lamports is how much solana to pay in, provided in lampots (i.e. 10e-9 of 1SOL)
-    */
-    pub fn purchase_bond(
-        ctx: Context<PurchaseBond>,
-        amount_raw: u64,
-        _bump_tvl_account: u8
-    ) -> ProgramResult {
 
-        instructions::purchase_bond::handler(
-            ctx,
-            amount_raw,
-            _bump_tvl_account
-        )
+    pub fn create_position_saber(
+        ctx: Context<SaberLiquidityInstruction>,
+        _bump_pool: u8,
+        _bump_position: u8,
+        token_a_amount: u64,
+        token_b_amount: u64,
+        min_mint_amount: u64,
+
+    ) -> ProgramResult {
+        instructions::create_position_saber::handler(
+            ctx, 
+            _bump_pool, 
+            _bump_position,
+            token_a_amount,
+            token_b_amount,
+            min_mint_amount,)
     }
 
     /**

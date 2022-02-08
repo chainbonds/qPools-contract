@@ -54,18 +54,37 @@ pub fn handler(
     ctx: Context<InitializeLpPoolAccount>,
     _bump: u8,
 ) -> ProgramResult {
-
+    msg!("initializing pool");
     let pool_account = &mut ctx.accounts.pool_pda;
+    msg!("got pool");
+
     pool_account.generator = ctx.accounts.initializer.key();
+    msg!("1 pool");
+
     pool_account.mint_a = ctx.accounts.mint_a.key();
+    msg!("2 pool");
+
     pool_account.mint_b = ctx.accounts.mint_b.key();
+    msg!("3 pool");
+
     pool_account.mint_lp = ctx.accounts.mint_lp.key();
+    msg!("4 pool");
+   
     pool_account.pool_token_account_a = ctx.accounts.pool_token_account_a.key();
+    msg!("5 pool");
+
     pool_account.pool_token_account_b = ctx.accounts.pool_token_account_b.key();
+    msg!("6 pool");
+
     pool_account.bump = _bump;
+    msg!("7 pool");
 
     pool_account.total_amount_in_a = 0;
+    msg!("8 pool");
+
     pool_account.total_amount_in_b = 0;
+    msg!("9 pool");
+
 
 
     Ok(())

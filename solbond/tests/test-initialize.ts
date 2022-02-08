@@ -5,6 +5,7 @@ import {Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
 import {Keypair, PublicKey, SYSVAR_RENT_PUBKEY, Transaction} from "@solana/web3.js";
 import {createToken} from "@qpools/admin-sdk/lib/invariant-utils";
 import {assert} from "chai";
+import * as spl from 'easy-spl'
 import {
     createAssociatedTokenAccountUnsigned,
     getAssociatedTokenAddressOffCurve,
@@ -19,6 +20,7 @@ import {
     StableSwap,
     findSwapAuthorityKey,
   } from "@saberhq/stableswap-sdk";
+import provider from '@project-serum/anchor/dist/cjs/provider';
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
@@ -114,29 +116,28 @@ describe('qPools!', () => {
         console.log("poolPDA ", poolPDA.toString())
         console.log(solbondProgram)
         console.log(solbondProgram.programId.toString())
-        let finaltx = await solbondProgram.rpc.initializePoolAccount(
-            poolBump,
-            {
-                accounts: {
-                    initializer: genericPayer.publicKey,
-                    poolPda: poolPDA,
-                    mintLp: poolTokenMint,
-                    mintA: stableSwapState.tokenA.mint,
-                    mintB: stableSwapState.tokenB.mint,
-                    poolTokenAccountA: stableSwapState.tokenA.reserve,
-                    poolTokenAccountB: stableSwapState.tokenB.reserve,
-                    clock:web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: web3.SystemProgram.programId,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    // Create liquidity accounts
-                },
-                signers:[genericPayer]
-            }
-        )
-
-        await provider.connection.confirmTransaction(finaltx);
-        console.log("did  it  Transaction id is: ", finaltx);
+        //let finaltx = await solbondProgram.rpc.initializePoolAccount(
+        //    poolBump,
+        //    {
+        //        accounts: {
+        //            initializer: genericPayer.publicKey,
+        //            poolPda: poolPDA,
+        //            mintLp: poolTokenMint,
+        //            mintA: stableSwapState.tokenA.mint,
+        //            mintB: stableSwapState.tokenB.mint,
+        //            poolTokenAccountA: stableSwapState.tokenA.reserve,
+        //            poolTokenAccountB: stableSwapState.tokenB.reserve,
+        //            clock:web3.SYSVAR_CLOCK_PUBKEY,
+        //            systemProgram: web3.SystemProgram.programId,
+        //            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        //            tokenProgram: TOKEN_PROGRAM_ID,
+        //            // Create liquidity accounts
+        //        },
+        //        signers:[genericPayer]
+        //    }
+        //)
+        //await provider.connection.confirmTransaction(finaltx);
+        //console.log("did  it  Transaction id is: ", finaltx);
 
           
    
@@ -144,8 +145,8 @@ describe('qPools!', () => {
     });
 
     it('#createSinglePosition', async () => {
-        let amountTokenA = new u64(39100);
-        let amountTokenB = new u64(39100);
+        let amountTokenA = new u64(1200);
+        let amountTokenB = new u64(1200);
 
         let minMintAmount = new u64(0);
 
@@ -158,6 +159,8 @@ describe('qPools!', () => {
 
 
         const randomOwner = Keypair.generate()
+        const alice = spl.Wallet.fromKeypair(connection, randomOwner)
+
         console.log(tokenAMint.toString())
         console.log(tokenBMint.toString())
         console.log(poolTokenMint.toString())
@@ -173,31 +176,36 @@ describe('qPools!', () => {
         //  })
         //);
 
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [randomOwner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount6"))],
-            solbondProgram.programId
-        );
-
+      
 
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
             [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
             solbondProgram.programId
         );
-        let qPoolAccount: PublicKey = new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs");
 
-        
+        let qPoolAccount: PublicKey = new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs");
+        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount6"))],
+            solbondProgram.programId
+        );
+
         //let swapAuthority = stableSwapState.config.authority
         //console.log(swapAuthority.toString())
     
         const [authority] = await findSwapAuthorityKey(stableSwapState.adminAccount, stableSwapProgramId);
         console.log("authority ", authority.toString())
+        
+        //let txA = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenAMint, randomOwner.publicKey, alice);
+        //let sg = await connection.sendTransaction(txA, [genericPayer]);
+        //await connection.confirmTransaction(sg);
+        //let userAccountA = await getAssociatedTokenAddressOffCurve(stableSwapState.tokenA.mint, positonPDA);
 
         try {
             let tx = await createAssociatedTokenAccountUnsigned(
                 connection,
                 stableSwapState.tokenA.mint,
                 null,
-                qPoolPDA,
+                positonPDA,
                 provider.wallet
             );
             const sg = await connection.sendTransaction(tx, [genericPayer]);
@@ -208,20 +216,20 @@ describe('qPools!', () => {
             console.log(e);
         }
 
-        let userAccountA = await getAssociatedTokenAddressOffCurve(stableSwapState.tokenA.mint, qPoolPDA);
-        console.log("qpollcurrarr", qPoolCurrencyAccount.toString())
-        //let userAccountA = await mintA.createAccount(qPoolCurrencyAccount)
+        let userAccountA = await getAssociatedTokenAddressOffCurve(stableSwapState.tokenA.mint, positonPDA);
+        //console.log("qpollcurrarr", qPoolCurrencyAccount.toString())
+        //let userAccountA = await tokenAMint.createAccount(positonPDA)
         console.log("mint A")
 
         //await mintA.mintTo(userAccountA, genericPayer, [], amountTokenA);
         // Creating depositor token b account
-
+ 
         try {
             let tx = await createAssociatedTokenAccountUnsigned(
                 connection,
                 stableSwapState.tokenB.mint,
                 null,
-                qPoolPDA,
+                positonPDA,
                 provider.wallet
             );
             const sg = await connection.sendTransaction(tx, [genericPayer]);
@@ -231,9 +239,14 @@ describe('qPools!', () => {
             console.log("Error is: ");
             console.log(e);
         }
-        //let userAccountB = await mintB.createAccount(qPoolCurrencyAccount)
+        // let userAccountB = await tokenBMint.createAccount(positonPDA)
+        //let txB = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenBMint, randomOwner.publicKey, alice);
+        //let txB = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenAMint, randomOwner.publicKey, alice);
+        //let sg2 = await connection.sendTransaction(txB, [genericPayer]);
+        //await connection.confirmTransaction(sg2);
+        let userAccountB = await getAssociatedTokenAddressOffCurve(stableSwapState.tokenB.mint, positonPDA);
 
-        let userAccountB = await getAssociatedTokenAddressOffCurve(stableSwapState.tokenB.mint, qPoolPDA);
+        //let userAccountB = await getAssociatedTokenAddressOffCurve(stableSwapState.tokenB.mint, positonPDA);
         console.log("user acc B info ", await connection.getAccountInfo(userAccountB))
         // try{
         //     await mintA.mintTo(userAccountA, genericPayer, [], amountTokenA);
@@ -248,13 +261,13 @@ describe('qPools!', () => {
         
         console.log("mint B")
 
-        //let userAccountpoolToken  = await poolMint.createAccount(qPoolCurrencyAccount)
+        //let userAccountpoolToken  = await poolTokenMint.createAccount(positonPDA)
         try {
             let tx = await createAssociatedTokenAccountUnsigned(
                 connection,
                 poolMint.publicKey,
                 null,
-                qPoolPDA,
+                positonPDA,
                 provider.wallet
             );
             const sg = await connection.sendTransaction(tx, [genericPayer]);
@@ -264,10 +277,17 @@ describe('qPools!', () => {
             console.log("Error is: ");
             console.log(e);
         }
+        //let txP = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,poolMint.publicKey, randomOwner.publicKey, alice);
+        ////let txA = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenAMint, randomOwner.publicKey, alice);
+        //let sg3 = await connection.sendTransaction(txP, [genericPayer]);
+        //await connection.confirmTransaction(sg3);
+        let userAccountpoolToken = await getAssociatedTokenAddressOffCurve(poolTokenMint, positonPDA);
 
-        let userAccountpoolToken = await getAssociatedTokenAddressOffCurve(poolTokenMint, qPoolPDA);
+        // let userAccountpoolToken = await getAssociatedTokenAddressOffCurve(poolTokenMint, positonPDA);
         let userAuthority = Keypair.generate()
         console.log("swap authority", authority.toString());
+        console.log("swap spanishflowauthority", swapAuthority.toString());
+
         console.log("pool token Mint", poolTokenMint.toString())
         console.log("output lp", userAccountpoolToken.toString())
         console.log("userAuthority, ", qPoolAccount.toString())
@@ -275,31 +295,31 @@ describe('qPools!', () => {
         console.log("user A", userAccountA.toString())
         console.log("reserve A", stableSwapState.tokenA.reserve.toString())
 
-
+        console.log("position pda ", positonPDA.toString())
+        console.log("pool pda ", poolPDA.toString())
         console.log("user B", userAccountB.toString())
         console.log("reserve B", stableSwapState.tokenB.reserve.toString())
 
-        
-        let finaltx = await solbondProgram.rpc.createLiquidityPositionSaber(
-            new BN(bumpqpoolaccount),
+        let finaltx = await solbondProgram.rpc.createPositionSaber(
+            new BN(poolBump),
+            new BN(bumpPositon),
             new BN(amountTokenA),
             new BN(amountTokenB),
             new BN(minMintAmount),
             {
                 accounts: {
-                    initializer: genericPayer.publicKey,
-                    bondPoolCurrencyTokenMint: stableSwapState.tokenA.mint,
+                    positionPda: positonPDA,
+                    owner: qPoolAccount,//randomOwner.publicKey,
                     poolMint: poolTokenMint,
                     outputLp: userAccountpoolToken,
-                    tokenProgram: TOKEN_PROGRAM_ID,
                     swapAuthority: swapAuthority,
-                    userAuthority: qPoolPDA,
+                    poolPda: poolPDA,
                     swap:swapAccount,
-                    clock:web3.SYSVAR_CLOCK_PUBKEY,
-                    userA: userAccountA,
-                    reserveA: stableSwapState.tokenA.reserve,
-                    userB: userAccountB,
-                    reserveB: stableSwapState.tokenB.reserve,    
+                    qpoolsA: userAccountA,
+                    poolTokenAccountA: stableSwapState.tokenA.reserve,
+                    poolTokenAccountB: stableSwapState.tokenB.reserve,
+                    qpoolsB: userAccountB,
+                    tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
                     // Create liquidity accounts

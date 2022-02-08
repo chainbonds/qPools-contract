@@ -95,50 +95,65 @@ export type Solbond = {
         ]
       },
       {
-        "name": "initializeBondPool",
+        "name": "createPositionSaber",
         "accounts": [
           {
-            "name": "bondPoolAccount",
+            "name": "positionPda",
             "isMut": true,
             "isSigner": false
           },
           {
-            "name": "bondPoolRedeemableMint",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenMint",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolRedeemableTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "initializer",
+            "name": "owner",
             "isMut": true,
             "isSigner": true
           },
           {
-            "name": "tvlAccount",
+            "name": "outputLp",
             "isMut": true,
             "isSigner": false
           },
           {
-            "name": "rent",
+            "name": "poolMint",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "swapAuthority",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolPda",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "swap",
             "isMut": false,
             "isSigner": false
           },
           {
-            "name": "clock",
+            "name": "qpoolsA",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolTokenAccountA",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolTokenAccountB",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "qpoolsB",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "saberSwapProgram",
             "isMut": false,
             "isSigner": false
           },
@@ -155,92 +170,24 @@ export type Solbond = {
         ],
         "args": [
           {
-            "name": "bumpBondPoolAccount",
+            "name": "bumpPool",
             "type": "u8"
           },
           {
-            "name": "bumpTvlAccount",
+            "name": "bumpPosition",
             "type": "u8"
-          }
-        ]
-      },
-      {
-        "name": "purchaseBond",
-        "accounts": [
-          {
-            "name": "bondPoolAccount",
-            "isMut": true,
-            "isSigner": false
           },
           {
-            "name": "bondPoolRedeemableMint",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenMint",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolRedeemableTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "tvlAccount",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "purchaser",
-            "isMut": true,
-            "isSigner": true
-          },
-          {
-            "name": "purchaserCurrencyTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "purchaserRedeemableTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "rent",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "clock",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "systemProgram",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "tokenProgram",
-            "isMut": false,
-            "isSigner": false
-          }
-        ],
-        "args": [
-          {
-            "name": "amountRaw",
+            "name": "tokenAAmount",
             "type": "u64"
           },
           {
-            "name": "bumpTvlAccount",
-            "type": "u8"
+            "name": "tokenBAmount",
+            "type": "u64"
+          },
+          {
+            "name": "minMintAmount",
+            "type": "u64"
           }
         ]
       },
@@ -482,6 +429,50 @@ export type Solbond = {
             },
             {
               "name": "bumpPoolList",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "positionAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "owner",
+              "type": "publicKey"
+            },
+            {
+              "name": "mintA",
+              "type": "publicKey"
+            },
+            {
+              "name": "mintB",
+              "type": "publicKey"
+            },
+            {
+              "name": "mintLp",
+              "type": "publicKey"
+            },
+            {
+              "name": "ownerTokenAccountA",
+              "type": "publicKey"
+            },
+            {
+              "name": "ownerTokenAccountB",
+              "type": "publicKey"
+            },
+            {
+              "name": "ownerTokenAccountLp",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolPda",
+              "type": "publicKey"
+            },
+            {
+              "name": "bump",
               "type": "u8"
             }
           ]
@@ -838,50 +829,65 @@ export type Solbond = {
         ]
       },
       {
-        "name": "initializeBondPool",
+        "name": "createPositionSaber",
         "accounts": [
           {
-            "name": "bondPoolAccount",
+            "name": "positionPda",
             "isMut": true,
             "isSigner": false
           },
           {
-            "name": "bondPoolRedeemableMint",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenMint",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolRedeemableTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "initializer",
+            "name": "owner",
             "isMut": true,
             "isSigner": true
           },
           {
-            "name": "tvlAccount",
+            "name": "outputLp",
             "isMut": true,
             "isSigner": false
           },
           {
-            "name": "rent",
+            "name": "poolMint",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "swapAuthority",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolPda",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "swap",
             "isMut": false,
             "isSigner": false
           },
           {
-            "name": "clock",
+            "name": "qpoolsA",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolTokenAccountA",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolTokenAccountB",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "qpoolsB",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "saberSwapProgram",
             "isMut": false,
             "isSigner": false
           },
@@ -898,92 +904,24 @@ export type Solbond = {
         ],
         "args": [
           {
-            "name": "bumpBondPoolAccount",
+            "name": "bumpPool",
             "type": "u8"
           },
           {
-            "name": "bumpTvlAccount",
+            "name": "bumpPosition",
             "type": "u8"
-          }
-        ]
-      },
-      {
-        "name": "purchaseBond",
-        "accounts": [
-          {
-            "name": "bondPoolAccount",
-            "isMut": true,
-            "isSigner": false
           },
           {
-            "name": "bondPoolRedeemableMint",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenMint",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolCurrencyTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "bondPoolRedeemableTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "tvlAccount",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "purchaser",
-            "isMut": true,
-            "isSigner": true
-          },
-          {
-            "name": "purchaserCurrencyTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "purchaserRedeemableTokenAccount",
-            "isMut": true,
-            "isSigner": false
-          },
-          {
-            "name": "rent",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "clock",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "systemProgram",
-            "isMut": false,
-            "isSigner": false
-          },
-          {
-            "name": "tokenProgram",
-            "isMut": false,
-            "isSigner": false
-          }
-        ],
-        "args": [
-          {
-            "name": "amountRaw",
+            "name": "tokenAAmount",
             "type": "u64"
           },
           {
-            "name": "bumpTvlAccount",
-            "type": "u8"
+            "name": "tokenBAmount",
+            "type": "u64"
+          },
+          {
+            "name": "minMintAmount",
+            "type": "u64"
           }
         ]
       },
@@ -1225,6 +1163,50 @@ export type Solbond = {
             },
             {
               "name": "bumpPoolList",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "positionAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "owner",
+              "type": "publicKey"
+            },
+            {
+              "name": "mintA",
+              "type": "publicKey"
+            },
+            {
+              "name": "mintB",
+              "type": "publicKey"
+            },
+            {
+              "name": "mintLp",
+              "type": "publicKey"
+            },
+            {
+              "name": "ownerTokenAccountA",
+              "type": "publicKey"
+            },
+            {
+              "name": "ownerTokenAccountB",
+              "type": "publicKey"
+            },
+            {
+              "name": "ownerTokenAccountLp",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolPda",
+              "type": "publicKey"
+            },
+            {
+              "name": "bump",
               "type": "u8"
             }
           ]

@@ -37,28 +37,30 @@ pub struct SaberLiquidityInstruction<'info> {
         space = 8 + PositionAccount::LEN,
         seeds = [owner.key().as_ref(), seeds::USER_POSITION_ACCOUNT], bump = _bump_position
     )]
-    pub position_pda: Account<'info, PositionAccount>,
+    pub position_pda: Box<Account<'info, PositionAccount>>,
 
-    #[account(signer)]
+    #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
 
   
     /// The output account for LP tokens.
     /// 
     #[account(mut)]
-    pub output_lp: Account<'info, TokenAccount>,
+    pub output_lp: Box<Account<'info, TokenAccount>>,
 
-    pub pool_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub pool_mint: Box<Account<'info, Mint>>,
     /// The authority of the swap.
     #[account(mut)]
     pub swap_authority: AccountInfo<'info>,
     /// The authority of the user.
     //#[account(mut, signer)]
     #[account(
-        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL ],
+        mut,
+        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]
-    pub pool_pda: Account<'info, TwoWayPoolAccount>,
+    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
     /// The swap.
     //#[account(mut)]
     pub swap: AccountInfo<'info>,
@@ -66,20 +68,23 @@ pub struct SaberLiquidityInstruction<'info> {
     // input block
     #[account(
         mut,
-        //constraint = &qPools_a.owner == pool_pda.key(),
+        //constraint = &qpools_a.owner == swap_authority.key,
+        constraint = &qpools_a.owner == &position_pda.key(),
+
     )]
     pub qpools_a: Box<Account<'info,TokenAccount>>,
 
     #[account(mut)]
-    pub pool_token_account_a: Account<'info, TokenAccount>,
+    pub pool_token_account_a: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
-    pub pool_token_account_b: Account<'info, TokenAccount>,
+    pub pool_token_account_b: Box<Account<'info, TokenAccount>>,
 
 
     #[account(
         mut,
-        //constraint = &qPools_b.owner == pool_pda.key()
+        //constraint = &qpools_b.owner == swap_authority.key
+        constraint = &qpools_b.owner == &position_pda.key(),
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
 
@@ -122,19 +127,22 @@ pub fn handler(
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),
-        user_authority: ctx.accounts.pool_pda.to_account_info(),
+        user_authority: ctx.accounts.position_pda.to_account_info(),
         swap: ctx.accounts.swap.to_account_info(),
     };
+    msg!("jshjd reserve to pools!");
 
     let input_a: SwapToken = SwapToken {
         user: ctx.accounts.qpools_a.to_account_info(),
         reserve: ctx.accounts.pool_token_account_a.to_account_info(),
     };
+    msg!("Depositing kkj to pools!");
 
     let input_b: SwapToken = SwapToken {
         user: ctx.accounts.qpools_b.to_account_info(),
         reserve: ctx.accounts.pool_token_account_b.to_account_info(),
     };
+    msg!("Depositing reserve to lal!");
 
     let deposit_context: Deposit = Deposit {
        user: user_context,
@@ -145,6 +153,7 @@ pub fn handler(
     };
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
 
+    msg!("ajsjsj reserve to pools!");
 
     stable_swap_anchor::deposit(
         CpiContext::new_with_signer(
@@ -152,8 +161,8 @@ pub fn handler(
             deposit_context,
             &[
                 [
-                    ctx.accounts.pool_mint.key().as_ref(), seeds::TWO_WAY_LP_POOL,
-                    &[_bump_pool]
+                    ctx.accounts.owner.key().as_ref(), seeds::USER_POSITION_ACCOUNT,
+                    &[_bump_position]
                 ].as_ref()
             ]
         ),
@@ -161,14 +170,21 @@ pub fn handler(
         token_b_amount,
         min_mint_amount,
     )?;
-
+    msg!("Depositing reskjlsdjklf!");
+    msg!("smt{}",ctx.accounts.pool_pda.total_amount_in_a);
 
     let pool_account = &mut ctx.accounts.pool_pda;
+    msg!("got ref");
+
     pool_account.total_amount_in_a += token_a_amount;
+    msg!("a add");
+
     pool_account.total_amount_in_b += token_b_amount;
+    msg!("b add");
 
 
     let position_account= &mut ctx.accounts.position_pda;
+
     position_account.owner = ctx.accounts.owner.key();
     position_account.mint_a = pool_account.mint_a.clone().key();
     position_account.mint_b = pool_account.mint_b.clone().key();

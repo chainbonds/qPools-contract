@@ -51,12 +51,20 @@ describe('qPools!', () => {
     //// Stable swap
     let swapAccount;
     let swapAuthority;
+    let swapAccountCash;
+    let swapAuthorityCash;
+    let swapAccountTest;
+    let swapAuthorityTest;
     let stableSwap: StableSwap;
     let fetchedStableSwap: StableSwap;
+    let fetchedStableSwapCash: StableSwap;
+    let fetchedStableSwapTest: StableSwap;
     let stableSwapAccount : Keypair;
     //stableSwapAccount=   Keypair.generate();
     let stableSwapProgramId: PublicKey;
     let stableSwapState;
+    let stableSwapStateCash;
+    let stableSwapStateTest;
     //stableSwapProgramId = SWAP_PROGRAM_ID;
     //console.log("Solbond Program");
     //console.log(solbondProgram.programId.toString());
@@ -67,6 +75,8 @@ describe('qPools!', () => {
     let qPoolCurrencyAccount;
 
     let USDC_USDT_pubkey: PublicKey;
+    let USDC_CASH_pubkey: PublicKey;
+    let TEST_USDC_pubkey: PublicKey;
     // Do some airdrop before we start the tests ...
     before(async () => {
         console.log("swapprogramid")
@@ -75,8 +85,9 @@ describe('qPools!', () => {
         );
         stableSwapAccount = Keypair.generate()
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
+        USDC_CASH_pubkey =  new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA")
+        TEST_USDC_pubkey =  new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x")
 
-      
 
         
 
@@ -95,54 +106,58 @@ describe('qPools!', () => {
         );
         swapAccount = fetchedStableSwap.config.swapAccount
         swapAuthority = fetchedStableSwap.config.authority
-        const { state } = fetchedStableSwap;
-        console.log(state);
+
+        const {state} = fetchedStableSwap;
         stableSwapState = state
-          
-        //const ATA_A = new Token(connection,state.tokenA.mint, TOKEN_PROGRAM_ID, genericPayer);
-        //const ATA_B = new Token(connection,state.tokenB.mint, TOKEN_PROGRAM_ID, genericPayer);
 
-        let tokenAMint = stableSwapState.tokenA.mint
-        let tokenBMint = stableSwapState.tokenB.mint
-  
-        let poolTokenMint = stableSwapState.poolTokenMint
-        //let ATA_lp = new Token(connection,poolTokenMint, TOKEN_PROGRAM_ID, genericPayer);
+    
 
-        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
-            solbondProgram.programId
-        );
 
-        console.log("poolPDA ", poolPDA.toString())
-        console.log(solbondProgram)
-        console.log(solbondProgram.programId.toString())
-        //let finaltx = await solbondProgram.rpc.initializePoolAccount(
-        //    poolBump,
-        //    {
-        //        accounts: {
-        //            initializer: genericPayer.publicKey,
-        //            poolPda: poolPDA,
-        //            mintLp: poolTokenMint,
-        //            mintA: stableSwapState.tokenA.mint,
-        //            mintB: stableSwapState.tokenB.mint,
-        //            poolTokenAccountA: stableSwapState.tokenA.reserve,
-        //            poolTokenAccountB: stableSwapState.tokenB.reserve,
-        //            clock:web3.SYSVAR_CLOCK_PUBKEY,
-        //            systemProgram: web3.SystemProgram.programId,
-        //            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        //            tokenProgram: TOKEN_PROGRAM_ID,
-        //            // Create liquidity accounts
-        //        },
-        //        signers:[genericPayer]
-        //    }
-        //)
-        //await provider.connection.confirmTransaction(finaltx);
-        //console.log("did  it  Transaction id is: ", finaltx);
+
 
           
    
 
     });
+
+    it('#create other stuff', async() => {
+        fetchedStableSwapCash = await StableSwap.load(
+            connection,
+            USDC_CASH_pubkey,
+            stableSwapProgramId
+          );
+        console.log("loaded")
+        assert.ok(fetchedStableSwapCash.config.swapAccount.equals(
+          USDC_CASH_pubkey)
+        );
+        swapAccountCash = fetchedStableSwapCash.config.swapAccount
+        swapAuthorityCash = fetchedStableSwapCash.config.authority
+
+        const {state} = fetchedStableSwapCash;
+        stableSwapStateCash = state
+
+       
+
+    })
+
+    it('#create other things gopf', async () => {
+        fetchedStableSwapTest = await StableSwap.load(
+            connection,
+            TEST_USDC_pubkey,
+            stableSwapProgramId
+          );
+        console.log("loaded")
+        assert.ok(fetchedStableSwapTest.config.swapAccount.equals(
+          TEST_USDC_pubkey)
+        );
+        swapAccountTest = fetchedStableSwapTest.config.swapAccount
+        swapAuthorityTest = fetchedStableSwapTest.config.authority
+
+        const {state} = fetchedStableSwapTest;
+        stableSwapStateTest = state
+ 
+    })
+
 
     it('#createSinglePosition', async () => {
         let amountTokenA = new u64(1200);
@@ -334,8 +349,89 @@ describe('qPools!', () => {
         console.log("did  it  Transaction id is: ", finaltx);
     })
 
- 
+    it('#savePortfolio', async () => {
+        let amountTokenA = new u64(1200);
+        let amountTokenB = new u64(1200);
+
+        let minMintAmount = new u64(0);
+        let poolTokenMintOne = stableSwapState.poolTokenMint
+
+        let [poolPDAOne, poolBumpOne] = await PublicKey.findProgramAddress(
+            [poolTokenMintOne.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            solbondProgram.programId
+        );
+
+        let qPoolAccount: PublicKey = new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs");
+        const index_0 = 0;
+        let [positonPDAOne, bumpPositonOne] = await await PublicKey.findProgramAddress(
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index_0.toString()))],
+            solbondProgram.programId
+        );
+
+        let poolTokenMintTwo = stableSwapStateCash.poolTokenMint
+
+        let [poolPDATwo, poolBumpTwo] = await PublicKey.findProgramAddress(
+            [poolTokenMintTwo.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            solbondProgram.programId
+        );
+
+        const index_1 = 1;
+        let [positonPDATwo, bumpPositonTwo] = await await PublicKey.findProgramAddress(
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index_1.toString()))],
+            solbondProgram.programId
+        );
 
 
-  
-});
+        let poolTokenMintThree = stableSwapStateTest.poolTokenMint
+        let [poolPDAThree, poolBumpThree] = await PublicKey.findProgramAddress(
+            [poolTokenMintThree.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            solbondProgram.programId
+        );
+
+        const index_2 = 2;
+        let [positonPDAThree, bumpPositonThree] = await await PublicKey.findProgramAddress(
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index_2.toString()))],
+            solbondProgram.programId
+        );
+        
+        let [portfolioPDA, bumpPortfolio] = await await PublicKey.findProgramAddress(
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PortfolioSeed6"))],
+            solbondProgram.programId
+        );
+        
+
+
+        let finaltx = await solbondProgram.rpc.savePortfolio(
+            new BN(bumpPortfolio),
+
+            {
+                accounts: {
+                    owner: qPoolAccount,
+                    portfolioPda: portfolioPDA,//randomOwner.publicKey,
+                    positionOne: positonPDAOne,
+                    positionTwo: positonPDATwo,
+                    positionThree: positonPDAThree,
+                    poolOne: poolPDAOne,
+                    poolTwo: poolPDATwo,
+                    poolThree: poolPDAThree,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers:[genericPayer]
+            }
+        )
+
+        await provider.connection.confirmTransaction(finaltx);
+        console.log("did  it  Transaction id is: ", finaltx);
+
+
+
+
+
+
+})
+
+
+
+})

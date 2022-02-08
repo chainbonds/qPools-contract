@@ -196,6 +196,67 @@ export type Solbond = {
         ]
       },
       {
+        "name": "savePortfolio",
+        "accounts": [
+          {
+            "name": "owner",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "portfolioPda",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "positionOne",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "positionTwo",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "positionThree",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolOne",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolTwo",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolThree",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "tokenProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      },
+      {
         "name": "redeemBond",
         "accounts": [
           {
@@ -433,6 +494,46 @@ export type Solbond = {
             },
             {
               "name": "bumpPoolList",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "portfolioAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "positionOnePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "positionTwoPda",
+              "type": "publicKey"
+            },
+            {
+              "name": "positionThreePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolOnePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolTwoPda",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolThreePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "owner",
+              "type": "publicKey"
+            },
+            {
+              "name": "bump",
               "type": "u8"
             }
           ]
@@ -934,6 +1035,67 @@ export type Solbond = {
         ]
       },
       {
+        "name": "savePortfolio",
+        "accounts": [
+          {
+            "name": "owner",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "portfolioPda",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "positionOne",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "positionTwo",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "positionThree",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolOne",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolTwo",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolThree",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "tokenProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      },
+      {
         "name": "redeemBond",
         "accounts": [
           {
@@ -1171,6 +1333,46 @@ export type Solbond = {
             },
             {
               "name": "bumpPoolList",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "portfolioAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "positionOnePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "positionTwoPda",
+              "type": "publicKey"
+            },
+            {
+              "name": "positionThreePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolOnePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolTwoPda",
+              "type": "publicKey"
+            },
+            {
+              "name": "poolThreePda",
+              "type": "publicKey"
+            },
+            {
+              "name": "owner",
+              "type": "publicKey"
+            },
+            {
+              "name": "bump",
               "type": "u8"
             }
           ]

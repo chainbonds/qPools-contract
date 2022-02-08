@@ -125,6 +125,13 @@ pub mod solbond {
             min_mint_amount,)
     }
 
+    pub fn save_portfolio(
+        ctx: Context<SavePortfolio>,
+        bump: u8,
+    ) -> ProgramResult {
+        instructions::create_portfolio::handler(ctx, bump)
+    }
+
     /**
     * Redeem the bond,
     *

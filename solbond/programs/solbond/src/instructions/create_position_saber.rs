@@ -15,6 +15,7 @@ use stable_swap_anchor::StableSwap;
 #[instruction(
     _bump_pool: u8,
     _bump_position: u8,
+    _index: u32,
     token_a_amount: u64,
     token_b_amount: u64,
     min_mint_amount: u64,
@@ -32,10 +33,13 @@ pub struct SaberLiquidityInstruction<'info> {
     /// 
     
     #[account(
-        init,
+        init_if_needed,
         payer = owner,
         space = 8 + PositionAccount::LEN,
-        seeds = [owner.key().as_ref(), seeds::USER_POSITION_ACCOUNT], bump = _bump_position
+        seeds = [owner.key().as_ref(),
+        format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
+        ], 
+         bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccount>>,
 
@@ -117,6 +121,7 @@ pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
     _bump_pool: u8,
     _bump_position: u8,
+    _index: u32,
     token_a_amount: u64,
     token_b_amount: u64,
     min_mint_amount: u64,
@@ -161,7 +166,8 @@ pub fn handler(
             deposit_context,
             &[
                 [
-                    ctx.accounts.owner.key().as_ref(), seeds::USER_POSITION_ACCOUNT,
+                    ctx.accounts.owner.key().as_ref(), 
+                    format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
                     &[_bump_position]
                 ].as_ref()
             ]

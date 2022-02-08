@@ -184,8 +184,9 @@ describe('qPools!', () => {
         );
 
         let qPoolAccount: PublicKey = new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs");
+        const index = 0;
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount6"))],
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index.toString()))],
             solbondProgram.programId
         );
 
@@ -303,6 +304,7 @@ describe('qPools!', () => {
         let finaltx = await solbondProgram.rpc.createPositionSaber(
             new BN(poolBump),
             new BN(bumpPositon),
+            new BN(index),
             new BN(amountTokenA),
             new BN(amountTokenB),
             new BN(minMintAmount),

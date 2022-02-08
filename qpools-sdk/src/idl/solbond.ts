@@ -178,6 +178,10 @@ export type Solbond = {
             "type": "u8"
           },
           {
+            "name": "index",
+            "type": "u32"
+          },
+          {
             "name": "tokenAAmount",
             "type": "u64"
           },
@@ -910,6 +914,10 @@ export type Solbond = {
           {
             "name": "bumpPosition",
             "type": "u8"
+          },
+          {
+            "name": "index",
+            "type": "u32"
           },
           {
             "name": "tokenAAmount",

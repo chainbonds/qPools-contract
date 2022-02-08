@@ -109,6 +109,7 @@ pub mod solbond {
         ctx: Context<SaberLiquidityInstruction>,
         _bump_pool: u8,
         _bump_position: u8,
+        _index:u32,
         token_a_amount: u64,
         token_b_amount: u64,
         min_mint_amount: u64,
@@ -118,6 +119,7 @@ pub mod solbond {
             ctx, 
             _bump_pool, 
             _bump_position,
+            _index, 
             token_a_amount,
             token_b_amount,
             min_mint_amount,)

@@ -322,11 +322,6 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "bondPoolCurrencyTokenMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -1250,11 +1245,6 @@ export const IDL: Solbond = {
         },
         {
           "name": "feesB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenMint",
           "isMut": true,
           "isSigner": false
         },

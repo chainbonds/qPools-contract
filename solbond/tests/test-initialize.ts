@@ -65,6 +65,10 @@ describe('qPools!', () => {
     let stableSwapState;
     let stableSwapStateCash;
     let stableSwapStateTest;
+
+    let userAccountpoolToken;
+    let userAccountpoolTokenTwo;
+    let userAccountpoolTokenThree;
     //stableSwapProgramId = SWAP_PROGRAM_ID;
     //console.log("Solbond Program");
     //console.log(solbondProgram.programId.toString());
@@ -297,7 +301,7 @@ describe('qPools!', () => {
         ////let txA = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenAMint, randomOwner.publicKey, alice);
         //let sg3 = await connection.sendTransaction(txP, [genericPayer]);
         //await connection.confirmTransaction(sg3);
-        let userAccountpoolToken = await getAssociatedTokenAddressOffCurve(poolTokenMint, positonPDA);
+        userAccountpoolToken = await getAssociatedTokenAddressOffCurve(poolTokenMint, positonPDA);
 
         // let userAccountpoolToken = await getAssociatedTokenAddressOffCurve(poolTokenMint, positonPDA);
         let userAuthority = Keypair.generate()
@@ -395,10 +399,63 @@ describe('qPools!', () => {
         );
         
         let [portfolioPDA, bumpPortfolio] = await await PublicKey.findProgramAddress(
-            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PortfolioSeed6"))],
+            [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PortFolioSeed6"))],
             solbondProgram.programId
         );
+
+        poolTokenMintTwo = stableSwapStateCash.poolTokenMint
+        let poolMintTwo = new Token(connection,poolTokenMintTwo, TOKEN_PROGRAM_ID, genericPayer);
+        console.log("poolMInt Two ", poolMintTwo.toString());
+        poolTokenMintThree = stableSwapStateTest.poolTokenMint
+        let poolMintThree = new Token(connection,poolTokenMintThree, TOKEN_PROGRAM_ID, genericPayer);
+        console.log("poolMintThree ", poolMintThree.toString())
         
+        
+        try {
+            let tx = await createAssociatedTokenAccountUnsigned(
+                connection,
+                poolMintTwo.publicKey,
+                null,
+                positonPDATwo,
+                provider.wallet
+            );
+            const sg = await connection.sendTransaction(tx, [genericPayer]);
+            await connection.confirmTransaction(sg);
+            console.log("Signature for pool token is: ", sg);
+        } catch (e) {
+            console.log("Error is: ");
+            console.log(e);
+        }
+        console.log("what")
+        //let txP = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,poolMint.publicKey, randomOwner.publicKey, alice);
+        ////let txA = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenAMint, randomOwner.publicKey, alice);
+        //let sg3 = await connection.sendTransaction(txP, [genericPayer]);
+        //await connection.confirmTransaction(sg3);
+        userAccountpoolTokenTwo = await getAssociatedTokenAddressOffCurve(poolTokenMintTwo, positonPDATwo);
+        console.log("userAccountpoolTwo ", userAccountpoolTokenTwo.toString())
+
+        try {
+            let tx = await createAssociatedTokenAccountUnsigned(
+                connection,
+                poolMintThree.publicKey,
+                null,
+                positonPDAThree,
+                provider.wallet
+            );
+            const sg = await connection.sendTransaction(tx, [genericPayer]);
+            await connection.confirmTransaction(sg);
+            console.log("Signature for pool token is: ", sg);
+        } catch (e) {
+            console.log("Error is: ");
+            console.log(e);
+        }
+        //let txP = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,poolMint.publicKey, randomOwner.publicKey, alice);
+        ////let txA = await spl.associatedTokenAccount.createAssociatedTokenAccountSigned(connection,tokenAMint, randomOwner.publicKey, alice);
+        //let sg3 = await connection.sendTransaction(txP, [genericPayer]);
+        //await connection.confirmTransaction(sg3);
+        userAccountpoolTokenThree = await getAssociatedTokenAddressOffCurve(poolTokenMintThree, positonPDAThree);
+        console.log("userAccountpoolTgree ", userAccountpoolTokenThree.toString())
+        console.log("userAccountpoolone ", userAccountpoolToken.toString())
 
 
         let finaltx = await solbondProgram.rpc.savePortfolio(
@@ -414,6 +471,9 @@ describe('qPools!', () => {
                     poolOne: poolPDAOne,
                     poolTwo: poolPDATwo,
                     poolThree: poolPDAThree,
+                    userLpTokenAccountOne: userAccountpoolToken,
+                    userLpTokenAccountTwo: userAccountpoolTokenTwo,
+                    userLpTokenAccountThree: userAccountpoolTokenThree,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     // Create liquidity accounts

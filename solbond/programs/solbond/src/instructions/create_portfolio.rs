@@ -20,7 +20,7 @@ pub struct SavePortfolio<'info> {
     pub owner: AccountInfo<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = owner,
         space = 8 + PortfolioAccount::LEN,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
@@ -40,11 +40,22 @@ pub struct SavePortfolio<'info> {
     pub pool_two: AccountInfo<'info>,
     #[account(mut)]
     pub pool_three: AccountInfo<'info>,
+
+
+    #[account(mut)]
+    pub user_lp_token_account_one: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub user_lp_token_account_two: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub user_lp_token_account_three: Account<'info, TokenAccount>,
+
     
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 
 }
+
+
 
 /*
     Based on the portfolio and weights, calculate how much to re-distribute into each pool
@@ -63,8 +74,6 @@ pub fn handler(
     _bump: u8,
 ) -> ProgramResult {
     
-    
- 
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
     portfolio_account.position_one_pda = ctx.accounts.position_one.clone().key();
     portfolio_account.position_two_pda = ctx.accounts.position_two.clone().key();
@@ -73,6 +82,10 @@ pub fn handler(
     portfolio_account.pool_one_pda = ctx.accounts.pool_one.clone().key();
     portfolio_account.pool_two_pda = ctx.accounts.pool_two.clone().key();
     portfolio_account.pool_three_pda = ctx.accounts.pool_three.clone().key();
+
+    portfolio_account.user_lp_token_account_one = ctx.accounts.user_lp_token_account_one.clone().key();
+    portfolio_account.user_lp_token_account_two = ctx.accounts.user_lp_token_account_two.clone().key();
+    portfolio_account.user_lp_token_account_three = ctx.accounts.user_lp_token_account_three.clone().key();
     
     portfolio_account.owner = ctx.accounts.owner.clone().key();
     

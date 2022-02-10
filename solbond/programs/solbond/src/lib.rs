@@ -132,6 +132,21 @@ pub mod solbond {
         instructions::create_portfolio::handler(ctx, bump)
     }
 
+    pub fn redeem_position_saber(
+        ctx: Context<RedeemSaberPosition>,
+        _bump_portfolio: u8,
+    _bump_position: u8,
+    _index: u32,
+    min_mint_amount: u64,
+    token_a_amount: u64,
+    token_b_amount: u64,
+    ) -> ProgramResult {
+        instructions::redeem_position_saber::handler(ctx, _bump_portfolio,
+        _bump_position, _index, min_mint_amount, token_a_amount, token_b_amount)
+    }
+    
+    
+
     /**
     * Redeem the bond,
     *

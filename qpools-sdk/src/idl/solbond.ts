@@ -103,6 +103,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "portfolioPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "owner",
           "isMut": true,
           "isSigner": true
@@ -178,8 +183,16 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
         },
         {
           "name": "tokenAAmount",
@@ -209,51 +222,6 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "positionOne",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "positionTwo",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "positionThree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolOne",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTwo",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolThree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userLpTokenAccountOne",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userLpTokenAccountTwo",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userLpTokenAccountThree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -268,6 +236,15 @@ export type Solbond = {
         {
           "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "weights",
+          "type": {
+            "array": [
+              "u64",
+              3
+            ]
+          }
         }
       ]
     },
@@ -636,40 +613,13 @@ export type Solbond = {
         "kind": "struct",
         "fields": [
           {
-            "name": "positionOnePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionTwoPda",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionThreePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolOnePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTwoPda",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolThreePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "userLpTokenAccountOne",
-            "type": "publicKey"
-          },
-          {
-            "name": "userLpTokenAccountTwo",
-            "type": "publicKey"
-          },
-          {
-            "name": "userLpTokenAccountThree",
-            "type": "publicKey"
+            "name": "weights",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
           },
           {
             "name": "owner",
@@ -1085,6 +1035,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "portfolioPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "owner",
           "isMut": true,
           "isSigner": true
@@ -1160,8 +1115,16 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
         },
         {
           "name": "tokenAAmount",
@@ -1191,51 +1154,6 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "positionOne",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "positionTwo",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "positionThree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolOne",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTwo",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolThree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userLpTokenAccountOne",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userLpTokenAccountTwo",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userLpTokenAccountThree",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1250,6 +1168,15 @@ export const IDL: Solbond = {
         {
           "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "weights",
+          "type": {
+            "array": [
+              "u64",
+              3
+            ]
+          }
         }
       ]
     },
@@ -1618,40 +1545,13 @@ export const IDL: Solbond = {
         "kind": "struct",
         "fields": [
           {
-            "name": "positionOnePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionTwoPda",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionThreePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolOnePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTwoPda",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolThreePda",
-            "type": "publicKey"
-          },
-          {
-            "name": "userLpTokenAccountOne",
-            "type": "publicKey"
-          },
-          {
-            "name": "userLpTokenAccountTwo",
-            "type": "publicKey"
-          },
-          {
-            "name": "userLpTokenAccountThree",
-            "type": "publicKey"
+            "name": "weights",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
           },
           {
             "name": "owner",

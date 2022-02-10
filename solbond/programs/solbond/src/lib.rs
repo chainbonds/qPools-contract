@@ -109,7 +109,9 @@ pub mod solbond {
         ctx: Context<SaberLiquidityInstruction>,
         _bump_pool: u8,
         _bump_position: u8,
+        _bump_portfolio: u8,
         _index:u32,
+        _weight: u64,
         token_a_amount: u64,
         token_b_amount: u64,
         min_mint_amount: u64,
@@ -119,7 +121,9 @@ pub mod solbond {
             ctx, 
             _bump_pool, 
             _bump_position,
+            _bump_portfolio,
             _index, 
+            _weight,
             token_a_amount,
             token_b_amount,
             min_mint_amount,)
@@ -128,8 +132,9 @@ pub mod solbond {
     pub fn save_portfolio(
         ctx: Context<SavePortfolio>,
         bump: u8,
+        weights: [u64; 3]
     ) -> ProgramResult {
-        instructions::create_portfolio::handler(ctx, bump)
+        instructions::create_portfolio::handler(ctx, bump, weights)
     }
 
     pub fn redeem_position_saber(

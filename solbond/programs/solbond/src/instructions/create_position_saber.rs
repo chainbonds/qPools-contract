@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
-use crate::state::{TwoWayPoolAccount, PositionAccount};
+use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
@@ -15,7 +15,9 @@ use stable_swap_anchor::StableSwap;
 #[instruction(
     _bump_pool: u8,
     _bump_position: u8,
+    _bump_portfolio: u8,
     _index: u32,
+    _weight: u64,
     token_a_amount: u64,
     token_b_amount: u64,
     min_mint_amount: u64,
@@ -42,6 +44,11 @@ pub struct SaberLiquidityInstruction<'info> {
          bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccount>>,
+
+    #[account(
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+    )]
+    pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
@@ -100,33 +107,24 @@ pub struct SaberLiquidityInstruction<'info> {
 
 }
 
-/*
-    Based on the portfolio and weights, calculate how much to re-distribute into each pool
-*/
-// // TODO: Replace everything by decimals?
-// pub fn calculate_amount_per_pool(x: u64) -> [u64; 5] {
-//
-//     let default_pay_in_amount: u64 = x / 5;
-//
-//     return [default_pay_in_amount, default_pay_in_amount, default_pay_in_amount, default_pay_in_amount, default_pay_in_amount];
-// }
 
-/**
-    Deposit reserve to pools.
-    All the Solana tokens that are within the reserve,
-    are now put into
-    Frontend should be respondible for creating all the required token accounts!
- */
 pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
     _bump_pool: u8,
     _bump_position: u8,
+    _bump_portfolio: u8,
     _index: u32,
+    _weight: u64,
     token_a_amount: u64,
     token_b_amount: u64,
     min_mint_amount: u64,
 ) -> ProgramResult {
     msg!("Depositing reserve to pools!");
+    msg!("getting portfolio details!");
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    assert!(portfolio.weights[_index as usize] == _weight, "input weight does not match portfolio weight!");
+    msg!("portfolio weight checks out!");
+
 
 
     let user_context: SwapUserContext = SwapUserContext {

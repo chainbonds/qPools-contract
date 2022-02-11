@@ -23,15 +23,8 @@ pub struct PositionAccount {
 
 impl PositionAccount {
     pub const LEN: usize =
-              32   // position owner
-            + 32   // mint_a
-            + 32   // mint_b
-            + 32   // mint_lp
-            + 32   // pool_token_account_a
-            + 32   // pool_token_account_b
-            + 32   // pool_token_account_lp
-            + 32   // pool_pda
-            + 8;    // bump
+    std::mem::size_of::<Pubkey>() * 8 +
+            1;    // bump
 
 
 }

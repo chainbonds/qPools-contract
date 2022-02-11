@@ -80,7 +80,7 @@ pub struct SaberLiquidityInstruction<'info> {
     #[account(
         mut,
         //constraint = &qpools_a.owner == swap_authority.key,
-        constraint = &qpools_a.owner == &position_pda.key(),
+        constraint = &qpools_a.owner == &portfolio_pda.key(),
 
     )]
     pub qpools_a: Box<Account<'info,TokenAccount>>,
@@ -95,7 +95,7 @@ pub struct SaberLiquidityInstruction<'info> {
     #[account(
         mut,
         //constraint = &qpools_b.owner == swap_authority.key
-        constraint = &qpools_b.owner == &position_pda.key(),
+        constraint = &qpools_b.owner == &portfolio_pda.key(),
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
 
@@ -130,7 +130,7 @@ pub fn handler(
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),
-        user_authority: ctx.accounts.position_pda.to_account_info(),
+        user_authority: ctx.accounts.portfolio_pda.to_account_info(),
         swap: ctx.accounts.swap.to_account_info(),
     };
     msg!("jshjd reserve to pools!");
@@ -165,8 +165,8 @@ pub fn handler(
             &[
                 [
                     ctx.accounts.owner.key().as_ref(), 
-                    format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
-                    &[_bump_position]
+                    seeds::PORTFOLIO_SEED,
+                    &[_bump_portfolio]
                 ].as_ref()
             ]
         ),

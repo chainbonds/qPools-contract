@@ -25,10 +25,8 @@ pub struct TwoWayPoolAccount {
 }
 
 impl TwoWayPoolAccount {
-    pub const LEN: usize =
-    std::mem::size_of::<Pubkey>() * 6 
-            + 1    // bump
-            + 8   // total_amount_in_a
-            + 8;  // total_amount_in_b
+    pub const LEN: usize = 
+    32 + 32 + 32 + 32 + 32 + 32 + 8 + 64 + 64;
 
 }
+

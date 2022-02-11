@@ -85,7 +85,21 @@ describe('qPools!', () => {
 
         console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
         for (let smt of sigs_rest) {
-            console.log("🦍 TRANSACTION SIG ", sig_reg.toString())
+            console.log("🦍 TRANSACTION SIG ", smt.toString())
+
+        }
+
+    })
+
+    it('simulate a full portfolio redeem', async () => {
+
+        // first, initialize a portfolio
+        let amountTokenA = new u64(100);
+        const amounts = [amountTokenA, amountTokenA, amountTokenA]
+        let sigs_rest = await portfolio.redeem_full_portfolio(weights, amounts, genericPayer);
+
+        for (let smt of sigs_rest) {
+            console.log("🦍 TRANSACTION SIG ", smt.toString())
 
         }
 

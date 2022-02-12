@@ -2,39 +2,12 @@ import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {QPair} from "@qpools/sdk/src/q-pair";
 import {BN} from "@project-serum/anchor";
 import {u64} from "@solana/spl-token";
 import {assert} from "chai";
-import {QPoolsAdmin} from "./qpools-admin";
+import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "./utils";
+import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
 
-// @ts-ignore
-import {
-    BondPoolAccount,
-    createAssociatedTokenAccountSendUnsigned,
-    getAssociatedTokenAddressOffCurve,
-    createMint,
-    getPayer,
-    getSolbondProgram,    
-    createAssociatedTokenAccountUnsigned,
-    MOCK,
-
-} from "@qpools/sdk";
-import {
-    StableSwap,
-    StableSwapState,
-    findSwapAuthorityKey,
-  } from "@saberhq/stableswap-sdk";
-import {NETWORK} from "@qpools/sdk/lib/cluster";
-import {IWallet} from "@qpools/sdk/lib/utils";
-import { min } from "bn.js";
-import { mint } from "easy-spl";
-
-
-
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 /*
     doing a deposit: 
         a function which registers the portfolio with the weights

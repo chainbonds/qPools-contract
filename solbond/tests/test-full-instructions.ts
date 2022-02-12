@@ -21,11 +21,11 @@ import {
     findSwapAuthorityKey,
   } from "@saberhq/stableswap-sdk";
 import provider from '@project-serum/anchor/dist/cjs/provider';
+import {SaberInteractTool} from "@qpools/sdk/lib/saber-cpi-endpoints";
+import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
-
-import { SaberInteractTool, Portfolio} from "@qpools/admin-sdk";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 

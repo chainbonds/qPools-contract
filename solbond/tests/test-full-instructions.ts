@@ -42,8 +42,6 @@ describe('qPools!', () => {
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
 
-    let stableSwapAccount : Keypair;
-    //stableSwapAccount=   Keypair.generate();
     let stableSwapProgramId: PublicKey;
 
 
@@ -54,22 +52,17 @@ describe('qPools!', () => {
     let USDC_TEST_pubkey: PublicKey;
     let portfolio: Portfolio;
 
-    let saberInteractTool: SaberInteractTool;
     // Do some airdrop before we start the tests ...
     before(async () => {
-        console.log("swapprogramid")
-        stableSwapProgramId = new PublicKey(
-            "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
-        );
-        stableSwapAccount = Keypair.generate()
+        console.log("swapprogramid");
+        stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
-        USDC_CASH_pubkey =  new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA")
-        USDC_TEST_pubkey =  new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x")
+        USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
+        USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
         
         weights = [new BN(500), new BN(500), new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
         
-        saberInteractTool = new SaberInteractTool(connection, provider, solbondProgram, genericPayer);
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
 
 
@@ -86,7 +79,6 @@ describe('qPools!', () => {
         console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
         for (let smt of sigs_rest) {
             console.log("🦍 TRANSACTION SIG ", smt.toString())
-
         }
 
     })

@@ -10,6 +10,8 @@ pub struct TwoWayPoolAccount {
     pub mint_lp: Pubkey,
     pub pool_token_account_a: Pubkey,
     pub pool_token_account_b: Pubkey,
+    pub pool_token_account_lp: Pubkey,
+    pub portfolio_pda: Pubkey,
 
     // Include also any bumps, etc.
     pub bump: u8,
@@ -26,7 +28,7 @@ pub struct TwoWayPoolAccount {
 
 impl TwoWayPoolAccount {
     pub const LEN: usize = 
-    32 + 32 + 32 + 32 + 32 + 32 + 8 + 64 + 64;
+    32 + 32 + 32 + 32 + 32 + 32 + 32 + 8 + 64 + 64;
 
 }
 

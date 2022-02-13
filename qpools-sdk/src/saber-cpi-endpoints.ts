@@ -50,7 +50,9 @@ export class SaberInteractTool {
 
 
     constructor(
-        connection: Connection, provider: Provider, solbondProgram: Program,
+        connection: Connection,
+        provider: Provider,
+        solbondProgram: Program,
         wallet: Keypair, 
     ) {
         this.connection = connection;
@@ -119,6 +121,13 @@ export class SaberInteractTool {
         return userAccount;
     }
 
+    async getAccountForMintAndPDADontCreate(mintKey: PublicKey, pda: PublicKey) {
+        const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
+        return userAccount;
+    }
+
+    // Yeah, the addresses will not change, but they may not be initialized yet.
+    // Initialization must be done over RPC if this is not the case yet!
     async getAccountForMint(mintKey: PublicKey) {
         try {
             // console.log("this wallet ", this.wallet.publicKey.toString())

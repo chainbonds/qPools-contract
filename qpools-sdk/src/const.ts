@@ -30,8 +30,12 @@ export const MOCK = {
             USDC_CASH: new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA"),
             USDC_PAI: new PublicKey("DoycojcYVwc42yCpGb4CvkbuKJkQ6KBTugLdJXv3U8ZE"),
             USDT_CASH: new PublicKey("TEJVTFTsqFEuoNNGu864ED4MJuZr8weByrsYYpZGCfQ"),
-            TEST_USDC: new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x"),
-        }
+            USDC_TEST: new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x"),
+        },
+        stableSwapProgramId: new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"),
+        // USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
+        // USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
+        // USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
     },
     MAIN: {
         SOL: new PublicKey('So11111111111111111111111111111111111111112'),

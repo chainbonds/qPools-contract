@@ -10,6 +10,13 @@ use stable_swap_anchor::StableSwap;
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
+// init_if_needed,
+// payer = initializer,
+// associated_token::mint = mint_b,
+// associated_token::authority = portfolio_pda
+// pub associated_token_program: Program<'info, AssociatedToken>
+// use anchor_spl::associated_token::{self, AssociatedToken};
+
 #[derive(Accounts)]
 // #[instruction(amount)]
 #[instruction(

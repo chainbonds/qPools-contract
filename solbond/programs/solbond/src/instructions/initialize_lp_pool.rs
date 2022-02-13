@@ -14,9 +14,6 @@ pub struct InitializeLpPoolAccount<'info> {
 
     // The account which represents the bond pool account
     // An LP pool's LP token uniquely identifies the pool for now
-
-    pub portfolio_pda: AccountInfo<'info>,
-
     #[account(
         init_if_needed,
         payer = initializer,
@@ -33,30 +30,11 @@ pub struct InitializeLpPoolAccount<'info> {
     #[account(mut)]
     pub mint_b: Account<'info, Mint>,
 
-    #[account(
-        init_if_needed,
-        payer = initializer,
-        associated_token::mint = mint_a,
-        associated_token::authority = portfolio_pda
-    )]
+    #[account(mut)]
     pub pool_token_account_a: Account<'info, TokenAccount>,
 
-    #[account(
-        init_if_needed,
-        payer = initializer,
-        associated_token::mint = mint_b,
-        associated_token::authority = portfolio_pda
-    )]
+    #[account(mut)]
     pub pool_token_account_b: Account<'info, TokenAccount>,
-
-    // Added!
-    #[account(
-        init_if_needed,
-        payer = initializer,
-        associated_token::mint = mint_lp,
-        associated_token::authority = portfolio_pda
-    )]
-    pub pool_token_account_lp: Account<'info, TokenAccount>,
 
     // The account which generates the pool account
     #[account(signer, mut)]
@@ -67,7 +45,6 @@ pub struct InitializeLpPoolAccount<'info> {
     pub clock: Sysvar<'info, Clock>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>
 }
 
 pub fn handler(
@@ -104,12 +81,6 @@ pub fn handler(
 
     pool_account.total_amount_in_b = 0;
     msg!("9 pool");
-
-    pool_account.pool_token_account_lp = ctx.accounts.pool_token_account_lp.key();
-    msg!("10 pool");
-
-    pool_account.portfolio_pda = ctx.accounts.portfolio_pda.key();
-    msg!("11 pool");
 
     Ok(())
 }

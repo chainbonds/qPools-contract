@@ -301,7 +301,6 @@ export class Portfolio extends SaberInteractTool {
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
-
                 },
                 signers: [owner]
             }
@@ -407,6 +406,8 @@ export class Portfolio extends SaberInteractTool {
                     portfolioPda: this.portfolioPDA,
                     owner: owner.publicKey,//randomOwner.publicKey,
                     poolMint: poolTokenMint,
+                    tokenAMint: state.tokenA.mint,
+                    tokenBMint: state.tokenB.mint,
                     outputLp: userAccountpoolToken,
                     swapAuthority: stableSwapState.config.authority,
                     poolPda: poolPDA,

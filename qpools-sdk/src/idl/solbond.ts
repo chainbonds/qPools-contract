@@ -487,7 +487,7 @@ export type Solbond = {
   ],
   "accounts": [
     {
-      "name": "bondPoolAccount",
+      "name": "BondPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -523,7 +523,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "invariantPoolAccount",
+      "name": "InvariantPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -603,7 +603,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "portfolioAccount",
+      "name": "PortfolioAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -628,7 +628,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "positionAccount",
+      "name": "PositionAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -672,7 +672,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "tvlInfoAccount",
+      "name": "TvlInfoAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -692,7 +692,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "twoWayPoolAccount",
+      "name": "TwoWayPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -922,7 +922,10 @@ export type Solbond = {
       "name": "EmptyTotalCurrencySupply",
       "msg": "Total Currency Supply seems empty!"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FoFkiqWv7v9TknYuvr13FjFfwJxEapQ3Nj17crcVXaeh"
+  }
 };
 
 export const IDL: Solbond = {
@@ -1414,7 +1417,7 @@ export const IDL: Solbond = {
   ],
   "accounts": [
     {
-      "name": "bondPoolAccount",
+      "name": "BondPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1450,7 +1453,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "invariantPoolAccount",
+      "name": "InvariantPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1530,7 +1533,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "portfolioAccount",
+      "name": "PortfolioAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1555,7 +1558,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "positionAccount",
+      "name": "PositionAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1599,7 +1602,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "tvlInfoAccount",
+      "name": "TvlInfoAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1619,7 +1622,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "twoWayPoolAccount",
+      "name": "TwoWayPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1849,5 +1852,8 @@ export const IDL: Solbond = {
       "name": "EmptyTotalCurrencySupply",
       "msg": "Total Currency Supply seems empty!"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FoFkiqWv7v9TknYuvr13FjFfwJxEapQ3Nj17crcVXaeh"
+  }
 };

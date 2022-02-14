@@ -9,6 +9,7 @@ import {MOCK} from "../const";
 import {sendAndConfirm} from "easy-spl/dist/util";
 import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
+import {getAssociatedTokenAddressOffCurve} from "../utils";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -57,6 +58,63 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             this.portfolioBump = bumpPortfolio
         }).finally(() => {});
 
+    }
+
+    async transferUsdcToPortfolio(amount: u64) {
+
+        // Get associated token account for the Saber USDC Token
+        let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
+        // TODO: If this account is empty, return an error! As this must already be existent!
+        // All get the portfolio PDAs USDC ATA
+        let pdaUSDCAccount = await this.getAccountForMintAndPDA(MOCK.DEV.SABER_USDC, this.portfolioPDA);
+        // Assume that this account exists already
+
+        let tx = await this.solbondProgram.rpc.transferToPortfolio(
+            new BN(this.portfolioBump),
+            amount,
+            {
+                accounts: {
+                    owner: this.owner.publicKey,
+                    portfolioPda: this.portfolioPDA,
+                    userOwnedTokenAccount: userUSDCAta,
+                    pdaOwnedTokenAccount: pdaUSDCAccount,
+                    tokenMint: MOCK.DEV.SABER_USDC,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                },
+                signers: [this.payer]
+            }
+
+        )
+        let sg = await this.provider.connection.confirmTransaction(tx);
+        console.log("Sending money tx: ", sg);
+        return tx;
+    }
+
+    async transferToUser(amount: u64) {
+        let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
+        let pdaUSDCAccount = await this.getAccountForMintAndPDA(MOCK.DEV.SABER_USDC, this.portfolioPDA);
+
+        let tx = await this.solbondProgram.rpc.transferRedeemedToUser(
+            new BN(this.portfolioBump),
+            amount,
+            {
+                accounts: {
+                    owner: this.owner.publicKey,
+                    portfolioPda: this.portfolioPDA,
+                    userOwnedTokenAccount: userUSDCAta,
+                    pdaOwnedTokenAccount: pdaUSDCAccount,
+                    tokenMint: MOCK.DEV.SABER_USDC,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                },
+                signers: [this.payer]
+            }
+
+        )
+        let sg = await this.provider.connection.confirmTransaction(tx);
+        console.log("Sending money tx: ", sg);
+        return tx;
     }
 
     async registerLiquidityPool(poolAddress: PublicKey, state: StableSwapState) {

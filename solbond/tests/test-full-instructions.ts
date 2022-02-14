@@ -39,9 +39,9 @@ describe('qPools!', () => {
     const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
     
     const payer = Keypair.generate();
-    // // @ts-expect-error
-    // const genericPayer = provider.wallet.payer as Keypair;
-    const genericPayer = payer;
+    // @ts-expect-error
+    const genericPayer = provider.wallet.payer as Keypair;
+    // const genericPayer = payer;
 
     let stableSwapProgramId: PublicKey;
 
@@ -72,6 +72,17 @@ describe('qPools!', () => {
 
     })
 
+    it('simulate sending to portfolio owned account', async () => {
+        let amountTokenA = new u64(3400);
+        let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
+        let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, amountTokenA);
+
+        console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+
+
+    })
+
     it('simulate a portfolio purchase', async () => {
 
         // first, initialize a portfolio
@@ -98,6 +109,15 @@ describe('qPools!', () => {
             console.log("🦍 TRANSACTION SIG ", smt.toString())
 
         }
+
+    })
+
+    it('simulate a redeem to user', async () => {
+
+        let amountTokenA = new u64(3400);
+        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
+
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
     })
 

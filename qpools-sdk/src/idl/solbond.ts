@@ -360,60 +360,30 @@ export type Solbond = {
       ]
     },
     {
-      "name": "redeemBond",
+      "name": "transferToPortfolio",
       "accounts": [
         {
-          "name": "bondPoolAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaser",
+          "name": "owner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "purchaserRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaserCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tvlAccount",
+          "name": "portfolioPda",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "rent",
-          "isMut": false,
+          "name": "userOwnedTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "clock",
+          "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
           "isSigner": false
         },
@@ -430,12 +400,57 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "redeemableAmountRaw",
-          "type": "u64"
+          "name": "bump",
+          "type": "u8"
         },
         {
-          "name": "bumpTvlAccount",
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transferRedeemedToUser",
+      "accounts": [
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userOwnedUserA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaOwnedUserA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
@@ -1290,60 +1305,30 @@ export const IDL: Solbond = {
       ]
     },
     {
-      "name": "redeemBond",
+      "name": "transferToPortfolio",
       "accounts": [
         {
-          "name": "bondPoolAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaser",
+          "name": "owner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "purchaserRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaserCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tvlAccount",
+          "name": "portfolioPda",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "rent",
-          "isMut": false,
+          "name": "userOwnedTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "clock",
+          "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
           "isSigner": false
         },
@@ -1360,12 +1345,57 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "redeemableAmountRaw",
-          "type": "u64"
+          "name": "bump",
+          "type": "u8"
         },
         {
-          "name": "bumpTvlAccount",
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transferRedeemedToUser",
+      "accounts": [
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userOwnedUserA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaOwnedUserA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },

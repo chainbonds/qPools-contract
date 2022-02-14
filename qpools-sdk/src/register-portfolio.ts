@@ -7,6 +7,7 @@ import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "./const";
 import {sendAndConfirm} from "easy-spl/dist/util";
+import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -22,6 +23,9 @@ export class Portfolio extends SaberInteractTool {
     public poolAddresses: Array<PublicKey>;
     public portfolio_owner: PublicKey;
 
+    public USDC_mint = new PublicKey('2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8');
+    public userOwnedUSDCAccount: PublicKey;
+    
     constructor(
         connection: Connection,
         provider: Provider,
@@ -589,5 +593,86 @@ export class Portfolio extends SaberInteractTool {
         return transactions_sigs;
     }
 
+    async transfer_to_portfolio(owner: IWallet, amount: u64) {
+        if (!this.userOwnedUSDCAccount) {
+            console.log("Creating a userOwnedUSDCAccount");
+            this.userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
+                this.connection,
+                this.USDC_mint,
+                this.wallet.publicKey,
+                owner,
+            );
+            console.log("Done!");
+        }
+
+        let pdaUSDCAccount = await this.getAccountForMintAndPDA(this.USDC_mint, this.portfolioPDA);
+        console.log("HHH")
+        console.log("pda ", pdaUSDCAccount.toString())
+        // @ts-expect-error
+        let signer = this.provider.wallet.payer as keypair
+        let finaltx = await this.solbondProgram.rpc.transferToPortfolio(
+            new BN(this.portfolioBump),
+            amount,
+            {
+                accounts: {
+                    owner: owner.publicKey,
+                    portfolioPda: this.portfolioPDA,
+                    userOwnedTokenAccount: this.userOwnedUSDCAccount,
+                    pdaOwnedTokenAccount: pdaUSDCAccount,
+                    tokenMint: this.USDC_mint,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                },
+                signers:[signer]
+            }
+        )
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("send money from user to portfolio: ", finaltx);
+        return finaltx;
+
+    }
+
+    async transfer_to_user(owner: IWallet, amount: u64) {
+
+
+        if (!this.userOwnedUSDCAccount) {
+            console.log("Creating a userOwnedUSDCAccount");
+            this.userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
+                this.connection,
+                this.USDC_mint,
+                this.wallet.publicKey,
+                owner,
+            );
+            console.log("Done!");
+        }
+
+        let pdaUSDCAccount = await this.getAccountForMintAndPDA(this.USDC_mint, this.portfolioPDA);
+        console.log("HHH")
+        console.log("pda ", pdaUSDCAccount.toString())
+        // @ts-expect-error
+        let signer = this.provider.wallet.payer as keypair
+        let finaltx = await this.solbondProgram.rpc.transferRedeemedToUser(
+            new BN(this.portfolioBump),
+            new BN(amount),
+
+            {
+                accounts: {
+                    portfolioPda: this.portfolioPDA,
+                    portfolioOwner: owner.publicKey,
+                    userOwnedUserA: this.userOwnedUSDCAccount,
+                    pdaOwnedUserA: pdaUSDCAccount,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers:[signer]
+            }
+        )
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("gave user money back : ", finaltx);
+
+        return [finaltx];
+    }
 
 }

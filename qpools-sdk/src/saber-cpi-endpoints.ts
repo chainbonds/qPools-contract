@@ -7,6 +7,7 @@ import {u64} from "@solana/spl-token";
 import {assert} from "chai";
 import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "./utils";
 import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
+import {MOCK} from "./const";
 
 /*
     doing a deposit: 
@@ -63,7 +64,7 @@ export class SaberInteractTool {
         this.wallet = wallet;
         this.providerWallet = this.provider.wallet;
 
-        this.stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
+        this.stableSwapProgramId = new PublicKey(MOCK.DEV.stableSwapProgramId);
 
     }
 

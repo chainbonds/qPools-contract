@@ -22,7 +22,7 @@ pub struct TransferToPortfolio<'info> {
     pub user_owned_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(mut,
-    constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
+        constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_token_account: Box<Account<'info,TokenAccount>>,
 

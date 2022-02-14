@@ -8,6 +8,7 @@ import {assert} from "chai";
 import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
 import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "../utils";
 import {sendAndConfirm} from "easy-spl/dist/util";
+import {MOCK} from "../const";
 
 /*
     doing a deposit:
@@ -65,7 +66,7 @@ export class SaberInteractToolFrontendFriendly {
         // @ts-expect-error
         this.wallet = this.provider.wallet.payer as Keypair;
 
-        this.stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
+        this.stableSwapProgramId = new PublicKey(MOCK.DEV.stableSwapProgramId);
 
     }
 

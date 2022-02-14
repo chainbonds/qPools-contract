@@ -3,6 +3,9 @@ import {Connection, PublicKey} from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 import {SEED} from "../seeds";
 import {WalletI} from "easy-spl";
+import {u64} from "@solana/spl-token";
+import {PortfolioAccount} from "../types/portfolioAccount";
+import {PositionAccount} from "../types/positionAccount";
 
 
 export class DisplayPortfolios {
@@ -26,22 +29,6 @@ export class DisplayPortfolios {
 
     }
 
-    // Get all accounts, print them, and return them
-    /**
-     * Get all the portfolio's that were created by the user
-     */
-    async getAllPortfolios() {
-
-        let [portfolioPDA, bumpPortfolio] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
-            this.solbondProgram.programId
-        );
-
-        // Now get accounts data of this PDA
-        // this.solbondProgram.account
-        // await this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount);
-
-    }
 
     /**
      * Given the portfolio pubkey, return all the PDAs that this portfolio has deposited something in

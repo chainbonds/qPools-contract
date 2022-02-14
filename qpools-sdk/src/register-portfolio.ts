@@ -42,6 +42,16 @@ export class Portfolio extends SaberInteractTool {
     }
 
 
+
+
+
+
+
+
+
+
+
+
     // Instead of this, we can have a couple of JSON objects... Should be much cleaner
     async registerAndCreateFullPortfolio(positionInput: Array<PositionsInput>, ownerKeypair: Keypair) {
 

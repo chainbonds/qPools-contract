@@ -13,6 +13,7 @@ import {
     waitForEpoch
 } from "./utils";
 import { Portfolio } from "./register-portfolio";
+import { PortfolioFrontendFriendly } from "./frontend-friendly/register-portfolio-wallet";
 
 export {
     QPoolsUser,
@@ -29,5 +30,6 @@ export {
     createAssociatedTokenAccountSendUnsigned,
     getAssociatedTokenAddressOffCurve,
     createAssociatedTokenAccountUnsigned,
-    Portfolio
+    Portfolio,
+    PortfolioFrontendFriendly
 }

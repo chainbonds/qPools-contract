@@ -6,6 +6,7 @@ import {SaberInteractTool} from "./saber-cpi-endpoints";
 import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "./const";
+import {sendAndConfirm} from "easy-spl/dist/util";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -174,9 +175,9 @@ export class Portfolio extends SaberInteractTool {
         // TODO: Turn these into instruction, return instruction if not exists ...
         // Create all of these in the backend, if they don't exist yet!
         // TODO: These are not userAccount, these are portfolioATA's. Should rename, this is confusing
-        let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        let userAccountPoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+        let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
+        let userAccountPoolToken = await this.getAccountForMintAndPDA(state.poolTokenMint, this.portfolioPDA);
 
         // Plan to install only in one of the pools
         let amount_a = new u64(0)
@@ -255,8 +256,25 @@ export class Portfolio extends SaberInteractTool {
         this.portfolio_owner = owner_keypair.publicKey
         this.portfolioPDA = portfolioPDAtmp
         this.portfolioBump = bumpPortfoliotmp
+
+        console.log("Inputs are: ");
+        console.log({
+            bump: this.portfolioBump,
+            weights: weights,
+            accounts: {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                        portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                        systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        })
+
         let finaltx = await this.solbondProgram.rpc.savePortfolio(
-            new BN(this.portfolioBump),
+            this.portfolioBump,
             weights,
             {
                 accounts: {
@@ -269,6 +287,13 @@ export class Portfolio extends SaberInteractTool {
                 signers: [owner_keypair]
             }
         )
+        // let tx = new Transaction(ix);
+        // owner_keypair
+        // await sendAndConfirm(this.connection, );
+        // this.provider.connection.sendTransaction(tx, [owner_keypair])
+        // signers: [owner_keypair]
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
 
         await this.provider.connection.confirmTransaction(finaltx);
         console.log("SavePortfolio Transaction Signature is: ", finaltx);
@@ -343,18 +368,18 @@ export class Portfolio extends SaberInteractTool {
         console.log("authority ", authority.toString())
 
 
-        let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+        let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
         //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
 
 
         console.log("userA ", userAccountA.toString())
-        let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+        let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
         //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
 
         console.log("userB ", userAccountA.toString())
 
 
-        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(poolTokenMint, this.portfolioPDA);
+        let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
         //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
 
 
@@ -476,18 +501,18 @@ export class Portfolio extends SaberInteractTool {
         console.log("authority ", authority.toString())
 
 
-        let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+        let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
         //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
 
 
         console.log("userA ", userAccountA.toString())
-        let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+        let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
         //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
 
         console.log("userB ", userAccountA.toString())
 
 
-        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(poolTokenMint, this.portfolioPDA);
+        let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
         //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
 
 

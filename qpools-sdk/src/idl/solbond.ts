@@ -924,7 +924,7 @@ export type Solbond = {
     }
   ],
   "metadata": {
-    "address": "FoFkiqWv7v9TknYuvr13FjFfwJxEapQ3Nj17crcVXaeh"
+    "address": "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN"
   }
 };
 
@@ -1854,6 +1854,6 @@ export const IDL: Solbond = {
     }
   ],
   "metadata": {
-    "address": "FoFkiqWv7v9TknYuvr13FjFfwJxEapQ3Nj17crcVXaeh"
+    "address": "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN"
   }
 };

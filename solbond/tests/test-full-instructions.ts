@@ -39,8 +39,9 @@ describe('qPools!', () => {
     const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
     
     const payer = Keypair.generate();
-    // @ts-expect-error
-    const genericPayer = provider.wallet.payer as Keypair;
+    // // @ts-expect-error
+    // const genericPayer = provider.wallet.payer as Keypair;
+    const genericPayer = payer;
 
     let stableSwapProgramId: PublicKey;
 
@@ -54,12 +55,15 @@ describe('qPools!', () => {
 
     // Do some airdrop before we start the tests ...
     before(async () => {
+
+        // await connection.requestAirdrop(genericPayer.publicKey, 1e9);
+
         console.log("swapprogramid");
         stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
         USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
         USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
-        
+
         weights = [new BN(500), new BN(500), new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
         

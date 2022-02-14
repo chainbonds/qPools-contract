@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-declare_id!("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
+declare_id!("HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN");
 
 // TODO: Replace all lamports with how many solana actually should be paid off.
 

@@ -15,7 +15,7 @@ import {MOCK} from "../const";
 import {sendAndConfirm} from "easy-spl/dist/util";
 import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
-import {getAssociatedTokenAddressOffCurve} from "../utils";
+import {createAssociatedTokenAccountSendUnsigned, getAssociatedTokenAddressOffCurve} from "../utils";
 import {SEED} from "../seeds";
 import {PortfolioAccount} from "../types/portfolioAccount";
 import {PositionAccount} from "../types/positionAccount";
@@ -448,8 +448,24 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         }
     }
 
-
-
+    // async registerAccount() {
+    //     // TODO: We will probably still have these ...
+    //     console.log("Registering account..");
+    //     // Purchaser
+    //     // Create the reserve account, if none exists
+    //     // console.log("Going to create the this.purchaserCurrencyAccount");
+    //
+    //     if (!this.purchaserCurrencyAccount) {
+    //         console.log("Creating a purchaserCurrencyAccount");
+    //         this.purchaserCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
+    //             this.connection,
+    //             this.currencyMint!.publicKey,
+    //             this.wallet.publicKey,
+    //             this.wallet
+    //         );
+    //         console.log("Done!");
+    //     }
+    // }
 
 
     async redeemFullPortfolio(amounts: Array<u64>) {
@@ -553,7 +569,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             new BN(bumpPositon),
             new BN(index),
             new BN(totalLPTokens.amount),
-            new BN(0),
+            new BN(1),
             new BN(0),
             {
                 accounts: {

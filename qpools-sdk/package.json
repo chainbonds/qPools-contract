@@ -19,6 +19,7 @@
     "@pythnetwork/client": "^2.5.1",
     "@saberhq/stableswap-sdk": "^1.12.42",
     "@solana/spl-token": "^0.1.8",
+    "@solana/buffer-layout": "^4.0.0",
     "@solana/web3.js": "^1.30.0",
     "chai": "^4.3.4",
     "common-js": "^0.3.8",

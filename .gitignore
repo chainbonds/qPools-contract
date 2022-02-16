@@ -2,5 +2,10 @@
 ./**/package-lock.json
 ./**/node_modules/*
 dapp-nextjs/build/*
-
-
+../.DS_Store
+../qpools-admin-sdk/lib/
+../qpools-admin-sdk/node_modules/
+../qpools-admin-sdk/package-lock.json
+../qpools-sdk/lib/
+../qpools-sdk/node_modules/
+../qpools-sdk/package-lock.json

@@ -86,20 +86,20 @@ describe('qPools!', () => {
     })
 
 
-    it('simulate a redeem to user', async () => {
+    /*it('simulate a redeem to user', async () => {
 
         let amountTokenA = new u64(3400);
         let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
 
         console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
-    })
+    })*/
 
 
     it('simulate a withdraw one', async () => {
 
-        let amount_token = new u64(30);
-        let amount_lp = new u64(30);
+        let amount_token = new u64(300);
+        let amount_lp = new u64(3400);
 
         let sigs_rest = await portfolio.redeem_single_position_only_one(0, new BN(500), amount_lp, amount_token, genericPayer);
 
@@ -108,7 +108,7 @@ describe('qPools!', () => {
     })
 
 
-    it('simulate a full portfolio redeem', async () => {
+    /*it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
         let amountTokenA = new u64(100);
@@ -120,6 +120,6 @@ describe('qPools!', () => {
 
         }
 
-    })
+    })*/
 
 })

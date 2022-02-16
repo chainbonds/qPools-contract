@@ -7,8 +7,8 @@ use crate::utils::seeds;
 
 #[derive(Accounts)]
 #[instruction(
-_bump_portfolio: u8,
-amount: u64,
+    _bump_portfolio: u8,
+    amount: u64,
 
 )]
 pub struct TransferRedeemedToUser<'info> {
@@ -25,16 +25,16 @@ pub struct TransferRedeemedToUser<'info> {
 
     //      user_token: SwapToken  block
     #[account(
-    mut,
-    //constraint = &user_a.owner == &position_pda.key(),
+        mut,
+        //constraint = &user_a.owner == &position_pda.key(),
     )]
     pub user_owned_user_a: Box<Account<'info, TokenAccount>>,
     #[account(
-    mut,
-    //constraint = &user_a.owner == &position_pda.key(),
+        mut,
+        //constraint = &user_a.owner == &position_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
-
+ 
     pub system_program: AccountInfo<'info>,
 
 }
@@ -45,7 +45,7 @@ pub fn handler(
     _bump_portfolio: u8,
     amount: u64,
 ) -> ProgramResult {
-
+    
     msg!("Helloo");
     let cpi_accounts = Transfer {
         from: ctx.accounts.pda_owned_user_a.to_account_info(),
@@ -65,7 +65,7 @@ pub fn handler(
                 ].as_ref()
             ],
         ), amount as u64)?;
-
+    
 
     Ok(())
 }

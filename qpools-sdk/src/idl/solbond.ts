@@ -360,6 +360,103 @@ export type Solbond = {
       ]
     },
     {
+      "name": "redeemPositionOneSaber",
+      "accounts": [
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "swapAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "positionPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "swap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "inputLp",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feesA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "saberSwapProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "lpAmount",
+          "type": "u64"
+        },
+        {
+          "name": "tokenAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "transferToPortfolio",
       "accounts": [
         {
@@ -457,7 +554,7 @@ export type Solbond = {
   ],
   "accounts": [
     {
-      "name": "PortfolioAccount",
+      "name": "portfolioAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -482,7 +579,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "PositionAccount",
+      "name": "positionAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -526,7 +623,7 @@ export type Solbond = {
       }
     },
     {
-      "name": "TwoWayPoolAccount",
+      "name": "twoWayPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -756,10 +853,7 @@ export type Solbond = {
       "name": "EmptyTotalCurrencySupply",
       "msg": "Total Currency Supply seems empty!"
     }
-  ],
-  "metadata": {
-    "address": "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN"
-  }
+  ]
 };
 
 export const IDL: Solbond = {
@@ -1124,6 +1218,103 @@ export const IDL: Solbond = {
       ]
     },
     {
+      "name": "redeemPositionOneSaber",
+      "accounts": [
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "swapAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "positionPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "swap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "inputLp",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feesA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "saberSwapProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "lpAmount",
+          "type": "u64"
+        },
+        {
+          "name": "tokenAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "transferToPortfolio",
       "accounts": [
         {
@@ -1221,7 +1412,7 @@ export const IDL: Solbond = {
   ],
   "accounts": [
     {
-      "name": "PortfolioAccount",
+      "name": "portfolioAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1246,7 +1437,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "PositionAccount",
+      "name": "positionAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1290,7 +1481,7 @@ export const IDL: Solbond = {
       }
     },
     {
-      "name": "TwoWayPoolAccount",
+      "name": "twoWayPoolAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1520,8 +1711,5 @@ export const IDL: Solbond = {
       "name": "EmptyTotalCurrencySupply",
       "msg": "Total Currency Supply seems empty!"
     }
-  ],
-  "metadata": {
-    "address": "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN"
-  }
+  ]
 };

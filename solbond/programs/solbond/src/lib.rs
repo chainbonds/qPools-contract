@@ -7,73 +7,17 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-declare_id!("HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN");
-
-// TODO: Replace all lamports with how many solana actually should be paid off.
-
-/*
-    TODO: 1
-    We should probably have a separate function to do the portfolio (re-)distribution
-    Buy mSOL, track total supply with redeemable-tokens ...
-
-    TODO: 2
-    Figure out a way to calculate the final bond, as well as the stepwise points
-    you can probably use a simple formula
-    and keep track of the amount that was already paid in
-    You can save these variables as part of the state
-
-    TODO: 3
-    Have a bunch of constraints across bondAccount
-
-    TODO: 4
-    Have another function to pay out profits ...
-    I guess this is also where our own profit-account comes in ...
-
-    TODO: 5
-    Include epochs (potentially), to decide how often something can be paid out as well.
-*/
-
-/**
-The relevant RPC endpoints from the amm program are:
-(in chronological order)
-
-- create_position
-- remove_position
-- claim_fee
-
-The RPC endpoints that are optional
-- swap
-    => We can also use the frontend to do swaps over serum, or similar
+declare_id!("HdWi7ZAt1tmWaMJgH37DMqAMqBwjzt56CtiKELBZotrc");
 
 
-The RPC endpoints we are unsure about
-- create_fee_tier
-- create_position_list
 
-The RPC endpoints that we _probably_ will not need
-- transfer_position_ownership
-    => probably not needed in the first MVP, could be interesting later
-- claim_fee
-    => I think this will be used not from this, but separately
-
-The RPC endpoints that we will not use
-- create_pool
-    => This is only called to create the pool, once the pool is created, no more is needed
-- create_state
-    => I think this is only used when initializing the pool to define fees and admin,
-        once the pool is initialized, we don't need this anymore
-- create_tick
-    => this will already be created before we can use the pool,
-        we have to use this before calling the pool
-
-
- */
 #[derive(Accounts)]
 #[instruction(
 _bump_bond_pool_account: u8,
 _bump_bond_pool_solana_account: u8
 )]
 pub struct BalancePools<'info> {
+
     // The standards accounts
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
@@ -86,20 +30,20 @@ pub mod solbond {
     use super::*;
 
     /**
-     * A simple health checkpoint which checks if the program is up and running
-     */
+    * A simple health checkpoint which checks if the program is up and running
+    */
     pub fn healthcheck(ctx: Context<Healthcheck>) -> ProgramResult {
         instructions::healthcheck::handler(ctx)
     }
 
     /**
-     * Initializes the reserve / vault
-     */
+    * Initializes the reserve / vault
+    */
     pub fn initialize_pool_account(
         ctx: Context<InitializeLpPoolAccount>,
         _bump: u8,
     ) -> ProgramResult {
-        instructions::initialize_lp_pool::handler(ctx, _bump)
+        instructions::initialize_lp_pool::handler(ctx,_bump)
     }
 
 
@@ -108,28 +52,29 @@ pub mod solbond {
         _bump_pool: u8,
         _bump_position: u8,
         _bump_portfolio: u8,
-        _index: u32,
+        _index:u32,
         _weight: u64,
         token_a_amount: u64,
         token_b_amount: u64,
         min_mint_amount: u64,
+
     ) -> ProgramResult {
         instructions::create_position_saber::handler(
-            ctx,
-            _bump_pool,
+            ctx, 
+            _bump_pool, 
             _bump_position,
             _bump_portfolio,
-            _index,
+            _index, 
             _weight,
             token_a_amount,
             token_b_amount,
-            min_mint_amount, )
+            min_mint_amount,)
     }
 
     pub fn save_portfolio(
         ctx: Context<SavePortfolio>,
         bump: u8,
-        weights: [u64; 3],
+        weights: [u64; 3]
     ) -> ProgramResult {
         instructions::create_portfolio::handler(ctx, bump, weights)
     }
@@ -137,41 +82,50 @@ pub mod solbond {
     pub fn redeem_position_saber(
         ctx: Context<RedeemSaberPosition>,
         _bump_portfolio: u8,
-        _bump_position: u8,
-        _index: u32,
-        min_mint_amount: u64,
-        token_a_amount: u64,
-        token_b_amount: u64,
+    _bump_position: u8,
+    _index: u32,
+    min_mint_amount: u64,
+    token_a_amount: u64,
+    token_b_amount: u64,
     ) -> ProgramResult {
-        instructions::redeem_position_saber::handler(
-            ctx,
-            _bump_portfolio,
-            _bump_position,
-            _index,
-            min_mint_amount,
-            token_a_amount,
-            token_b_amount
-        )
+        instructions::redeem_position_saber::handler(ctx, _bump_portfolio,
+        _bump_position, _index, min_mint_amount, token_a_amount, token_b_amount)
     }
 
+
+    pub fn redeem_position_one_saber(
+        ctx: Context<RedeemOneSaberPosition>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _index: u32,
+        lp_amount: u64,
+        token_amount: u64,
+    ) -> ProgramResult {
+        instructions::redeem_position_one_saber::handler(ctx, _bump_portfolio,
+        _bump_position, _index, lp_amount, token_amount)
+    }
+    
+    
 
     pub fn transfer_to_portfolio(
         ctx: Context<TransferToPortfolio>,
         bump: u8, amount: u64) -> ProgramResult {
-        instructions::transfer_to_portfolio::handler(ctx, bump, amount)
-    }
-
+            instructions::transfer_to_portfolio::handler(ctx,bump,amount)
+        }
+    
     pub fn transfer_redeemed_to_user(
         ctx: Context<TransferRedeemedToUser>,
         bump: u8,
-        amount: u64,
+        amount: u64
     ) -> ProgramResult {
+
         instructions::transfer_redeemed_to_user::handler(
             ctx,
             bump,
-            amount,
+            amount
         )
     }
+
 
 }
 

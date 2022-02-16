@@ -13,21 +13,21 @@ pub struct TransferToPortfolio<'info> {
     pub owner: AccountInfo<'info>,
 
     #[account(
-    seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
 
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     #[account(mut)]
     pub user_owned_token_account: Box<Account<'info, TokenAccount>>,
-
-    #[account(mut,
+    
+    #[account(mut,         
         constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_token_account: Box<Account<'info,TokenAccount>>,
 
     pub token_mint: Account<'info, Mint>,
-
+    
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 
@@ -42,7 +42,7 @@ pub fn handler(
     _bump: u8,
     amount: u64,
 ) -> ProgramResult {
-
+  
     msg!("IM KRE");
 
     let cpi_accounts = Transfer {
@@ -53,6 +53,6 @@ pub fn handler(
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     token::transfer(cpi_ctx, amount as u64)?;
-
+    
     Ok(())
 }

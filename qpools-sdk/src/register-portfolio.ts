@@ -686,4 +686,106 @@ export class Portfolio extends SaberInteractTool {
         return [finaltx];
     }
 
+    async redeem_single_position_only_one(index: number, weight: BN, lp_amount: u64, token_amount: u64, owner: Keypair) {
+
+
+        const pool_address = this.poolAddresses[index];
+        const stableSwapState = await this.getPoolState(pool_address)
+        const {state} = stableSwapState
+
+        console.log("got state ", state);
+
+        let poolTokenMint = state.poolTokenMint
+
+        console.log("poolTokenMint ", poolTokenMint.toString());
+
+        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            this.solbondProgram.programId
+        );
+
+        console.log("poolPDA ", poolPDA.toString())
+
+        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
+            [owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index.toString()))],
+            this.solbondProgram.programId
+        );
+
+        console.log("positionPDA ", positonPDA.toString())
+
+        const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
+        console.log("authority ", authority.toString())
+        
+  
+    
+
+        let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+        //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
+
+ 
+        console.log("userA ", userAccountA.toString())
+        //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
+
+
+        
+        let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
+        //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
+
+
+        console.log("👀 positionPda ", positonPDA.toString())
+
+        console.log("😸 portfolioPda", this.portfolioPDA.toString());
+        console.log("👾 owner.publicKey",  owner.publicKey.toString());
+
+        console.log("🟢 poolTokenMint", poolTokenMint.toString());
+        console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
+
+        console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
+        console.log("🤯 poolPDA", poolPDA.toString());
+        
+        console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
+        console.log("🤥 userAccountA", userAccountA.toString());
+        console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
+        
+        console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
+        
+        console.log("🦒 mint A", state.tokenA.mint.toString());
+        console.log("🦒 mint B", state.tokenB.mint.toString());
+        console.log("🦒 mint LP", poolTokenMint.toString());
+
+
+        let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
+            new BN(this.portfolioBump),
+            new BN(bumpPositon),
+            new BN(index),
+            new BN(lp_amount),
+            new BN(token_amount),
+            {
+                accounts: {
+                    positionPda: positonPDA,
+                    portfolioPda: this.portfolioPDA,
+                    portfolioOwner: owner.publicKey,
+                    poolMint: poolTokenMint,
+                    inputLp: userAccountpoolToken,
+                    swapAuthority: stableSwapState.config.authority,
+                    swap:stableSwapState.config.swapAccount,
+                    userA: userAccountA,
+                    reserveA: state.tokenA.reserve,
+                    reserveB: state.tokenB.reserve,
+                    feesA: state.tokenA.adminFeeAccount, 
+                    saberSwapProgram: this.stableSwapProgramId,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers:[owner]
+            }
+        )
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("Single Redeem Transaction is : ", finaltx);
+
+        return [finaltx];
+    }
+
 }

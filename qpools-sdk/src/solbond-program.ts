@@ -9,9 +9,9 @@ export const getSolbondProgram = (connection: Connection, provider: Provider, ne
     // Have a list of all addresses, based on DEVNET, MAINNET, ETC.
     let programAddress;
     if (network == NETWORK.LOCALNET) {
-        programAddress = "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN";
+        programAddress = "HdWi7ZAt1tmWaMJgH37DMqAMqBwjzt56CtiKELBZotrc";
     } else if (network == NETWORK.DEVNET) {
-        programAddress = "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN";
+        programAddress = "HdWi7ZAt1tmWaMJgH37DMqAMqBwjzt56CtiKELBZotrc";
     } else if (network == NETWORK.TESTNET) {
         programAddress = "HbJv8zuZ48AaqShNrTCBM3H34i51Vj6q4RfAQfA2iQLN";
     } else if (network == NETWORK.MAINNET) {

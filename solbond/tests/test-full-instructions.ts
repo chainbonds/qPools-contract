@@ -1,27 +1,14 @@
-import * as anchor from '@project-serum/anchor';
-import {BN, Program, web3, Provider} from '@project-serum/anchor';
-import {Solbond} from '../target/types/solbond';
-import {Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {Keypair, PublicKey, SYSVAR_RENT_PUBKEY, Transaction} from "@solana/web3.js";
-import {createToken} from "@qpools/admin-sdk/lib/invariant-utils";
-import {assert} from "chai";
-import * as spl from 'easy-spl'
-import {
-    createAssociatedTokenAccountUnsigned,
-    getAssociatedTokenAddressOffCurve,
-} from "@qpools/sdk";
+import {BN, Provider} from '@project-serum/anchor';
+import {u64} from '@solana/spl-token';
+import {Keypair, PublicKey} from "@solana/web3.js";
+
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 
 import {
-    createMint,
     getSolbondProgram,
 } from "@qpools/sdk";
-import {
-    StableSwap,
-    findSwapAuthorityKey,
-  } from "@saberhq/stableswap-sdk";
-import provider from '@project-serum/anchor/dist/cjs/provider';
-import {SaberInteractTool} from "@qpools/sdk/lib/saber-cpi-endpoints";
+
+
 import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -73,7 +60,7 @@ describe('qPools!', () => {
     })
 
     it('simulate sending to portfolio owned account', async () => {
-        let amountTokenA = new u64(3400);
+        let amountTokenA = new u64(340000);
         let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
         let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, amountTokenA);
 
@@ -98,6 +85,29 @@ describe('qPools!', () => {
 
     })
 
+
+    it('simulate a redeem to user', async () => {
+
+        let amountTokenA = new u64(3400);
+        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
+
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+
+    })
+
+
+    it('simulate a withdraw one', async () => {
+
+        let amount_token = new u64(30);
+        let amount_lp = new u64(30);
+
+        let sigs_rest = await portfolio.redeem_single_position_only_one(0, new BN(500), amount_lp, amount_token, genericPayer);
+
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+
+    })
+
+
     it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
@@ -109,15 +119,6 @@ describe('qPools!', () => {
             console.log("🦍 TRANSACTION SIG ", smt.toString())
 
         }
-
-    })
-
-    it('simulate a redeem to user', async () => {
-
-        let amountTokenA = new u64(3400);
-        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
-
-        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
     })
 

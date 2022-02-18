@@ -688,7 +688,6 @@ export class Portfolio extends SaberInteractTool {
 
     async redeem_single_position_only_one(index: number, weight: BN, lp_amount: u64, token_amount: u64, owner: Keypair) {
 
-
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState

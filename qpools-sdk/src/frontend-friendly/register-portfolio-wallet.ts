@@ -470,7 +470,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             const stableSwapState = await this.getPoolState(poolAddress);
             const {state} = stableSwapState;
 
-            await this.redeemSinglePosition(
+            await this.redeemSinglePositionOneSide(
                 i,
                 poolAddress,
                 state,
@@ -594,6 +594,102 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         return [finaltx];
     }
 
+    async redeemSinglePositionOneSide(
+        index: number,
+        poolAddress: PublicKey,
+        state: StableSwapState,
+        stableSwapState: StableSwap
+    ) {
+        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            this.solbondProgram.programId
+        );
+        console.log("poolPDA ", poolPDA.toString());
+
+        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index.toString()))],
+            this.solbondProgram.programId
+        );
+        console.log("positionPDA ", positonPDA.toString())
+        const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
+        console.log("authority ", authority.toString())
+
+        // Gotta cross-check which one is the currency token, in this case
+
+        let currencyMint: PublicKey;
+        let userAccount: PublicKey;
+        if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
+            currencyMint = state.tokenA.mint;
+            userAccount = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+        } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
+            currencyMint = state.tokenB.mint;
+            userAccount = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+        } else {
+            throw Error(
+                "Could not find overlapping USDC Pool Mint Address!! " +
+                MOCK.DEV.SABER_USDC.toString() + " (Saber USDC) " +
+                state.tokenA.mint.toString() + " (MintA) " +
+                state.tokenB.mint.toString() + " (MintB) "
+            )
+        }
+        let userAccountpoolToken = await this.getAccountForMintAndPDA(state.poolTokenMint, this.portfolioPDA);
+        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+
+        console.log("user Account ", userAccount.toString());
+        console.log("currency Mint ", currencyMint.toString())
+
+        console.log("👀 positionPda ", positonPDA.toString())
+
+        console.log("😸 portfolioPda", this.portfolioPDA.toString());
+        console.log("👾 owner.publicKey",  this.owner.publicKey.toString());
+
+        console.log("🟢 poolTokenMint", state.poolTokenMint.toString());
+        console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
+
+        console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
+        console.log("🤯 poolPDA", poolPDA.toString());
+
+        console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
+        console.log("🤥 userAccountA", userAccount.toString());
+        console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
+
+        console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
+
+        console.log("🦒 mint A", state.tokenA.mint.toString());
+        console.log("🦒 mint B", state.tokenB.mint.toString());
+        console.log("🦒 mint LP", state.poolTokenMint.toString());
+
+        // Set minimum token account to 0 lol
+
+        let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
+            new BN(this.portfolioBump),
+            new BN(bumpPositon),
+            new BN(index),
+            new BN(lpAmount),
+            new BN(0),
+            {
+                accounts: {
+                    positionPda: positonPDA,
+                    portfolioPda: this.portfolioPDA,
+                    portfolioOwner: this.owner.publicKey,
+                    poolMint: state.poolTokenMint,
+                    inputLp: userAccountpoolToken,
+                    swapAuthority: stableSwapState.config.authority,
+                    swap:stableSwapState.config.swapAccount,
+                    userA: userAccount,
+                    reserveA: state.tokenA.reserve,
+                    reserveB: state.tokenB.reserve,
+                    feesA: state.tokenA.adminFeeAccount,
+                    saberSwapProgram: this.stableSwapProgramId,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers:[this.wallet]
+            }
+        )
+
+    }
 
 
 }

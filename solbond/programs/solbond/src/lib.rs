@@ -83,13 +83,20 @@ pub mod solbond {
         ctx: Context<RedeemSaberPosition>,
         _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_pool: u8,
     _index: u32,
     min_mint_amount: u64,
     token_a_amount: u64,
     token_b_amount: u64,
     ) -> ProgramResult {
         instructions::redeem_position_saber::handler(ctx, _bump_portfolio,
-        _bump_position, _index, min_mint_amount, token_a_amount, token_b_amount)
+        _bump_position, _bump_pool, _index, min_mint_amount, token_a_amount, token_b_amount)
+
+    }
+
+    pub fn update_pool_struct(ctx: Context<UpdatePoolStruct>, _bump_pool: u8) -> ProgramResult {
+        instructions::redeem_position_saber::update_balance(ctx, _bump_pool)
+
     }
 
 
@@ -97,12 +104,13 @@ pub mod solbond {
         ctx: Context<RedeemOneSaberPosition>,
         _bump_portfolio: u8,
         _bump_position: u8,
+        _bump_pool: u8,
         _index: u32,
         lp_amount: u64,
         token_amount: u64,
     ) -> ProgramResult {
         instructions::redeem_position_one_saber::handler(ctx, _bump_portfolio,
-        _bump_position, _index, lp_amount, token_amount)
+        _bump_position,_bump_pool, _index, lp_amount, token_amount)
     }
     
     

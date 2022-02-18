@@ -529,7 +529,19 @@ export class Portfolio extends SaberInteractTool {
 
         let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
         //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
+        let amount_a = new u64(0);
+        let amount_b = new u64(0);
 
+        let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
+
+
+        if (state.tokenA.mint.toString() === MOCK.DEV.SABER_USDC.toString()) {
+            amount_a = new u64(1);
+            console.log("A IS THE WAY")
+        } else {
+            amount_b = new u64(1);
+            console.log("B IS THE WAY")
+        }
 
         console.log("👀 positionPda ", positonPDA.toString())
 
@@ -557,14 +569,16 @@ export class Portfolio extends SaberInteractTool {
         let finaltx = await this.solbondProgram.rpc.redeemPositionSaber(
             new BN(this.portfolioBump),
             new BN(bumpPositon),
+            new BN(poolBump),
             new BN(index),
-            new BN(amountTokenA),
-            new BN(0),
-            new BN(0),
+            new BN(totalLPTokens.amount),
+            new BN(amount_a),
+            new BN(amount_b),
             {
                 accounts: {
                     positionPda: positonPDA,
                     portfolioPda: this.portfolioPDA,
+                    poolPda: poolPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,
                     inputLp: userAccountpoolToken,
@@ -587,6 +601,29 @@ export class Portfolio extends SaberInteractTool {
 
         await this.provider.connection.confirmTransaction(finaltx);
         console.log("Single Redeem Transaction is : ", finaltx);
+
+        let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
+            new BN(poolBump),
+            {
+                accounts: {
+                    poolPda: poolPDA,
+                    portfolioOwner: owner.publicKey,
+                    poolMint: poolTokenMint,
+                    
+                    userA: userAccountA,
+                   
+                    userB: userAccountB,
+        
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers: [owner,]
+            }
+        )
+
+        await this.provider.connection.confirmTransaction(finaltx_update);
+        console.log("Update Pool TX Is : ", finaltx_update);
 
         return [finaltx];
     }
@@ -699,7 +736,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("poolTokenMint ", poolTokenMint.toString());
 
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool7"))],
             this.solbondProgram.programId
         );
 
@@ -715,7 +752,8 @@ export class Portfolio extends SaberInteractTool {
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
         
-  
+        let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
+
     
 
         let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
@@ -729,6 +767,7 @@ export class Portfolio extends SaberInteractTool {
         
         let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
         //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
+        let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
 
 
         console.log("👀 positionPda ", positonPDA.toString())
@@ -756,13 +795,15 @@ export class Portfolio extends SaberInteractTool {
         let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
             new BN(this.portfolioBump),
             new BN(bumpPositon),
+            new BN(poolBump),
             new BN(index),
-            new BN(lp_amount),
-            new BN(token_amount),
+            new BN(totalLPTokens.amount),
+            new BN(1),
             {
                 accounts: {
                     positionPda: positonPDA,
                     portfolioPda: this.portfolioPDA,
+                    poolPda: poolPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,
                     inputLp: userAccountpoolToken,
@@ -770,6 +811,7 @@ export class Portfolio extends SaberInteractTool {
                     swap:stableSwapState.config.swapAccount,
                     userA: userAccountA,
                     reserveA: state.tokenA.reserve,
+                    mintA: state.tokenA.mint,
                     reserveB: state.tokenB.reserve,
                     feesA: state.tokenA.adminFeeAccount, 
                     saberSwapProgram: this.stableSwapProgramId,
@@ -783,6 +825,29 @@ export class Portfolio extends SaberInteractTool {
 
         await this.provider.connection.confirmTransaction(finaltx);
         console.log("Single Redeem Transaction is : ", finaltx);
+
+        let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
+            new BN(poolBump),
+            {
+                accounts: {
+                    poolPda: poolPDA,
+                    portfolioOwner: owner.publicKey,
+                    poolMint: poolTokenMint,
+                    
+                    userA: userAccountA,
+                   
+                    userB: userAccountB,
+        
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    // Create liquidity accounts
+                },
+                signers: [owner]
+            }
+        )
+
+        await this.provider.connection.confirmTransaction(finaltx_update);
+        console.log("Update Pool single TX Is : ", finaltx_update);
 
         return [finaltx];
     }

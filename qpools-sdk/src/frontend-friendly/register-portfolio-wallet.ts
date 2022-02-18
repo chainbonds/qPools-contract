@@ -85,6 +85,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
             this.solbondProgram.programId
         );
+        this.portfolioPDA = portfolioPDA;
 
         // Now get accounts data of this PDA
         // this.solbondProgram.account
@@ -172,7 +173,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         let allAmounts = await Promise.all(positions.map(async (position: PositionAccount) => {
 
             // Get mint and token account
-            // Figure out if and how we cna convert LP tokens to actual USD representation
+            // Figure out if and how we can convert LP tokens to actual USD representation
 
             // Find the mint/USD pyth oracle
             // let exchange: IExchangeInfo;
@@ -195,14 +196,6 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log(allAmounts);
 
     }
-
-
-
-
-
-
-
-
 
 
     async transferUsdcToPortfolio(amount: u64) {
@@ -324,16 +317,19 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
         let userAccountPoolToken = await this.getAccountForMintAndPDA(state.poolTokenMint, this.portfolioPDA);
 
+        // Amount A and amount B should be the maximum that is contained in both addresses!
+
         // Plan to install only in one of the pools
-        let amount_a = new u64(0)
-        let amount_b = new u64(0)
-        if (state.tokenA.mint.toString() === MOCK.DEV.SABER_USDC.toString()) {
-            amount_a = amountTokenA
-            console.log("A IS THE WAY")
-        } else {
-            amount_b = amountTokenA
-            console.log("B IS THE WAY")
-        }
+        let amount_a = (await this.connection.getTokenAccountBalance(userAccountA)).value.amount;
+        let amount_b = (await this.connection.getTokenAccountBalance(userAccountB)).value.amount;
+
+        // if (state.tokenA.mint.toString() === MOCK.DEV.SABER_USDC.toString()) {
+        //     amount_a = amountTokenA
+        //     console.log("A IS THE WAY")
+        // } else {
+        //     amount_b = amountTokenA
+        //     console.log("B IS THE WAY")
+        // }
 
         console.log("👀 positionPda ", positonPDA.toString())
 
@@ -394,13 +390,6 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
     }
 
-    async sendUSDC() {
-
-        // const mint = await spl.Mint.create(connection, 6, alice.publicKey, alice)
-        // await bob.transferToken(mint.key, alice.publicKey, 5)
-
-    }
-
     async registerPortfolio(weights: Array<BN>) {
 
         let tx = await this.solbondProgram.rpc.savePortfolio(
@@ -446,6 +435,10 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                 amountTokenA
             )
         }
+    }
+
+    async getPortfolio() {
+
     }
 
     // async registerAccount() {

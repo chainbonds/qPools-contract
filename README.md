@@ -63,7 +63,7 @@ program = "./deps/invariant/target/deploy/staker.so"
 
 [scripts]
 #test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/*.ts"
-test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/solbond-initialize-invariant-pools.ts"
+test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register tests/**/solbond-initialize-invariant-poolsInfo.ts"
 ```
 
 

@@ -20,6 +20,7 @@ import {SEED} from "../seeds";
 import {PortfolioAccount} from "../types/portfolioAccount";
 import {PositionAccount} from "../types/positionAccount";
 import {TwoWayPoolAccount} from "../types/twoWayPoolAccount";
+import {delay} from "../utils";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -67,6 +68,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
         }).finally(() => {});
+        delay(1000);
 
     }
 
@@ -482,137 +484,141 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("##redeemFullPortfolio()");
     }
 
-    async redeemSinglePositionOne(
-        index: number,
-        poolAddress: PublicKey, 
-        state: StableSwapState, stableSwapState: StableSwap
-    ) {
-        console.log("#redeemFullPortfolio()");
-
-        console.log("got state ", state);
-
-        let poolTokenMint = state.poolTokenMint
-
-        console.log("poolTokenMint ", poolTokenMint.toString());
-
-        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        );
-
-        console.log("poolPDA ", poolPDA.toString())
-
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
-            this.solbondProgram.programId
-        );
-
-        console.log("positionPDA ", positonPDA.toString())
-
-        const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
-        console.log("authority ", authority.toString())
-
-
-        let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
-        //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
-
-
-        console.log("userA ", userAccountA.toString())
-        let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
-        //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
-
-        console.log("userB ", userAccountA.toString())
-
-
-        let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
-        //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
-
-       
-
-        // Let's redeem all LP tokens
-        let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
-        console.log("Total tokens to redeem", totalLPTokens);
-
-        console.log("👀 positionPda ", positonPDA.toString())
-
-        console.log("😸 portfolioPda", this.portfolioPDA.toString());
-        console.log("👾 owner.publicKey", this.owner.publicKey.toString());
-
-        console.log("🟢 poolTokenMint", poolTokenMint.toString());
-        console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
-
-        console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
-        console.log("🤯 poolPDA", poolPDA.toString());
-
-        console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
-        console.log("🤥 userAccountA", userAccountA.toString());
-        console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
-
-        console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
-        console.log("👹 userAccountB", userAccountB.toString());
-
-        console.log("🦒 mint A", state.tokenA.mint.toString());
-        console.log("🦒 mint B", state.tokenB.mint.toString());
-        console.log("🦒 mint LP", poolTokenMint.toString());
-
-
-        let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
-            new BN(this.portfolioBump),
-            new BN(bumpPositon),
-            new BN(poolBump),
-            new BN(index),
-            new BN(totalLPTokens.amount),
-            new BN(1),
-            {
-                accounts: {
-                    positionPda: positonPDA,
-                    portfolioPda: this.portfolioPDA,
-                    portfolioOwner: this.owner.publicKey,
-                    poolPda: poolPDA,
-                    poolMint: poolTokenMint,
-                    inputLp: userAccountpoolToken,
-                    swapAuthority: stableSwapState.config.authority,
-                    swap: stableSwapState.config.swapAccount,
-                    userA: userAccountA,
-                    reserveA: state.tokenA.reserve,
-                    reserveB: state.tokenB.reserve,
-                    feesA: state.tokenA.adminFeeAccount,
-                    saberSwapProgram: this.stableSwapProgramId,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    // Create liquidity accounts
-                },
-                signers: [this.wallet]
-            }
-        )
-
-        await this.provider.connection.confirmTransaction(finaltx);
-        console.log("Single RedeemOne Transaction is : ", finaltx);
-        
-        let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
-            new BN(poolBump),
-            {
-                accounts: {
-                    poolPda: poolPDA,
-                    portfolioOwner: this.owner.publicKey,
-                    poolMint: poolTokenMint,
-                    userA: userAccountA,
-                    userB: userAccountB,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    // Create liquidity accounts
-                },
-                signers: [this.wallet]
-            }
-        )
-
-        await this.provider.connection.confirmTransaction(finaltx_update);
-        console.log("Update Pool single TX ONE Is : ", finaltx_update);
-
-        console.log("##redeemFullPortfolio()");
-        return [finaltx];
-
-    }
+    // async redeemSinglePositionOne(
+    //     index: number,
+    //     poolAddress: PublicKey,
+    //     state: StableSwapState,
+    //     stableSwapState: StableSwap
+    // ) {
+    //     console.log("#redeemFullPortfolio()");
+    //
+    //     console.log("got state ", state);
+    //
+    //     let poolTokenMint = state.poolTokenMint
+    //
+    //     console.log("poolTokenMint ", poolTokenMint.toString());
+    //
+    //     let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+    //         [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
+    //         this.solbondProgram.programId
+    //     );
+    //
+    //     console.log("poolPDA ", poolPDA.toString())
+    //
+    //     let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
+    //         [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+    //         this.solbondProgram.programId
+    //     );
+    //
+    //     console.log("positionPDA ", positonPDA.toString())
+    //
+    //     const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
+    //     console.log("authority ", authority.toString())
+    //
+    //
+    //     let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+    //     //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
+    //
+    //
+    //     console.log("userA ", userAccountA.toString())
+    //     let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
+    //     //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
+    //
+    //     console.log("userB ", userAccountA.toString())
+    //
+    //
+    //     let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
+    //     //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
+    //
+    //
+    //
+    //     // Let's redeem all LP tokens
+    //     let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
+    //     console.log("Total tokens to redeem", totalLPTokens);
+    //
+    //     console.log("👀 positionPda ", positonPDA.toString())
+    //
+    //     console.log("😸 portfolioPda", this.portfolioPDA.toString());
+    //     console.log("👾 owner.publicKey", this.owner.publicKey.toString());
+    //
+    //     console.log("🟢 poolTokenMint", poolTokenMint.toString());
+    //     console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
+    //
+    //     console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
+    //     console.log("🤯 poolPDA", poolPDA.toString());
+    //
+    //     console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
+    //     console.log("🤥 userAccountA", userAccountA.toString());
+    //     console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
+    //
+    //     console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
+    //     console.log("👹 userAccountB", userAccountB.toString());
+    //
+    //     console.log("Portfolio PDA ss : ", this.portfolioPDA.toString());
+    //
+    //     console.log("🦒 mint A", state.tokenA.mint.toString());
+    //     console.log("🦒 mint B", state.tokenB.mint.toString());
+    //     console.log("🦒 mint LP", poolTokenMint.toString());
+    //
+    //     console.log("Portfolio PDA : ", this.portfolioPDA.toString());
+    //     let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
+    //         new BN(this.portfolioBump),
+    //         new BN(bumpPositon),
+    //         new BN(poolBump),
+    //         new BN(index),
+    //         new BN(totalLPTokens.amount),
+    //         new BN(1),
+    //         {
+    //             accounts: {
+    //                 portfolioPda: this.portfolioPDA,
+    //                 portfolioOwner: this.owner.publicKey,
+    //                 tokenProgram: TOKEN_PROGRAM_ID,
+    //                 swapAuthority: stableSwapState.config.authority,
+    //                 positionPda: positonPDA,
+    //                 swap: stableSwapState.config.swapAccount,
+    //                 poolPda: poolPDA,
+    //                 inputLp: userAccountpoolToken,
+    //                 poolMint: poolTokenMint,
+    //                 userA: userAccountA,
+    //                 reserveA: state.tokenA.reserve,
+    //                 feesA: state.tokenA.adminFeeAccount,
+    //                 mintA: state.tokenA.mint,
+    //                 reserveB: state.tokenB.reserve,
+    //                 saberSwapProgram: this.stableSwapProgramId,
+    //                 systemProgram: web3.SystemProgram.programId,
+    //                 // Create liquidity accounts
+    //             },
+    //             signers: [this.wallet]
+    //         }
+    //     )
+    //
+    //     await this.provider.connection.confirmTransaction(finaltx);
+    //     console.log("Single RedeemOne Transaction is : ", finaltx);
+    //
+    //     let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
+    //         new BN(poolBump),
+    //         {
+    //             accounts: {
+    //                 poolPda: poolPDA,
+    //                 portfolioOwner: this.owner.publicKey,
+    //                 poolMint: poolTokenMint,
+    //                 userA: userAccountA,
+    //                 userB: userAccountB,
+    //                 tokenProgram: TOKEN_PROGRAM_ID,
+    //                 systemProgram: web3.SystemProgram.programId,
+    //                 // Create liquidity accounts
+    //             },
+    //             signers: [this.wallet]
+    //         }
+    //     )
+    //
+    //     await this.provider.connection.confirmTransaction(finaltx_update);
+    //     console.log("Update Pool single TX ONE Is : ", finaltx_update);
+    //
+    //     console.log("##redeemFullPortfolio()");
+    //     return [finaltx];
+    //
+    // }
 
     async redeemSinglePosition(
         index: number,
@@ -621,10 +627,6 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         stableSwapState: StableSwap
     ) {
         console.log("#redeemSinglePosition()");
-
-        // Redeem the full position.
-        // For this, redeem the full amount!
-
         console.log("got state ", state);
 
         let poolTokenMint = state.poolTokenMint
@@ -689,6 +691,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("🦒 mint B", state.tokenB.mint.toString());
         console.log("🦒 mint LP", poolTokenMint.toString());
 
+        console.log("Portfolio PDA : ", this.portfolioPDA.toString());
 
         let finaltx = await this.solbondProgram.rpc.redeemPositionSaber(
             new BN(this.portfolioBump),
@@ -758,7 +761,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
     ) {
         console.log("#redeemSinglePositionOneSide()");
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
+            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
         console.log("poolPDA ", poolPDA.toString());
@@ -775,12 +778,29 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
         let currencyMint: PublicKey;
         let userAccount: PublicKey;
+
+        let reserveA: PublicKey;
+        let feesA: PublicKey;
+        let mintA: PublicKey;
+        let reserveB: PublicKey;
         if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
             currencyMint = state.tokenA.mint;
             userAccount = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+
+            reserveA = state.tokenA.reserve
+            feesA = state.tokenA.adminFeeAccount
+            mintA = state.tokenA.mint
+            reserveB = state.tokenB.reserve
+
         } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
             currencyMint = state.tokenB.mint;
             userAccount = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+
+            reserveA = state.tokenB.reserve
+            feesA = state.tokenB.adminFeeAccount
+            mintA = state.tokenB.mint
+            reserveB = state.tokenA.reserve
+
         } else {
             throw Error(
                 "Could not find overlapping USDC Pool Mint Address!! " +
@@ -817,28 +837,32 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("🦒 mint LP", state.poolTokenMint.toString());
 
         // Set minimum token account to 0 lol
+        console.log("Portfolio PDA : ", this.portfolioPDA.toString());
 
         let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
             new BN(this.portfolioBump),
             new BN(bumpPositon),
+            new BN(poolBump),
             new BN(index),
             new BN(lpAmount),
             new BN(0),
             {
                 accounts: {
-                    positionPda: positonPDA,
                     portfolioPda: this.portfolioPDA,
                     portfolioOwner: this.owner.publicKey,
-                    poolMint: state.poolTokenMint,
-                    inputLp: userAccountpoolToken,
-                    swapAuthority: stableSwapState.config.authority,
-                    swap:stableSwapState.config.swapAccount,
-                    userA: userAccount,
-                    reserveA: state.tokenA.reserve,
-                    reserveB: state.tokenB.reserve,
-                    feesA: state.tokenA.adminFeeAccount,
-                    saberSwapProgram: this.stableSwapProgramId,
                     tokenProgram: TOKEN_PROGRAM_ID,
+                    swapAuthority: stableSwapState.config.authority,
+                    positionPda: positonPDA,
+                    swap: stableSwapState.config.swapAccount,
+                    poolPda: poolPDA,
+                    inputLp: userAccountpoolToken,
+                    poolMint: state.poolTokenMint,
+                    userA: userAccount,
+                    reserveA: reserveA,
+                    feesA: feesA,
+                    mintA: mintA,
+                    reserveB: reserveB,
+                    saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
                     // Create liquidity accounts
                 },

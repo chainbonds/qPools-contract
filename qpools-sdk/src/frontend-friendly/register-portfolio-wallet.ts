@@ -80,6 +80,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
      * Get all the portfolio's that were created by the user
      */
     async fetchPortfolio(): Promise<PortfolioAccount> {
+        console.log("#fetchPortfolio()");
 
         let [portfolioPDA, _] = await PublicKey.findProgramAddress(
             [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
@@ -89,14 +90,16 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
         // Now get accounts data of this PDA
         // this.solbondProgram.account
+        // Of course, this might not exist yet!
         let response = await this.solbondProgram.account.portfolioAccount.fetch(portfolioPDA);
         let portfolioContent = response as PortfolioAccount;
         console.log("Portfolio Content", portfolioContent);
+        console.log("##fetchPortfolio()");
         return portfolioContent;
     }
 
     async fetchAllPools(): Promise<TwoWayPoolAccount[]> {
-
+        console.log("#fetchAllPools()");
         // Right now, we only have 3 liquidity pools, and that's it!
         let responses = [];
 
@@ -112,11 +115,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             responses.push(poolContent);
 
         }
-
+        console.log("##fetchAllPools()");
         return responses;
     }
 
     async fetchSinglePool(state: StableSwapState): Promise<TwoWayPoolAccount> {
+        console.log("#fetchSinglePool()");
         // Pool token mint is generated from the unique, pool address. As such, this is already an iterator!
         let [poolPDA, _] = await PublicKey.findProgramAddress(
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
@@ -125,10 +129,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
         let response = await this.solbondProgram.account.twoWayPoolAccount.fetch(poolPDA);
         let poolContent = response as TwoWayPoolAccount;
+        console.log("##fetchSinglePool()");
         return poolContent;
     }
 
     async fetchAllPositions(): Promise<PositionAccount[]> {
+        console.log("#fetchAllPositions()");
 
         // Right now, we only have 3 liquidity pools, and that's it!
         let responses = [];
@@ -145,11 +151,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             responses.push(positionContent);
 
         }
-
+        console.log("##fetchAllPositions()");
         return responses;
     }
 
     async fetchSinglePosition(index: number) {
+        console.log("#fetchSinglePosition()");
         let [positonPDA, bumpPositon] = await PublicKey.findProgramAddress(
             [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
             this.solbondProgram.programId
@@ -157,11 +164,13 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
         let response = await this.solbondProgram.account.positionAccount.fetch(positonPDA);
         let positionContent = response as PositionAccount;
+        console.log("##fetchSinglePosition()");
         return positionContent;
     }
 
     // Given every single position, calculate how much TVL you have in this portfolio
     async calculatePortfolioValue() {
+        console.log("#calculatePortfolioValue()");
         let portfolio = await this.fetchPortfolio();
         let positions = await this.fetchAllPositions();
         console.log("portfolio ", portfolio);
@@ -194,12 +203,13 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
         console.log("All Promises are: ");
         console.log(allAmounts);
+        console.log("##calculatePortfolioValue()");
 
     }
 
 
     async transferUsdcToPortfolio(amount: u64) {
-
+        console.log("#transferUsdcToPortfolio()");
         // Get associated token account for the Saber USDC Token
         console.log("Get PDA userUSDC");
         let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
@@ -229,10 +239,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         )
         let sg = await this.provider.connection.confirmTransaction(tx);
         console.log("Sending money tx: ", sg);
+        console.log("##transferUsdcToPortfolio()");
         return tx;
     }
 
     async transferToUser() {
+        console.log("#transferToUser()");
         let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
         let pdaUSDCAccount = await this.getAccountForMintAndPDA(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
@@ -258,10 +270,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         )
         let sg = await this.provider.connection.confirmTransaction(tx);
         console.log("Sending money tx: ", sg);
+        console.log("##transferToUser()");
         return tx;
     }
 
     async registerLiquidityPool(poolAddress: PublicKey, state: StableSwapState) {
+        console.log("#registerLiquidityPool()");
 
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
@@ -291,6 +305,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("Confirming...");
         let sg = await this.connection.confirmTransaction(tx);
         console.log("Transaction went through: ", sg);
+        console.log("##registerLiquidityPool()");
     }
 
     async createSinglePosition(
@@ -301,7 +316,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         weight: BN,
         amountTokenA: u64
     ) {
-
+        console.log("#createSinglePosition()");
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
@@ -387,10 +402,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("Confirming...");
         let sg = await this.connection.confirmTransaction(tx);
         console.log("Transaction went through: ", sg);
+        console.log("##createSinglePosition()");
 
     }
 
     async registerPortfolio(weights: Array<BN>) {
+        console.log("#registerPortfolio()");
 
         let tx = await this.solbondProgram.rpc.savePortfolio(
             this.portfolioBump,
@@ -409,10 +426,13 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("Confirming...");
         let sg = await this.connection.confirmTransaction(tx);
         console.log("Transaction went through: ", sg);
+        console.log("##registerPortfolio()");
 
     }
 
     async createFullPortfolio(weights: Array<BN>, amounts: Array<u64>) {
+        console.log("#createFullPortfolio()");
+
         for (var i = 0; i < weights.length; i++) {
             let w = weights[i];
             let amountTokenA = amounts[i];
@@ -435,33 +455,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                 amountTokenA
             )
         }
+        console.log("##createFullPortfolio()");
     }
-
-    async getPortfolio() {
-
-    }
-
-    // async registerAccount() {
-    //     // TODO: We will probably still have these ...
-    //     console.log("Registering account..");
-    //     // Purchaser
-    //     // Create the reserve account, if none exists
-    //     // console.log("Going to create the this.purchaserCurrencyAccount");
-    //
-    //     if (!this.purchaserCurrencyAccount) {
-    //         console.log("Creating a purchaserCurrencyAccount");
-    //         this.purchaserCurrencyAccount = await createAssociatedTokenAccountSendUnsigned(
-    //             this.connection,
-    //             this.currencyMint!.publicKey,
-    //             this.wallet.publicKey,
-    //             this.wallet
-    //         );
-    //         console.log("Done!");
-    //     }
-    // }
-
 
     async redeemFullPortfolio(amounts: Array<u64>) {
+        console.log("#redeemFullPortfolio()");
+
         let transactions_sigs = []
         for (var i = 0; i < 3; i++) {
 
@@ -480,6 +479,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         }
 
         console.log("redeemed! the full portfolio!")
+        console.log("##redeemFullPortfolio()");
     }
 
     async redeemSinglePositionOne(
@@ -487,6 +487,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         poolAddress: PublicKey, 
         state: StableSwapState, stableSwapState: StableSwap
     ) {
+        console.log("#redeemFullPortfolio()");
 
         console.log("got state ", state);
 
@@ -608,7 +609,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         await this.provider.connection.confirmTransaction(finaltx_update);
         console.log("Update Pool single TX ONE Is : ", finaltx_update);
 
-
+        console.log("##redeemFullPortfolio()");
         return [finaltx];
 
     }
@@ -619,6 +620,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         state: StableSwapState,
         stableSwapState: StableSwap
     ) {
+        console.log("#redeemSinglePosition()");
 
         // Redeem the full position.
         // For this, redeem the full amount!
@@ -744,6 +746,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         await this.provider.connection.confirmTransaction(finaltx_update);
         console.log("Update Pool single TX Is : ", finaltx_update);
 
+        console.log("##redeemSinglePosition()");
         return [finaltx];
     }
 
@@ -753,6 +756,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         state: StableSwapState,
         stableSwapState: StableSwap
     ) {
+        console.log("#redeemSinglePositionOneSide()");
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool6"))],
             this.solbondProgram.programId
@@ -841,7 +845,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                 signers:[this.wallet]
             }
         )
-
+        console.log("##redeemSinglePositionOneSide()");
     }
 
 

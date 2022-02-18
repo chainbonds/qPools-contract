@@ -736,7 +736,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("poolTokenMint ", poolTokenMint.toString());
 
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool7"))],
+            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
 

@@ -282,6 +282,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "inputLp",
           "isMut": true,
           "isSigner": false
@@ -342,6 +347,10 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpPool",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -356,6 +365,52 @@ export type Solbond = {
         {
           "name": "tokenBAmount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updatePoolStruct",
+      "accounts": [
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPool",
+          "type": "u8"
         }
       ]
     },
@@ -418,7 +473,17 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "mintA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "reserveB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolPda",
           "isMut": true,
           "isSigner": false
         },
@@ -440,6 +505,10 @@ export type Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPool",
           "type": "u8"
         },
         {
@@ -661,6 +730,14 @@ export type Solbond = {
           },
           {
             "name": "totalAmountInB",
+            "type": "u64"
+          },
+          {
+            "name": "tmpA",
+            "type": "u64"
+          },
+          {
+            "name": "tmpB",
             "type": "u64"
           }
         ]
@@ -1140,6 +1217,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "inputLp",
           "isMut": true,
           "isSigner": false
@@ -1200,6 +1282,10 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpPool",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -1214,6 +1300,52 @@ export const IDL: Solbond = {
         {
           "name": "tokenBAmount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updatePoolStruct",
+      "accounts": [
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPool",
+          "type": "u8"
         }
       ]
     },
@@ -1276,7 +1408,17 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "mintA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "reserveB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolPda",
           "isMut": true,
           "isSigner": false
         },
@@ -1298,6 +1440,10 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPool",
           "type": "u8"
         },
         {
@@ -1519,6 +1665,14 @@ export const IDL: Solbond = {
           },
           {
             "name": "totalAmountInB",
+            "type": "u64"
+          },
+          {
+            "name": "tmpA",
+            "type": "u64"
+          },
+          {
+            "name": "tmpB",
             "type": "u64"
           }
         ]

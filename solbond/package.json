@@ -1,7 +1,6 @@
 {
     "scripts": {
-        "test:qPools": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-initialize.ts",
-        "test:qPools-linked-instructions": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts",
+        "test:qPools": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts",
         "test:saber-only-devnet": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/simple-end-to-end-devnet-saber.spec.ts",
         "deploy:reserve": "ANCHOR_WALLET=~/.config/solana/id.json npx ts-node cranks/deploy-qpool-reserve.ts",
         "crank:tvl": "ANCHOR_WALLET=~/.config/solana/id.json npx ts-node cranks/calculate-tvl.ts"

@@ -15,6 +15,7 @@ use stable_swap_anchor::StableSwap;
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_pool: u8, 
     _index: u32,
     mint_amount: u64,
     token_amount: u64,
@@ -71,11 +72,20 @@ pub struct RedeemOneSaberPosition<'info> {
     #[account(mut)]
     pub fees_a: Box<Account<'info, TokenAccount>>,
 
+    pub mint_a: Account<'info, Mint>,
+
 
 
     #[account(mut)]
     pub reserve_b: Box<Account<'info, TokenAccount>>,
 
+
+    #[account(
+        mut,
+        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
+        bump = _bump_pool
+    )]
+    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
 
 
     
@@ -105,6 +115,7 @@ pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_pool: u8, 
     _index: u32,
     lp_amount: u64,
     token_amount: u64,
@@ -113,7 +124,7 @@ pub fn handler(
     
     msg!("withdraw single saber position");
 
-
+    let amt_start = ctx.accounts.user_a.amount;
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),
@@ -162,6 +173,29 @@ pub fn handler(
     )?;
 
     msg!("withdraw completed successfully");
+
+    let pool_account = &mut ctx.accounts.pool_pda;
+    if pool_account.mint_a.key() == ctx.accounts.mint_a.key() {
+        msg!("a minus");
+        //ool_account.total_amount_in_a -= token_amount;
+        pool_account.tmp_a = amt_start;
+        pool_account.tmp_b = 0;
+
+
+    } else {
+       // pool_account.total_amount_in_b -= token_amount;
+        pool_account.tmp_b = amt_start;
+        pool_account.tmp_a = 0;
+
+        msg!("b minus");
+
+
+    }
+
+    msg!("thru");
+    // have to determine which token to withdraw
+
+
 
     
 

@@ -111,7 +111,7 @@ describe('qPools!', () => {
     /*it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
-        let amountTokenA = new u64(100);
+        let amountTokenA = new u64(120000);
         const amounts = [amountTokenA, amountTokenA, amountTokenA]
         let sigs_rest = await portfolio.redeem_full_portfolio(weights, amounts, genericPayer);
 

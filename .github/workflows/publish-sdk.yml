@@ -12,6 +12,7 @@ on:
       - main
       - david1
       - new_main
+      - instruction/chained
   pull_request:
     branches: 
       - npm
@@ -20,6 +21,7 @@ on:
       - main
       - david1
       - new_main
+      - instruction/chained
 
 env:
   solana_verion: 1.8.12

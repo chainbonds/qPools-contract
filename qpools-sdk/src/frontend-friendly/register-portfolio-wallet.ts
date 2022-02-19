@@ -170,46 +170,6 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         return positionContent;
     }
 
-    // Given every single position, calculate how much TVL you have in this portfolio
-    async calculatePortfolioValue() {
-        console.log("#calculatePortfolioValue()");
-        let portfolio = await this.fetchPortfolio();
-        let positions = await this.fetchAllPositions();
-        console.log("portfolio ", portfolio);
-        console.log("positions is: ", positions);
-
-        // Iterate through all positions,
-        // Get the LP tokens
-        // From the LP tokens, calculate the total value ...
-        let allAmounts = await Promise.all(positions.map(async (position: PositionAccount) => {
-
-            // Get mint and token account
-            // Figure out if and how we can convert LP tokens to actual USD representation
-
-            // Find the mint/USD pyth oracle
-            // let exchange: IExchangeInfo;
-            // calculateVirtualPrice();
-
-            // Convert to USDC
-            let tokenAAmount = (await this.connection.getTokenAccountBalance(position.ownerTokenAccountA)).value;
-            let tokenBAmount = (await this.connection.getTokenAccountBalance(position.ownerTokenAccountB)).value;
-            let tokenLPAmount = (await this.connection.getTokenAccountBalance(position.ownerTokenAccountLp)).value;
-            console.log("Token A, B, LP Amounts are: ", tokenAAmount, tokenBAmount, tokenLPAmount, position.poolPda.toString());
-
-            return {
-                A: tokenAAmount,
-                B: tokenBAmount,
-                LP: tokenLPAmount,
-            }
-        }));
-
-        console.log("All Promises are: ");
-        console.log(allAmounts);
-        console.log("##calculatePortfolioValue()");
-
-    }
-
-
     async transferUsdcToPortfolio(amount: u64) {
         console.log("#transferUsdcToPortfolio()");
         // Get associated token account for the Saber USDC Token
@@ -222,6 +182,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         // Assume that this account exists already
 
         console.log("Making transfer ...");
+        console.log("Payer is: ", this.payer);
         let tx = await this.solbondProgram.rpc.transferToPortfolio(
             new BN(this.portfolioBump),
             amount,
@@ -411,6 +372,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
     async registerPortfolio(weights: Array<BN>) {
         console.log("#registerPortfolio()");
 
+        console.log("Payer is: ", this.payer);
         let tx = await this.solbondProgram.rpc.savePortfolio(
             this.portfolioBump,
             weights,
@@ -483,142 +445,6 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("redeemed! the full portfolio!")
         console.log("##redeemFullPortfolio()");
     }
-
-    // async redeemSinglePositionOne(
-    //     index: number,
-    //     poolAddress: PublicKey,
-    //     state: StableSwapState,
-    //     stableSwapState: StableSwap
-    // ) {
-    //     console.log("#redeemFullPortfolio()");
-    //
-    //     console.log("got state ", state);
-    //
-    //     let poolTokenMint = state.poolTokenMint
-    //
-    //     console.log("poolTokenMint ", poolTokenMint.toString());
-    //
-    //     let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-    //         [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-    //         this.solbondProgram.programId
-    //     );
-    //
-    //     console.log("poolPDA ", poolPDA.toString())
-    //
-    //     let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-    //         [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
-    //         this.solbondProgram.programId
-    //     );
-    //
-    //     console.log("positionPDA ", positonPDA.toString())
-    //
-    //     const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
-    //     console.log("authority ", authority.toString())
-    //
-    //
-    //     let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
-    //     //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
-    //
-    //
-    //     console.log("userA ", userAccountA.toString())
-    //     let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
-    //     //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
-    //
-    //     console.log("userB ", userAccountA.toString())
-    //
-    //
-    //     let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
-    //     //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
-    //
-    //
-    //
-    //     // Let's redeem all LP tokens
-    //     let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
-    //     console.log("Total tokens to redeem", totalLPTokens);
-    //
-    //     console.log("👀 positionPda ", positonPDA.toString())
-    //
-    //     console.log("😸 portfolioPda", this.portfolioPDA.toString());
-    //     console.log("👾 owner.publicKey", this.owner.publicKey.toString());
-    //
-    //     console.log("🟢 poolTokenMint", poolTokenMint.toString());
-    //     console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
-    //
-    //     console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
-    //     console.log("🤯 poolPDA", poolPDA.toString());
-    //
-    //     console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
-    //     console.log("🤥 userAccountA", userAccountA.toString());
-    //     console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
-    //
-    //     console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
-    //     console.log("👹 userAccountB", userAccountB.toString());
-    //
-    //     console.log("Portfolio PDA ss : ", this.portfolioPDA.toString());
-    //
-    //     console.log("🦒 mint A", state.tokenA.mint.toString());
-    //     console.log("🦒 mint B", state.tokenB.mint.toString());
-    //     console.log("🦒 mint LP", poolTokenMint.toString());
-    //
-    //     console.log("Portfolio PDA : ", this.portfolioPDA.toString());
-    //     let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
-    //         new BN(this.portfolioBump),
-    //         new BN(bumpPositon),
-    //         new BN(poolBump),
-    //         new BN(index),
-    //         new BN(totalLPTokens.amount),
-    //         new BN(1),
-    //         {
-    //             accounts: {
-    //                 portfolioPda: this.portfolioPDA,
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 swapAuthority: stableSwapState.config.authority,
-    //                 positionPda: positonPDA,
-    //                 swap: stableSwapState.config.swapAccount,
-    //                 poolPda: poolPDA,
-    //                 inputLp: userAccountpoolToken,
-    //                 poolMint: poolTokenMint,
-    //                 userA: userAccountA,
-    //                 reserveA: state.tokenA.reserve,
-    //                 feesA: state.tokenA.adminFeeAccount,
-    //                 mintA: state.tokenA.mint,
-    //                 reserveB: state.tokenB.reserve,
-    //                 saberSwapProgram: this.stableSwapProgramId,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 // Create liquidity accounts
-    //             },
-    //             signers: [this.wallet]
-    //         }
-    //     )
-    //
-    //     await this.provider.connection.confirmTransaction(finaltx);
-    //     console.log("Single RedeemOne Transaction is : ", finaltx);
-    //
-    //     let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
-    //         new BN(poolBump),
-    //         {
-    //             accounts: {
-    //                 poolPda: poolPDA,
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 poolMint: poolTokenMint,
-    //                 userA: userAccountA,
-    //                 userB: userAccountB,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 // Create liquidity accounts
-    //             },
-    //             signers: [this.wallet]
-    //         }
-    //     )
-    //
-    //     await this.provider.connection.confirmTransaction(finaltx_update);
-    //     console.log("Update Pool single TX ONE Is : ", finaltx_update);
-    //
-    //     console.log("##redeemFullPortfolio()");
-    //     return [finaltx];
-    //
-    // }
 
     async redeemSinglePosition(
         index: number,

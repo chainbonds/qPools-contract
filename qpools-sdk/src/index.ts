@@ -15,6 +15,7 @@ import {
 import { Portfolio } from "./register-portfolio";
 import { PortfolioFrontendFriendly } from "./frontend-friendly/register-portfolio-wallet";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
+import {PortfolioFrontendFriendlyChainedInstructions} from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
 
 export {
     QPoolsUser,
@@ -33,5 +34,6 @@ export {
     createAssociatedTokenAccountUnsigned,
     Portfolio,
     PortfolioFrontendFriendly,
-    DisplayPortfolios
+    DisplayPortfolios,
+    PortfolioFrontendFriendlyChainedInstructions
 }

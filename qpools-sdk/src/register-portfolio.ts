@@ -24,6 +24,8 @@ export class Portfolio extends SaberInteractTool {
     public poolAddresses: Array<PublicKey>;
     public portfolio_owner: PublicKey;
 
+    public qPools_USDC_fees: PublicKey; 
+
     public USDC_mint = new PublicKey(MOCK.DEV.SABER_USDC);
     public userOwnedUSDCAccount: PublicKey;
 
@@ -73,6 +75,7 @@ export class Portfolio extends SaberInteractTool {
         this.portfolio_owner = ownerKeypair.publicKey;
         this.portfolioPDA = _portfolioPDA;
         this.portfolioBump = _bumpPortfolio;
+
 
         // Should probably accept the provider instead / provider keypair
         /*
@@ -682,7 +685,9 @@ export class Portfolio extends SaberInteractTool {
     }
 
     async transfer_to_user(owner: IWallet, amount: u64) {
+        const randomOwner = Keypair.generate();
 
+        this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, randomOwner.publicKey);
 
         if (!this.userOwnedUSDCAccount) {
             console.log("Creating a userOwnedUSDCAccount");
@@ -710,6 +715,7 @@ export class Portfolio extends SaberInteractTool {
                     portfolioOwner: owner.publicKey,
                     userOwnedUserA: this.userOwnedUSDCAccount,
                     pdaOwnedUserA: pdaUSDCAccount,
+                    feesQpoolsA: this.qPools_USDC_fees,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     // Create liquidity accounts

@@ -604,6 +604,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "feesQpoolsA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -643,6 +648,10 @@ export type Solbond = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "initialAmountUsdc",
+            "type": "u64"
           }
         ]
       }
@@ -1539,6 +1548,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "feesQpoolsA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1578,6 +1592,10 @@ export const IDL: Solbond = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "initialAmountUsdc",
+            "type": "u64"
           }
         ]
       }

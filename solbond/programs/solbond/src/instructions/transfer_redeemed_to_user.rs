@@ -34,6 +34,9 @@ pub struct TransferRedeemedToUser<'info> {
         //constraint = &user_a.owner == &position_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
  
     pub system_program: AccountInfo<'info>,
 
@@ -45,8 +48,42 @@ pub fn handler(
     _bump_portfolio: u8,
     amount: u64,
 ) -> ProgramResult {
-    
-    msg!("Helloo");
+    let amount_after_fee;
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    if amount > portfolio.initial_amount_USDC {
+        msg!("Made some profits, will take 20% fees :P");
+        let fee_amount = (amount * 20)/(100);
+        amount_after_fee  = amount - fee_amount;
+        msg!(&format!("amount to take as fee {}", fee_amount));
+        msg!(&format!("amount to give to user {}", amount_after_fee));
+
+        let cpi_accounts_fees = Transfer {
+            from: ctx.accounts.pda_owned_user_a.to_account_info(),
+            to: ctx.accounts.fees_qpools_a.to_account_info(),
+            authority: ctx.accounts.portfolio_pda.to_account_info(),
+        };
+        let cpi_program_fees = ctx.accounts.token_program.to_account_info();
+        token::transfer(CpiContext::new_with_signer(
+            cpi_program_fees,
+            cpi_accounts_fees,
+            &[
+                [
+                    ctx.accounts.portfolio_owner.key.as_ref(),
+                    seeds::PORTFOLIO_SEED,
+                    &[_bump_portfolio]
+                ].as_ref()
+            ],
+
+        ), fee_amount)?;
+
+        msg!("transered fees to qPools");
+
+        
+    } else {
+        msg!("zero fees, sorry for your losses");
+        amount_after_fee = amount;
+        
+    }
     let cpi_accounts = Transfer {
         from: ctx.accounts.pda_owned_user_a.to_account_info(),
         to: ctx.accounts.user_owned_user_a.to_account_info(),
@@ -64,7 +101,7 @@ pub fn handler(
                     &[_bump_portfolio]
                 ].as_ref()
             ],
-        ), amount as u64)?;
+        ), amount_after_fee as u64)?;
     
 
     Ok(())

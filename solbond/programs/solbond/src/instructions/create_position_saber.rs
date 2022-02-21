@@ -106,12 +106,14 @@ pub struct SaberLiquidityInstruction<'info> {
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
 
+    pub pool_address: AccountInfo<'info>,
+
     
     pub saber_swap_program: Program<'info, StableSwap>,
     
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
-
+    pub rent: Sysvar<'info, Rent>,
 }
 
 
@@ -204,7 +206,11 @@ pub fn handler(
     position_account.owner_token_account_b = ctx.accounts.qpools_b.key();
     position_account.owner_token_account_lp = ctx.accounts.output_lp.key();
     position_account.pool_pda = pool_account.key();
+    position_account.pool_address = ctx.accounts.pool_address.key();
     position_account.bump = _bump_position;
+
+    let clock = Clock::get().unwrap();
+    position_account.timestamp = clock.unix_timestamp;
 
 
     // // Calculate how much currency is in the bond

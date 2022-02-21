@@ -357,6 +357,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
+                    poolAddress: poolAddress,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     // Create liquidity accounts
                 },
                 signers: [this.payer]

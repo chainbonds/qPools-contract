@@ -57,6 +57,7 @@ pub fn handler(
     
     portfolio_account.bump = _bump;
     portfolio_account.weights = weights;
+    portfolio_account.initial_amount_USDC = 0;
 
     Ok(())
 }

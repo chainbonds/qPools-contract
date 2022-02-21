@@ -43,8 +43,6 @@ pub fn handler(
     amount: u64,
 ) -> ProgramResult {
   
-    msg!("IM KRE");
-
     let cpi_accounts = Transfer {
         from: ctx.accounts.user_owned_token_account.to_account_info(),
         to: ctx.accounts.pda_owned_token_account.to_account_info(),
@@ -53,6 +51,11 @@ pub fn handler(
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     token::transfer(cpi_ctx, amount as u64)?;
+
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.initial_amount_USDC = amount as u64;
+
+    msg!(&format!("put in amount {} ", amount));
     
     Ok(())
 }

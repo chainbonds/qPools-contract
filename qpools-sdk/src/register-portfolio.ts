@@ -462,6 +462,8 @@ export class Portfolio extends SaberInteractTool {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
+                    poolAddress: pool_address,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     // Create liquidity accounts
                 },
                 signers: [owner]
@@ -750,7 +752,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("poolPDA ", poolPDA.toString())
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index.toString()))],
+            [owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount7"+index.toString()))],
             this.solbondProgram.programId
         );
 

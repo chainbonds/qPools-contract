@@ -158,6 +158,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -169,6 +174,11 @@ export type Solbond = {
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -694,8 +704,16 @@ export type Solbond = {
             "type": "publicKey"
           },
           {
+            "name": "poolAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1102,6 +1120,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -1113,6 +1136,11 @@ export const IDL: Solbond = {
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -1638,8 +1666,16 @@ export const IDL: Solbond = {
             "type": "publicKey"
           },
           {
+            "name": "poolAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }

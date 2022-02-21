@@ -9,5 +9,5 @@ export const SEED = {
     TVL_INFO_ACCOUNT: "tvlInfoAccount6",
     PORTFOLIO_ACCOUNT: "PortFolioSeed9",
     LP_POOL_ACCOUNT: "twoWayPool7",
-    POSITION_ACCOUNT_APPENDUM: "PositionAccount"
+    POSITION_ACCOUNT_APPENDUM: "PositionAccount7"
 }

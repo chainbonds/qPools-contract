@@ -16,8 +16,10 @@ pub struct PositionAccount {
     // pda of pool where position is
     pub pool_pda: Pubkey,
 
+    pub pool_address: Pubkey,
     // Include also any bumps, etc.
     pub bump: u8,
+    pub timestamp: i64,
 
 }
 
@@ -31,7 +33,9 @@ impl PositionAccount {
             + 32   // pool_token_account_b
             + 32   // pool_token_account_lp
             + 32   // pool_pda
-            + 8;    // bump
+            + 32   // pool_address
+            + 8     // bump
+            + 64+1;    // time
 
 
 }

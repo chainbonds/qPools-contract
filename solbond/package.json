@@ -1,8 +1,6 @@
 {
     "scripts": {
-        "test:solbond-only": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/solbond-only.spec.ts",
-        "test:qPools": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-initialize.ts",
-        "test:qPools-linked-instructions": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts",
+        "test:qPools": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts",
         "test:saber-only-devnet": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/simple-end-to-end-devnet-saber.spec.ts",
         "deploy:reserve": "ANCHOR_WALLET=~/.config/solana/id.json npx ts-node cranks/deploy-qpool-reserve.ts",
         "crank:tvl": "ANCHOR_WALLET=~/.config/solana/id.json npx ts-node cranks/calculate-tvl.ts"
@@ -13,6 +11,7 @@
         "@qpools/admin-sdk": "file:../qpools-admin-sdk",
         "@qpools/sdk": "file:../qpools-sdk",
         "@saberhq/stableswap-sdk": "^1.12.34",
+        "@solana/buffer-layout": "^4.0.0",
         "@solana/spl-token": "^0.1.8",
         "easy-spl": "^0.5.0"
     },

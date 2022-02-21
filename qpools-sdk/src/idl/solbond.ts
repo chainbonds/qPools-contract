@@ -158,6 +158,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -169,6 +174,11 @@ export type Solbond = {
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -282,6 +292,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "inputLp",
           "isMut": true,
           "isSigner": false
@@ -342,6 +357,10 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpPool",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -360,60 +379,187 @@ export type Solbond = {
       ]
     },
     {
-      "name": "redeemBond",
+      "name": "updatePoolStruct",
       "accounts": [
         {
-          "name": "bondPoolAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaser",
+          "name": "portfolioOwner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "purchaserRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaserCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tvlAccount",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "rent",
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPool",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "redeemPositionOneSaber",
+      "accounts": [
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "clock",
+          "name": "swapAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "positionPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "swap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "inputLp",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feesA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reserveB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "saberSwapProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPool",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "lpAmount",
+          "type": "u64"
+        },
+        {
+          "name": "tokenAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transferToPortfolio",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
           "isSigner": false
         },
@@ -430,41 +576,46 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "redeemableAmountRaw",
-          "type": "u64"
+          "name": "bump",
+          "type": "u8"
         },
         {
-          "name": "bumpTvlAccount",
-          "type": "u8"
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
     {
-      "name": "setTvl",
+      "name": "transferRedeemedToUser",
       "accounts": [
         {
-          "name": "tvlAccount",
+          "name": "portfolioPda",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "initializer",
+          "name": "portfolioOwner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "poolAccount",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "rent",
-          "isMut": false,
+          "name": "userOwnedUserA",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "clock",
-          "isMut": false,
+          "name": "pdaOwnedUserA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feesQpoolsA",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -475,133 +626,17 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "newTvlInUsd",
-          "type": "u64"
+          "name": "bump",
+          "type": "u8"
         },
         {
-          "name": "tvlAccountBump",
-          "type": "u8"
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
   ],
   "accounts": [
-    {
-      "name": "bondPoolAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "generator",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolRedeemableMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolCurrencyTokenMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolRedeemableTokenAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolCurrencyTokenAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "bumpBondPoolAccount",
-            "type": "u8"
-          },
-          {
-            "name": "bumpBondPoolTokenAccount",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "invariantPoolAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "idx",
-            "type": "u32"
-          },
-          {
-            "name": "maxIdx",
-            "type": "u32"
-          },
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
-          {
-            "name": "state",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolWeight",
-            "type": "u32"
-          },
-          {
-            "name": "tickmap",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenCurrencyMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenXMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenCurrencyAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenXAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "qpoolTokenCurrencyAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "qpoolTokenXAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionInPool",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionListInPool",
-            "type": "publicKey"
-          },
-          {
-            "name": "upperTick",
-            "type": "publicKey"
-          },
-          {
-            "name": "lowerTick",
-            "type": "publicKey"
-          },
-          {
-            "name": "initializer",
-            "type": "publicKey"
-          },
-          {
-            "name": "bumpPoolList",
-            "type": "u8"
-          }
-        ]
-      }
-    },
     {
       "name": "portfolioAccount",
       "type": {
@@ -623,6 +658,10 @@ export type Solbond = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "initialAmountUsdc",
+            "type": "u64"
           }
         ]
       }
@@ -665,28 +704,16 @@ export type Solbond = {
             "type": "publicKey"
           },
           {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tvlInfoAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "tvlMint",
+            "name": "poolAddress",
             "type": "publicKey"
           },
           {
-            "name": "tvlInUsdc",
-            "type": "u64"
+            "name": "bump",
+            "type": "u8"
           },
           {
-            "name": "decimals",
-            "type": "u8"
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -730,6 +757,14 @@ export type Solbond = {
           },
           {
             "name": "totalAmountInB",
+            "type": "u64"
+          },
+          {
+            "name": "tmpA",
+            "type": "u64"
+          },
+          {
+            "name": "tmpB",
             "type": "u64"
           }
         ]
@@ -1085,6 +1120,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -1096,6 +1136,11 @@ export const IDL: Solbond = {
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -1209,6 +1254,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "inputLp",
           "isMut": true,
           "isSigner": false
@@ -1269,6 +1319,10 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpPool",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         },
@@ -1287,60 +1341,187 @@ export const IDL: Solbond = {
       ]
     },
     {
-      "name": "redeemBond",
+      "name": "updatePoolStruct",
       "accounts": [
         {
-          "name": "bondPoolAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bondPoolRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaser",
+          "name": "portfolioOwner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "purchaserRedeemableTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "purchaserCurrencyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tvlAccount",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "rent",
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPool",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "redeemPositionOneSaber",
+      "accounts": [
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioOwner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "clock",
+          "name": "swapAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "positionPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "swap",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "inputLp",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feesA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reserveB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "saberSwapProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPool",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "lpAmount",
+          "type": "u64"
+        },
+        {
+          "name": "tokenAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transferToPortfolio",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
           "isSigner": false
         },
@@ -1357,41 +1538,46 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "redeemableAmountRaw",
-          "type": "u64"
+          "name": "bump",
+          "type": "u8"
         },
         {
-          "name": "bumpTvlAccount",
-          "type": "u8"
+          "name": "amount",
+          "type": "u64"
         }
       ]
     },
     {
-      "name": "setTvl",
+      "name": "transferRedeemedToUser",
       "accounts": [
         {
-          "name": "tvlAccount",
+          "name": "portfolioPda",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "initializer",
+          "name": "portfolioOwner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "poolAccount",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "rent",
-          "isMut": false,
+          "name": "userOwnedUserA",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "clock",
-          "isMut": false,
+          "name": "pdaOwnedUserA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feesQpoolsA",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1402,133 +1588,17 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "newTvlInUsd",
-          "type": "u64"
+          "name": "bump",
+          "type": "u8"
         },
         {
-          "name": "tvlAccountBump",
-          "type": "u8"
+          "name": "amount",
+          "type": "u64"
         }
       ]
     }
   ],
   "accounts": [
-    {
-      "name": "bondPoolAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "generator",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolRedeemableMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolCurrencyTokenMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolRedeemableTokenAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "bondPoolCurrencyTokenAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "bumpBondPoolAccount",
-            "type": "u8"
-          },
-          {
-            "name": "bumpBondPoolTokenAccount",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "invariantPoolAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "idx",
-            "type": "u32"
-          },
-          {
-            "name": "maxIdx",
-            "type": "u32"
-          },
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
-          {
-            "name": "state",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolWeight",
-            "type": "u32"
-          },
-          {
-            "name": "tickmap",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenCurrencyMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenXMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenCurrencyAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenXAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "qpoolTokenCurrencyAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "qpoolTokenXAddress",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionInPool",
-            "type": "publicKey"
-          },
-          {
-            "name": "positionListInPool",
-            "type": "publicKey"
-          },
-          {
-            "name": "upperTick",
-            "type": "publicKey"
-          },
-          {
-            "name": "lowerTick",
-            "type": "publicKey"
-          },
-          {
-            "name": "initializer",
-            "type": "publicKey"
-          },
-          {
-            "name": "bumpPoolList",
-            "type": "u8"
-          }
-        ]
-      }
-    },
     {
       "name": "portfolioAccount",
       "type": {
@@ -1550,6 +1620,10 @@ export const IDL: Solbond = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "initialAmountUsdc",
+            "type": "u64"
           }
         ]
       }
@@ -1592,28 +1666,16 @@ export const IDL: Solbond = {
             "type": "publicKey"
           },
           {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tvlInfoAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "tvlMint",
+            "name": "poolAddress",
             "type": "publicKey"
           },
           {
-            "name": "tvlInUsdc",
-            "type": "u64"
+            "name": "bump",
+            "type": "u8"
           },
           {
-            "name": "decimals",
-            "type": "u8"
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1657,6 +1719,14 @@ export const IDL: Solbond = {
           },
           {
             "name": "totalAmountInB",
+            "type": "u64"
+          },
+          {
+            "name": "tmpA",
+            "type": "u64"
+          },
+          {
+            "name": "tmpB",
             "type": "u64"
           }
         ]

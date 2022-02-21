@@ -114,7 +114,7 @@ describe('saber-devnet', () => {
         MOCK.DEV.SABER_POOL.USDC_USDT,
         MOCK.DEV.SABER_POOL.USDC_CASH,
         MOCK.DEV.SABER_POOL.USDC_PAI,
-        MOCK.DEV.SABER_POOL.TEST_USDC
+        MOCK.DEV.SABER_POOL.USDC_TEST
     ];
     // Replace this by a forloop for all pools later
     let swapAccount: PublicKey = new PublicKey(allSwapAccounts[0]);

@@ -12,6 +12,9 @@ import {
     getPayer,
     waitForEpoch
 } from "./utils";
+import { Portfolio } from "./register-portfolio";
+import { PortfolioFrontendFriendly } from "./frontend-friendly/register-portfolio-wallet";
+import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 
 export {
     QPoolsUser,
@@ -27,5 +30,8 @@ export {
     getBlockchainEpoch,
     createAssociatedTokenAccountSendUnsigned,
     getAssociatedTokenAddressOffCurve,
-    createAssociatedTokenAccountUnsigned
+    createAssociatedTokenAccountUnsigned,
+    Portfolio,
+    PortfolioFrontendFriendly,
+    DisplayPortfolios
 }

@@ -7,67 +7,9 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 
 use instructions::*;
-declare_id!("3vTbhuwJwR5BadSH9wt29rLf91S57x31ynQZJpG9cf7E");
-
-// TODO: Replace all lamports with how many solana actually should be paid off.
-
-/*
-    TODO: 1
-    We should probably have a separate function to do the portfolio (re-)distribution
-    Buy mSOL, track total supply with redeemable-tokens ...
-
-    TODO: 2
-    Figure out a way to calculate the final bond, as well as the stepwise points
-    you can probably use a simple formula
-    and keep track of the amount that was already paid in
-    You can save these variables as part of the state
-
-    TODO: 3
-    Have a bunch of constraints across bondAccount
-
-    TODO: 4
-    Have another function to pay out profits ...
-    I guess this is also where our own profit-account comes in ...
-
-    TODO: 5
-    Include epochs (potentially), to decide how often something can be paid out as well.
-*/
-
-/**
-    The relevant RPC endpoints from the amm program are:
-    (in chronological order)
-
-    - create_position
-    - remove_position
-    - claim_fee
-
-    The RPC endpoints that are optional
-    - swap
-        => We can also use the frontend to do swaps over serum, or similar
+declare_id!("HdWi7ZAt1tmWaMJgH37DMqAMqBwjzt56CtiKELBZotrc");
 
 
-    The RPC endpoints we are unsure about
-    - create_fee_tier
-    - create_position_list
-
-    The RPC endpoints that we _probably_ will not need
-    - transfer_position_ownership
-        => probably not needed in the first MVP, could be interesting later
-    - claim_fee
-        => I think this will be used not from this, but separately
-
-    The RPC endpoints that we will not use
-    - create_pool
-        => This is only called to create the pool, once the pool is created, no more is needed
-    - create_state
-        => I think this is only used when initializing the pool to define fees and admin,
-            once the pool is initialized, we don't need this anymore
-    - create_tick
-        => this will already be created before we can use the pool,
-            we have to use this before calling the pool
-
-
-*/
 
 #[derive(Accounts)]
 #[instruction(
@@ -141,49 +83,57 @@ pub mod solbond {
         ctx: Context<RedeemSaberPosition>,
         _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_pool: u8,
     _index: u32,
     min_mint_amount: u64,
     token_a_amount: u64,
     token_b_amount: u64,
     ) -> ProgramResult {
         instructions::redeem_position_saber::handler(ctx, _bump_portfolio,
-        _bump_position, _index, min_mint_amount, token_a_amount, token_b_amount)
+        _bump_position, _bump_pool, _index, min_mint_amount, token_a_amount, token_b_amount)
+
+    }
+
+    pub fn update_pool_struct(ctx: Context<UpdatePoolStruct>, _bump_pool: u8) -> ProgramResult {
+        instructions::redeem_position_saber::update_balance(ctx, _bump_pool)
+
+    }
+
+
+    pub fn redeem_position_one_saber(
+        ctx: Context<RedeemOneSaberPosition>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _bump_pool: u8,
+        _index: u32,
+        lp_amount: u64,
+        token_amount: u64,
+    ) -> ProgramResult {
+        instructions::redeem_position_one_saber::handler(ctx, _bump_portfolio,
+        _bump_position,_bump_pool, _index, lp_amount, token_amount)
     }
     
     
 
-    /**
-    * Redeem the bond,
-    *
-    *   If it is before the bond runs out,
-    +     then you should pay out part of the profits that were generated so far
-    *   If it is after the bond runs out,
-    *     then you should pay out all the profits, and the initial pay-in amount (face-value / par-value) that was paid in
-    */
-    pub fn redeem_bond(
-        ctx: Context<RedeemBond>,
-        redeemable_amount_raw: u64,
-        _bump_tvl_account: u8
+    pub fn transfer_to_portfolio(
+        ctx: Context<TransferToPortfolio>,
+        bump: u8, amount: u64) -> ProgramResult {
+            instructions::transfer_to_portfolio::handler(ctx,bump,amount)
+        }
+    
+    pub fn transfer_redeemed_to_user(
+        ctx: Context<TransferRedeemedToUser>,
+        bump: u8,
+        amount: u64
     ) -> ProgramResult {
 
-        instructions::redeem_bond::handler(
+        instructions::transfer_redeemed_to_user::handler(
             ctx,
-            redeemable_amount_raw,
-            _bump_tvl_account
+            bump,
+            amount
         )
     }
 
-    pub fn set_tvl(
-        ctx: Context<SetTvl>,
-        new_tvl_in_usd: u64,
-        tvl_account_bump: u8
-    ) -> ProgramResult {
-        instructions::set_tvl::handler(
-            ctx,
-            new_tvl_in_usd,
-            tvl_account_bump
-        )
-    }
 
 }
 

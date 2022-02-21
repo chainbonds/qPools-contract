@@ -2,39 +2,13 @@ import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {QPair} from "@qpools/sdk/src/q-pair";
 import {BN} from "@project-serum/anchor";
 import {u64} from "@solana/spl-token";
 import {assert} from "chai";
-import {QPoolsAdmin} from "./qpools-admin";
+import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "./utils";
+import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
+import {MOCK} from "./const";
 
-// @ts-ignore
-import {
-    BondPoolAccount,
-    createAssociatedTokenAccountSendUnsigned,
-    getAssociatedTokenAddressOffCurve,
-    createMint,
-    getPayer,
-    getSolbondProgram,    
-    createAssociatedTokenAccountUnsigned,
-    MOCK,
-
-} from "@qpools/sdk";
-import {
-    StableSwap,
-    StableSwapState,
-    findSwapAuthorityKey,
-  } from "@saberhq/stableswap-sdk";
-import {NETWORK} from "@qpools/sdk/lib/cluster";
-import {IWallet} from "@qpools/sdk/lib/utils";
-import { min } from "bn.js";
-import { mint } from "easy-spl";
-
-
-
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 /*
     doing a deposit: 
         a function which registers the portfolio with the weights
@@ -77,7 +51,9 @@ export class SaberInteractTool {
 
 
     constructor(
-        connection: Connection, provider: Provider, solbondProgram: Program,
+        connection: Connection,
+        provider: Provider,
+        solbondProgram: Program,
         wallet: Keypair, 
     ) {
         this.connection = connection;
@@ -88,7 +64,7 @@ export class SaberInteractTool {
         this.wallet = wallet;
         this.providerWallet = this.provider.wallet;
 
-        this.stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
+        this.stableSwapProgramId = new PublicKey(MOCK.DEV.stableSwapProgramId);
 
     }
 
@@ -146,6 +122,13 @@ export class SaberInteractTool {
         return userAccount;
     }
 
+    async getAccountForMintAndPDADontCreate(mintKey: PublicKey, pda: PublicKey) {
+        const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
+        return userAccount;
+    }
+
+    // Yeah, the addresses will not change, but they may not be initialized yet.
+    // Initialization must be done over RPC if this is not the case yet!
     async getAccountForMint(mintKey: PublicKey) {
         try {
             // console.log("this wallet ", this.wallet.publicKey.toString())

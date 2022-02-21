@@ -26,12 +26,4 @@ rm package-lock.json
 rm yarn.lock
 npm install --include=dev
 
-cd ..
-echo "Installing web-app ..."
-cd dapp-nextjs
-rm -rf node_modules/
-rm package-lock.json
-rm yarn.lock
-yarn
-
 echo "Success!"

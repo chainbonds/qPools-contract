@@ -1,31 +1,18 @@
-import * as anchor from '@project-serum/anchor';
-import {BN, Program, web3, Provider} from '@project-serum/anchor';
-import {Solbond} from '../target/types/solbond';
-import {Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {Keypair, PublicKey, SYSVAR_RENT_PUBKEY, Transaction} from "@solana/web3.js";
-import {createToken} from "@qpools/admin-sdk/lib/invariant-utils";
-import {assert} from "chai";
-import * as spl from 'easy-spl'
-import {
-    createAssociatedTokenAccountUnsigned,
-    getAssociatedTokenAddressOffCurve,
-} from "@qpools/sdk";
+import {BN, Provider} from '@project-serum/anchor';
+import {u64} from '@solana/spl-token';
+import {Keypair, PublicKey} from "@solana/web3.js";
+
 import {NETWORK} from "@qpools/sdk/lib/cluster";
 
 import {
-    createMint,
     getSolbondProgram,
 } from "@qpools/sdk";
-import {
-    StableSwap,
-    findSwapAuthorityKey,
-  } from "@saberhq/stableswap-sdk";
-import provider from '@project-serum/anchor/dist/cjs/provider';
+
+
+import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 const {
     ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
-
-import { SaberInteractTool, Portfolio} from "@qpools/admin-sdk";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -41,9 +28,8 @@ describe('qPools!', () => {
     const payer = Keypair.generate();
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
+    // const genericPayer = payer;
 
-    let stableSwapAccount : Keypair;
-    //stableSwapAccount=   Keypair.generate();
     let stableSwapProgramId: PublicKey;
 
 
@@ -54,23 +40,32 @@ describe('qPools!', () => {
     let USDC_TEST_pubkey: PublicKey;
     let portfolio: Portfolio;
 
-    let saberInteractTool: SaberInteractTool;
     // Do some airdrop before we start the tests ...
     before(async () => {
-        console.log("swapprogramid")
-        stableSwapProgramId = new PublicKey(
-            "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
-        );
-        stableSwapAccount = Keypair.generate()
+
+        // await connection.requestAirdrop(genericPayer.publicKey, 1e9);
+
+        console.log("swapprogramid");
+        stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
-        USDC_CASH_pubkey =  new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA")
-        USDC_TEST_pubkey =  new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x")
-        
+        USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
+        USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
+
         weights = [new BN(500), new BN(500), new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
         
-        saberInteractTool = new SaberInteractTool(connection, provider, solbondProgram, genericPayer);
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
+
+
+    })
+
+    it('simulate sending to portfolio owned account', async () => {
+        let amountTokenA = new u64(340000);
+        let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
+        let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, amountTokenA);
+
+        console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
 
     })
@@ -86,15 +81,37 @@ describe('qPools!', () => {
         console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
         for (let smt of sigs_rest) {
             console.log("🦍 TRANSACTION SIG ", smt.toString())
-
         }
 
     })
 
-    it('simulate a full portfolio redeem', async () => {
+
+    it('simulate a redeem to user', async () => {
+
+        let amountTokenA = new u64(3400);
+        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
+
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+
+    })
+
+
+    /*it('simulate a withdraw one', async () => {
+
+        let amount_token = new u64(300);
+        let amount_lp = new u64(3400);
+
+        let sigs_rest = await portfolio.redeem_single_position_only_one(0, new BN(500), amount_lp, amount_token, genericPayer);
+
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+
+    })*/
+
+
+    /*it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
-        let amountTokenA = new u64(100);
+        let amountTokenA = new u64(120000);
         const amounts = [amountTokenA, amountTokenA, amountTokenA]
         let sigs_rest = await portfolio.redeem_full_portfolio(weights, amounts, genericPayer);
 
@@ -103,6 +120,6 @@ describe('qPools!', () => {
 
         }
 
-    })
+    })*/
 
 })

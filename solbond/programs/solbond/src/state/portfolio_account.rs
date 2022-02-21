@@ -8,6 +8,8 @@ pub struct PortfolioAccount {
     pub weights: [u64; 3],
     pub owner: Pubkey,
     pub bump: u8,
+
+    pub initial_amount_USDC: u64,
 }
 
 
@@ -17,6 +19,6 @@ pub struct PortfolioAccount {
 
 impl PortfolioAccount {
     pub const LEN: usize = 
-    std::mem::size_of::<Pubkey>() + 3*8 + 1;
+    std::mem::size_of::<Pubkey>() + 3*8 + 1 + 64;
 
 }

@@ -10,12 +10,14 @@ on:
       - dev
       - stage
       - main
+      - david1
   pull_request:
     branches: 
       - npm
       - dev
       - stage
       - main
+      - david1
 
 env:
   solana_verion: 1.8.12

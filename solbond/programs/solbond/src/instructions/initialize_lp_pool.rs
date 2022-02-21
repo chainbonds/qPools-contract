@@ -2,6 +2,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::associated_token::{self, AssociatedToken};
 use crate::state::{TwoWayPoolAccount};
 use crate::utils::seeds;
 
@@ -29,19 +30,15 @@ pub struct InitializeLpPoolAccount<'info> {
     #[account(mut)]
     pub mint_b: Account<'info, Mint>,
 
-
     #[account(mut)]
     pub pool_token_account_a: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub pool_token_account_b: Account<'info, TokenAccount>,
 
-
     // The account which generates the pool account
     #[account(signer, mut)]
     pub initializer: AccountInfo<'info>,
-
-  
 
     // The standards accounts
     pub rent: Sysvar<'info, Rent>,
@@ -84,8 +81,6 @@ pub fn handler(
 
     pool_account.total_amount_in_b = 0;
     msg!("9 pool");
-
-
 
     Ok(())
 }

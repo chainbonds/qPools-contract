@@ -55,9 +55,9 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         // Also save all the pool here
         // this.poolAddresses = poolRegistry.getActivePools().map((x: ExplicitSaberPool) => x.swap.config.swapAccount);
         this.poolAddresses = [
-            // MOCK.DEV.SABER_POOL.USDC_USDT,
-            // MOCK.DEV.SABER_POOL.USDC_CASH,
-            // MOCK.DEV.SABER_POOL.USDC_TEST
+            MOCK.DEV.SABER_POOL.USDC_USDT,
+            MOCK.DEV.SABER_POOL.USDC_CASH,
+            MOCK.DEV.SABER_POOL.USDC_TEST
             // getActivePools.
         ];
 

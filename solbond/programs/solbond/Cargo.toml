@@ -20,4 +20,3 @@ anchor-spl = "0.20.1"
 solana-program = "1.8.12"
 spl-token = { version = "3.1.4", features = ["no-entrypoint"] }
 stable-swap-anchor = "1.6.7"
-vipers = "1.6.1"

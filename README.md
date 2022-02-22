@@ -130,3 +130,15 @@ Anchor.toml
 ###
 
 If the token is some sort of derivative, then we use the USDC pyth conversion (this just makes it infinitely simpler to handle cases, etc.).
+
+
+### (6) Analyze wit Soteria Compiler
+
+
+```
+docker run -v $PWD/qPools-contract/solbond/:/workspace -it greencorelab/soteria:latest /bin/bash
+
+cargo build-bpf
+cd programs/solbond
+soteria -analyzeAll .
+```

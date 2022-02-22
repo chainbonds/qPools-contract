@@ -36,6 +36,7 @@ pub struct TransferRedeemedToUser<'info> {
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
 
+
     #[account(mut)]
     pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
  
@@ -49,6 +50,7 @@ pub fn handler(
     _bump_portfolio: u8,
     amount: u64,
 ) -> ProgramResult {
+
     let amount_after_fee;
     let portfolio = &mut ctx.accounts.portfolio_pda;
     if amount > portfolio.initial_amount_USDC {
@@ -104,6 +106,7 @@ pub fn handler(
                     &[_bump_portfolio]
                 ].as_ref()
             ],
+
         ), amount_after_fee as u64)?;
     
 

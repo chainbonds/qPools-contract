@@ -7,7 +7,7 @@ use stable_swap_anchor::*;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use anchor_lang::solana_program::system_program;
 use stable_swap_anchor::StableSwap;
-
+use crate::ErrorCode;
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 #[derive(Accounts)]
@@ -261,8 +261,8 @@ pub fn update_balance(ctx: Context<UpdatePoolStruct>,
         msg!(&format!("AFTER A  is {}", amt_after_a));
         msg!(&format!("AFTER B  is {}", amt_after_b));
 
-        let diff_a = amt_after_a - pool_account.tmp_a;
-        let diff_b = amt_after_b - pool_account.tmp_b;
+        let diff_a = amt_after_a.checked_sub(pool_account.tmp_a).ok_or_else(||{ErrorCode::CustomMathError6})?;
+        let diff_b = amt_after_b.checked_sub(pool_account.tmp_b).ok_or_else(||{ErrorCode::CustomMathError6})?;
         let pool_account = &mut ctx.accounts.pool_pda;
         msg!("got ref");
 
@@ -270,7 +270,7 @@ pub fn update_balance(ctx: Context<UpdatePoolStruct>,
         msg!(&format!("Amount to subtract {}", diff_a));
         if pool_account.total_amount_in_a > 0 {
             if diff_a <= pool_account.total_amount_in_a {
-                pool_account.total_amount_in_a -= diff_a;
+                pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_sub(diff_a).ok_or_else(||{ErrorCode::CustomMathError6})?;
 
             } else {
                 pool_account.total_amount_in_a = 0
@@ -283,7 +283,7 @@ pub fn update_balance(ctx: Context<UpdatePoolStruct>,
         msg!(&format!("Amount to subtract {}", diff_b));
         if pool_account.total_amount_in_b > 0 {
             if diff_b <= pool_account.total_amount_in_b {
-                pool_account.total_amount_in_b -= diff_b;
+                pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_sub(diff_b).ok_or_else(||{ErrorCode::CustomMathError6})?;
 
             } else {
                 pool_account.total_amount_in_b = 0

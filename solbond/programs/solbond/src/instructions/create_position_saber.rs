@@ -7,6 +7,7 @@ use stable_swap_anchor::*;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use anchor_lang::solana_program::system_program;
 use stable_swap_anchor::StableSwap;
+use crate::ErrorCode;
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
@@ -189,10 +190,11 @@ pub fn handler(
     let pool_account = &mut ctx.accounts.pool_pda;
     msg!("got ref");
 
-    pool_account.total_amount_in_a += token_a_amount;
+    pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_add(token_a_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
     msg!("a add");
 
-    pool_account.total_amount_in_b += token_b_amount;
+    pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_add(token_b_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
+
     msg!("b add");
 
 

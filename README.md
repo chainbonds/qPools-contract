@@ -126,3 +126,16 @@ lib.rs
 solbond-program.ts
 Anchor.toml
 ```
+
+
+
+### (6) Analyze wit Soteria Compiler
+
+
+```
+docker run -v $PWD/qPools-contract/solbond/:/workspace -it greencorelab/soteria:latest /bin/bash
+
+cargo build-bpf
+cd programs/solbond
+soteria -analyzeAll .
+```

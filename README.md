@@ -126,3 +126,7 @@ lib.rs
 solbond-program.ts
 Anchor.toml
 ```
+
+###
+
+If the token is some sort of derivative, then we use the USDC pyth conversion (this just makes it infinitely simpler to handle cases, etc.).

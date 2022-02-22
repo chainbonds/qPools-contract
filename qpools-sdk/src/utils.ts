@@ -1,6 +1,6 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
 const spl = require("@solana/spl-token");
 
@@ -11,6 +11,28 @@ let _payer: Keypair | null = null;
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export const tokenAccountExists = async (
+    conn: web3.Connection,
+    account: web3.PublicKey,
+): Promise<boolean> => {
+    const info = await conn.getParsedAccountInfo(account)
+    return info.value !== null
+}
+
+// export const createTokenAccount = async (
+//     mint: PublicKey,
+//     address: PublicKey | null
+// ): Promise<TransactionInstruction> => {
+//     return Token.createAssociatedTokenAccountInstruction(
+//         ASSOCIATED_TOKEN_PROGRAM_ID,
+//         TOKEN_PROGRAM_ID,
+//         mint,
+//         address,
+//         owner,
+//         wallet.publicKey
+//     )
+// }
 
 export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
@@ -126,6 +148,31 @@ export const getAssociatedTokenAddressOffCurve = async (
     user: web3.PublicKey
 ): Promise<web3.PublicKey> => {
     return Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, user, true);
+}
+
+export const createAssociatedTokenAccountUnsignedInstruction = async (
+    conn: web3.Connection,
+    mint: web3.PublicKey,
+    address: web3.PublicKey | null,
+    owner: web3.PublicKey,
+    wallet: WalletI,
+): Promise<web3.Transaction> => {
+    if (!address) {
+        address = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner, true);
+    }
+    console.log("ASSOCIATED_TOKEN_PROGRAM_ID", ASSOCIATED_TOKEN_PROGRAM_ID.toString(), TOKEN_PROGRAM_ID.toString());
+    let instructions = [
+        Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            mint,
+            address,
+            owner,
+            wallet.publicKey
+        )
+    ]
+    let tx = await util.wrapInstructions(conn, instructions, wallet.publicKey);
+    return tx;
 }
 
 export const createAssociatedTokenAccountUnsigned = async (

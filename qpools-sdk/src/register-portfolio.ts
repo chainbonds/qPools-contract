@@ -733,7 +733,6 @@ export class Portfolio extends SaberInteractTool {
 
     async redeem_single_position_only_one(index: number, weight: BN, lp_amount: u64, token_amount: u64, owner: Keypair) {
 
-
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
@@ -745,7 +744,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("poolTokenMint ", poolTokenMint.toString());
 
         let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("twoWayPool7"))],
+            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
 

@@ -130,8 +130,7 @@ export class SaberInteractToolFrontendFriendly {
     }
 
     async getAccountForMintAndPDADontCreate(mintKey: PublicKey, pda: PublicKey) {
-        const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
-        return userAccount;
+        return await getAssociatedTokenAddressOffCurve(mintKey, pda);
     }
 
     // Yeah, the addresses will not change, but they may not be initialized yet.

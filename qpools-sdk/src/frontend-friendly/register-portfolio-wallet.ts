@@ -1,6 +1,7 @@
 import {Connection, Keypair, PublicKey, Signer, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
+import * as poolRegistry from "../registry/registry-helper";
 import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {SaberInteractTool} from "../saber-cpi-endpoints";
 import {
@@ -21,6 +22,7 @@ import {PortfolioAccount} from "../types/portfolioAccount";
 import {PositionAccount} from "../types/positionAccount";
 import {TwoWayPoolAccount} from "../types/twoWayPoolAccount";
 import {delay} from "../utils";
+import {ExplicitSaberPool, getActivePools} from "../registry/registry-helper";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -51,10 +53,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         );
 
         // Also save all the pool here
+        // this.poolAddresses = poolRegistry.getActivePools().map((x: ExplicitSaberPool) => x.swap.config.swapAccount);
         this.poolAddresses = [
-            MOCK.DEV.SABER_POOL.USDC_USDT,
-            MOCK.DEV.SABER_POOL.USDC_CASH,
-            MOCK.DEV.SABER_POOL.USDC_TEST
+            // MOCK.DEV.SABER_POOL.USDC_USDT,
+            // MOCK.DEV.SABER_POOL.USDC_CASH,
+            // MOCK.DEV.SABER_POOL.USDC_TEST
+            // getActivePools.
         ];
 
         this.owner = provider.wallet;
@@ -595,7 +599,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("poolPDA ", poolPDA.toString());
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index.toString()))],
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
             this.solbondProgram.programId
         );
         console.log("positionPDA ", positonPDA.toString())

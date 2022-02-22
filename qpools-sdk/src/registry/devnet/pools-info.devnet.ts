@@ -1,4 +1,4 @@
-export const POOLS_INFO = {
+export const DEV_POOLS_INFO = {
   "saberLiquidityPools": [
     {
       "id": "btc",

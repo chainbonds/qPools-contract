@@ -56,7 +56,8 @@ pub fn handler(
     if amount > portfolio.initial_amount_USDC {
         msg!("Made some profits, will take 20% fees :P");
         //let fee_amount = (amount * 20)/(100);
-        let tmp1 = amount.checked_mul(20).ok_or_else(||{ErrorCode::CustomMathError6})?;
+        let profit = amount.checked_sub(portfolio.initial_amount_USDC).ok_or_else(| | {ErrorCode::CustomMathError6})?;
+        let tmp1 = profit.checked_mul(20).ok_or_else(||{ErrorCode::CustomMathError6})?;
         let fee_amount = tmp1.checked_div(100).ok_or_else(||{ErrorCode::CustomMathError7})?;
         amount_after_fee  = amount.checked_sub(fee_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
         msg!(&format!("amount to take as fee {}", fee_amount));

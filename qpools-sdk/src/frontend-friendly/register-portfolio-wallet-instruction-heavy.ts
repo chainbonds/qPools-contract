@@ -466,7 +466,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         console.log("poolPDA ", poolPDA.toString());
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode("PositionAccount"+index.toString()))],
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
             this.solbondProgram.programId
         );
         console.log("positionPDA ", positonPDA.toString())

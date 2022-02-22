@@ -1,7 +1,7 @@
 // Because this is devnet, the address might not correspond with the pairs one-to-one
 // Only consider the portfolio addresses that are included here
 // All the underlying text etc. should be taken from the registry
-export const PORTFOLIOID_TO_TOKEN = {
+export const DEV_PORTFOLIOID_TO_TOKEN = {
     "pairs": [
         {
             "portfolioApiId": "UST-USDC",

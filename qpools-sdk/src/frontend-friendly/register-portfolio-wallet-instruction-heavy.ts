@@ -183,6 +183,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     tokenMint: MOCK.DEV.SABER_USDC,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                 },
                 signers: [this.payer]
             }
@@ -207,6 +209,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     portfolioPda: this.portfolioPDA,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                 },
                 signers: [this.payer]
             }
@@ -417,6 +421,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     // Create liquidity accounts
                 },
                 signers: [this.payer]
@@ -536,6 +541,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     reserveB: reserveB,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers:[this.wallet]
@@ -567,6 +574,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     tokenMint: MOCK.DEV.SABER_USDC,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                 },
                 signers: [this.payer]
             }

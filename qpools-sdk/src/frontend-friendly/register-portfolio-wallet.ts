@@ -199,6 +199,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     tokenMint: MOCK.DEV.SABER_USDC,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                 },
                 signers: [this.payer]
             }
@@ -230,6 +232,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     tokenMint: MOCK.DEV.SABER_USDC,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                 },
                 signers: [this.payer]
             }
@@ -388,6 +392,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [this.payer]
@@ -552,6 +558,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     saberSwapProgram: this.stableSwapProgramId,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [this.wallet]
@@ -572,6 +580,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     userB: userAccountB,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [this.wallet]
@@ -696,6 +706,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
                     reserveB: reserveB,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers:[this.wallet]

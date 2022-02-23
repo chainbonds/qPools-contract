@@ -91,6 +91,7 @@ export class Portfolio extends SaberInteractTool {
                     portfolioPda: this.portfolioPDA,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                 },
                 signers: [ownerKeypair]
             }
@@ -234,6 +235,8 @@ export class Portfolio extends SaberInteractTool {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [owner]
@@ -300,6 +303,8 @@ export class Portfolio extends SaberInteractTool {
                     portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [owner_keypair]
@@ -597,6 +602,7 @@ export class Portfolio extends SaberInteractTool {
                     feesB: state.tokenB.adminFeeAccount,
                     saberSwapProgram: this.stableSwapProgramId,
                     tokenProgram: TOKEN_PROGRAM_ID,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,
                     // Create liquidity accounts
                 },
@@ -621,6 +627,8 @@ export class Portfolio extends SaberInteractTool {
         
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [owner,]
@@ -675,6 +683,8 @@ export class Portfolio extends SaberInteractTool {
                     tokenMint: this.USDC_mint,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                 },
                 signers:[signer]
             }
@@ -720,6 +730,8 @@ export class Portfolio extends SaberInteractTool {
                     feesQpoolsA: this.qPools_USDC_fees,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers:[signer]
@@ -825,6 +837,8 @@ export class Portfolio extends SaberInteractTool {
                     saberSwapProgram: this.stableSwapProgramId,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers:[owner]
@@ -848,6 +862,8 @@ export class Portfolio extends SaberInteractTool {
         
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
                     // Create liquidity accounts
                 },
                 signers: [owner]

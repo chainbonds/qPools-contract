@@ -90,6 +90,7 @@ pub struct RedeemOneSaberPosition<'info> {
     
     pub saber_swap_program: Program<'info, StableSwap>,
     pub system_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 

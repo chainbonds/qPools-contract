@@ -41,6 +41,7 @@ pub struct TransferRedeemedToUser<'info> {
     pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
  
     pub system_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 

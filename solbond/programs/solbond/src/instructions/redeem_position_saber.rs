@@ -57,6 +57,7 @@ pub struct UpdatePoolStruct<'info> {
     pub user_b: Box<Account<'info, TokenAccount>>,
 
     pub system_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 #[derive(Accounts)]
@@ -146,6 +147,7 @@ pub struct RedeemSaberPosition<'info> {
     
     pub saber_swap_program: Program<'info, StableSwap>,
     pub system_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 

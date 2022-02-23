@@ -24,6 +24,7 @@ pub struct SavePortfolio<'info> {
     
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 

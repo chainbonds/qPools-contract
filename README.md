@@ -43,7 +43,6 @@ Debugging:
 
 -------
 
-At least one portfolio assignment has to have been done
 
 
 ### (2) Analyze wit Soteria Compiler

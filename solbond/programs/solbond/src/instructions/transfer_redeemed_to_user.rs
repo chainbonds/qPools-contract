@@ -13,7 +13,7 @@ use crate::ErrorCode;
 
 )]
 pub struct TransferRedeemedToUser<'info> {
-    #[account(mut,
+    #[account(
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
@@ -27,12 +27,12 @@ pub struct TransferRedeemedToUser<'info> {
     //      user_token: SwapToken  block
     #[account(
         mut,
-        //constraint = &user_a.owner == &position_pda.key(),
+        //constraint = &user_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub user_owned_user_a: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        //constraint = &user_a.owner == &position_pda.key(),
+        constraint = &pda_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
 

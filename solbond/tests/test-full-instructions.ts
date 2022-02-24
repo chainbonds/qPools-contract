@@ -96,7 +96,7 @@ describe('qPools!', () => {
     })
 
 
-    /*it('simulate a withdraw one', async () => {
+    it('simulate a withdraw one', async () => {
 
         let amount_token = new u64(300);
         let amount_lp = new u64(3400);
@@ -105,10 +105,10 @@ describe('qPools!', () => {
 
         console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
-    })*/
+    })
 
 
-    /*it('simulate a full portfolio redeem', async () => {
+    it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
         let amountTokenA = new u64(120000);
@@ -120,6 +120,6 @@ describe('qPools!', () => {
 
         }
 
-    })*/
+    })
 
 })

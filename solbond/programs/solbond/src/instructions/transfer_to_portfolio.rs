@@ -43,7 +43,7 @@ pub fn handler(
     _bump: u8,
     amount: u64,
 ) -> ProgramResult {
-  
+    msg!("transfer initial funds from user to portfolio");
     let cpi_accounts = Transfer {
         from: ctx.accounts.user_owned_token_account.to_account_info(),
         to: ctx.accounts.pda_owned_token_account.to_account_info(),
@@ -56,7 +56,6 @@ pub fn handler(
     let portfolio = &mut ctx.accounts.portfolio_pda;
     portfolio.initial_amount_USDC = amount as u64;
 
-    msg!(&format!("put in amount {} ", amount));
     
     Ok(())
 }

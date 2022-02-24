@@ -1,7 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{Mint, Token, TokenAccount};
-
+use anchor_spl::token::{Token};
 #[derive(Accounts)]
 // #[instruction()]
 pub struct Healthcheck<'info> {

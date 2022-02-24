@@ -1,11 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
 use crate::utils::seeds;
-use stable_swap_anchor::*;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
-use anchor_lang::solana_program::system_program;
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
 
@@ -32,16 +29,6 @@ use crate::ErrorCode;
 )]
 pub struct SaberLiquidityInstruction<'info> {
 
-    //pub user: AccountInfo<'info>,
-    /// The "A" token of the swap.
-    //pub input_a: AccountInfo<'info>,
-    /// The "B" token of the swap.
-    //pub input_b: AccountInfo<'info>,
-    /// The pool mint of the swap.
-    /// 
-    /// 
-    /// 
-    
     #[account(
         init_if_needed,
         payer = owner,
@@ -58,8 +45,8 @@ pub struct SaberLiquidityInstruction<'info> {
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
 
   
     /// The output account for LP tokens.
@@ -70,12 +57,11 @@ pub struct SaberLiquidityInstruction<'info> {
     #[account(mut)]
     pub pool_mint: Box<Account<'info, Mint>>,
     /// The authority of the swap.
-    #[account(mut)]
+    // swap authority doesn't have to be mut, tests pass
     pub swap_authority: AccountInfo<'info>,
-    /// The authority of the user.
-    //#[account(mut, signer)]
+
+    // also doesn't have to be mut, tests pass
     #[account(
-        mut,
         seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]
@@ -129,7 +115,7 @@ pub fn handler(
     token_b_amount: u64,
     min_mint_amount: u64,
 ) -> ProgramResult {
-    msg!("Depositing reserve to pools!");
+    msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
     let portfolio = &mut ctx.accounts.portfolio_pda;
     assert!(portfolio.weights[_index as usize] == _weight, "input weight does not match portfolio weight!");
@@ -143,19 +129,16 @@ pub fn handler(
         user_authority: ctx.accounts.portfolio_pda.to_account_info(),
         swap: ctx.accounts.swap.to_account_info(),
     };
-    msg!("jshjd reserve to pools!");
 
     let input_a: SwapToken = SwapToken {
         user: ctx.accounts.qpools_a.to_account_info(),
         reserve: ctx.accounts.pool_token_account_a.to_account_info(),
     };
-    msg!("Depositing kkj to pools!");
 
     let input_b: SwapToken = SwapToken {
         user: ctx.accounts.qpools_b.to_account_info(),
         reserve: ctx.accounts.pool_token_account_b.to_account_info(),
     };
-    msg!("Depositing reserve to lal!");
 
     let deposit_context: Deposit = Deposit {
        user: user_context,
@@ -166,7 +149,6 @@ pub fn handler(
     };
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
 
-    msg!("ajsjsj reserve to pools!");
 
     stable_swap_anchor::deposit(
         CpiContext::new_with_signer(
@@ -184,18 +166,12 @@ pub fn handler(
         token_b_amount,
         min_mint_amount,
     )?;
-    msg!("Depositing reskjlsdjklf!");
-    msg!("smt{}",ctx.accounts.pool_pda.total_amount_in_a);
 
     let pool_account = &mut ctx.accounts.pool_pda;
-    msg!("got ref");
 
     pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_add(token_a_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
-    msg!("a add");
 
     pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_add(token_b_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
-
-    msg!("b add");
 
 
     let position_account= &mut ctx.accounts.position_pda;
@@ -213,19 +189,6 @@ pub fn handler(
 
     let clock = Clock::get().unwrap();
     position_account.timestamp = clock.unix_timestamp;
-
-
-    // // Calculate how much currency is in the bond
-    // let available_currency: u64 = ctx.accounts.bond_pool_currency_account.amount;
-    //
-    // // For now, assume we provide the same amount of liquidity to all pools
-    // // So we don't have to calculate the weightings
-    // let fraction_per_pool = calculate_amount_per_pool(available_currency);
-    //
-    // // Make swaps, and deposit this much to the pool
-    // for i in 0..fraction_per_pool.len() {
-    //
-    // }
 
     Ok(())
 }

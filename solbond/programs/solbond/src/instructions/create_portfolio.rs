@@ -10,8 +10,8 @@ use crate::utils::seeds;
 #[instruction(_bump:u8, weights:[u64; 3])]
 pub struct SavePortfolio<'info> {
 
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
 
     #[account(
         init_if_needed,
@@ -24,6 +24,7 @@ pub struct SavePortfolio<'info> {
     
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 

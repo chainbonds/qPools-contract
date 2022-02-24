@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Transfer};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{PortfolioAccount};
 use crate::utils::seeds;
 use crate::ErrorCode;
@@ -13,26 +13,25 @@ use crate::ErrorCode;
 
 )]
 pub struct TransferRedeemedToUser<'info> {
-    #[account(mut,
+    #[account(
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut, signer)]
-    pub portfolio_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub portfolio_owner: Signer<'info>,
 
 
-    pub token_program: AccountInfo<'info>,
 
     //      user_token: SwapToken  block
     #[account(
         mut,
-        //constraint = &user_a.owner == &position_pda.key(),
+        //constraint = &user_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub user_owned_user_a: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        //constraint = &user_a.owner == &position_pda.key(),
+        constraint = &pda_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
 
@@ -40,7 +39,9 @@ pub struct TransferRedeemedToUser<'info> {
     #[account(mut)]
     pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
  
-    pub system_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 
 }
 
@@ -56,7 +57,8 @@ pub fn handler(
     if amount > portfolio.initial_amount_USDC {
         msg!("Made some profits, will take 20% fees :P");
         //let fee_amount = (amount * 20)/(100);
-        let tmp1 = amount.checked_mul(20).ok_or_else(||{ErrorCode::CustomMathError6})?;
+        let profit = amount.checked_sub(portfolio.initial_amount_USDC).ok_or_else(| | {ErrorCode::CustomMathError6})?;
+        let tmp1 = profit.checked_mul(20).ok_or_else(||{ErrorCode::CustomMathError6})?;
         let fee_amount = tmp1.checked_div(100).ok_or_else(||{ErrorCode::CustomMathError7})?;
         amount_after_fee  = amount.checked_sub(fee_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
         msg!(&format!("amount to take as fee {}", fee_amount));

@@ -89,8 +89,8 @@ export function getActivePools(): ExplicitSaberPool[] {
     // Return the pool accounts, that correspond to these tokesn ...
     // Get all pools that have as one component USDC
     let mintUsdc = "VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL";
-    // let usdcToken = this.getToken(new PublicKey(mintUsdc));
-    return this.getPoolsContainingToken(new PublicKey(mintUsdc));
+    // let usdcToken = getToken(new PublicKey(mintUsdc));
+    return getPoolsContainingToken(new PublicKey(mintUsdc));
 }
 
 /**
@@ -99,7 +99,7 @@ export function getActivePools(): ExplicitSaberPool[] {
  */
 export function getTokenFromPortfolioId(portfolioId: String): PublicKey | null {
     let out: PublicKey | null = null;
-    this.getPortfolioToTokenDict()["pairs"].map((x: PortfolioPair) => {
+    getPortfolioToTokenDict()["pairs"].map((x: PortfolioPair) => {
         if (portfolioId === x.portfolioApiId) {
             out = new PublicKey(x.poolAddress);
         }
@@ -113,7 +113,7 @@ export function getTokenFromPortfolioId(portfolioId: String): PublicKey | null {
  */
 export function getToken(tokenMint: PublicKey): ExplicitToken | null {
     let out: ExplicitToken | null = null;
-    this.getAllTokens()["tokens"].map((x: ExplicitToken) => {
+    getAllTokens()["tokens"].map((x: ExplicitToken) => {
         if (x.address === tokenMint.toString()) {
             out = x;
         }
@@ -128,7 +128,7 @@ export function getToken(tokenMint: PublicKey): ExplicitToken | null {
  */
 export function getPool(poolAddress: PublicKey): ExplicitSaberPool | null {
     let out: ExplicitSaberPool | null = null;
-    this.getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
         if (x.swap.config.swapAccount.equals(poolAddress)) {
             out = x;
         }
@@ -159,7 +159,7 @@ export async function getTokenPythToUsdcPrice(
  */
 export function getPoolsContainingToken(tokenMint: PublicKey) {
     let allPools: ExplicitSaberPool[] = [];
-    this.getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
         // These are not explicit token types, these are saber token types
         let tokenA: SaberToken = x.tokens[0];
         let tokenB: SaberToken = x.tokens[1];
@@ -180,4 +180,19 @@ export function getPoolsContainingToken(tokenMint: PublicKey) {
 export function getSerpiusEndpoint() {
     // "https://qpools.serpius.com/weight_status.json";
     return "https://qpools.serpius.com/weight_status_devnet.json";
+}
+
+// TODO: Write batch functions for all these
+export function getIconFromToken(tokenMint: PublicKey) {
+
+    let out: string = "";
+    getAllTokens()["tokens"].map((x: ExplicitToken) => {
+        if (x.address === tokenMint.toString()) {
+            out = x.logoURI
+        }
+    })
+    if (!out) {
+        console.log("WARNING: URI does not exist!");
+    }
+    return out;
 }

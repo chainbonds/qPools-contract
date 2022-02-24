@@ -94,8 +94,8 @@ pub mod solbond {
 
     }
 
-    pub fn update_pool_struct(ctx: Context<UpdatePoolStruct>, _bump_pool: u8) -> ProgramResult {
-        instructions::redeem_position_saber::update_balance(ctx, _bump_pool)
+    pub fn update_pool_struct(ctx: Context<UpdatePoolStruct>, _bump_pool: u8, _bump_portfolio: u8,) -> ProgramResult {
+        instructions::redeem_position_saber::update_balance(ctx, _bump_pool, _bump_portfolio)
 
     }
 

@@ -1,8 +1,7 @@
 import {Connection, Keypair, PublicKey, Signer, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {SaberInteractTool} from "../saber-cpi-endpoints";
+import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {
     calculateVirtualPrice,
     findSwapAuthorityKey,
@@ -12,12 +11,9 @@ import {
 } from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "../const";
-import {sendAndConfirm} from "easy-spl/dist/util";
 import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {
-    createAssociatedTokenAccountSendUnsigned,
-    createAssociatedTokenAccountUnsigned,
     createAssociatedTokenAccountUnsignedInstruction,
     getAssociatedTokenAddressOffCurve,
     tokenAccountExists
@@ -48,6 +44,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     public payer: Keypair;
     public owner: WalletI;
+
+    // There are a lot of accounts that need would be created twice
+    // (assuming we use the same pool, but that pool has not been instantiated yet)
+    private createdAtaAccounts: Set<string> = new Set();
 
     constructor(
         connection: Connection,
@@ -284,6 +284,17 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
+        console.log("About to send all the data");
+        console.log("Sending the RPC Call");
+        console.log({
+            initializer: this.owner.publicKey.toString(),
+            poolPda: poolPDA.toString(),
+            mintLp: state.poolTokenMint.toString(),
+            mintA: state.tokenA.mint.toString(),
+            mintB: state.tokenB.mint.toString(),
+            poolTokenAccountA: state.tokenA.reserve.toString(),
+            poolTokenAccountB: state.tokenB.reserve.toString(),
+        })
         let ix: TransactionInstruction = this.solbondProgram.instruction.initializePoolAccount(
             new BN(poolBump),
             {
@@ -299,7 +310,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
-
                 },
                 signers: [this.payer]
             }
@@ -316,9 +326,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
         let txs = [];
 
+        console.log("The individual accounts are: ");
+        console.log(userAccountA.toString());
+        console.log(userAccountB.toString());
+        console.log(userAccountPoolToken.toString());
+
         // Check for each account if it exists, and if it doesn't exist, create it
-        if (!(await tokenAccountExists(this.connection, userAccountA))) {
+        if (!(await tokenAccountExists(this.connection, userAccountA)) && !this.createdAtaAccounts.has(userAccountA.toString())) {
             console.log("Chaining userAccountA");
+            this.createdAtaAccounts.add(userAccountA.toString());
             let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 state.tokenA.mint,
@@ -329,8 +345,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             txs.push(...ix.instructions);
             console.log("Chained userAccountA");
         }
-        if (!(await tokenAccountExists(this.connection, userAccountB))) {
+        if (!(await tokenAccountExists(this.connection, userAccountB)) && !this.createdAtaAccounts.has(userAccountB.toString())) {
             console.log("Chaining userAccountB");
+            this.createdAtaAccounts.add(userAccountB.toString());
             let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 state.tokenB.mint,
@@ -341,8 +358,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             txs.push(...ix.instructions);
             console.log("Chained userAccountB");
         }
-        if (!(await tokenAccountExists(this.connection, userAccountPoolToken))) {
+        if (!(await tokenAccountExists(this.connection, userAccountPoolToken)) && !this.createdAtaAccounts.has(userAccountPoolToken.toString())) {
             console.log("Chaining userAccountPoolToken");
+            this.createdAtaAccounts.add(userAccountPoolToken.toString());
             let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 state.poolTokenMint,
@@ -404,8 +422,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 accounts: {
                     positionPda: positonPDA,
                     portfolioPda: this.portfolioPDA,
-                    owner: this.owner.publicKey,
+                    owner: this.owner.publicKey,//randomOwner.publicKey,
                     poolMint: state.poolTokenMint,
+                    tokenAMint: state.tokenA.mint,
+                    tokenBMint: state.tokenB.mint,
                     outputLp: userAccountPoolToken,
                     swapAuthority: stableSwapState.config.authority,
                     poolPda: poolPDA,
@@ -417,7 +437,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
-                    // Create liquidity accounts
+                    poolAddress: poolAddress,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                 },
                 signers: [this.payer]
             }
@@ -482,6 +503,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let feesA: PublicKey;
         let mintA: PublicKey;
         let reserveB: PublicKey;
+        // TODO: Replace this object. Replace any occurrence of MOCK.DEV.SABER_USDC with your function ...
+
+        /**
+         *  Terminology: Token A is our currency, and Token B is the other currency
+         */
         if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
             currencyMint = state.tokenA.mint;
             userAccount = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
@@ -517,24 +543,24 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             new BN(poolBump),
             new BN(index),
             new BN(lpAmount),
-            new BN(0),
+            new BN(1),
             {
                 accounts: {
-                    portfolioPda: this.portfolioPDA,
-                    portfolioOwner: this.owner.publicKey,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    swapAuthority: stableSwapState.config.authority,
                     positionPda: positonPDA,
-                    swap: stableSwapState.config.swapAccount,
+                    portfolioPda: this.portfolioPDA,
                     poolPda: poolPDA,
-                    inputLp: userAccountpoolToken,
+                    portfolioOwner: this.owner.publicKey,
                     poolMint: state.poolTokenMint,
+                    inputLp: userAccountpoolToken,
+                    swapAuthority: stableSwapState.config.authority,
+                    swap:stableSwapState.config.swapAccount,
                     userA: userAccount,
                     reserveA: reserveA,
-                    feesA: feesA,
-                    mintA: mintA,
+                    mintA: state.tokenA.mint,
                     reserveB: reserveB,
+                    feesA: feesA,
                     saberSwapProgram: this.stableSwapProgramId,
+                    tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     // Create liquidity accounts
                 },
@@ -564,6 +590,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     portfolioPda: this.portfolioPDA,
                     userOwnedUserA: userUSDCAta,
                     pdaOwnedUserA: pdaUSDCAccount,
+                    // TODO: Also replace MOCK.DEV here
                     tokenMint: MOCK.DEV.SABER_USDC,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,

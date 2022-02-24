@@ -173,3 +173,11 @@ export function getPoolsContainingToken(tokenMint: PublicKey) {
     return allPools;
 }
 
+/**
+ * Get the serpius API endpoint. Depending on whether we are on mainnet or devnet,
+ * Return the respective variable
+ */
+export function getSerpiusEndpoint() {
+    // "https://qpools.serpius.com/weight_status.json";
+    return "https://qpools.serpius.com/weight_status_devnet.json";
+}

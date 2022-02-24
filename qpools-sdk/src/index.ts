@@ -13,7 +13,6 @@ import {
     waitForEpoch
 } from "./utils";
 import { Portfolio } from "./register-portfolio";
-import { PortfolioFrontendFriendly } from "./frontend-friendly/register-portfolio-wallet";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 import {PortfolioFrontendFriendlyChainedInstructions} from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
 import { IDL as SolbondIdl } from "./idl/solbond";
@@ -34,7 +33,6 @@ export {
     getAssociatedTokenAddressOffCurve,
     createAssociatedTokenAccountUnsigned,
     Portfolio,
-    PortfolioFrontendFriendly,
     DisplayPortfolios,
     PortfolioFrontendFriendlyChainedInstructions,
     SolbondIdl

@@ -44,16 +44,6 @@ export class Portfolio extends SaberInteractTool {
     }
 
 
-
-
-
-
-
-
-
-
-
-
     // Instead of this, we can have a couple of JSON objects... Should be much cleaner
     async registerAndCreateFullPortfolio(positionInput: Array<PositionsInput>, ownerKeypair: Keypair) {
 
@@ -687,9 +677,7 @@ export class Portfolio extends SaberInteractTool {
     }
 
     async transfer_to_user(owner: IWallet, amount: u64) {
-        const randomOwner = Keypair.generate();
-
-        this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, randomOwner.publicKey);
+        this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs"));
 
         if (!this.userOwnedUSDCAccount) {
             console.log("Creating a userOwnedUSDCAccount");

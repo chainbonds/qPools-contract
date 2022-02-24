@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Transfer};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{PortfolioAccount};
 use crate::utils::seeds;
 use crate::ErrorCode;
@@ -18,11 +18,10 @@ pub struct TransferRedeemedToUser<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut, signer)]
-    pub portfolio_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub portfolio_owner: Signer<'info>,
 
 
-    pub token_program: AccountInfo<'info>,
 
     //      user_token: SwapToken  block
     #[account(
@@ -40,7 +39,8 @@ pub struct TransferRedeemedToUser<'info> {
     #[account(mut)]
     pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
  
-    pub system_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 
 }

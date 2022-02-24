@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{TokenAccount};
+use anchor_spl::token::{Token, TokenAccount, Mint};
 use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
@@ -14,15 +14,14 @@ use crate::ErrorCode;
 )]
 pub struct UpdatePoolStruct<'info> {
 
-    #[account(mut, signer)]
-    pub portfolio_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub portfolio_owner: Signer<'info>,
 
     #[account(
         seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    pub token_program: AccountInfo<'info>,
 
 
     #[account(
@@ -32,7 +31,7 @@ pub struct UpdatePoolStruct<'info> {
     pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
 
     #[account(mut)]
-    pub pool_mint: AccountInfo<'info>,
+    pub pool_mint: Account<'info, Mint>,
 
     #[account(
         mut,
@@ -47,7 +46,9 @@ pub struct UpdatePoolStruct<'info> {
     )]
     pub user_b: Box<Account<'info, TokenAccount>>,
 
-    pub system_program: AccountInfo<'info>,
+    
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 
 }
@@ -67,11 +68,10 @@ pub struct RedeemSaberPosition<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut, signer)]
-    pub portfolio_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub portfolio_owner: Signer<'info>,
 
 
-    pub token_program: AccountInfo<'info>,
     pub swap_authority: AccountInfo<'info>,
     #[account(
         seeds = [portfolio_owner.key().as_ref(),
@@ -95,7 +95,7 @@ pub struct RedeemSaberPosition<'info> {
     )]
     pub input_lp:  Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub pool_mint: AccountInfo<'info>,
+    pub pool_mint: Account<'info, Mint>,
 
 
     #[account(
@@ -124,7 +124,8 @@ pub struct RedeemSaberPosition<'info> {
 
     
     pub saber_swap_program: Program<'info, StableSwap>,
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 
 }

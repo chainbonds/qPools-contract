@@ -9,8 +9,8 @@ use crate::utils::seeds;
 #[instruction(_bump:u8, amount: u64)]
 pub struct TransferToPortfolio<'info> {
 
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
 
     #[account(
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump

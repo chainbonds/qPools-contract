@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{ Mint, TokenAccount};
+use anchor_spl::token::{Token, Mint, TokenAccount};
 use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
@@ -24,10 +24,9 @@ pub struct RedeemOneSaberPosition<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut, signer)]
-    pub portfolio_owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub portfolio_owner: Signer<'info>,
 
-    pub token_program: AccountInfo<'info>,
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
@@ -46,7 +45,7 @@ pub struct RedeemOneSaberPosition<'info> {
     )]
     pub input_lp:  Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub pool_mint: AccountInfo<'info>,
+    pub pool_mint: Account<'info, Mint>,
 
 
     #[account(
@@ -55,7 +54,7 @@ pub struct RedeemOneSaberPosition<'info> {
     )]
     pub user_a: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub reserve_a: AccountInfo<'info>,//Box<Account<'info, TokenAccount>>,
+    pub reserve_a: Account<'info, TokenAccount>,//Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub fees_a: Box<Account<'info, TokenAccount>>,
 
@@ -77,7 +76,8 @@ pub struct RedeemOneSaberPosition<'info> {
 
     
     pub saber_swap_program: Program<'info, StableSwap>,
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 
 }

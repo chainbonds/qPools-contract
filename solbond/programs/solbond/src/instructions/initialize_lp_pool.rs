@@ -32,8 +32,8 @@ pub struct InitializeLpPoolAccount<'info> {
     #[account(mut)]
     pub pool_token_account_b: Account<'info, TokenAccount>,
 
-    #[account(signer, mut)]
-    pub initializer: AccountInfo<'info>,
+    #[account(mut)]
+    pub initializer: Signer<'info>,
 
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,

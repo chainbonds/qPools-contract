@@ -29,16 +29,6 @@ use crate::ErrorCode;
 )]
 pub struct SaberLiquidityInstruction<'info> {
 
-    //pub user: AccountInfo<'info>,
-    /// The "A" token of the swap.
-    //pub input_a: AccountInfo<'info>,
-    /// The "B" token of the swap.
-    //pub input_b: AccountInfo<'info>,
-    /// The pool mint of the swap.
-    /// 
-    /// 
-    /// 
-    
     #[account(
         init_if_needed,
         payer = owner,
@@ -55,8 +45,8 @@ pub struct SaberLiquidityInstruction<'info> {
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
 
   
     /// The output account for LP tokens.

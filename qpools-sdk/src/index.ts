@@ -16,6 +16,7 @@ import { Portfolio } from "./register-portfolio";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 import {PortfolioFrontendFriendlyChainedInstructions} from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
 import { IDL as SolbondIdl } from "./idl/solbond";
+import * as registry from "./registry/registry-helper";
 
 export {
     QPoolsUser,
@@ -35,5 +36,6 @@ export {
     Portfolio,
     DisplayPortfolios,
     PortfolioFrontendFriendlyChainedInstructions,
-    SolbondIdl
+    SolbondIdl,
+    registry
 }

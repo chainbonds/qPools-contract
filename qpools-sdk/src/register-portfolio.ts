@@ -615,9 +615,11 @@ export class Portfolio extends SaberInteractTool {
 
         let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
             new BN(poolBump),
+            new BN(this.portfolioBump),
             {
                 accounts: {
                     poolPda: poolPDA,
+                    portfolioPda: this.portfolioPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,
                     
@@ -636,7 +638,7 @@ export class Portfolio extends SaberInteractTool {
         )
 
         await this.provider.connection.confirmTransaction(finaltx_update);
-        console.log("Update Pool TX Is : ", finaltx_update);
+        console.log("🦚🦚🦚🦚Update Pool TX Is : ", finaltx_update);
 
         return [finaltx];
     }
@@ -850,9 +852,11 @@ export class Portfolio extends SaberInteractTool {
 
         let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
             new BN(poolBump),
+            new BN(this.portfolioBump),
             {
                 accounts: {
                     poolPda: poolPDA,
+                    portfolioPda: this.portfolioPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,
                     

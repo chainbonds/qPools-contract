@@ -268,7 +268,7 @@ export type Solbond = {
       "accounts": [
         {
           "name": "portfolioPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -283,7 +283,7 @@ export type Solbond = {
         },
         {
           "name": "swapAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -298,7 +298,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -397,13 +397,18 @@ export type Solbond = {
           "isSigner": true
         },
         {
+          "name": "portfolioPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "poolPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -435,6 +440,10 @@ export type Solbond = {
       "args": [
         {
           "name": "bumpPool",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPortfolio",
           "type": "u8"
         }
       ]
@@ -1260,7 +1269,7 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "portfolioPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1275,7 +1284,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "swapAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1290,7 +1299,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1389,13 +1398,18 @@ export const IDL: Solbond = {
           "isSigner": true
         },
         {
+          "name": "portfolioPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "poolPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1427,6 +1441,10 @@ export const IDL: Solbond = {
       "args": [
         {
           "name": "bumpPool",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPortfolio",
           "type": "u8"
         }
       ]

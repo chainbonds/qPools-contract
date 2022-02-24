@@ -1,11 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
 use crate::utils::seeds;
-use stable_swap_anchor::*;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
-use anchor_lang::solana_program::system_program;
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
 

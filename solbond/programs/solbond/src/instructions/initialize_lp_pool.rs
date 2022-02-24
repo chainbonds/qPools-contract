@@ -1,8 +1,6 @@
 
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use anchor_spl::associated_token::{self, AssociatedToken};
 use crate::state::{TwoWayPoolAccount};
 use crate::utils::seeds;
 

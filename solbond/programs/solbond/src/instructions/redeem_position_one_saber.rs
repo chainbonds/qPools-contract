@@ -6,10 +6,8 @@ use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext, WithdrawOne};
 use stable_swap_anchor::StableSwap;
 
-//use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 #[derive(Accounts)]
-// #[instruction(amount)]
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,

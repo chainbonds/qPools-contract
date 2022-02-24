@@ -571,9 +571,11 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
         let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
             new BN(poolBump),
+            new BN(this.portfolioBump),
             {
                 accounts: {
                     poolPda: poolPDA,
+                    portfolioPda: this.portfolioPDA,
                     portfolioOwner: this.owner.publicKey,
                     poolMint: poolTokenMint,
                     userA: userAccountA,

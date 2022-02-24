@@ -124,12 +124,12 @@ export type Solbond = {
         },
         {
           "name": "swapAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "poolPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1116,12 +1116,12 @@ export const IDL: Solbond = {
         },
         {
           "name": "swapAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "poolPda",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {

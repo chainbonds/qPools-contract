@@ -70,12 +70,11 @@ pub struct SaberLiquidityInstruction<'info> {
     #[account(mut)]
     pub pool_mint: Box<Account<'info, Mint>>,
     /// The authority of the swap.
-    #[account(mut)]
+    // swap authority doesn't have to be mut, tests pass
     pub swap_authority: AccountInfo<'info>,
-    /// The authority of the user.
-    //#[account(mut, signer)]
+
+    // also doesn't have to be mut, tests pass
     #[account(
-        mut,
         seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]

@@ -20,7 +20,8 @@ use stable_swap_anchor::StableSwap;
 
 )]
 pub struct RedeemOneSaberPosition<'info> {
-    #[account(mut,
+    // doesn't have to be mut
+    #[account(
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
@@ -28,16 +29,8 @@ pub struct RedeemOneSaberPosition<'info> {
     #[account(mut, signer)]
     pub portfolio_owner: AccountInfo<'info>,
 
-    //pub user: AccountInfo<'info>,
-    /// The "A" token of the swap.
-    //pub input_a: AccountInfo<'info>,
-    /// The "B" token of the swap.
-    //pub input_b: AccountInfo<'info>,
-    /// The pool mint of the swap.
-    
-    // user: SwapUserContext block 
     pub token_program: AccountInfo<'info>,
-    #[account(mut)]
+
     pub swap_authority: AccountInfo<'info>,
     #[account(
         seeds = [portfolio_owner.key().as_ref(),
@@ -51,18 +44,16 @@ pub struct RedeemOneSaberPosition<'info> {
 
     #[account(
         mut,
-        //constraint = &input_lp.owner == &position_pda.key(),
+        constraint = &input_lp.owner == &portfolio_pda.key(),
     )]
     pub input_lp:  Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub pool_mint: AccountInfo<'info>,
 
-    // output_a: SwapOutput block
 
-    //      user_token: SwapToken  block
     #[account(
         mut,
-        //constraint = &user_a.owner == &position_pda.key(),
+        constraint = &user_a.owner == &portfolio_pda.key(),
     )]
     pub user_a: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
@@ -80,7 +71,6 @@ pub struct RedeemOneSaberPosition<'info> {
 
 
     #[account(
-        mut,
         seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]
@@ -94,23 +84,7 @@ pub struct RedeemOneSaberPosition<'info> {
 
 }
 
-/*
-    Based on the portfolio and weights, calculate how much to re-distribute into each pool
-*/
-// // TODO: Replace everything by decimals?
-// pub fn calculate_amount_per_pool(x: u64) -> [u64; 5] {
-//
-//     let default_pay_in_amount: u64 = x / 5;
-//
-//     return [default_pay_in_amount, default_pay_in_amount, default_pay_in_amount, default_pay_in_amount, default_pay_in_amount];
-// }
 
-/**
-    Deposit reserve to pools.
-    All the Solana tokens that are within the reserve,
-    are now put into
-    Frontend should be respondible for creating all the required token accounts!
- */
 pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
     _bump_portfolio: u8,
@@ -177,25 +151,15 @@ pub fn handler(
 
     let pool_account = &mut ctx.accounts.pool_pda;
     if pool_account.mint_a.key() == ctx.accounts.mint_a.key() {
-        msg!("a minus");
-        //ool_account.total_amount_in_a -= token_amount;
         pool_account.tmp_a = amt_start;
         pool_account.tmp_b = 0;
 
 
     } else {
-       // pool_account.total_amount_in_b -= token_amount;
         pool_account.tmp_b = amt_start;
         pool_account.tmp_a = 0;
 
-        msg!("b minus");
-
-
     }
-
-    msg!("thru");
-    // have to determine which token to withdraw
-
 
 
     

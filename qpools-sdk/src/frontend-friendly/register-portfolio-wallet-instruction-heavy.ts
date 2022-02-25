@@ -3,7 +3,7 @@ import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {
-    findSwapAuthorityKey,
+    findSwapAuthorityKey, normalizedTradeFee,
     StableSwap,
     StableSwapState
 } from "@saberhq/stableswap-sdk";
@@ -172,13 +172,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     /**
      * Send USDC from the User's Wallet, to the Portfolio Account
      */
-    // TODO: I guess this amount can be the same at all steps (?)
     async transferUsdcFromUserToPortfolio(amount: u64): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromUserToPortfolio()");
-        // Assume this already exists. If not, then throw error that user has zero balance
         let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
-
-        // Create this account as well, if it does not exist yet ..
         let pdaUSDCAccount = await this.getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferToPortfolio(
@@ -266,11 +262,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return txs;
     }
 
-    async depositTokensToLiquidityPools(weights: Array<BN>): Promise<TransactionInstruction[]> {
+    async depositTokensToLiquidityPools(): Promise<TransactionInstruction[]> {
         console.log("#createFullPortfolio()");
         let txs = [];
-        for (var i = 0; i < weights.length; i++) {
-            let w = weights[i];
+        for (var i = 0; i < this.poolAddresses.length; i++) {
             let poolAddress = this.poolAddresses[i];
             const stableSwapState = await this.getPoolState(poolAddress);
             const {state} = stableSwapState;
@@ -281,8 +276,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 i,
                 poolAddress,
                 state,
-                stableSwapState,
-                w
+                stableSwapState
             )
             txs.push(tx1);
         }
@@ -394,14 +388,19 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     /**
      * Register the existing liquidity pool with the given portfolio
+     *
+     * There is a strong difference in funtionality between whether the instructions are prepared first,
+     * or whether we send the RPC calls one by one.
+     *
+     * Assume for now that the instructions are prepare all together, and then sent however it may be sent.
+     *
      */
     // : Promise<TransactionInstruction>
     async createSinglePositionInLiquidityPool(
         index: number,
         poolAddress: PublicKey,
         state: StableSwapState,
-        stableSwapState: StableSwap,
-        weight: BN
+        stableSwapState: StableSwap
     ) {
         console.log("#createSinglePositionInLiquidityPool()");
         let tx: Transaction = new Transaction();
@@ -426,19 +425,85 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // TODO: Calculate this stuff from the account modal.
         //  Fuck, the account modal also needs to be registered first. But that's fine
 
+        // TODO: Get these amounts from the struct!
+        let x = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        console.log("x is: ", x);
+
+        // Throw error, if the weights are null!
+        if (!x.weights[0] || !x.weights[1] || !x.weights[2]) {
+            console.log(x);
+            throw Error("Account was not generated yet!" + JSON.stringify(x));
+        }
+
+        // Gotta check if decimals cause any nasty surprises ....
+        // We could also just use float division for now ...
+
+        // Depending on whatever is the currency mint, we can
+        let weight: BN = new BN(x.weights[index]);
+        let weightSum: BN = new BN(x.weights.reduce(
+            (sum: BN, x: BN) => new BN(sum).add(new BN(x)),
+            new BN(0)
+        ));
+        let amount = new BN(x.initialAmountUsdc);
+
+        if (!weight) {
+            console.log(x);
+            console.log(weight);
+            throw Error("Account was not generated yet!" + JSON.stringify(x));
+        }
+
+        console.log("Weight is: ", weight.toString());
+        console.log("Weights are: ", x.weights.map((x) => {return x.toString()}));
+        console.log("Weight sum is: ", weightSum.toString());
+        console.log("Amount a, b and weights are: ", amount_a.toString(), amount_b.toString());
+
         // TODO: Create a loading modal. Loading
-        let amount_a = (await this.connection.getTokenAccountBalance(userAccountA)).value.amount;
-        let amount_b = (await this.connection.getTokenAccountBalance(userAccountB)).value.amount;
+        // TODO: Gotta mix A and B depending on which one has the currency we're interested in!
+        let amount_a = new BN((await this.connection.getTokenAccountBalance(userAccountA)).value.amount);
+        amount_a = amount_a.mul(weight).div(weightSum);
+        let amount_b = new BN((await this.connection.getTokenAccountBalance(userAccountB)).value.amount);
+        amount_b = amount_b.mul(weight).div(weightSum);
+
+        // Maybe we should still do it in a way where we get amount_a and amount_b from online
+        // And then we assign them according to the weights ...
+        // This makes most sense probably, assuming that the instructions are all created _before_ sending them off.
+        // We have to be strict with this!!!!
+
+        // And now we just gotta normalize these by the weights
+
+        // Check which token corresponds to the currency
+        // let amount_a: BN = new BN(0);
+        // let amount_b: BN = new BN(0);
+        // if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {
+        //     // Are the weights already normalized (?)
+        //     // Normalize is on-the-go
+        //     amount_a = amount.mul(weight).div(weightSum);
+        //     amount_b = new BN(0);
+        // } else if (state.tokenB.mint.equals(MOCK.DEV.SABER_USDC)) {
+        //     amount_b = amount.mul(weight).div(weightSum);
+        //     amount_a = new BN(0);
+        // } else {
+        //     console.log("Nonono");
+        //     console.log(state.tokenA.mint.toString());
+        //     console.log(state.tokenB.mint.toString());
+        //     throw Error("None of the mints are relevant!");
+        // }
+        // Perhaps have a separate function (a or b and normalize)
+
+        if (!amount_a || !amount_b) {
+            console.log(amount_a.toString(), amount_b.toString())
+            throw Error("Something went wrong!");
+        }
 
         // amount_b we skip, because we assume that the currency-token is token A
         // This is a bad assumption though!!
         // TODO: These amounts here are a problem for sure (!)
-        let sg = await this.solbondProgram.rpc.createPositionSaber(
+        let ix = await this.solbondProgram.instruction.createPositionSaber(
             new BN(poolBump),
             new BN(bumpPositon),
             new BN(this.portfolioBump),
             new BN(index),
-            new BN(weight),
+            weight,
             new BN(amount_a),
             new BN(amount_b),
             new BN(0),
@@ -468,8 +533,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             }
         )
         console.log("##createSinglePositionInLiquidityPool()");
-        this.connection.confirmTransaction(sg);
-        // return ix;
+        return ix;
     }
 
 

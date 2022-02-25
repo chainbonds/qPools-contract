@@ -624,7 +624,7 @@ export type Solbond = {
       "accounts": [
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1625,7 +1625,7 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

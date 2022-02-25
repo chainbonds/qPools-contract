@@ -13,7 +13,7 @@ use crate::ErrorCode;
 
 )]
 pub struct TransferRedeemedToUser<'info> {
-    #[account(
+    #[account(mut,
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
@@ -110,7 +110,16 @@ pub fn handler(
             ],
 
         ), amount_after_fee as u64)?;
-    
+
+
+    // close portfolio account
+    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
+    let user_starting_lamports = owner_acc_info.lamports();
+    let portfolio_acc_info = ctx.accounts.portfolio_pda.to_account_info();
+    **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(portfolio_acc_info.lamports()).unwrap();
+    **portfolio_acc_info.lamports.borrow_mut() = 0;
+    let mut portfolio_data = portfolio_acc_info.data.borrow_mut();
+    portfolio_data.fill(0);
 
     Ok(())
 }

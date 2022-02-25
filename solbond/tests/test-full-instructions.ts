@@ -86,14 +86,7 @@ describe('qPools!', () => {
     })
 
 
-    it('simulate a redeem to user', async () => {
-
-        let amountTokenA = new u64(3400);
-        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
-
-        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
-
-    })
+    
 
 
     it('simulate a withdraw one', async () => {
@@ -119,6 +112,15 @@ describe('qPools!', () => {
             console.log("🦍 TRANSACTION SIG ", smt.toString())
 
         }
+
+    })
+
+    it('simulate a redeem to user', async () => {
+
+        let amountTokenA = new u64(3400);
+        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
+
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
     })
 

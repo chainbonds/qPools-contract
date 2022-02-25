@@ -1,4 +1,4 @@
-import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, TokenAmount, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
@@ -142,9 +142,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         console.log("#fetchAllPositions()");
         let responses = [];
         for (var i = 0; i < 3; i++) {
-            let poolAddress = this.poolAddresses[i];
-            const stableSwapState = await this.getPoolState(poolAddress);
-            const {state} = stableSwapState;
             let positionContent = await this.fetchSinglePosition(i);
             console.log("Position Content", positionContent);
             responses.push(positionContent);
@@ -159,6 +156,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
             this.solbondProgram.programId
         );
+        console.log("Fetching position PDA ..", positonPDA.toString());
         let response = await this.solbondProgram.account.positionAccount.fetch(positonPDA);
         let positionContent = response as PositionAccount;
         console.log("##fetchSinglePosition()");
@@ -265,20 +263,35 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async depositTokensToLiquidityPools(): Promise<TransactionInstruction[]> {
         console.log("#createFullPortfolio()");
         let txs = [];
+
+        // for each user ATA, track how much of this ATA he still has left ...
+        // Or just assume that we only do USDC right now
+
+        // for (var i = 0; i < this.poolAddresses.length; i++) {
+        // }
+        // Just get the initial USDC amount, much easier for now
+        let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        let initialAmountUsdc: BN = new BN(portfolioAccount.initialAmountUsdc);
+        // For the portfolio's ATA, get the total balance ...
+        // let usdcTokenAccount: PublicKey = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.portfolioPDA);
+        // let usdcTokenAmount: TokenAmount = (await this.connection.getTokenAccountBalance(usdcTokenAccount)).value;
+
         for (var i = 0; i < this.poolAddresses.length; i++) {
             let poolAddress = this.poolAddresses[i];
             const stableSwapState = await this.getPoolState(poolAddress);
             const {state} = stableSwapState;
 
-            // Get weight from the online account, not from here
+            // Get initial amount
 
-            let tx1 = await this.createSinglePositionInLiquidityPool(
+            // Get weight from the online account, not from here
+            let ix1 = await this.createSinglePositionInLiquidityPool(
                 i,
                 poolAddress,
                 state,
-                stableSwapState
+                stableSwapState,
+                initialAmountUsdc
             )
-            txs.push(tx1);
+            txs.push(ix1);
         }
         console.log("##createFullPortfolio()");
         return txs;
@@ -400,7 +413,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         index: number,
         poolAddress: PublicKey,
         state: StableSwapState,
-        stableSwapState: StableSwap
+        stableSwapState: StableSwap,
+        initialAmountUsdc: BN
+        // tokenAmount: TokenAmount
     ) {
         console.log("#createSinglePositionInLiquidityPool()");
         let tx: Transaction = new Transaction();
@@ -444,7 +459,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             (sum: BN, x: BN) => new BN(sum).add(new BN(x)),
             new BN(0)
         ));
-        let amount = new BN(x.initialAmountUsdc);
 
         if (!weight) {
             console.log(x);
@@ -455,14 +469,45 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         console.log("Weight is: ", weight.toString());
         console.log("Weights are: ", x.weights.map((x) => {return x.toString()}));
         console.log("Weight sum is: ", weightSum.toString());
-        console.log("Amount a, b and weights are: ", amount_a.toString(), amount_b.toString());
+
+        // TODO: Do flip between A and B!
 
         // TODO: Create a loading modal. Loading
         // TODO: Gotta mix A and B depending on which one has the currency we're interested in!
         let amount_a = new BN((await this.connection.getTokenAccountBalance(userAccountA)).value.amount);
-        amount_a = amount_a.mul(weight).div(weightSum);
+        console.log("Fetched amount is: ", amount_a.toString());
         let amount_b = new BN((await this.connection.getTokenAccountBalance(userAccountB)).value.amount);
-        amount_b = amount_b.mul(weight).div(weightSum);
+        console.log("Fetched amount is: ", amount_b.toString());
+
+
+        console.log("Amount a, b and weights are: ", amount_a.toString(), amount_b.toString());
+        console.log("initialAmount is: ", initialAmountUsdc.toString());
+
+        // Take the minimum between the getBalance balance, and the initialUsdcBalance
+        // Don't deposit more than there is
+        // TODO: Take care of decimals
+        let maximumAmountIn = initialAmountUsdc.mul(weight).div(weightSum);
+        console.log("Maximum amount in is: ", maximumAmountIn.toString());
+        amount_a = BN.min(maximumAmountIn, amount_a);
+        console.log("AmountA in", amount_a.toString());
+        amount_b = BN.min(maximumAmountIn, amount_b);
+        console.log("Amountb in", amount_b.toString());
+
+        // amount_a = amount_a.mul(weight).div(weightSum);
+        // console.log("Fetched amount is: ", amount_b.toString());
+        // amount_b = amount_b.mul(weight).div(weightSum);
+
+        // Do not charge more than there is here ...
+        // usdcTokenAmount: BN,
+        // tokenAmount: TokenAmount
+
+        // These has to be a mixture of initial_deposit_a and initial_deposit_b!
+
+        // TODO: maybe make sure that the weight we input is not higher than initial_amount_deposit * weight (!!!)
+        // Not a solution. Assuming that the transactions are non-atomic, the issue is that the ratio will modify
+        // how much is paid into each account. As such, the best way would be to save the exact amount per pool,
+        // not it's weight
+
 
         // Maybe we should still do it in a way where we get amount_a and amount_b from online
         // And then we assign them according to the weights ...
@@ -470,26 +515,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // We have to be strict with this!!!!
 
         // And now we just gotta normalize these by the weights
-
-        // Check which token corresponds to the currency
-        // let amount_a: BN = new BN(0);
-        // let amount_b: BN = new BN(0);
-        // if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {
-        //     // Are the weights already normalized (?)
-        //     // Normalize is on-the-go
-        //     amount_a = amount.mul(weight).div(weightSum);
-        //     amount_b = new BN(0);
-        // } else if (state.tokenB.mint.equals(MOCK.DEV.SABER_USDC)) {
-        //     amount_b = amount.mul(weight).div(weightSum);
-        //     amount_a = new BN(0);
-        // } else {
-        //     console.log("Nonono");
-        //     console.log(state.tokenA.mint.toString());
-        //     console.log(state.tokenB.mint.toString());
-        //     throw Error("None of the mints are relevant!");
-        // }
-        // Perhaps have a separate function (a or b and normalize)
-
         if (!amount_a || !amount_b) {
             console.log(amount_a.toString(), amount_b.toString())
             throw Error("Something went wrong!");
@@ -498,7 +523,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // amount_b we skip, because we assume that the currency-token is token A
         // This is a bad assumption though!!
         // TODO: These amounts here are a problem for sure (!)
-        let ix = await this.solbondProgram.instruction.createPositionSaber(
+        let ix = await this.solbondProgram.rpc.createPositionSaber(
             new BN(poolBump),
             new BN(bumpPositon),
             new BN(this.portfolioBump),
@@ -533,7 +558,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             }
         )
         console.log("##createSinglePositionInLiquidityPool()");
-        return ix;
+        // return ix;
     }
 
 

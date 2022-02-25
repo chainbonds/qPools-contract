@@ -1,11 +1,9 @@
-import {Connection, Keypair, PublicKey, Signer, Transaction, TransactionInstruction} from "@solana/web3.js";
-import {BN, Program, Provider, utils, web3} from "@project-serum/anchor";
+import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {
-    calculateVirtualPrice,
     findSwapAuthorityKey,
-    IExchangeInfo,
     StableSwap,
     StableSwapState
 } from "@saberhq/stableswap-sdk";
@@ -40,7 +38,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
     public poolAddresses: Array<PublicKey>;
-    public portfolio_owner: PublicKey;
+    public portfolioOwner: PublicKey;
+    public qPoolsUsdcFees: PublicKey;
 
     public payer: Keypair;
     public owner: WalletI;
@@ -80,6 +79,16 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
         }).finally(() => {});
+
+        // Replace with currency
+        // TODO: Always assume that this address exists. Write a short deploy script that includes this
+        this.getAccountForMintAndPDADontCreate(
+            MOCK.DEV.SABER_USDC,
+            new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs")
+        ).then((x: PublicKey) => {
+            this.qPoolsUsdcFees = x;
+        });
+
         delay(1000);
 
     }
@@ -163,6 +172,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     /**
      * Send USDC from the User's Wallet, to the Portfolio Account
      */
+    // TODO: I guess this amount can be the same at all steps (?)
     async transferUsdcFromUserToPortfolio(amount: u64): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromUserToPortfolio()");
         // Assume this already exists. If not, then throw error that user has zero balance
@@ -221,7 +231,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     // Instructions to create the associated token accounts for the portfolios
     async registerAtaForLiquidityPortfolio(): Promise<TransactionInstruction[]> {
-        console.log("#registerAllLiquidityPools()");
+        console.log("#registerAtaForLiquidityPortfolio()");
         let txs = [];
         for (var i = 0; i < this.poolAddresses.length; i++) {
             let poolAddress = this.poolAddresses[i];
@@ -235,7 +245,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 }
             })
         }
-        console.log("##registerAllLiquidityPools()");
+        console.log("##registerAtaForLiquidityPortfolio()");
         return txs;
     }
 
@@ -264,6 +274,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             let poolAddress = this.poolAddresses[i];
             const stableSwapState = await this.getPoolState(poolAddress);
             const {state} = stableSwapState;
+
+            // Get weight from the online account, not from here
+
             let tx1 = await this.createSinglePositionInLiquidityPool(
                 i,
                 poolAddress,
@@ -410,9 +423,16 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         /*
             Now get the actual instruction set ...
          */
+        // TODO: Calculate this stuff from the account modal.
+        //  Fuck, the account modal also needs to be registered first. But that's fine
+
+        // TODO: Create a loading modal. Loading
         let amount_a = (await this.connection.getTokenAccountBalance(userAccountA)).value.amount;
         let amount_b = (await this.connection.getTokenAccountBalance(userAccountB)).value.amount;
 
+        // amount_b we skip, because we assume that the currency-token is token A
+        // This is a bad assumption though!!
+        // TODO: These amounts here are a problem for sure (!)
         let sg = await this.solbondProgram.rpc.createPositionSaber(
             new BN(poolBump),
             new BN(bumpPositon),
@@ -538,6 +558,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 state.tokenB.mint.toString() + " (MintB) "
             )
         }
+        // TODO: Again, this tokenAccountPool should be retrieved in the first place,
+        //  and should be determined how much USDC it corresponds to, and should be retrieved as
         let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
 
@@ -560,14 +582,13 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     swap:stableSwapState.config.swapAccount,
                     userA: userAccount,
                     reserveA: reserveA,
-                    mintA: state.tokenA.mint,
+                    mintA: mintA,
                     reserveB: reserveB,
                     feesA: feesA,
                     saberSwapProgram: this.stableSwapProgramId,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-
                     // Create liquidity accounts
                 },
                 signers:[this.wallet]
@@ -586,6 +607,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let pdaUSDCAccount = await this.getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         // TODO: We assume this account exists ... gotta enforce it I guess lol
+        // TODO: Again, we assume that this account exists
         let totalPDA_USDCAmount = (await this.connection.getTokenAccountBalance(pdaUSDCAccount)).value.amount;
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferRedeemedToUser(
             new BN(this.portfolioBump),
@@ -601,8 +623,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    // feesQpoolsA: state.
-                    // feesQpoolsB: state.
+                    feesQpoolsA: this.qPoolsUsdcFees
                 },
                 signers: [this.payer]
             }

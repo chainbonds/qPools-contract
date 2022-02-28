@@ -270,8 +270,73 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // for (var i = 0; i < this.poolAddresses.length; i++) {
         // }
         // Just get the initial USDC amount, much easier for now
-        let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        let _buffer = (await this.connection.getAccountInfo(this.portfolioPDA)).data;
+        console.log("Unparsed buffer 1 is: ", _buffer.toString());
+        console.log("Unparsed buffer 2 is: ", _buffer);
+        console.log("Unparsed buffer 3 is: ", _buffer);
+
+
+        console.log("This portfolio PDA is ", this.portfolioPDA.toString());
+        let portfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA));
+        // console.log("Portfolio account is: ", _portfolioAccount);
+        // let portfolioAccount = _portfolioAccount as PortfolioAccount;
+        console.log("Parsed portfolio account is: ", portfolioAccount);
+
+        // let portfolioAccount: PortfolioAccount = (await this.connection.getAccountInfo(this.portfolioPDA)).data as PortfolioAccount;
+        console.log("Portfolio account is: ", portfolioAccount);
+
+
+        // // Find the slice, that is at the location where it should be ...
+        // // 8 bits ; skip the first 1 bytes, these are overhead.
+        // // 3 * 64 bits ; skip the next 3 * 8 bytes, these are the weights
+        // // 32 bits ; skip the next 4 bytes, these are the pubkey
+        // // 8 bits ; skip the next 1 bytes, this encodes the bump.
+        // // 64 bits ; the next 8 bytes encode the initial USDC Amount
+        // let accountInfoBuffer = await this.connection.getAccountInfo(this.portfolioPDA);
+        // console.log("Account buffer is: ", accountInfoBuffer.data);
+        // let data: Buffer = accountInfoBuffer.data;
+        // // console.log("Total buffer is of size: ", unparsedData.length);
+        // // let slice = unparsedData.slice(
+        // //     (3 * 8 + 32 + 1),
+        // //     ((3 * 8 + 32 + 1) + 8)
+        // // );
+        // // console.log("Slice is: ", slice);
+        //
+        // // let w0: bigint = data.readBigUInt64LE(0 * 8);
+        // let w1: bigint = data.readBigUInt64LE(1 * 8);
+        // let w2: bigint = data.readBigUInt64LE(2 * 8);
+        // let w3: bigint = data.readBigUInt64LE(3 * 8);
+        //
+        // // Skip the next 32 bytes
+        // let bump: number = data.readUInt8((4 * 8) + 32);
+        // // Bump is also successfully parsed!!
+        //
+        // console.log("Cross comparing bump..", this.portfolioBump);
+        //
+        // // let bump = data.readUInt8((2*8 + (2*8) + 8) + 32);
+        // let usdc = data.readBigUInt64LE((4 * 8) + 32 + 1);
+        // let usdc2 = data.readBigUInt64LE((4 * 8) + 32 + 2);
+        // let usdc3 = data.readBigUInt64LE((4 * 8) + 32 + 3);
+        // let usdc4 = data.readBigUInt64LE((4 * 8) + 32 + 4);
+        // let usdc5 = data.readBigUInt64LE((4 * 8) + 32 + 5);
+        // let usdc6 = data.readBigUInt64LE((4 * 8) + 32 + 6);
+        // let usdc7 = data.readBigUInt64LE((4 * 8) + 32 + 7);
+        // let usdc8 = data.readBigUInt64LE((4 * 8) + 32 + 8);
+        // let usdc9 = data.readBigUInt64LE((4 * 8) + 32 + 9);
+        // // let owner = data.slice(2*8 + (2*8) + 8, (2*8 + (2*8) + 8) + 32);
+        // // owner
+        //
+        // console.log("All items are: ", w1.toString(), w2.toString(), w3.toString(), bump.toString());
+        // console.log("All additional items are: ", bump.toString());
+        // console.log("initialUsdc is: ", usdc.toString(), usdc2.toString());
+        // console.log("next couple U64 are: ", usdc3.toString(), usdc4.toString(), usdc5.toString(), usdc6.toString(), usdc7.toString(), usdc8.toString(), usdc9.toString());
+        //
+        //
+        // // = data.readBigUInt64LE(0);
+        // let initialAmountUsdc = new BN(0.);
+
         let initialAmountUsdc: BN = new BN(portfolioAccount.initialAmountUsdc);
+        console.log("initialAmountUsdc is: ", initialAmountUsdc.toString());
         // For the portfolio's ATA, get the total balance ...
         // let usdcTokenAccount: PublicKey = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.portfolioPDA);
         // let usdcTokenAmount: TokenAmount = (await this.connection.getTokenAccountBalance(usdcTokenAccount)).value;

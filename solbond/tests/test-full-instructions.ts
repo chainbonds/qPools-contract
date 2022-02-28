@@ -63,13 +63,15 @@ describe('qPools!', () => {
         let amountTokenA = new u64(340000);
         let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
         let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, amountTokenA);
+        let sigs_read = await portfolio.read_from_portfolio(provider.wallet, amountTokenA);
 
         console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
         console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+        console.log("🦍 TRANSACTION SIG read ", sigs_read.toString())
 
 
     })
-
+    /*
     it('simulate a portfolio purchase', async () => {
 
         // first, initialize a portfolio
@@ -85,10 +87,17 @@ describe('qPools!', () => {
 
     })
 
+    it('read portfolio', async () => {
+        let amountTokenA = new u64(1200);
+        let sigs_rest = await portfolio.read_from_portfolio(provider.wallet, amountTokenA);
+
+        console.log("ON the count TRANSACTION SIG ", sigs_rest.toString())
+    })
+
 
     
-
-
+    */
+    /*
     it('simulate a withdraw one', async () => {
 
         let amount_token = new u64(300);
@@ -124,4 +133,31 @@ describe('qPools!', () => {
 
     })
 
+
+    it('2nd try, same things, simulate sending to portfolio owned account', async () => {
+        let amountTokenA = new u64(340000);
+        let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
+        let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, amountTokenA);
+
+        console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
+        console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
+
+
+    })
+
+    it('2nd try, same things, simulate a portfolio purchase', async () => {
+
+        // first, initialize a portfolio
+        let amountTokenA = new u64(1200);
+        const amounts = [amountTokenA, amountTokenA, amountTokenA]
+        let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
+        let sigs_rest = await portfolio.create_full_portfolio(weights, amounts, genericPayer);
+
+        console.log("🦧 REGISTER PORTFOLIO SIG ", sig_reg.toString())
+        for (let smt of sigs_rest) {
+            console.log("🦍 TRANSACTION SIG ", smt.toString())
+        }
+
+    })
+    */
 })

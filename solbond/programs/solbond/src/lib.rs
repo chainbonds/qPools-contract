@@ -120,6 +120,12 @@ pub mod solbond {
         bump: u8, amount: u64) -> ProgramResult {
             instructions::transfer_to_portfolio::handler(ctx,bump,amount)
         }
+
+    pub fn read_portfolio(
+        ctx: Context<TransferToPortfolio>,
+        bump: u8, amount: u64) -> ProgramResult {
+            instructions::transfer_to_portfolio::read_portfolio_account(ctx,bump,amount)
+    }
     
     pub fn transfer_redeemed_to_user(
         ctx: Context<TransferRedeemedToUser>,

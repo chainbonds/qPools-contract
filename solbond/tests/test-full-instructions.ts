@@ -71,7 +71,7 @@ describe('qPools!', () => {
 
 
     })
-    /*
+    
     it('simulate a portfolio purchase', async () => {
 
         // first, initialize a portfolio
@@ -96,8 +96,8 @@ describe('qPools!', () => {
 
 
     
-    */
-    /*
+    
+    
     it('simulate a withdraw one', async () => {
 
         let amount_token = new u64(300);
@@ -159,5 +159,5 @@ describe('qPools!', () => {
         }
 
     })
-    */
+    
 })

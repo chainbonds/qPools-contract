@@ -129,7 +129,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -403,7 +403,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -513,7 +513,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1185,7 +1185,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1459,7 +1459,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1569,7 +1569,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

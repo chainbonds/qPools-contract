@@ -62,6 +62,7 @@ pub struct SaberLiquidityInstruction<'info> {
 
     // also doesn't have to be mut, tests pass
     #[account(
+        mut, 
         seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]

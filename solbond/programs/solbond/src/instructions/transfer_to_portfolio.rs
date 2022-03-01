@@ -56,6 +56,7 @@ pub fn handler(
     let portfolio = &mut ctx.accounts.portfolio_pda;
     portfolio.initial_amount_USDC = amount as u64;
 
-    
+    msg!("amount is {}", portfolio.initial_amount_USDC);
+
     Ok(())
 }

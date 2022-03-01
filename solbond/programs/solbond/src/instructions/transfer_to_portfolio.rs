@@ -58,8 +58,6 @@ pub fn handler(
     portfolio.initial_amount_USDC = amount as u64;
     msg!("amount written to USDC init {}", portfolio.initial_amount_USDC);
 
-    msg!("amount is {}", portfolio.initial_amount_USDC);
-
     Ok(())
 }
 

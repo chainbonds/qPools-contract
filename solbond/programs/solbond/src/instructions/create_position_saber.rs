@@ -41,6 +41,7 @@ pub struct SaberLiquidityInstruction<'info> {
     pub position_pda: Box<Account<'info, PositionAccount>>,
 
     #[account(
+        mut, 
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
@@ -62,6 +63,7 @@ pub struct SaberLiquidityInstruction<'info> {
 
     // also doesn't have to be mut, tests pass
     #[account(
+        mut, 
         seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]

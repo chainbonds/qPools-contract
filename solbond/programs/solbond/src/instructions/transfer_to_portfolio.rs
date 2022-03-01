@@ -13,6 +13,7 @@ pub struct TransferToPortfolio<'info> {
     pub owner: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
 
     )]
@@ -55,8 +56,16 @@ pub fn handler(
 
     let portfolio = &mut ctx.accounts.portfolio_pda;
     portfolio.initial_amount_USDC = amount as u64;
+    msg!("amount written to USDC init {}", portfolio.initial_amount_USDC);
 
     msg!("amount is {}", portfolio.initial_amount_USDC);
 
     Ok(())
+}
+
+
+pub fn read_portfolio_account(ctx: Context<TransferToPortfolio>, _bump: u8, amount: u64) -> ProgramResult {
+    msg!("amount read {}", ctx.accounts.portfolio_pda.initial_amount_USDC);
+    Ok(())
+
 }

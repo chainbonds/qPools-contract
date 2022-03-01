@@ -20,7 +20,6 @@ import * as registry from "./registry/registry-helper";
 
 export {
     QPoolsUser,
-    MOCK,
     BondPoolAccount,
     airdropAdmin,
     getSolbondProgram,
@@ -37,5 +36,6 @@ export {
     DisplayPortfolios,
     PortfolioFrontendFriendlyChainedInstructions,
     SolbondIdl,
-    registry
+    registry,
+    MOCK
 }

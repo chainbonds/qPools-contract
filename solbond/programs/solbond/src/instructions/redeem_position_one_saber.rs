@@ -68,6 +68,7 @@ pub struct RedeemOneSaberPosition<'info> {
 
 
     #[account(
+        mut,
         seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
         bump = _bump_pool
     )]

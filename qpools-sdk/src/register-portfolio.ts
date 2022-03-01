@@ -688,6 +688,48 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
+    async read_from_portfolio(owner: IWallet, amount: u64) {
+        if (!this.userOwnedUSDCAccount) {
+            console.log("Creating a userOwnedUSDCAccount");
+            this.userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
+                this.connection,
+                this.USDC_mint,
+                this.wallet.publicKey,
+                owner,
+            );
+            console.log("Done!");
+        }
+
+        let pdaUSDCAccount = await this.getAccountForMintAndPDA(this.USDC_mint, this.portfolioPDA);
+        console.log("HHH")
+        console.log("pda ", pdaUSDCAccount.toString())
+        // @ts-expect-error
+        let signer = this.provider.wallet.payer as keypair
+        let finaltx = await this.solbondProgram.rpc.readPortfolio(
+            new BN(this.portfolioBump),
+            amount,
+            {
+                accounts: {
+                    owner: owner.publicKey,
+                    portfolioPda: this.portfolioPDA,
+                    userOwnedTokenAccount: this.userOwnedUSDCAccount,
+                    pdaOwnedTokenAccount: pdaUSDCAccount,
+                    tokenMint: this.USDC_mint,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
+                },
+                signers:[signer]
+            }
+        )
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("🍄🌝🌖 ", finaltx);
+        return finaltx;
+
+    }
+
     async transfer_to_user(owner: IWallet, amount: u64) {
         this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs"));
 

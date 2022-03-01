@@ -129,7 +129,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -403,7 +403,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -513,7 +513,7 @@ export type Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -574,7 +574,62 @@ export type Solbond = {
         },
         {
           "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "readPortfolio",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1130,7 +1185,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1404,7 +1459,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1514,7 +1569,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1575,7 +1630,62 @@ export const IDL: Solbond = {
         },
         {
           "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "readPortfolio",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
           "isSigner": false
         },
         {

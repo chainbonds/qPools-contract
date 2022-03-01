@@ -232,7 +232,8 @@ export class Portfolio extends SaberInteractTool {
                 signers: [owner]
             }
         )
-        transactions.add(tx);
+        transactions.add(tx);       
+        
 
         return transactions;
     }
@@ -467,6 +468,25 @@ export class Portfolio extends SaberInteractTool {
 
         await this.provider.connection.confirmTransaction(finaltx);
         console.log("created a single LP position with signature: ", finaltx);
+
+        let amount_max = BN.max(amount_b,amount_a);
+        let txw = await this.solbondProgram.rpc.validatePosition(
+            new BN(this.portfolioBump),
+            new BN(index),
+            new BN(amount_max),
+            {
+                accounts: {
+                    owner: owner.publicKey,
+                    portfolioPda: this.portfolioPDA,
+                },
+                signers: [owner]
+            }
+        )
+        await this.provider.connection.confirmTransaction(txw);
+        console.log("VALIDATE☃️⛄️: ", txw);
+
+
+        
 
         return [finaltx, create_liq_pool_tx];
     }

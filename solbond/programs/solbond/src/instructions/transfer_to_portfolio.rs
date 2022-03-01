@@ -56,6 +56,7 @@ pub fn handler(
 
     let portfolio = &mut ctx.accounts.portfolio_pda;
     portfolio.initial_amount_USDC = amount as u64;
+    portfolio.remaining_amount_USDC = amount as u64;
     msg!("amount written to USDC init {}", portfolio.initial_amount_USDC);
 
     

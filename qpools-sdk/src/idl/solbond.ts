@@ -104,7 +104,7 @@ export type Solbond = {
         },
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -214,6 +214,35 @@ export type Solbond = {
         },
         {
           "name": "minMintAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "validatePosition",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -746,6 +775,15 @@ export type Solbond = {
             }
           },
           {
+            "name": "amountsIn",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
             "name": "owner",
             "type": "publicKey"
           },
@@ -755,6 +793,10 @@ export type Solbond = {
           },
           {
             "name": "initialAmountUsdc",
+            "type": "u64"
+          },
+          {
+            "name": "remainingAmountUsdc",
             "type": "u64"
           }
         ]
@@ -1160,7 +1202,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1270,6 +1312,35 @@ export const IDL: Solbond = {
         },
         {
           "name": "minMintAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "validatePosition",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -1802,6 +1873,15 @@ export const IDL: Solbond = {
             }
           },
           {
+            "name": "amountsIn",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          },
+          {
             "name": "owner",
             "type": "publicKey"
           },
@@ -1811,6 +1891,10 @@ export const IDL: Solbond = {
           },
           {
             "name": "initialAmountUsdc",
+            "type": "u64"
+          },
+          {
+            "name": "remainingAmountUsdc",
             "type": "u64"
           }
         ]

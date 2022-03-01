@@ -71,6 +71,12 @@ pub mod solbond {
             min_mint_amount,)
     }
 
+    pub fn validate_position(
+        ctx: Context<ValidateContext>, _bump_portfolio:u8, index:u32, amount:u64,
+    ) -> ProgramResult {
+        instructions::create_position_saber::validate_position(ctx, _bump_portfolio, index, amount)
+    }
+
     pub fn save_portfolio(
         ctx: Context<SavePortfolio>,
         bump: u8,

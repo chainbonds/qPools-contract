@@ -55,10 +55,15 @@ pub fn handler(
     //portfolio_account.user_lp_token_account_three = ctx.accounts.user_lp_token_account_three.clone().key();
     
     portfolio_account.owner = ctx.accounts.owner.clone().key();
-    
     portfolio_account.bump = _bump;
     portfolio_account.weights = weights;
+
+    let amounts_init = [0,0,0];
+    portfolio_account.amounts_in = amounts_init;
+
     portfolio_account.initial_amount_USDC = 0;
+    portfolio_account.remaining_amount_USDC = 0;
+
 
     Ok(())
 }

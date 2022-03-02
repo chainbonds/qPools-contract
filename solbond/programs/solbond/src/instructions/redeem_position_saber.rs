@@ -225,13 +225,15 @@ pub fn update_balance(ctx: Context<UpdatePoolStruct>,
         let amt_after_b = ctx.accounts.user_b.amount;
 
 
-        let diff_a = amt_after_a.checked_sub(pool_account.tmp_a).ok_or_else(||{ErrorCode::CustomMathError6})?;
-        let diff_b = amt_after_b.checked_sub(pool_account.tmp_b).ok_or_else(||{ErrorCode::CustomMathError6})?;
+        //let diff_a = amt_after_a.checked_sub(pool_account.tmp_a).ok_or_else(||{ErrorCode::CustomMathError1})?;
+        //let diff_b = amt_after_b.checked_sub(pool_account.tmp_b).ok_or_else(||{ErrorCode::CustomMathError2})?;
+        let diff_a = amt_after_a - pool_account.tmp_a;
+        let diff_b = amt_after_b - pool_account.tmp_b;
         let pool_account = &mut ctx.accounts.pool_pda;
 
         if pool_account.total_amount_in_a > 0 {
             if diff_a <= pool_account.total_amount_in_a {
-                pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_sub(diff_a).ok_or_else(||{ErrorCode::CustomMathError6})?;
+                pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_sub(diff_a).ok_or_else(||{ErrorCode::CustomMathError3})?;
 
             } else {
                 pool_account.total_amount_in_a = 0
@@ -240,7 +242,7 @@ pub fn update_balance(ctx: Context<UpdatePoolStruct>,
 
         if pool_account.total_amount_in_b > 0 {
             if diff_b <= pool_account.total_amount_in_b {
-                pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_sub(diff_b).ok_or_else(||{ErrorCode::CustomMathError6})?;
+                pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_sub(diff_b).ok_or_else(||{ErrorCode::CustomMathError4})?;
 
             } else {
                 pool_account.total_amount_in_b = 0

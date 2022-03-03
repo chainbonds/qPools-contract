@@ -737,15 +737,6 @@ export type Solbond = {
         "kind": "struct",
         "fields": [
           {
-            "name": "weights",
-            "type": {
-              "array": [
-                "u64",
-                3
-              ]
-            }
-          },
-          {
             "name": "owner",
             "type": "publicKey"
           },
@@ -766,36 +757,24 @@ export type Solbond = {
         "kind": "struct",
         "fields": [
           {
-            "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintA",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintB",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintLp",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerTokenAccountA",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerTokenAccountB",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerTokenAccountLp",
-            "type": "publicKey"
-          },
-          {
             "name": "poolPda",
             "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialTokenAmount",
+            "type": "u64"
           },
           {
             "name": "poolAddress",
@@ -1793,15 +1772,6 @@ export const IDL: Solbond = {
         "kind": "struct",
         "fields": [
           {
-            "name": "weights",
-            "type": {
-              "array": [
-                "u64",
-                3
-              ]
-            }
-          },
-          {
             "name": "owner",
             "type": "publicKey"
           },
@@ -1822,36 +1792,24 @@ export const IDL: Solbond = {
         "kind": "struct",
         "fields": [
           {
-            "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintA",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintB",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintLp",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerTokenAccountA",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerTokenAccountB",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerTokenAccountLp",
-            "type": "publicKey"
-          },
-          {
             "name": "poolPda",
             "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialTokenAmount",
+            "type": "u64"
           },
           {
             "name": "poolAddress",

@@ -177,16 +177,20 @@ pub fn handler(
 
     let position_account= &mut ctx.accounts.position_pda;
 
-    position_account.owner = ctx.accounts.owner.key();
-    position_account.mint_a = pool_account.mint_a.clone().key();
-    position_account.mint_b = pool_account.mint_b.clone().key();
-    position_account.mint_lp = pool_account.mint_lp.clone().key();
-    position_account.owner_token_account_a = ctx.accounts.qpools_a.key();
-    position_account.owner_token_account_b = ctx.accounts.qpools_b.key();
-    position_account.owner_token_account_lp = ctx.accounts.output_lp.key();
-    position_account.pool_pda = pool_account.key();
+    // position_account.owner = ctx.accounts.owner.key();
+    // position_account.mint_a = pool_account.mint_a.clone().key();
+    // position_account.mint_b = pool_account.mint_b.clone().key();
+    // position_account.mint_lp = pool_account.mint_lp.clone().key();
+    // position_account.owner_token_account_a = ctx.accounts.qpools_a.key();
+    // position_account.owner_token_account_b = ctx.accounts.qpools_b.key();
+    // position_account.owner_token_account_lp = ctx.accounts.output_lp.key();
+    // position_account.pool_pda = pool_account.key();
     position_account.pool_address = ctx.accounts.pool_address.key();
     position_account.bump = _bump_position;
+    position_account.index = _index;
+    position_account.weight = _weight;
+    position_account.initial_token_amount = std::cmp::max(token_a_amount, token_b_amount);
+    position_account.is_fulfilled = true;
 
     let clock = Clock::get().unwrap();
     position_account.timestamp = clock.unix_timestamp;

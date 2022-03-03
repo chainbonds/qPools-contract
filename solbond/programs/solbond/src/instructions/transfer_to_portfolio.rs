@@ -9,8 +9,8 @@ use crate::utils::seeds;
 #[instruction(_bump:u8, amount: u64)]
 pub struct TransferToPortfolio<'info> {
 
-    #[account(mut)]
-    pub owner: Signer<'info>,
+    //#[account(mut)]
+    pub owner: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -51,8 +51,25 @@ pub fn handler(
         authority: ctx.accounts.owner.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    token::transfer(cpi_ctx, amount as u64)?;
+    /*let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts,
+        &[
+                [
+                    ctx.accounts.owner.key().as_ref(), 
+                    seeds::PORTFOLIO_SEED,
+                    &[_bump]
+                ].as_ref()
+            ],
+    ); */
+    token::transfer(
+        CpiContext::new_with_signer(cpi_program, cpi_accounts,
+            &[
+                    [
+                        ctx.accounts.owner.key().as_ref(), 
+                        seeds::PORTFOLIO_SEED,
+                        &[_bump]
+                    ].as_ref()
+                ],
+            ), amount as u64)?;
 
     let portfolio = &mut ctx.accounts.portfolio_pda;
     portfolio.initial_amount_USDC = amount as u64;

@@ -678,7 +678,7 @@ export class Portfolio extends SaberInteractTool {
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
 
                 },
-                signers:[signer]
+                //signers:[signer]
             }
         )
 

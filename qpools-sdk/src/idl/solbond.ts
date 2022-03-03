@@ -569,8 +569,8 @@ export type Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "portfolioPda",
@@ -624,8 +624,8 @@ export type Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "portfolioPda",
@@ -1604,8 +1604,8 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "portfolioPda",
@@ -1659,8 +1659,8 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "portfolioPda",

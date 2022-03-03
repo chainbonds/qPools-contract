@@ -33,7 +33,7 @@ pub struct SaberLiquidityInstruction<'info> {
         init_if_needed,
         payer = owner,
         space = 8 + PositionAccount::LEN,
-        seeds = [owner.key().as_ref(),
+        seeds = [portfolio_pda.key().as_ref(),
         format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
         ], 
          bump = _bump_position
@@ -46,8 +46,8 @@ pub struct SaberLiquidityInstruction<'info> {
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
-    #[account(mut)]
-    pub owner: Signer<'info>,
+    //#[account(mut)]
+    pub owner: AccountInfo<'info>,
 
   
     /// The output account for LP tokens.
@@ -119,10 +119,9 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
-    let portfolio = &mut ctx.accounts.portfolio_pda;
-    assert!(portfolio.weights[_index as usize] == _weight, "input weight does not match portfolio weight!");
-    msg!("portfolio weight checks out!");
-
+    //let portfolio = &mut ctx.accounts.portfolio_pda;
+    //assert!(portfolio.weights[_index as usize] == _weight, "input weight does not match portfolio weight!");
+    //msg!("portfolio weight checks out!");
 
 
     let user_context: SwapUserContext = SwapUserContext {

@@ -86,7 +86,7 @@ describe('qPools!', () => {
         }
 
     })
-
+    /*
     it('read portfolio', async () => {
         let amountTokenA = new u64(1200);
         let sigs_rest = await portfolio.read_from_portfolio(provider.wallet, amountTokenA);
@@ -159,5 +159,5 @@ describe('qPools!', () => {
         }
 
     })
-    
+    */
 })

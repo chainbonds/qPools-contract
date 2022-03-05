@@ -7,7 +7,6 @@ pub mod redeem_position_saber;
 pub mod transfer_redeemed_to_user;
 pub mod transfer_to_portfolio;
 pub mod redeem_position_one_saber;
-pub mod redeem_portfolio;
 
 pub use healthcheck::*;
 pub use initialize_lp_pool::*;
@@ -17,4 +16,3 @@ pub use redeem_position_saber::*;
 pub use transfer_redeemed_to_user::*;
 pub use transfer_to_portfolio::*;
 pub use redeem_position_one_saber::*;
-pub use redeem_portfolio::*;

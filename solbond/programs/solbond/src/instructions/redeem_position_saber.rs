@@ -1,67 +1,19 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount, Mint};
-use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
+use crate::state::{TwoWayPoolAccount, PositionAccountSaber, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
 
-#[derive(Accounts)]
-#[instruction(
-    _bump_pool: u8, 
-    _bump_portfolio: u8,
-)]
-pub struct UpdatePoolStruct<'info> {
 
-    #[account(mut)]
-    pub portfolio_owner: Signer<'info>,
-
-    #[account(
-        seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
-    )]
-    pub portfolio_pda: Account<'info, PortfolioAccount>,
-
-
-
-    #[account(
-        mut,
-        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
-        bump = _bump_pool
-    )]
-    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
-
-    #[account(mut)]
-    pub pool_mint: Account<'info, Mint>,
-
-    #[account(
-        mut,
-        constraint = &user_a.owner == &portfolio_pda.key(),
-    )]
-    pub user_a: Box<Account<'info, TokenAccount>>,
-
-
-    #[account(
-        mut,
-        constraint = &user_b.owner == &portfolio_pda.key(),
-    )]
-    pub user_b: Box<Account<'info, TokenAccount>>,
-
-    
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
-
-}
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
     _bump_pool: u8, 
-    _index: u32,
-    min_mint_amount: u64,
-    token_a_amount: u64,
-    token_b_amount: u64
+    _index: u32
 )]
 pub struct RedeemSaberPosition<'info> {
     #[account(
@@ -69,26 +21,20 @@ pub struct RedeemSaberPosition<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut)]
-    pub portfolio_owner: Signer<'info>,
+    //#[account(mut)]
+    pub portfolio_owner: AccountInfo<'info>,
 
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
-        seeds = [portfolio_owner.key().as_ref(),
-        format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
+        seeds = [portfolio_pda.key().as_ref(),
+         &_index.to_le_bytes(),seeds::USER_POSITION_STRING.as_bytes(),
         ], 
          bump = _bump_position
     )]
-    pub position_pda: Box<Account<'info, PositionAccount>>,
+    pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     pub swap: AccountInfo<'info>,
-
-    #[account(
-        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
-        bump = _bump_pool
-    )]
-    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
 
     #[account(
         mut,
@@ -137,17 +83,12 @@ pub fn handler(
     _bump_portfolio: u8,
     _bump_position: u8,
     _bump_pool: u8, 
-    _index: u32,
-    min_mint_amount: u64,
-    token_a_amount: u64,
-    token_b_amount: u64
+    _index: u32
 ) -> ProgramResult {
     
     msg!("withdraw single saber position");
 
-    let amt_start_a = ctx.accounts.user_a.amount;
-    let amt_start_b = ctx.accounts.user_b.amount;
-
+  
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),
@@ -183,6 +124,7 @@ pub fn handler(
        output_b: output_b,
     };
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
+    let position = &mut ctx.accounts.position_pda;
 
 
     stable_swap_anchor::withdraw(
@@ -197,57 +139,11 @@ pub fn handler(
                 ].as_ref()
             ]
         ),
-        min_mint_amount,
-        token_a_amount,
-        token_b_amount,
+        position.min_mint_amount,
+        position.minimum_token_a_amount,
+        position.minimum_token_b_amount,
         
     )?;
     
-
-    let pool_account = &mut ctx.accounts.pool_pda;
-    pool_account.tmp_a = amt_start_a;
-    pool_account.tmp_b = amt_start_b;
- 
-    
-
     Ok(())
-}
-
-pub fn update_balance(ctx: Context<UpdatePoolStruct>,
-    _bump_pool: u8, 
-    _bump_portfolio: u8,
-    ) -> ProgramResult {
-        msg!("update balances");
-        let pool_account = &mut ctx.accounts.pool_pda;
-
-        
-        let amt_after_a = ctx.accounts.user_a.amount;
-        let amt_after_b = ctx.accounts.user_b.amount;
-
-
-        //let diff_a = amt_after_a.checked_sub(pool_account.tmp_a).ok_or_else(||{ErrorCode::CustomMathError1})?;
-        //let diff_b = amt_after_b.checked_sub(pool_account.tmp_b).ok_or_else(||{ErrorCode::CustomMathError2})?;
-        let diff_a = amt_after_a - pool_account.tmp_a;
-        let diff_b = amt_after_b - pool_account.tmp_b;
-        let pool_account = &mut ctx.accounts.pool_pda;
-
-        if pool_account.total_amount_in_a > 0 {
-            if diff_a <= pool_account.total_amount_in_a {
-                pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_sub(diff_a).ok_or_else(||{ErrorCode::CustomMathError3})?;
-
-            } else {
-                pool_account.total_amount_in_a = 0
-            }
-        }
-
-        if pool_account.total_amount_in_b > 0 {
-            if diff_b <= pool_account.total_amount_in_b {
-                pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_sub(diff_b).ok_or_else(||{ErrorCode::CustomMathError4})?;
-
-            } else {
-                pool_account.total_amount_in_b = 0
-            }
-        }
-        // pool_account.total_amount_in_b -= diff_b;
-        Ok(())
 }

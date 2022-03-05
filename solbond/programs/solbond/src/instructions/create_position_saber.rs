@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
+use crate::state::{PositionAccountSaber, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
@@ -18,27 +18,20 @@ use crate::ErrorCode;
 #[derive(Accounts)]
 // #[instruction(amount)]
 #[instruction(
-    _bump_pool: u8,
     _bump_position: u8,
     _bump_portfolio: u8,
     _index: u32,
-    _weight: u64,
-    token_a_amount: u64,
-    token_b_amount: u64,
-    min_mint_amount: u64,
 )]
 pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
-        init_if_needed,
-        payer = owner,
-        space = 8 + PositionAccount::LEN,
+        mut,
         seeds = [portfolio_pda.key().as_ref(),
-        format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
+         &_index.to_le_bytes(),seeds::USER_POSITION_STRING.as_bytes(),
         ], 
          bump = _bump_position
     )]
-    pub position_pda: Box<Account<'info, PositionAccount>>,
+    pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     #[account(
         mut, 
@@ -61,13 +54,6 @@ pub struct SaberLiquidityInstruction<'info> {
     // swap authority doesn't have to be mut, tests pass
     pub swap_authority: AccountInfo<'info>,
 
-    // also doesn't have to be mut, tests pass
-    #[account(
-        mut, 
-        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
-        bump = _bump_pool
-    )]
-    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
     /// The swap.
     //#[account(mut)]
     pub swap: AccountInfo<'info>,
@@ -94,9 +80,6 @@ pub struct SaberLiquidityInstruction<'info> {
         constraint = &qpools_b.owner == &portfolio_pda.key(),
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
-
-    pub pool_address: AccountInfo<'info>,
-
     
     pub saber_swap_program: Program<'info, StableSwap>,
     
@@ -108,20 +91,25 @@ pub struct SaberLiquidityInstruction<'info> {
 
 pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
-    _bump_pool: u8,
     _bump_position: u8,
     _bump_portfolio: u8,
     _index: u32,
-    _weight: u64,
-    token_a_amount: u64,
-    token_b_amount: u64,
-    min_mint_amount: u64,
 ) -> ProgramResult {
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
-    //let portfolio = &mut ctx.accounts.portfolio_pda;
-    //assert!(portfolio.weights[_index as usize] == _weight, "input weight does not match portfolio weight!");
-    //msg!("portfolio weight checks out!");
+
+    assert!(
+        ctx.accounts.position_pda.index <= ctx.accounts.portfolio_pda.num_positions && !ctx.accounts.portfolio_pda.fully_created,
+        "position already fully created"
+    );
+    assert!(
+        ctx.accounts.portfolio_pda.key() == ctx.accounts.position_pda.portfolio_pda,
+        "The provided portfolio_pda doesn't match the approved!"
+    );
+    assert!(
+        ctx.accounts.pool_mint.key() == ctx.accounts.position_pda.pool_address,
+        "The mint address provided in the context doesn't match the approved mint!"
+    );
 
 
     let user_context: SwapUserContext = SwapUserContext {
@@ -150,6 +138,7 @@ pub fn handler(
     };
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
 
+    let approved_position_details = &mut ctx.accounts.position_pda;
 
     stable_swap_anchor::deposit(
         CpiContext::new_with_signer(
@@ -163,37 +152,20 @@ pub fn handler(
                 ].as_ref()
             ]
         ),
-        token_a_amount,
-        token_b_amount,
-        min_mint_amount,
+        approved_position_details.max_initial_token_a_amount,
+        approved_position_details.max_initial_token_b_amount,
+        approved_position_details.min_mint_amount,
     )?;
 
-    let pool_account = &mut ctx.accounts.pool_pda;
-
-    pool_account.total_amount_in_a = pool_account.total_amount_in_a.checked_add(token_a_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
-
-    pool_account.total_amount_in_b = pool_account.total_amount_in_b.checked_add(token_b_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
-
-
-    let position_account= &mut ctx.accounts.position_pda;
-
-    // position_account.owner = ctx.accounts.owner.key();
-    // position_account.mint_a = pool_account.mint_a.clone().key();
-    // position_account.mint_b = pool_account.mint_b.clone().key();
-    // position_account.mint_lp = pool_account.mint_lp.clone().key();
-    // position_account.owner_token_account_a = ctx.accounts.qpools_a.key();
-    // position_account.owner_token_account_b = ctx.accounts.qpools_b.key();
-    // position_account.owner_token_account_lp = ctx.accounts.output_lp.key();
-    // position_account.pool_pda = pool_account.key();
-    position_account.pool_address = ctx.accounts.pool_address.key();
-    position_account.bump = _bump_position;
-    position_account.index = _index;
-    position_account.weight = _weight;
-    position_account.initial_token_amount = std::cmp::max(token_a_amount, token_b_amount);
-    position_account.is_fulfilled = true;
-
+    approved_position_details.is_fulfilled = true;
+    
     let clock = Clock::get().unwrap();
-    position_account.timestamp = clock.unix_timestamp;
+    approved_position_details.timestamp = clock.unix_timestamp;
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    if approved_position_details.index == portfolio.num_positions {
+        portfolio.fully_created = true;
+        portfolio.fulfilled_timestamp = clock.unix_timestamp;
+    }
 
     Ok(())
 }

@@ -6,11 +6,11 @@ use crate::utils::seeds;
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 #[derive(Accounts)]
-#[instruction(_bump:u8, amount: u64)]
+#[instruction(_bump:u8)]
 pub struct TransferToPortfolio<'info> {
 
-    //#[account(mut)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
 
     #[account(
         mut,
@@ -42,7 +42,6 @@ pub struct TransferToPortfolio<'info> {
 pub fn handler(
     ctx: Context<TransferToPortfolio>,
     _bump: u8,
-    amount: u64,
 ) -> ProgramResult {
     msg!("transfer initial funds from user to portfolio");
     let cpi_accounts = Transfer {
@@ -51,15 +50,9 @@ pub fn handler(
         authority: ctx.accounts.owner.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
-    /*let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts,
-        &[
-                [
-                    ctx.accounts.owner.key().as_ref(), 
-                    seeds::PORTFOLIO_SEED,
-                    &[_bump]
-                ].as_ref()
-            ],
-    ); */
+
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+
     token::transfer(
         CpiContext::new_with_signer(cpi_program, cpi_accounts,
             &[
@@ -69,11 +62,8 @@ pub fn handler(
                         &[_bump]
                     ].as_ref()
                 ],
-            ), amount as u64)?;
+            ), portfolio.initial_amount_USDC)?;
 
-    let portfolio = &mut ctx.accounts.portfolio_pda;
-    portfolio.initial_amount_USDC = amount as u64;
-    msg!("amount written to USDC init {}", portfolio.initial_amount_USDC);
 
     
     Ok(())

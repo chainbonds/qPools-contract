@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint, TokenAccount};
-use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
+use crate::state::{TwoWayPoolAccount, PositionAccountSaber, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext, WithdrawOne};
@@ -13,9 +13,6 @@ use stable_swap_anchor::StableSwap;
     _bump_position: u8,
     _bump_pool: u8, 
     _index: u32,
-    mint_amount: u64,
-    token_amount: u64,
-
 )]
 pub struct RedeemOneSaberPosition<'info> {
     // doesn't have to be mut
@@ -24,18 +21,18 @@ pub struct RedeemOneSaberPosition<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut)]
-    pub portfolio_owner: Signer<'info>,
+    //#[account(mut)]
+    pub portfolio_owner: AccountInfo<'info>,
 
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
-        seeds = [portfolio_owner.key().as_ref(),
-        format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
+        seeds = [portfolio_pda.key().as_ref(),
+         &_index.to_le_bytes(),seeds::USER_POSITION_STRING.as_bytes(),
         ], 
-         bump = _bump_position
+        bump = _bump_position
     )]
-    pub position_pda: Box<Account<'info, PositionAccount>>,
+    pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     pub swap: AccountInfo<'info>,
 
@@ -90,12 +87,9 @@ pub fn handler(
     _bump_position: u8,
     _bump_pool: u8, 
     _index: u32,
-    lp_amount: u64,
-    token_amount: u64,
 
 ) -> ProgramResult {
 
-    
     msg!("withdraw single saber position");
 
     let amt_start = ctx.accounts.user_a.amount;
@@ -128,7 +122,7 @@ pub fn handler(
     };
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
 
-
+    let position = &mut ctx.accounts.position_pda;
     stable_swap_anchor::withdraw_one(
         CpiContext::new_with_signer(
             saber_swap_program,
@@ -141,27 +135,16 @@ pub fn handler(
                 ].as_ref()
             ]
         ),
-        lp_amount,
-        token_amount,
+        position.pool_token_amount,
+        std::cmp::max(
+            position.minimum_token_a_amount,
+            position.minimum_token_b_amount
+        ),
         
     )?;
 
     msg!("withdraw completed successfully");
-
-    let pool_account = &mut ctx.accounts.pool_pda;
-    if pool_account.mint_a.key() == ctx.accounts.mint_a.key() {
-        pool_account.tmp_a = amt_start;
-        pool_account.tmp_b = 0;
-
-
-    } else {
-        pool_account.tmp_b = amt_start;
-        pool_account.tmp_a = 0;
-
-    }
-
-
-    
+  
 
     Ok(())
 }

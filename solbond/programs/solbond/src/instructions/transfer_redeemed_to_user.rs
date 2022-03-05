@@ -9,8 +9,6 @@ use crate::ErrorCode;
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio: u8,
-    amount: u64,
-
 )]
 pub struct TransferRedeemedToUser<'info> {
     #[account(mut,
@@ -18,8 +16,8 @@ pub struct TransferRedeemedToUser<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut)]
-    pub portfolio_owner: Signer<'info>,
+    //#[account(mut)]
+    pub portfolio_owner: AccountInfo<'info>,
 
 
 
@@ -49,18 +47,17 @@ pub struct TransferRedeemedToUser<'info> {
 pub fn handler(
     ctx: Context<TransferRedeemedToUser>,
     _bump_portfolio: u8,
-    amount: u64,
 ) -> ProgramResult {
 
     let amount_after_fee;
     let portfolio = &mut ctx.accounts.portfolio_pda;
-    if amount > portfolio.initial_amount_USDC {
+    if portfolio.withdraw_amount_USDC > portfolio.initial_amount_USDC {
         msg!("Made some profits, will take 20% fees :P");
         //let fee_amount = (amount * 20)/(100);
-        let profit = amount.checked_sub(portfolio.initial_amount_USDC).ok_or_else(| | {ErrorCode::CustomMathError6})?;
+        let profit = portfolio.withdraw_amount_USDC .checked_sub(portfolio.initial_amount_USDC).ok_or_else(| | {ErrorCode::CustomMathError6})?;
         let tmp1 = profit.checked_mul(20).ok_or_else(||{ErrorCode::CustomMathError6})?;
         let fee_amount = tmp1.checked_div(100).ok_or_else(||{ErrorCode::CustomMathError7})?;
-        amount_after_fee  = amount.checked_sub(fee_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
+        amount_after_fee  = portfolio.withdraw_amount_USDC .checked_sub(fee_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
         msg!(&format!("amount to take as fee {}", fee_amount));
         msg!(&format!("amount to give to user {}", amount_after_fee));
 
@@ -88,7 +85,7 @@ pub fn handler(
         
     } else {
         msg!("zero fees, sorry for your losses");
-        amount_after_fee = amount;
+        amount_after_fee = portfolio.withdraw_amount_USDC ;
         
     }
     let cpi_accounts = Transfer {

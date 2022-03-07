@@ -10,8 +10,9 @@ use crate::utils::seeds;
 #[instruction(
     _bump:u8, 
     _weights:Vec<u64>, 
-    _num_positions:u64,
+    _num_positions:u32,
     _total_amount_USDC: u64,
+
 )]
 pub struct SavePortfolio<'info> {
 

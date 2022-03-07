@@ -36,6 +36,25 @@ pub mod solbond {
         instructions::healthcheck::handler(ctx)
     }
 
+    /**
+     * This model creates a portfolio where the base currency is USDC i.e the user only pays in USDC.
+     * The steps 1-3 are permissioned, meaning that the user has to sign client side. The point is to 
+     * make these instructions fairly small such that they can all be bundled together in one transaction. 
+     * Create a Portfolio workflow:
+     * 1) create_portfolio(ctx,bump,weights,num_pos,amount_total):
+     *      ctx: context of the portfolio
+     *      bump: bump for the portfolio_pda
+     *      weights: the weights in the portfolio (check if sum is normalized)
+     *      num_positions: number of positions this portfolio will have
+     *      amount: total amount of USDC in the portfolio
+     * 
+     * 2) for position_i in range(num_positions):
+     *          approve_position_weight_{PROTOCOL_NAME}(ctx, args)
+     * 
+     * 3) transfer_to_portfolio():
+     *      transfers the agreed upon amount to a ATA owned by portfolio_pda
+     * 
+    */
 
     /**
      * Permissioned instruction which approves the creation of a new Portfolio
@@ -93,8 +112,12 @@ pub mod solbond {
 
     pub fn transfer_to_portfolio(
         ctx: Context<TransferToPortfolio>,
-        bump: u8) -> ProgramResult {
-            instructions::transfer_to_portfolio::handler(ctx,bump)
+        bump: u8
+    ) -> ProgramResult {
+            instructions::transfer_to_portfolio::handler(
+                ctx,
+                bump
+            )
     }
 
 
@@ -103,7 +126,11 @@ pub mod solbond {
         _bump: u8,
         _total_amount: u64,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_withdraw_to_user(ctx,_bump,_total_amount)
+        instructions::create_portfolio::approve_withdraw_to_user(
+            ctx,
+            _bump,
+            _total_amount
+        )
     }
 
     pub fn approve_withdraw_amount_saber(
@@ -132,7 +159,10 @@ pub mod solbond {
         ctx: Context<InitializeLpPoolAccount>,
         _bump: u8,
     ) -> ProgramResult {
-        instructions::initialize_lp_pool::handler(ctx,_bump)
+        instructions::initialize_lp_pool::handler(
+            ctx,
+            _bump
+        )
     }
 
 
@@ -159,8 +189,13 @@ pub mod solbond {
         _index: u32,
     ) -> ProgramResult {
 
-        instructions::redeem_position_saber::handler(ctx, _bump_portfolio,
-        _bump_position, _bump_pool, _index)
+        instructions::redeem_position_saber::handler(
+            ctx, 
+            _bump_portfolio,
+        _bump_position, 
+        _bump_pool, 
+        _index
+    )
 
     }
 
@@ -172,18 +207,25 @@ pub mod solbond {
         _bump_pool: u8,
         _index: u32,
     ) -> ProgramResult {
-        instructions::redeem_position_one_saber::handler(ctx, _bump_portfolio,
-        _bump_position,_bump_pool, _index)
+        instructions::redeem_position_one_saber::handler(
+            ctx, 
+            _bump_portfolio,
+        _bump_position,
+        _bump_pool, 
+        _index
+    )
     }
     
-    
-
     
 
     pub fn read_portfolio(
         ctx: Context<TransferToPortfolio>,
         bump: u8, amount: u64) -> ProgramResult {
-            instructions::transfer_to_portfolio::read_portfolio_account(ctx,bump,amount)
+            instructions::transfer_to_portfolio::read_portfolio_account(
+                ctx,
+                bump,
+                amount
+            )
     }
     
     pub fn transfer_redeemed_to_user(

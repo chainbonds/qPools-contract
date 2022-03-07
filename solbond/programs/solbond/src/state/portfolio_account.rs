@@ -38,6 +38,7 @@ impl PortfolioAccount {
     std::mem::size_of::<u8>() + 
     std::mem::size_of::<bool>()*2 +
     std::mem::size_of::<u64>()*2 + 
+    std::mem::size_of::<u32>() +
     std::mem::size_of::<i64>()*2;
 
 }

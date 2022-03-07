@@ -7,7 +7,7 @@
 export const SEED = {
     BOND_POOL_ACCOUNT: "bondPoolAccount6",
     TVL_INFO_ACCOUNT: "tvlInfoAccount6",
-    PORTFOLIO_ACCOUNT: "SeedFolioPort2",
+    PORTFOLIO_ACCOUNT: "portFolioSeed000",
     LP_POOL_ACCOUNT: "twoWayPool7",
-    POSITION_ACCOUNT_APPENDUM: "AccountPosition1"
+    POSITION_ACCOUNT_APPENDUM: "positionAccount0"
 }

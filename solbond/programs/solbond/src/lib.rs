@@ -248,6 +248,14 @@ pub mod solbond {
  */
 #[error]
 pub enum ErrorCode {
+    #[msg("Provided LP mints don't match!")]
+    ProvidedMintNotMatching,
+    #[msg("Provided Portfolios don't match!")]
+    ProvidedPortfolioNotMatching,
+    #[msg("Position already fully created!")]
+    PositionFullyCreatedError,
+    #[msg("Position already fulfilled!")]
+    PositionAlreadyFulfilledError,
     #[msg("Redeemables to be paid out are somehow zero!")]
     LowBondRedeemableAmount,
     #[msg("Token to be paid into the bond should not be zero")]

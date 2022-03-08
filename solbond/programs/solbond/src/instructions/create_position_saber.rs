@@ -97,24 +97,19 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
-    assert!(
-        !ctx.accounts.position_pda.is_fulfilled,
-        "position already fulfilled"
-    );
-    assert!(
-        ctx.accounts.position_pda.index <= ctx.accounts.portfolio_pda.num_positions && !ctx.accounts.portfolio_pda.fully_created,
-        "position already fully created"
-    );
-    assert!(
-        ctx.accounts.portfolio_pda.key() == ctx.accounts.position_pda.portfolio_pda,
-        "The provided portfolio_pda doesn't match the approved!"
-    );
-    assert!(
-        ctx.accounts.pool_mint.key() == ctx.accounts.position_pda.pool_address,
-        "The mint address provided in the context doesn't match the approved mint!"
-    );
-
-
+    if ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionAlreadyFulfilledError.into());
+    }
+    if ctx.accounts.position_pda.index > ctx.accounts.portfolio_pda.num_positions || ctx.accounts.portfolio_pda.fully_created {
+        return Err(ErrorCode::PositionFullyCreatedError.into());
+    }
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
+    if ctx.accounts.pool_mint.key() != ctx.accounts.position_pda.pool_address {
+        return Err(ErrorCode::ProvidedMintNotMatching.into());
+    }
+  
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),

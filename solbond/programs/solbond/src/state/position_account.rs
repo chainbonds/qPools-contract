@@ -33,9 +33,9 @@ pub struct PositionAccountSaber {
 impl PositionAccountSaber {
     pub const LEN: usize =
             std::mem::size_of::<Pubkey>() * 2 // portfolio_pda, pool_address
-            + std::mem::size_of::<bool>() *2     // is_fulfilled
+            + std::mem::size_of::<bool>()      // is_fulfilled
             + std::mem::size_of::<u32>()      // index
-            + std::mem::size_of::<u64>() * 4  // weight, a_amount, b_amount, min_mint_amount
+            + std::mem::size_of::<u64>() * 7  // weight, a_amount, b_amount, min_mint_amount
             + std::mem::size_of::<u8>()       // bump
             + std::mem::size_of::<i64>();     // time
 

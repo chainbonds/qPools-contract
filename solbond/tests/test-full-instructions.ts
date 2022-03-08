@@ -51,20 +51,60 @@ describe('qPools!', () => {
         USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
         USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
 
-        weights = [new u64(500), new u64(500), new u64(500)];
+        weights = [new BN(500), new BN(500), new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
         
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
 
 
     })
-
+    
     it('create a new portfolio', async() => {
         let total_amount_USDC = new u64(340000);
         let num_positions =3;
-        let sig_create = await portfolio.createPortfolioSigned(weights, genericPayer, num_positions, total_amount_USDC)
+        try {
+            let sig_create = await portfolio.createPortfolioSigned(weights, genericPayer, num_positions, total_amount_USDC, pool_addresses)
+        } catch (e) {
 
+        }
+        
+        for (var i = 0; i < num_positions; i++) {
+            let amountTokenA = new u64(1200);
+            let amountTokenB = new u64(0);
+            let minMintAmount = new u64(0);
+            let weight = new BN(500);
+            try{
+                let approve_sig = await portfolio.approvePositionWeightSaber(
+                amountTokenA,
+                amountTokenB,
+                minMintAmount,
+                i,
+                weight,
+                genericPayer
+                )
+            } catch (e) {
+
+            }
+        }
     }) 
+    
+    it('fulfill a position', async() => {
+        const num_positions = 3;
+        let total_amount_USDC = new u64(340000);
+        try {
+            let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, total_amount_USDC);
+
+        } catch (e) {
+            
+        }
+
+        for(var i = 0; i < num_positions-1; i++) {
+            let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer,i)
+
+        }
+
+
+    })
     /*
     it('simulate sending to portfolio owned account', async () => {
         let amountTokenA = new u64(340000);

@@ -242,9 +242,10 @@ export class Portfolio extends SaberInteractTool {
 
 
 
-    async createPortfolioSigned(weights: Array<BN>, owner_keypair: Keypair, num_positions: number, initial_amount_USDC: u64) {
+    async createPortfolioSigned(weights: Array<BN>, owner_keypair: Keypair, num_positions: number, initial_amount_USDC: u64, pool_addresses:Array<PublicKey>) {
+        this.poolAddresses = pool_addresses;
 
-        let [portfolioPDAtmp, bumpPortfoliotmp] = await await PublicKey.findProgramAddress(
+        let [portfolioPDAtmp, bumpPortfoliotmp] = await PublicKey.findProgramAddress(
             [owner_keypair.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
             this.solbondProgram.programId
         );
@@ -302,7 +303,141 @@ export class Portfolio extends SaberInteractTool {
 
 
 
+    async approvePositionWeightSaber(token_a_amount: u64, token_b_amount: u64, min_mint_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
 
+        console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        );
+
+        const pool_address = this.poolAddresses[index];
+        const stableSwapState = await this.getPoolState(pool_address)
+        const {state} = stableSwapState
+
+
+        let poolTokenMint = state.poolTokenMint
+        console.log("Inputs are: ");
+        console.log({
+            portfolioBump: this.portfolioBump.toString(),
+            positionBump: bumpPosition.toString(),
+            weight: weight.toString(),
+            token_a_amount: token_a_amount.toString(),
+            token_b_amount: token_b_amount.toString(),
+            min_mint_amount: min_mint_amount.toString(),
+            index: index.toString(),
+            accounts: {
+                accounts: {
+                    owner: owner_keypair.publicKey.toString(),
+                    positionPda: positionPDA.toString(),
+                    portfolioPda: this.portfolioPDA.toString(),//randomOwner.publicKey,
+                    poolMint: poolTokenMint.toString(),
+                    tokenProgram: TOKEN_PROGRAM_ID.toString(),
+                    systemProgram: web3.SystemProgram.programId.toString(),
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY.toString(),
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        })
+        let finaltx = await this.solbondProgram.rpc.approvePositionWeightSaber(
+            this.portfolioBump,
+            bumpPosition,
+            new BN(weight),
+            new BN(token_a_amount),
+            new BN(token_b_amount),
+            new BN(min_mint_amount),
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    poolMint: poolTokenMint,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        )
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("approvePositionWeightSaber Transaction Signature is: ", finaltx);
+        return finaltx;
+    }
+
+    async permissionlessFulfillSaber(owner_keypair: Keypair, index: number) {
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        );
+
+        const pool_address = this.poolAddresses[index];
+        const stableSwapState = await this.getPoolState(pool_address)
+        const {state} = stableSwapState
+
+        
+        let poolTokenMint = state.poolTokenMint
+
+
+        const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
+        console.log("authority ", authority.toString())
+
+
+        let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, this.portfolioPDA);
+        //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
+
+
+        console.log("userA ", userAccountA.toString())
+        let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, this.portfolioPDA);
+        //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
+
+        console.log("userB ", userAccountA.toString())
+
+
+        let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, this.portfolioPDA);
+        //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
+
+
+        let finaltx = await this.solbondProgram.rpc.createPositionSaber(
+            bumpPosition,
+            this.portfolioBump,
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    outputLp:  userAccountpoolToken,
+                    poolMint: poolTokenMint,
+                    swapAuthority: stableSwapState.config.authority,
+                    swap: stableSwapState.config.swapAccount,
+                    qpoolsA: userAccountA,
+                    poolTokenAccountA: state.tokenA.reserve,
+                    poolTokenAccountB: state.tokenB.reserve,
+                    qpoolsB: userAccountB,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    saberSwapProgram: this.stableSwapProgramId,
+                    systemProgram: web3.SystemProgram.programId,
+                    poolAddress: pool_address,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                //signers: [owner_keypair]
+            }
+        )
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("FulfillSaberPosition Transaction Signature is: ", finaltx);
+        return finaltx;
+    }
 
 
 
@@ -761,7 +896,6 @@ export class Portfolio extends SaberInteractTool {
         let signer = this.provider.wallet.payer as keypair
         let finaltx = await this.solbondProgram.rpc.transferToPortfolio(
             new BN(this.portfolioBump),
-            amount,
             {
                 accounts: {
                     owner: owner.publicKey,

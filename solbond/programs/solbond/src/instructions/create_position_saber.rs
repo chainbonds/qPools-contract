@@ -26,10 +26,10 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut,
-        seeds = [portfolio_pda.key().as_ref(),
-         &_index.to_le_bytes(),seeds::USER_POSITION_STRING.as_bytes(),
+        seeds = [owner.key().as_ref(),
+        format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
         ], 
-         bump = _bump_position
+        bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
@@ -97,7 +97,10 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
-
+    assert!(
+        !ctx.accounts.position_pda.is_fulfilled,
+        "position already fulfilled"
+    );
     assert!(
         ctx.accounts.position_pda.index <= ctx.accounts.portfolio_pda.num_positions && !ctx.accounts.portfolio_pda.fully_created,
         "position already fully created"

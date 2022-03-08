@@ -61,7 +61,6 @@ pub struct ApproveWithdrawPortfolio<'info> {
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
-    _weight: u64,
     _max_initial_token_a_amount: u64,
     _max_initial_token_b_amount: u64,
     _min_mint_amount: u64,
@@ -241,7 +240,7 @@ pub fn approve_withdraw_to_user(
     _total_amount: u64,
 ) -> ProgramResult {
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
-    assert!(portfolio_account.fully_created, "portfolio can't be withdrawn before full creation");
+    //assert!(portfolio_account.fully_created, "portfolio can't be withdrawn before full creation");
     
     portfolio_account.to_be_redeemed = true;
     portfolio_account.withdraw_amount_USDC = _total_amount;

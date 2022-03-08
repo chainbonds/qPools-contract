@@ -11,7 +11,7 @@ use stable_swap_anchor::StableSwap;
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
-    _bump_pool: u8, 
+    //_bump_pool: u8, 
     _index: u32,
 )]
 pub struct RedeemOneSaberPosition<'info> {
@@ -27,7 +27,7 @@ pub struct RedeemOneSaberPosition<'info> {
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
-        seeds = [portfolio_pda.key().as_ref(),
+        seeds = [portfolio_owner.key().as_ref(),
          //&_index.to_le_bytes(),seeds::USER_POSITION_STRING,
          format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
         ], 
@@ -65,12 +65,12 @@ pub struct RedeemOneSaberPosition<'info> {
     pub reserve_b: Box<Account<'info, TokenAccount>>,
 
 
-    #[account(
-        mut,
-        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
-        bump = _bump_pool
-    )]
-    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
+    // #[account(
+    //     mut,
+    //     seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
+    //     bump = _bump_pool
+    // )]
+    // pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
 
 
     
@@ -86,14 +86,14 @@ pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
     _bump_portfolio: u8,
     _bump_position: u8,
-    _bump_pool: u8, 
+    //bump_pool: u8, 
     _index: u32,
 
 ) -> ProgramResult {
 
     msg!("withdraw single saber position");
 
-    let amt_start = ctx.accounts.user_a.amount;
+    //let amt_start = ctx.accounts.user_a.amount;
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),

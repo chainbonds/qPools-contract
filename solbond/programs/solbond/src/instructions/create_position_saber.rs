@@ -97,6 +97,7 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
+    
     if ctx.accounts.position_pda.is_fulfilled {
         return Err(ErrorCode::PositionAlreadyFulfilledError.into());
     }

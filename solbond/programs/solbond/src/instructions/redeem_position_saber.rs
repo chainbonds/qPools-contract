@@ -12,7 +12,7 @@ use crate::ErrorCode;
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
-    _bump_pool: u8, 
+    //_bump_pool: u8, 
     _index: u32
 )]
 pub struct RedeemSaberPosition<'info> {
@@ -27,7 +27,7 @@ pub struct RedeemSaberPosition<'info> {
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
-        seeds = [portfolio_pda.key().as_ref(),
+        seeds = [portfolio_owner.key().as_ref(),
         // &_index.to_le_bytes(),seeds::USER_POSITION_STRING,
         format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
 
@@ -84,7 +84,7 @@ pub fn handler(
     ctx: Context<RedeemSaberPosition>,
     _bump_portfolio: u8,
     _bump_position: u8,
-    _bump_pool: u8, 
+    //_bump_pool: u8, 
     _index: u32
 ) -> ProgramResult {
     

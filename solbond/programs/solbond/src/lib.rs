@@ -121,6 +121,23 @@ pub mod solbond {
     }
 
 
+    /** 
+     * Withdraw a Portfolio workflow:
+     * 1) approve_withdraw_to_user(ctx,amount_total):
+     *      ctx: context of the portfolio
+     *      amount: total amount of USDC in the portfolio
+     * 
+     * 2) for position_i in range(num_positions):
+     *          approve_withdraw_amount_{PROTOCOL_NAME}(ctx, args)
+     * 3) for position_i in range(num_positions):
+     *          withdraw
+     * 
+     * 3) transfer_redeemed_to_user():
+     *      transfers the funds back to the user
+     * 
+    */
+
+
     pub fn approve_withdraw_to_user(
         ctx: Context<ApproveWithdrawPortfolio>,
         _bump: u8,
@@ -152,9 +169,8 @@ pub mod solbond {
             _index,
         )
     }
-    /**
-    * Initializes the reserve / vault
-    */
+
+    
     pub fn initialize_pool_account(
         ctx: Context<InitializeLpPoolAccount>,
         _bump: u8,
@@ -185,7 +201,7 @@ pub mod solbond {
         ctx: Context<RedeemSaberPosition>,
         _bump_portfolio: u8,
         _bump_position: u8,
-        _bump_pool: u8,
+        //_bump_pool: u8,
         _index: u32,
     ) -> ProgramResult {
 
@@ -193,7 +209,7 @@ pub mod solbond {
             ctx, 
             _bump_portfolio,
         _bump_position, 
-        _bump_pool, 
+        //_bump_pool, 
         _index
     )
 
@@ -204,14 +220,14 @@ pub mod solbond {
         ctx: Context<RedeemOneSaberPosition>,
         _bump_portfolio: u8,
         _bump_position: u8,
-        _bump_pool: u8,
+        //_bump_pool: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::redeem_position_one_saber::handler(
             ctx, 
             _bump_portfolio,
         _bump_position,
-        _bump_pool, 
+        //_bump_pool, 
         _index
     )
     }

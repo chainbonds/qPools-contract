@@ -564,10 +564,6 @@ export type Solbond = {
           "type": "u8"
         },
         {
-          "name": "bumpPool",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "u32"
         }
@@ -637,11 +633,6 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "poolPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -669,10 +660,6 @@ export type Solbond = {
         },
         {
           "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPool",
           "type": "u8"
         },
         {
@@ -1721,10 +1708,6 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
-          "name": "bumpPool",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "u32"
         }
@@ -1794,11 +1777,6 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "poolPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "saberSwapProgram",
           "isMut": false,
           "isSigner": false
@@ -1826,10 +1804,6 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPool",
           "type": "u8"
         },
         {

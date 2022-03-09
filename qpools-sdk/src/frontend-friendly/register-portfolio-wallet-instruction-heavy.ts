@@ -314,6 +314,27 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return approveWeightInstruction;
     }
 
+    async signApproveWithdrawToUser(totalAmount: BN) {
+        let ix = await this.solbondProgram.instruction.approveWithdrawToUser(
+            this.portfolioBump,
+            totalAmount,
+            {
+                accounts: {
+                    owner: this.owner.publicKey,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [this.payer]
+            }
+        )
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
+        return ix;
+    }
+
     async approveWithdrawAmountSaber(index: number) {
 
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
@@ -428,42 +449,42 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return txs;
     }
     */
-    async depositTokensToLiquidityPools(): Promise<TransactionInstruction[]> {
-        console.log("#createFullPortfolio()");
-        let txs = [];
-
-        // for each user ATA, track how much of this ATA he still has left ...
-        // Or just assume that we only do USDC right now
-
-        // for (var i = 0; i < this.poolAddresses.length; i++) {
-        // }
-        // Just get the initial USDC amount, much easier for now
-        let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-        let initialAmountUsdc: BN = new BN(portfolioAccount.initialAmountUsdc);
-        // For the portfolio's ATA, get the total balance ...
-        // let usdcTokenAccount: PublicKey = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.portfolioPDA);
-        // let usdcTokenAmount: TokenAmount = (await this.connection.getTokenAccountBalance(usdcTokenAccount)).value;
-
-        for (var i = 0; i < this.poolAddresses.length; i++) {
-            let poolAddress = this.poolAddresses[i];
-            const stableSwapState = await this.getPoolState(poolAddress);
-            const {state} = stableSwapState;
-
-            // Get initial amount
-
-            // Get weight from the online account, not from here
-            let ix1 = await this.createSinglePositionInLiquidityPool(
-                i,
-                poolAddress,
-                state,
-                stableSwapState,
-                initialAmountUsdc
-            )
-            txs.push(ix1);
-        }
-        console.log("##createFullPortfolio()");
-        return txs;
-    }
+    // async depositTokensToLiquidityPools(): Promise<TransactionInstruction[]> {
+    //     console.log("#createFullPortfolio()");
+    //     let txs = [];
+    //
+    //     // for each user ATA, track how much of this ATA he still has left ...
+    //     // Or just assume that we only do USDC right now
+    //
+    //     // for (var i = 0; i < this.poolAddresses.length; i++) {
+    //     // }
+    //     // Just get the initial USDC amount, much easier for now
+    //     let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+    //     let initialAmountUsdc: BN = new BN(portfolioAccount.initial_amount_USDC);
+    //     // For the portfolio's ATA, get the total balance ...
+    //     // let usdcTokenAccount: PublicKey = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.portfolioPDA);
+    //     // let usdcTokenAmount: TokenAmount = (await this.connection.getTokenAccountBalance(usdcTokenAccount)).value;
+    //
+    //     for (var i = 0; i < this.poolAddresses.length; i++) {
+    //         let poolAddress = this.poolAddresses[i];
+    //         const stableSwapState = await this.getPoolState(poolAddress);
+    //         const {state} = stableSwapState;
+    //
+    //         // Get initial amount
+    //
+    //         // Get weight from the online account, not from here
+    //         let ix1 = await this.createSinglePositionInLiquidityPool(
+    //             i,
+    //             poolAddress,
+    //             state,
+    //             stableSwapState,
+    //             initialAmountUsdc
+    //         )
+    //         txs.push(ix1);
+    //     }
+    //     console.log("##createFullPortfolio()");
+    //     return txs;
+    // }
 
     /**
      * For a given user, and his registered portfolio, register one of the pools that he will be depositingm oney to
@@ -577,152 +598,149 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      *
      */
     // : Promise<TransactionInstruction>
-    async createSinglePositionInLiquidityPool(
-        index: number,
-        poolAddress: PublicKey,
-        state: StableSwapState,
-        stableSwapState: StableSwap,
-        initialAmountUsdc: BN
-        // tokenAmount: TokenAmount
-    ) {
-        console.log("#createSinglePositionInLiquidityPool()");
-        let tx: Transaction = new Transaction();
-        //let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-        //    [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-        //    this.solbondProgram.programId
-        //);
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-        const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
-
-        // Creating ATA accounts if not existent yet ...
-        let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        let userAccountPoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-
-        /*
-            Now get the actual instruction set ...
-         */
-        // TODO: Calculate this stuff from the account modal.
-        //  Fuck, the account modal also needs to be registered first. But that's fine
-
-        // TODO: Get these amounts from the struct!
-        let x = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-        console.log("x is: ", x);
-
-        // Throw error, if the weights are null!
-        if (!x.weights[0] || !x.weights[1] || !x.weights[2]) {
-            console.log(x);
-            throw Error("Account was not generated yet!" + JSON.stringify(x));
-        }
-
-        // Gotta check if decimals cause any nasty surprises ....
-        // We could also just use float division for now ...
-
-        // Depending on whatever is the currency mint, we can
-        let weight: BN = new BN(x.weights[index]);
-        let weightSum: BN = new BN(x.weights.reduce(
-            (sum: BN, x: BN) => new BN(sum).add(new BN(x)),
-            new BN(0)
-        ));
-
-        if (!weight) {
-            console.log(x);
-            console.log(weight);
-            throw Error("Account was not generated yet!" + JSON.stringify(x));
-        }
-
-        console.log("Weight is: ", weight.toString());
-        console.log("Weights are: ", x.weights.map((x) => {return x.toString()}));
-        console.log("Weight sum is: ", weightSum.toString());
-
-        // TODO: Do flip between A and B!
-
-        // TODO: Create a loading modal. Loading
-        // TODO: Gotta mix A and B depending on which one has the currency we're interested in!
-        let amount_a = new BN((await this.connection.getTokenAccountBalance(userAccountA)).value.amount);
-        console.log("Fetched amount is: ", amount_a.toString());
-        let amount_b = new BN((await this.connection.getTokenAccountBalance(userAccountB)).value.amount);
-        console.log("Fetched amount is: ", amount_b.toString());
-
-
-        console.log("Amount a, b and weights are: ", amount_a.toString(), amount_b.toString());
-        console.log("initialAmount is: ", initialAmountUsdc.toString());
-
-        // Take the minimum between the getBalance balance, and the initialUsdcBalance
-        // Don't deposit more than there is
-        // TODO: Take care of decimals
-        let maximumAmountIn = initialAmountUsdc.mul(weight).div(weightSum);
-        console.log("Maximum amount in is: ", maximumAmountIn.toString());
-        amount_a = BN.min(maximumAmountIn, amount_a);
-        console.log("AmountA in", amount_a.toString());
-        amount_b = BN.min(maximumAmountIn, amount_b);
-        console.log("Amountb in", amount_b.toString());
-
-        // amount_a = amount_a.mul(weight).div(weightSum);
-        // console.log("Fetched amount is: ", amount_b.toString());
-        // amount_b = amount_b.mul(weight).div(weightSum);
-
-        // Do not charge more than there is here ...
-        // usdcTokenAmount: BN,
-        // tokenAmount: TokenAmount
-
-        // These has to be a mixture of initial_deposit_a and initial_deposit_b!
-
-        // TODO: maybe make sure that the weight we input is not higher than initial_amount_deposit * weight (!!!)
-        // Not a solution. Assuming that the transactions are non-atomic, the issue is that the ratio will modify
-        // how much is paid into each account. As such, the best way would be to save the exact amount per pool,
-        // not it's weight
-
-
-        // Maybe we should still do it in a way where we get amount_a and amount_b from online
-        // And then we assign them according to the weights ...
-        // This makes most sense probably, assuming that the instructions are all created _before_ sending them off.
-        // We have to be strict with this!!!!
-
-        // And now we just gotta normalize these by the weights
-        if (!amount_a || !amount_b) {
-            console.log(amount_a.toString(), amount_b.toString())
-            throw Error("Something went wrong!");
-        }
-
-        // amount_b we skip, because we assume that the currency-token is token A
-        // This is a bad assumption though!!
-        // TODO: These amounts here are a problem for sure (!)
-        let ix = await this.solbondProgram.rpc.createPositionSaber(
-            new BN(bumpPosition),
-            new BN(this.portfolioBump),
-            new BN(index),
-            {
-                accounts: {
-                    positionPda: positionPDA,
-                    portfolioPda: this.portfolioPDA,
-                    owner: this.owner.publicKey,//randomOwner.publicKey,
-                    poolMint: state.poolTokenMint,
-                    tokenAMint: state.tokenA.mint,
-                    tokenBMint: state.tokenB.mint,
-                    outputLp: userAccountPoolToken,
-                    swapAuthority: stableSwapState.config.authority,
-                    //poolPda: poolPDA,
-                    swap: stableSwapState.config.swapAccount,
-                    qpoolsA: userAccountA,
-                    poolTokenAccountA: state.tokenA.reserve,
-                    poolTokenAccountB: state.tokenB.reserve,
-                    qpoolsB: userAccountB,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    saberSwapProgram: this.stableSwapProgramId,
-                    systemProgram: web3.SystemProgram.programId,
-                    poolAddress: poolAddress,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                },
-                //signers: [this.payer]
-            }
-        )
-        console.log("##createSinglePositionInLiquidityPool()");
-        // return ix;
-    }
+    // async createSinglePositionInLiquidityPool(
+    //     index: number,
+    //     poolAddress: PublicKey,
+    //     state: StableSwapState,
+    //     stableSwapState: StableSwap,
+    //     initialAmountUsdc: BN
+    //     // tokenAmount: TokenAmount
+    // ) {
+    //     console.log("#createSinglePositionInLiquidityPool()");
+    //     let tx: Transaction = new Transaction();
+    //     //let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+    //     //    [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
+    //     //    this.solbondProgram.programId
+    //     //);
+    //     let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+    //         [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+    //         this.solbondProgram.programId
+    //     );
+    //     const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
+    //
+    //     // Creating ATA accounts if not existent yet ...
+    //     let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+    //     let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+    //     let userAccountPoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+    //
+    //     /*
+    //         Now get the actual instruction set ...
+    //      */
+    //     // TODO: Calculate this stuff from the account modal.
+    //     //  Fuck, the account modal also needs to be registered first. But that's fine
+    //
+    //     // TODO: Get these amounts from the struct!
+    //     let x = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+    //     console.log("x is: ", x);
+    //
+    //     // I think this is deprecated!
+    //
+    //
+    //     // Gotta check if decimals cause any nasty surprises ....
+    //     // We could also just use float division for now ...
+    //
+    //     // Depending on whatever is the currency mint, we can
+    //     let weight: BN = new BN(x.weights[index]);
+    //     let weightSum: BN = new BN(x.weights.reduce(
+    //         (sum: BN, x: BN) => new BN(sum).add(new BN(x)),
+    //         new BN(0)
+    //     ));
+    //
+    //     if (!weight) {
+    //         console.log(x);
+    //         console.log(weight);
+    //         throw Error("Account was not generated yet!" + JSON.stringify(x));
+    //     }
+    //
+    //     console.log("Weight is: ", weight.toString());
+    //     console.log("Weights are: ", x.weights.map((x) => {return x.toString()}));
+    //     console.log("Weight sum is: ", weightSum.toString());
+    //
+    //     // TODO: Do flip between A and B!
+    //
+    //     // TODO: Create a loading modal. Loading
+    //     // TODO: Gotta mix A and B depending on which one has the currency we're interested in!
+    //     let amount_a = new BN((await this.connection.getTokenAccountBalance(userAccountA)).value.amount);
+    //     console.log("Fetched amount is: ", amount_a.toString());
+    //     let amount_b = new BN((await this.connection.getTokenAccountBalance(userAccountB)).value.amount);
+    //     console.log("Fetched amount is: ", amount_b.toString());
+    //
+    //
+    //     console.log("Amount a, b and weights are: ", amount_a.toString(), amount_b.toString());
+    //     console.log("initialAmount is: ", initialAmountUsdc.toString());
+    //
+    //     // Take the minimum between the getBalance balance, and the initialUsdcBalance
+    //     // Don't deposit more than there is
+    //     // TODO: Take care of decimals
+    //     let maximumAmountIn = initialAmountUsdc.mul(weight).div(weightSum);
+    //     console.log("Maximum amount in is: ", maximumAmountIn.toString());
+    //     amount_a = BN.min(maximumAmountIn, amount_a);
+    //     console.log("AmountA in", amount_a.toString());
+    //     amount_b = BN.min(maximumAmountIn, amount_b);
+    //     console.log("Amountb in", amount_b.toString());
+    //
+    //     // amount_a = amount_a.mul(weight).div(weightSum);
+    //     // console.log("Fetched amount is: ", amount_b.toString());
+    //     // amount_b = amount_b.mul(weight).div(weightSum);
+    //
+    //     // Do not charge more than there is here ...
+    //     // usdcTokenAmount: BN,
+    //     // tokenAmount: TokenAmount
+    //
+    //     // These has to be a mixture of initial_deposit_a and initial_deposit_b!
+    //
+    //     // TODO: maybe make sure that the weight we input is not higher than initial_amount_deposit * weight (!!!)
+    //     // Not a solution. Assuming that the transactions are non-atomic, the issue is that the ratio will modify
+    //     // how much is paid into each account. As such, the best way would be to save the exact amount per pool,
+    //     // not it's weight
+    //
+    //
+    //     // Maybe we should still do it in a way where we get amount_a and amount_b from online
+    //     // And then we assign them according to the weights ...
+    //     // This makes most sense probably, assuming that the instructions are all created _before_ sending them off.
+    //     // We have to be strict with this!!!!
+    //
+    //     // And now we just gotta normalize these by the weights
+    //     if (!amount_a || !amount_b) {
+    //         console.log(amount_a.toString(), amount_b.toString())
+    //         throw Error("Something went wrong!");
+    //     }
+    //
+    //     // amount_b we skip, because we assume that the currency-token is token A
+    //     // This is a bad assumption though!!
+    //     // TODO: These amounts here are a problem for sure (!)
+    //     let ix = await this.solbondProgram.rpc.createPositionSaber(
+    //         new BN(bumpPosition),
+    //         new BN(this.portfolioBump),
+    //         new BN(index),
+    //         {
+    //             accounts: {
+    //                 positionPda: positionPDA,
+    //                 portfolioPda: this.portfolioPDA,
+    //                 owner: this.owner.publicKey,//randomOwner.publicKey,
+    //                 poolMint: state.poolTokenMint,
+    //                 tokenAMint: state.tokenA.mint,
+    //                 tokenBMint: state.tokenB.mint,
+    //                 outputLp: userAccountPoolToken,
+    //                 swapAuthority: stableSwapState.config.authority,
+    //                 //poolPda: poolPDA,
+    //                 swap: stableSwapState.config.swapAccount,
+    //                 qpoolsA: userAccountA,
+    //                 poolTokenAccountA: state.tokenA.reserve,
+    //                 poolTokenAccountB: state.tokenB.reserve,
+    //                 qpoolsB: userAccountB,
+    //                 tokenProgram: TOKEN_PROGRAM_ID,
+    //                 saberSwapProgram: this.stableSwapProgramId,
+    //                 systemProgram: web3.SystemProgram.programId,
+    //                 poolAddress: poolAddress,
+    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //             },
+    //             //signers: [this.payer]
+    //         }
+    //     )
+    //     console.log("##createSinglePositionInLiquidityPool()");
+    //     // return ix;
+    // }
 
 
     // Now any Redeem Logic

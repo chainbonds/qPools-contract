@@ -5,7 +5,7 @@ use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext, WithdrawOne};
 use stable_swap_anchor::StableSwap;
-
+use crate::ErrorCode;
 
 #[derive(Accounts)]
 #[instruction(
@@ -17,6 +17,7 @@ use stable_swap_anchor::StableSwap;
 pub struct RedeemOneSaberPosition<'info> {
     // doesn't have to be mut
     #[account(
+    mut,
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
@@ -27,6 +28,7 @@ pub struct RedeemOneSaberPosition<'info> {
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
+        mut,
         seeds = [portfolio_owner.key().as_ref(),
          //&_index.to_le_bytes(),seeds::USER_POSITION_STRING,
          format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
@@ -65,14 +67,6 @@ pub struct RedeemOneSaberPosition<'info> {
     pub reserve_b: Box<Account<'info, TokenAccount>>,
 
 
-    // #[account(
-    //     mut,
-    //     seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
-    //     bump = _bump_pool
-    // )]
-    // pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
-
-
     
     pub saber_swap_program: Program<'info, StableSwap>,
     pub system_program: Program<'info, System>,
@@ -86,12 +80,25 @@ pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
     _bump_portfolio: u8,
     _bump_position: u8,
-    //bump_pool: u8, 
     _index: u32,
 
 ) -> ProgramResult {
 
     msg!("withdraw single saber position");
+    if !ctx.accounts.position_pda.redeem_approved {
+        return Err(ErrorCode::RedeemNotApproved.into());
+    }
+    if ctx.accounts.portfolio_pda.num_redeemed >= ctx.accounts.portfolio_pda.num_positions {
+        return Err(ErrorCode::AllPositionsRedeemed.into());
+    }
+    if !ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
+    if ctx.accounts.position_pda.is_redeemed {
+        return Err(ErrorCode::PositionAlreadyRedeemed.into());
+
+    }
+
 
     //let amt_start = ctx.accounts.user_a.amount;
     let user_context: SwapUserContext = SwapUserContext {
@@ -140,6 +147,11 @@ pub fn handler(
         position.minimum_token_amount_out,
         
     )?;
+
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.num_redeemed += 1;
+    let position = &mut ctx.accounts.position_pda;
+    position.is_redeemed = true;
 
     msg!("withdraw completed successfully");
   

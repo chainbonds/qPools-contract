@@ -1029,8 +1029,8 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
-    async transfer_to_user(owner: IWallet, amount: u64) {
-        this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs"));
+    async transfer_to_user(owner: IWallet) {
+        //this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs"));
 
         if (!this.userOwnedUSDCAccount) {
             console.log("Creating a userOwnedUSDCAccount");
@@ -1050,7 +1050,7 @@ export class Portfolio extends SaberInteractTool {
         let signer = this.provider.wallet.payer as keypair
         let finaltx = await this.solbondProgram.rpc.transferRedeemedToUser(
             new BN(this.portfolioBump),
-            new BN(amount),
+            //new BN(amount),
 
             {
                 accounts: {
@@ -1058,7 +1058,7 @@ export class Portfolio extends SaberInteractTool {
                     portfolioOwner: owner.publicKey,
                     userOwnedUserA: this.userOwnedUSDCAccount,
                     pdaOwnedUserA: pdaUSDCAccount,
-                    feesQpoolsA: this.qPools_USDC_fees,
+                    //feesQpoolsA: this.qPools_USDC_fees,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,

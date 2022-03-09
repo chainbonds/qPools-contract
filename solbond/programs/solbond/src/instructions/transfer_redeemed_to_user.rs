@@ -34,8 +34,8 @@ pub struct TransferRedeemedToUser<'info> {
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
 
 
-    #[account(mut)]
-    pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
+    // #[account(mut)]
+    // pub fees_qpools_a: Box<Account<'info, TokenAccount>>,
  
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -49,9 +49,13 @@ pub fn handler(
     _bump_portfolio: u8,
 ) -> ProgramResult {
 
-    let amount_after_fee;
+    //let amount_after_fee;
     let portfolio = &mut ctx.accounts.portfolio_pda;
-    if portfolio.withdraw_amount_USDC > portfolio.initial_amount_USDC {
+    if portfolio.num_redeemed < portfolio.num_positions {
+        return Err(ErrorCode::NotReadyForTransferBack.into());
+    }
+    // no fees for now 
+    /*if portfolio.withdraw_amount_USDC > portfolio.initial_amount_USDC {
         msg!("Made some profits, will take 20% fees :P");
         //let fee_amount = (amount * 20)/(100);
         let profit = portfolio.withdraw_amount_USDC .checked_sub(portfolio.initial_amount_USDC).ok_or_else(| | {ErrorCode::CustomMathError6})?;
@@ -66,6 +70,7 @@ pub fn handler(
             to: ctx.accounts.fees_qpools_a.to_account_info(),
             authority: ctx.accounts.portfolio_pda.to_account_info(),
         };
+        ctx.accounts.pda_owned_user_a.amount;
         let cpi_program_fees = ctx.accounts.token_program.to_account_info();
         token::transfer(CpiContext::new_with_signer(
             cpi_program_fees,
@@ -87,7 +92,8 @@ pub fn handler(
         msg!("zero fees, sorry for your losses");
         amount_after_fee = portfolio.withdraw_amount_USDC ;
         
-    }
+    }*/
+
     let cpi_accounts = Transfer {
         from: ctx.accounts.pda_owned_user_a.to_account_info(),
         to: ctx.accounts.user_owned_user_a.to_account_info(),
@@ -106,7 +112,7 @@ pub fn handler(
                 ].as_ref()
             ],
 
-        ), amount_after_fee as u64)?;
+        ), ctx.accounts.pda_owned_user_a.amount as u64)?;
 
 
     // close portfolio account

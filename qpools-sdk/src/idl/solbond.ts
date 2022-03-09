@@ -570,7 +570,7 @@ export type Solbond = {
       "accounts": [
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -585,7 +585,7 @@ export type Solbond = {
         },
         {
           "name": "positionPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -743,11 +743,6 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "feesQpoolsA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -802,6 +797,10 @@ export type Solbond = {
             "type": "u64"
           },
           {
+            "name": "numRedeemed",
+            "type": "u32"
+          },
+          {
             "name": "numPositions",
             "type": "u32"
           },
@@ -831,6 +830,14 @@ export type Solbond = {
           },
           {
             "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
             "type": "bool"
           },
           {
@@ -928,206 +935,231 @@ export type Solbond = {
   "errors": [
     {
       "code": 6000,
+      "name": "RedeemNotApproved",
+      "msg": "Redeem has not been approved yet!"
+    },
+    {
+      "code": 6001,
+      "name": "PositionAlreadyRedeemed",
+      "msg": "Position has already been redeemed!"
+    },
+    {
+      "code": 6002,
+      "name": "PositionNotFulfilledYet",
+      "msg": "Position can't be redeemed before fulfillment"
+    },
+    {
+      "code": 6003,
+      "name": "AllPositionsRedeemed",
+      "msg": "All positions have already been redeemed! You can transfer the funds back"
+    },
+    {
+      "code": 6004,
+      "name": "NotReadyForTransferBack",
+      "msg": "Positions have to redeemed before the funds get transfered back"
+    },
+    {
+      "code": 6005,
       "name": "ProvidedMintNotMatching",
       "msg": "Provided LP mints don't match!"
     },
     {
-      "code": 6001,
+      "code": 6006,
       "name": "ProvidedPortfolioNotMatching",
       "msg": "Provided Portfolios don't match!"
     },
     {
-      "code": 6002,
+      "code": 6007,
       "name": "PositionFullyCreatedError",
       "msg": "Position already fully created!"
     },
     {
-      "code": 6003,
+      "code": 6008,
       "name": "PositionAlreadyFulfilledError",
       "msg": "Position already fulfilled!"
     },
     {
-      "code": 6004,
+      "code": 6009,
       "name": "LowBondRedeemableAmount",
       "msg": "Redeemables to be paid out are somehow zero!"
     },
     {
-      "code": 6005,
+      "code": 6010,
       "name": "LowBondTokAmount",
       "msg": "Token to be paid into the bond should not be zero"
     },
     {
-      "code": 6006,
+      "code": 6011,
       "name": "RedeemCapacity",
       "msg": "Asking for too much SOL when redeeming!"
     },
     {
-      "code": 6007,
+      "code": 6012,
       "name": "MinPurchaseAmount",
       "msg": "Not enough credits!"
     },
     {
-      "code": 6008,
+      "code": 6013,
       "name": "TimeFrameIsNotAnInterval",
       "msg": "Provided times are not an interval (end-time before start-time!)"
     },
     {
-      "code": 6009,
+      "code": 6014,
       "name": "TimeFrameIsInThePast",
       "msg": "Provided starting time is not in the future. You should make it in such a way that it is slightly in the future, s.t. you have the ability to pay in some amounts."
     },
     {
-      "code": 6010,
+      "code": 6015,
       "name": "TimeFrameCannotPurchaseAdditionalBondAmount",
       "msg": "Bond is already locked, you cannot pay in more into this bond!"
     },
     {
-      "code": 6011,
+      "code": 6016,
       "name": "TimeFrameNotPassed",
       "msg": "Bond has not gone past timeframe yet"
     },
     {
-      "code": 6012,
+      "code": 6017,
       "name": "MarketRateOverflow",
       "msg": "There was an issue computing the market rate. MarketRateOverflow"
     },
     {
-      "code": 6013,
+      "code": 6018,
       "name": "MarketRateUnderflow",
       "msg": "There was an issue computing the market rate. MarketRateUnderflow"
     },
     {
-      "code": 6014,
+      "code": 6019,
       "name": "PayoutError",
       "msg": "Paying out more than was initially paid in"
     },
     {
-      "code": 6015,
+      "code": 6020,
       "name": "Calculation",
       "msg": "Redeemable-calculation doesnt add up"
     },
     {
-      "code": 6016,
+      "code": 6021,
       "name": "ReturningNoCurrency",
       "msg": "Returning no Tokens!"
     },
     {
-      "code": 6017,
+      "code": 6022,
       "name": "CustomMathError1",
       "msg": "Custom Math Error 1!"
     },
     {
-      "code": 6018,
+      "code": 6023,
       "name": "CustomMathError2",
       "msg": "Custom Math Error 2!"
     },
     {
-      "code": 6019,
+      "code": 6024,
       "name": "CustomMathError3",
       "msg": "Custom Math Error 3!"
     },
     {
-      "code": 6020,
+      "code": 6025,
       "name": "CustomMathError4",
       "msg": "Custom Math Error 4!"
     },
     {
-      "code": 6021,
+      "code": 6026,
       "name": "CustomMathError5",
       "msg": "Custom Math Error 5!"
     },
     {
-      "code": 6022,
+      "code": 6027,
       "name": "CustomMathError6",
       "msg": "Custom Math Error 6!"
     },
     {
-      "code": 6023,
+      "code": 6028,
       "name": "CustomMathError7",
       "msg": "Custom Math Error 7!"
     },
     {
-      "code": 6024,
+      "code": 6029,
       "name": "CustomMathError8",
       "msg": "Custom Math Error 8!"
     },
     {
-      "code": 6025,
+      "code": 6030,
       "name": "CustomMathError9",
       "msg": "Custom Math Error 9!"
     },
     {
-      "code": 6026,
+      "code": 6031,
       "name": "CustomMathError10",
       "msg": "Custom Math Error 10!"
     },
     {
-      "code": 6027,
+      "code": 6032,
       "name": "CustomMathError11",
       "msg": "Custom Math Error 11!"
     },
     {
-      "code": 6028,
+      "code": 6033,
       "name": "CustomMathError12",
       "msg": "Custom Math Error 12!"
     },
     {
-      "code": 6029,
+      "code": 6034,
       "name": "CustomMathError13",
       "msg": "Custom Math Error 13!"
     },
     {
-      "code": 6030,
+      "code": 6035,
       "name": "CustomMathError14",
       "msg": "Custom Math Error 14!"
     },
     {
-      "code": 6031,
+      "code": 6036,
       "name": "CustomMathError15",
       "msg": "Custom Math Error 15!"
     },
     {
-      "code": 6032,
+      "code": 6037,
       "name": "CustomMathError16",
       "msg": "Custom Math Error 16!"
     },
     {
-      "code": 6033,
+      "code": 6038,
       "name": "CustomMathError17",
       "msg": "Custom Math Error 17!"
     },
     {
-      "code": 6034,
+      "code": 6039,
       "name": "CustomMathError18",
       "msg": "Custom Math Error 18!"
     },
     {
-      "code": 6035,
+      "code": 6040,
       "name": "CustomMathError19",
       "msg": "Custom Math Error 19!"
     },
     {
-      "code": 6036,
+      "code": 6041,
       "name": "CustomMathError20",
       "msg": "Custom Math Error 20!"
     },
     {
-      "code": 6037,
+      "code": 6042,
       "name": "CustomMathError21",
       "msg": "Custom Math Error 21!"
     },
     {
-      "code": 6038,
+      "code": 6043,
       "name": "CustomMathError22",
       "msg": "Custom Math Error 22!"
     },
     {
-      "code": 6039,
+      "code": 6044,
       "name": "EmptyTotalTokenSupply",
       "msg": "Total Token Supply seems empty!"
     },
     {
-      "code": 6040,
+      "code": 6045,
       "name": "EmptyTotalCurrencySupply",
       "msg": "Total Currency Supply seems empty!"
     }
@@ -1706,7 +1738,7 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1721,7 +1753,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "positionPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1879,11 +1911,6 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "feesQpoolsA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1938,6 +1965,10 @@ export const IDL: Solbond = {
             "type": "u64"
           },
           {
+            "name": "numRedeemed",
+            "type": "u32"
+          },
+          {
             "name": "numPositions",
             "type": "u32"
           },
@@ -1967,6 +1998,14 @@ export const IDL: Solbond = {
           },
           {
             "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
             "type": "bool"
           },
           {
@@ -2064,206 +2103,231 @@ export const IDL: Solbond = {
   "errors": [
     {
       "code": 6000,
+      "name": "RedeemNotApproved",
+      "msg": "Redeem has not been approved yet!"
+    },
+    {
+      "code": 6001,
+      "name": "PositionAlreadyRedeemed",
+      "msg": "Position has already been redeemed!"
+    },
+    {
+      "code": 6002,
+      "name": "PositionNotFulfilledYet",
+      "msg": "Position can't be redeemed before fulfillment"
+    },
+    {
+      "code": 6003,
+      "name": "AllPositionsRedeemed",
+      "msg": "All positions have already been redeemed! You can transfer the funds back"
+    },
+    {
+      "code": 6004,
+      "name": "NotReadyForTransferBack",
+      "msg": "Positions have to redeemed before the funds get transfered back"
+    },
+    {
+      "code": 6005,
       "name": "ProvidedMintNotMatching",
       "msg": "Provided LP mints don't match!"
     },
     {
-      "code": 6001,
+      "code": 6006,
       "name": "ProvidedPortfolioNotMatching",
       "msg": "Provided Portfolios don't match!"
     },
     {
-      "code": 6002,
+      "code": 6007,
       "name": "PositionFullyCreatedError",
       "msg": "Position already fully created!"
     },
     {
-      "code": 6003,
+      "code": 6008,
       "name": "PositionAlreadyFulfilledError",
       "msg": "Position already fulfilled!"
     },
     {
-      "code": 6004,
+      "code": 6009,
       "name": "LowBondRedeemableAmount",
       "msg": "Redeemables to be paid out are somehow zero!"
     },
     {
-      "code": 6005,
+      "code": 6010,
       "name": "LowBondTokAmount",
       "msg": "Token to be paid into the bond should not be zero"
     },
     {
-      "code": 6006,
+      "code": 6011,
       "name": "RedeemCapacity",
       "msg": "Asking for too much SOL when redeeming!"
     },
     {
-      "code": 6007,
+      "code": 6012,
       "name": "MinPurchaseAmount",
       "msg": "Not enough credits!"
     },
     {
-      "code": 6008,
+      "code": 6013,
       "name": "TimeFrameIsNotAnInterval",
       "msg": "Provided times are not an interval (end-time before start-time!)"
     },
     {
-      "code": 6009,
+      "code": 6014,
       "name": "TimeFrameIsInThePast",
       "msg": "Provided starting time is not in the future. You should make it in such a way that it is slightly in the future, s.t. you have the ability to pay in some amounts."
     },
     {
-      "code": 6010,
+      "code": 6015,
       "name": "TimeFrameCannotPurchaseAdditionalBondAmount",
       "msg": "Bond is already locked, you cannot pay in more into this bond!"
     },
     {
-      "code": 6011,
+      "code": 6016,
       "name": "TimeFrameNotPassed",
       "msg": "Bond has not gone past timeframe yet"
     },
     {
-      "code": 6012,
+      "code": 6017,
       "name": "MarketRateOverflow",
       "msg": "There was an issue computing the market rate. MarketRateOverflow"
     },
     {
-      "code": 6013,
+      "code": 6018,
       "name": "MarketRateUnderflow",
       "msg": "There was an issue computing the market rate. MarketRateUnderflow"
     },
     {
-      "code": 6014,
+      "code": 6019,
       "name": "PayoutError",
       "msg": "Paying out more than was initially paid in"
     },
     {
-      "code": 6015,
+      "code": 6020,
       "name": "Calculation",
       "msg": "Redeemable-calculation doesnt add up"
     },
     {
-      "code": 6016,
+      "code": 6021,
       "name": "ReturningNoCurrency",
       "msg": "Returning no Tokens!"
     },
     {
-      "code": 6017,
+      "code": 6022,
       "name": "CustomMathError1",
       "msg": "Custom Math Error 1!"
     },
     {
-      "code": 6018,
+      "code": 6023,
       "name": "CustomMathError2",
       "msg": "Custom Math Error 2!"
     },
     {
-      "code": 6019,
+      "code": 6024,
       "name": "CustomMathError3",
       "msg": "Custom Math Error 3!"
     },
     {
-      "code": 6020,
+      "code": 6025,
       "name": "CustomMathError4",
       "msg": "Custom Math Error 4!"
     },
     {
-      "code": 6021,
+      "code": 6026,
       "name": "CustomMathError5",
       "msg": "Custom Math Error 5!"
     },
     {
-      "code": 6022,
+      "code": 6027,
       "name": "CustomMathError6",
       "msg": "Custom Math Error 6!"
     },
     {
-      "code": 6023,
+      "code": 6028,
       "name": "CustomMathError7",
       "msg": "Custom Math Error 7!"
     },
     {
-      "code": 6024,
+      "code": 6029,
       "name": "CustomMathError8",
       "msg": "Custom Math Error 8!"
     },
     {
-      "code": 6025,
+      "code": 6030,
       "name": "CustomMathError9",
       "msg": "Custom Math Error 9!"
     },
     {
-      "code": 6026,
+      "code": 6031,
       "name": "CustomMathError10",
       "msg": "Custom Math Error 10!"
     },
     {
-      "code": 6027,
+      "code": 6032,
       "name": "CustomMathError11",
       "msg": "Custom Math Error 11!"
     },
     {
-      "code": 6028,
+      "code": 6033,
       "name": "CustomMathError12",
       "msg": "Custom Math Error 12!"
     },
     {
-      "code": 6029,
+      "code": 6034,
       "name": "CustomMathError13",
       "msg": "Custom Math Error 13!"
     },
     {
-      "code": 6030,
+      "code": 6035,
       "name": "CustomMathError14",
       "msg": "Custom Math Error 14!"
     },
     {
-      "code": 6031,
+      "code": 6036,
       "name": "CustomMathError15",
       "msg": "Custom Math Error 15!"
     },
     {
-      "code": 6032,
+      "code": 6037,
       "name": "CustomMathError16",
       "msg": "Custom Math Error 16!"
     },
     {
-      "code": 6033,
+      "code": 6038,
       "name": "CustomMathError17",
       "msg": "Custom Math Error 17!"
     },
     {
-      "code": 6034,
+      "code": 6039,
       "name": "CustomMathError18",
       "msg": "Custom Math Error 18!"
     },
     {
-      "code": 6035,
+      "code": 6040,
       "name": "CustomMathError19",
       "msg": "Custom Math Error 19!"
     },
     {
-      "code": 6036,
+      "code": 6041,
       "name": "CustomMathError20",
       "msg": "Custom Math Error 20!"
     },
     {
-      "code": 6037,
+      "code": 6042,
       "name": "CustomMathError21",
       "msg": "Custom Math Error 21!"
     },
     {
-      "code": 6038,
+      "code": 6043,
       "name": "CustomMathError22",
       "msg": "Custom Math Error 22!"
     },
     {
-      "code": 6039,
+      "code": 6044,
       "name": "EmptyTotalTokenSupply",
       "msg": "Total Token Supply seems empty!"
     },
     {
-      "code": 6040,
+      "code": 6045,
       "name": "EmptyTotalCurrencySupply",
       "msg": "Total Currency Supply seems empty!"
     }

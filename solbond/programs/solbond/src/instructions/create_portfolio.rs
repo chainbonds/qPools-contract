@@ -160,6 +160,7 @@ pub fn handler(
     portfolio_account.initial_amount_USDC = _total_amount_USDC;
     
     portfolio_account.num_positions = _num_positions;
+    portfolio_account.num_redeemed = 0;
 
     let clock = Clock::get().unwrap();
     portfolio_account.start_timestamp = clock.unix_timestamp;
@@ -178,7 +179,7 @@ pub fn approve_position_weight_saber(
     _min_mint_amount: u64,
     _index: u32,
 ) -> ProgramResult {
-    msg!("one");
+
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;
     position_account.weight = _weight;
@@ -189,14 +190,14 @@ pub fn approve_position_weight_saber(
 
     position_account.pool_token_amount = 0;
     position_account.minimum_token_amount_out = 0;
-    //position_account.minimum_token_b_amount = 0;
 
 
     position_account.is_fulfilled = false;
+    position_account.is_redeemed = false;
+    position_account.redeem_approved = false;
     position_account.bump = _bump_position;
 
     position_account.pool_address = ctx.accounts.pool_mint.key().clone();
-    msg!("kir");
     position_account.portfolio_pda = ctx.accounts.portfolio_pda.key().clone();
     
 
@@ -222,8 +223,10 @@ pub fn approve_withdraw_amount_saber(
         "The mint address provided in the context doesn't match the approved mint!"
     );
 
+
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;
+    position_account.redeem_approved = true;
 
     position_account.pool_token_amount = _pool_token_amount;
     position_account.minimum_token_amount_out = _minimum_token_amount;

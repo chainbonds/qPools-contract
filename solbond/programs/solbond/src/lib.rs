@@ -262,6 +262,16 @@ pub mod solbond {
  */
 #[error]
 pub enum ErrorCode {
+    #[msg("Redeem has not been approved yet!")]
+    RedeemNotApproved,
+    #[msg("Position has already been redeemed!")]
+    PositionAlreadyRedeemed,
+    #[msg("Position can't be redeemed before fulfillment")]
+    PositionNotFulfilledYet,
+    #[msg("All positions have already been redeemed! You can transfer the funds back")]
+    AllPositionsRedeemed,
+    #[msg("Positions have to redeemed before the funds get transfered back")]
+    NotReadyForTransferBack,
     #[msg("Provided LP mints don't match!")]
     ProvidedMintNotMatching,
     #[msg("Provided Portfolios don't match!")]

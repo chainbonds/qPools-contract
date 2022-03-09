@@ -61,7 +61,7 @@ describe('qPools!', () => {
     
     it('create a new portfolio', async() => {
         let total_amount_USDC = new u64(340000);
-        let num_positions =3;
+        let num_positions =1;
         try {
             let sig_create = await portfolio.createPortfolioSigned(weights, genericPayer, num_positions, total_amount_USDC, pool_addresses)
         } catch (e) {
@@ -89,7 +89,7 @@ describe('qPools!', () => {
     }) 
     
     it('fulfill a position', async() => {
-        const num_positions = 3;
+        const num_positions = 1;
         let total_amount_USDC = new u64(340000);
         try {
             let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, total_amount_USDC);
@@ -108,10 +108,10 @@ describe('qPools!', () => {
 
     it('sign a redeem', async() => {
         let total_amount_USDC = new u64(340000);
-        const num_positions = 3;
-        let amountTokenA = new u64(1200);
+        const num_positions = 1;
+        let amountTokenA = new u64(1);
         let amountTokenB = new u64(0);
-        let minMintAmount = new u64(1);
+        let minMintAmount = new u64(0);
         let sign_withdraw = await portfolio.signApproveWithdrawToUser(genericPayer,total_amount_USDC)
         var i = 0;
         let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
@@ -127,8 +127,10 @@ describe('qPools!', () => {
         let approve_sig2 = await portfolio.redeem_single_position_only_one(
                 i,
                 genericPayer,
-            )
+        )
 
+
+    let sigs_rest = await portfolio.transfer_to_user(provider.wallet);
         
 
     })

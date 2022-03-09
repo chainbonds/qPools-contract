@@ -247,19 +247,56 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return approveWeightInstruction;
     }
 
+    async approveWithdrawAmountSaber(index: number) {
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [this.owner.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        );
+        
+        let poolAddress = this.poolAddresses[index];
+        const stableSwapState = await this.getPoolState(poolAddress);
+        const {state} = stableSwapState;
+        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+
+        let finaltx:TransactionInstruction = await this.solbondProgram.instruction.approveWithdrawAmountSaber(
+            this.portfolioBump,
+            new BN(bumpPosition),
+            new BN(lpAmount),
+            new BN(1),
+            new BN(index),
+            {
+                accounts: {
+                    owner: this.owner.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey, 
+                    poolMint: state.poolTokenMint,                 
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [this.payer]
+            }
+        )
+
+        return finaltx;
+
+    }
+
 
 
     /**
      * Send USDC from the User's Wallet, to the Portfolio Account
      */
-    async transferUsdcFromUserToPortfolio(amount: u64): Promise<TransactionInstruction> {
+    async transferUsdcFromUserToPortfolio(): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromUserToPortfolio()");
         let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
         let pdaUSDCAccount = await this.getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferToPortfolio(
             new BN(this.portfolioBump),
-            amount,
             {
                 accounts: {
                     owner: this.owner.publicKey,
@@ -305,6 +342,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return ix;
     }
     */
+    /* OLD
     // Instructions to create the associated token accounts for the portfolios
     async registerAtaForLiquidityPortfolio(): Promise<TransactionInstruction[]> {
         console.log("#registerAtaForLiquidityPortfolio()");
@@ -323,7 +361,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         }
         console.log("##registerAtaForLiquidityPortfolio()");
         return txs;
-    }
+    }*/
 
     /*OLD
     async registerAllLiquidityPools(): Promise<TransactionInstruction[]> {
@@ -502,10 +540,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     ) {
         console.log("#createSinglePositionInLiquidityPool()");
         let tx: Transaction = new Transaction();
-        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        );
+        //let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+        //    [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
+        //    this.solbondProgram.programId
+        //);
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
             [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
@@ -671,11 +709,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         stableSwapState: StableSwap
     ): Promise<TransactionInstruction> {
         console.log("#redeemSinglePositionOneSide()");
-        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+        /*let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
-        );
-        console.log("poolPDA ", poolPDA.toString());
+        );*/
+        //console.log("poolPDA ", poolPDA.toString());
 
         let [positionPDA, bumpPosition] = await await PublicKey.findProgramAddress(
             [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
@@ -733,15 +771,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let ix: TransactionInstruction = this.solbondProgram.instruction.redeemPositionOneSaber(
             new BN(this.portfolioBump),
             new BN(bumpPosition),
-            new BN(poolBump),
             new BN(index),
-            new BN(lpAmount),
-            new BN(1),
             {
                 accounts: {
                     positionPda: positionPDA,
                     portfolioPda: this.portfolioPDA,
-                    poolPda: poolPDA,
                     portfolioOwner: this.owner.publicKey,
                     poolMint: state.poolTokenMint,
                     inputLp: userAccountpoolToken,
@@ -758,7 +792,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     // Create liquidity accounts
                 },
-                signers:[this.wallet]
+                //signers:[this.wallet]
             }
         )
         console.log("##redeemSinglePositionOneSide()");
@@ -778,7 +812,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let totalPDA_USDCAmount = (await this.connection.getTokenAccountBalance(pdaUSDCAccount)).value.amount;
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferRedeemedToUser(
             new BN(this.portfolioBump),
-            new BN(totalPDA_USDCAmount),
+            //new BN(totalPDA_USDCAmount),
             {
                 accounts: {
                     portfolioOwner: this.owner.publicKey,
@@ -792,7 +826,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     feesQpoolsA: this.qPoolsUsdcFees
                 },
-                signers: [this.payer]
+                //signers: [this.payer]
             }
 
         )

@@ -153,8 +153,8 @@ export type Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "portfolioPda",
@@ -292,11 +292,7 @@ export type Solbond = {
           "type": "u64"
         },
         {
-          "name": "minimumTokenAAmount",
-          "type": "u64"
-        },
-        {
-          "name": "minimumTokenBAmount",
+          "name": "minimumTokenAmount",
           "type": "u64"
         },
         {
@@ -673,8 +669,8 @@ export type Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "portfolioPda",
@@ -862,11 +858,7 @@ export type Solbond = {
             "type": "u64"
           },
           {
-            "name": "minimumTokenAAmount",
-            "type": "u64"
-          },
-          {
-            "name": "minimumTokenBAmount",
+            "name": "minimumTokenAmountOut",
             "type": "u64"
           },
           {
@@ -1297,8 +1289,8 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "portfolioPda",
@@ -1436,11 +1428,7 @@ export const IDL: Solbond = {
           "type": "u64"
         },
         {
-          "name": "minimumTokenAAmount",
-          "type": "u64"
-        },
-        {
-          "name": "minimumTokenBAmount",
+          "name": "minimumTokenAmount",
           "type": "u64"
         },
         {
@@ -1817,8 +1805,8 @@ export const IDL: Solbond = {
       "accounts": [
         {
           "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "portfolioPda",
@@ -2006,11 +1994,7 @@ export const IDL: Solbond = {
             "type": "u64"
           },
           {
-            "name": "minimumTokenAAmount",
-            "type": "u64"
-          },
-          {
-            "name": "minimumTokenBAmount",
+            "name": "minimumTokenAmountOut",
             "type": "u64"
           },
           {

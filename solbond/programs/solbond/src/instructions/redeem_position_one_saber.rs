@@ -137,10 +137,7 @@ pub fn handler(
             ]
         ),
         position.pool_token_amount,
-        std::cmp::max(
-            position.minimum_token_a_amount,
-            position.minimum_token_b_amount
-        ),
+        position.minimum_token_amount_out,
         
     )?;
 

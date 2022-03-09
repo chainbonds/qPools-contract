@@ -142,8 +142,8 @@ pub fn handler(
             ]
         ),
         position.min_mint_amount,
-        position.minimum_token_a_amount,
-        position.minimum_token_b_amount,
+        position.minimum_token_amount_out,
+        position.minimum_token_amount_out,
         
     )?;
     

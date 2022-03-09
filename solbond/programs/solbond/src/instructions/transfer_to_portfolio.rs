@@ -9,8 +9,8 @@ use crate::utils::seeds;
 #[instruction(_bump:u8)]
 pub struct TransferToPortfolio<'info> {
 
-    //#[account(mut)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
 
     #[account(
         mut,

@@ -88,7 +88,7 @@ describe('qPools!', () => {
         }
     }) 
     
-    /*it('fulfill a position', async() => {
+    it('fulfill a position', async() => {
         const num_positions = 3;
         let total_amount_USDC = new u64(340000);
         try {
@@ -98,39 +98,38 @@ describe('qPools!', () => {
             
         }
 
-        for(var i = 0; i < num_positions-1; i++) {
-            let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer,i)
+        var i = 0
+        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer,i)
 
-        }
+        
 
 
-    })*/
+    })
 
     it('sign a redeem', async() => {
         let total_amount_USDC = new u64(340000);
         const num_positions = 3;
         let amountTokenA = new u64(1200);
         let amountTokenB = new u64(0);
-        let minMintAmount = new u64(0);
+        let minMintAmount = new u64(1);
         let sign_withdraw = await portfolio.signApproveWithdrawToUser(genericPayer,total_amount_USDC)
-        for(var i = 0; i < num_positions-1; i++) {
-            let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
+        var i = 0;
+        let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
                 genericPayer,
                 i,
                 minMintAmount,
-                amountTokenA, 
-                amountTokenB
-                )
+                amountTokenA 
+        )
 
-        }
+        
 
-        for(var i = 0; i < num_positions-1; i++) {
-            let approve_sig = await portfolio.redeem_single_position(
+        
+        let approve_sig2 = await portfolio.redeem_single_position_only_one(
                 i,
                 genericPayer,
-                )
+            )
 
-        }
+        
 
     })
 

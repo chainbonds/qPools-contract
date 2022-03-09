@@ -155,8 +155,7 @@ pub mod solbond {
         _bump_portfolio: u8,
         _bump_position: u8,
         _pool_token_amount: u64,
-        _minimum_token_a_amount: u64,
-        _minimum_token_b_amount: u64,
+        _minimum_token_amount: u64,
         _index: u32,
     ) -> ProgramResult {
         instructions::create_portfolio::approve_withdraw_amount_saber(
@@ -164,8 +163,7 @@ pub mod solbond {
             _bump_portfolio,
             _bump_position,
             _pool_token_amount,
-            _minimum_token_a_amount,
-            _minimum_token_b_amount,
+            _minimum_token_amount,
             _index,
         )
     }

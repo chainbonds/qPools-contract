@@ -399,7 +399,7 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
-    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64, tokenBAmount: u64) {
+    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
             [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
@@ -415,7 +415,6 @@ export class Portfolio extends SaberInteractTool {
             new BN(bumpPosition),
             new BN(poolTokenAmount),
             new BN(tokenAAmount),
-            new BN(tokenBAmount),
             new BN(index),
             {
                 accounts: {
@@ -939,7 +938,7 @@ export class Portfolio extends SaberInteractTool {
         for (var i = 0; i < weights.length; i++) {
             let w = weights[i];
             let amountTokenA = amounts[i];
-            let tx = await this.redeem_single_position(i, w, amountTokenA, owner)
+            let tx = await this.redeem_single_position(i, owner)
             transactions_sigs = transactions_sigs.concat(tx)
         }
 
@@ -1075,7 +1074,7 @@ export class Portfolio extends SaberInteractTool {
         return [finaltx];
     }
 
-    async redeem_single_position_only_one(index: number, weight: BN, lp_amount: u64, token_amount: u64, owner: Keypair) {
+    async redeem_single_position_only_one(index: number, owner: Keypair) {
 
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
@@ -1087,15 +1086,15 @@ export class Portfolio extends SaberInteractTool {
 
         console.log("poolTokenMint ", poolTokenMint.toString());
 
-        let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        );
+        // let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
+        //     [poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
+        //     this.solbondProgram.programId
+        // );
 
-        console.log("poolPDA ", poolPDA.toString())
+        // console.log("poolPDA ", poolPDA.toString())
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
@@ -1131,7 +1130,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
 
         console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
-        console.log("🤯 poolPDA", poolPDA.toString());
+        // console.log("🤯 poolPDA", poolPDA.toString());
         
         console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
         console.log("🤥 userAccountA", userAccountA.toString());
@@ -1147,15 +1146,11 @@ export class Portfolio extends SaberInteractTool {
         let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
             new BN(this.portfolioBump),
             new BN(bumpPositon),
-            new BN(poolBump),
             new BN(index),
-            new BN(totalLPTokens.amount),
-            new BN(1),
             {
                 accounts: {
                     positionPda: positonPDA,
                     portfolioPda: this.portfolioPDA,
-                    poolPda: poolPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,
                     inputLp: userAccountpoolToken,
@@ -1180,7 +1175,7 @@ export class Portfolio extends SaberInteractTool {
         await this.provider.connection.confirmTransaction(finaltx);
         console.log("Single Redeem Transaction is : ", finaltx);
 
-        let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
+        /*let finaltx_update = await this.solbondProgram.rpc.updatePoolStruct(
             new BN(poolBump),
             new BN(this.portfolioBump),
             {
@@ -1202,10 +1197,10 @@ export class Portfolio extends SaberInteractTool {
                 },
                 signers: [owner]
             }
-        )
+        )*/
 
-        await this.provider.connection.confirmTransaction(finaltx_update);
-        console.log("Update Pool single TX Is : ", finaltx_update);
+        // await this.provider.connection.confirmTransaction(finaltx_update);
+        // console.log("Update Pool single TX Is : ", finaltx_update);
 
         return [finaltx];
     }

@@ -72,7 +72,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = owner,
         space = 8 + PositionAccountSaber::LEN,
         seeds = [
@@ -105,8 +105,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     _bump_portfolio: u8,
     _bump_position: u8,
     _pool_token_amount: u64,
-    _minimum_token_a_amount: u64,
-    _minimum_token_b_amount: u64,
+    _minimum_token_amount: u64,
     _index: u32,
 )]
 pub struct ApproveWithdrawAmountSaber<'info> {
@@ -189,8 +188,8 @@ pub fn approve_position_weight_saber(
     position_account.min_mint_amount = _min_mint_amount;
 
     position_account.pool_token_amount = 0;
-    position_account.minimum_token_a_amount = 0;
-    position_account.minimum_token_b_amount = 0;
+    position_account.minimum_token_amount_out = 0;
+    //position_account.minimum_token_b_amount = 0;
 
 
     position_account.is_fulfilled = false;
@@ -210,8 +209,7 @@ pub fn approve_withdraw_amount_saber(
     _bump_portfolio: u8,
     _bump_position: u8,
     _pool_token_amount: u64,
-    _minimum_token_a_amount: u64,
-    _minimum_token_b_amount: u64,
+    _minimum_token_amount: u64,
     _index: u32,
 ) -> ProgramResult {
 
@@ -228,8 +226,7 @@ pub fn approve_withdraw_amount_saber(
     position_account.index = _index;
 
     position_account.pool_token_amount = _pool_token_amount;
-    position_account.minimum_token_a_amount = _minimum_token_a_amount;
-    position_account.minimum_token_b_amount = _minimum_token_b_amount;
+    position_account.minimum_token_amount_out = _minimum_token_amount;
 
     Ok(())
 }

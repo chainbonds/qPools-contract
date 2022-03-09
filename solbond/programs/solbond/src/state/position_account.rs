@@ -22,8 +22,8 @@ pub struct PositionAccountSaber {
 
     // stuff for redeem
     pub pool_token_amount: u64,
-    pub minimum_token_a_amount: u64,
-    pub minimum_token_b_amount: u64,
+    pub minimum_token_amount_out: u64,
+    //pub minimum_token_b_amount: u64,
 
     pub bump: u8,
     pub timestamp: i64,
@@ -35,7 +35,7 @@ impl PositionAccountSaber {
             std::mem::size_of::<Pubkey>() * 2 // portfolio_pda, pool_address
             + std::mem::size_of::<bool>()      // is_fulfilled
             + std::mem::size_of::<u32>()      // index
-            + std::mem::size_of::<u64>() * 7  // weight, a_amount, b_amount, min_mint_amount
+            + std::mem::size_of::<u64>() * 6   // weight, a_amount, b_amount, min_mint_amount
             + std::mem::size_of::<u8>()       // bump
             + std::mem::size_of::<i64>();     // time
 

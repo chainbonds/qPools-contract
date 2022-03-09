@@ -194,7 +194,6 @@ pub mod solbond {
         )
     }
 
-
     pub fn redeem_position_saber(
         ctx: Context<RedeemSaberPosition>,
         _bump_portfolio: u8,

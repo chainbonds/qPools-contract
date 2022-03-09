@@ -27,7 +27,6 @@ pub struct PortfolioAccount {
 
     //pub pool_address_1: Pubkey,
 
-
 }
 
 
@@ -43,5 +42,4 @@ impl PortfolioAccount {
     std::mem::size_of::<u64>()*2 + 
     std::mem::size_of::<u32>()*2 +
     std::mem::size_of::<i64>()*2;
-
 }

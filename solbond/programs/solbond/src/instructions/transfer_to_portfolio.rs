@@ -63,8 +63,6 @@ pub fn handler(
                     ].as_ref()
                 ],
             ), portfolio.initial_amount_USDC)?;
-
-
     
     Ok(())
 }

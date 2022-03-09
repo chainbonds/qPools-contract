@@ -245,6 +245,5 @@ pub fn approve_withdraw_to_user(
     portfolio_account.to_be_redeemed = true;
     portfolio_account.withdraw_amount_USDC = _total_amount;
     
-
     Ok(())
 }

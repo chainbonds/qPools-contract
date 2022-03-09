@@ -1261,7 +1261,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

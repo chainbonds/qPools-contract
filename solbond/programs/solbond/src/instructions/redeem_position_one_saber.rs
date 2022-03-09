@@ -1,41 +1,41 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint, TokenAccount};
-use crate::state::{TwoWayPoolAccount, PositionAccount, PortfolioAccount};
+use crate::state::{TwoWayPoolAccount, PositionAccountSaber, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext, WithdrawOne};
 use stable_swap_anchor::StableSwap;
-
+use crate::ErrorCode;
 
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
-    _bump_pool: u8, 
+    //_bump_pool: u8, 
     _index: u32,
-    mint_amount: u64,
-    token_amount: u64,
-
 )]
 pub struct RedeemOneSaberPosition<'info> {
     // doesn't have to be mut
     #[account(
+    mut,
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    #[account(mut)]
-    pub portfolio_owner: Signer<'info>,
+    //#[account(mut)]
+    pub portfolio_owner: AccountInfo<'info>,
 
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
+        mut,
         seeds = [portfolio_owner.key().as_ref(),
-        format!("{seed}{index}", seed = seeds::USER_POSITION_STRING, index = _index).as_bytes(),
+         //&_index.to_le_bytes(),seeds::USER_POSITION_STRING,
+         format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
         ], 
-         bump = _bump_position
+        bump = _bump_position
     )]
-    pub position_pda: Box<Account<'info, PositionAccount>>,
+    pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     pub swap: AccountInfo<'info>,
 
@@ -67,14 +67,6 @@ pub struct RedeemOneSaberPosition<'info> {
     pub reserve_b: Box<Account<'info, TokenAccount>>,
 
 
-    #[account(
-        mut,
-        seeds=[pool_mint.key().as_ref(),seeds::TWO_WAY_LP_POOL],
-        bump = _bump_pool
-    )]
-    pub pool_pda: Box<Account<'info, TwoWayPoolAccount>>,
-
-
     
     pub saber_swap_program: Program<'info, StableSwap>,
     pub system_program: Program<'info, System>,
@@ -88,17 +80,27 @@ pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
     _bump_portfolio: u8,
     _bump_position: u8,
-    _bump_pool: u8, 
     _index: u32,
-    lp_amount: u64,
-    token_amount: u64,
 
 ) -> ProgramResult {
 
-    
     msg!("withdraw single saber position");
+    if !ctx.accounts.position_pda.redeem_approved {
+        return Err(ErrorCode::RedeemNotApproved.into());
+    }
+    if ctx.accounts.portfolio_pda.num_redeemed >= ctx.accounts.portfolio_pda.num_positions {
+        return Err(ErrorCode::AllPositionsRedeemed.into());
+    }
+    if !ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
+    if ctx.accounts.position_pda.is_redeemed {
+        return Err(ErrorCode::PositionAlreadyRedeemed.into());
 
-    let amt_start = ctx.accounts.user_a.amount;
+    }
+
+
+    //let amt_start = ctx.accounts.user_a.amount;
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
         swap_authority: ctx.accounts.swap_authority.to_account_info(),
@@ -128,7 +130,7 @@ pub fn handler(
     };
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
 
-
+    let position = &mut ctx.accounts.position_pda;
     stable_swap_anchor::withdraw_one(
         CpiContext::new_with_signer(
             saber_swap_program,
@@ -141,27 +143,18 @@ pub fn handler(
                 ].as_ref()
             ]
         ),
-        lp_amount,
-        token_amount,
+        position.pool_token_amount,
+        position.minimum_token_amount_out,
         
     )?;
 
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.num_redeemed += 1;
+    let position = &mut ctx.accounts.position_pda;
+    position.is_redeemed = true;
+
     msg!("withdraw completed successfully");
-
-    let pool_account = &mut ctx.accounts.pool_pda;
-    if pool_account.mint_a.key() == ctx.accounts.mint_a.key() {
-        pool_account.tmp_a = amt_start;
-        pool_account.tmp_b = 0;
-
-
-    } else {
-        pool_account.tmp_b = amt_start;
-        pool_account.tmp_a = 0;
-
-    }
-
-
-    
+  
 
     Ok(())
 }

@@ -58,7 +58,84 @@ describe('qPools!', () => {
 
 
     })
+    
+    it('create a new portfolio', async() => {
+        let total_amount_USDC = new u64(340000);
+        let num_positions =1;
+        try {
+            let sig_create = await portfolio.createPortfolioSigned(weights, genericPayer, num_positions, total_amount_USDC, pool_addresses)
+        } catch (e) {
 
+        }
+        
+        for (var i = 0; i < num_positions; i++) {
+            let amountTokenA = new u64(1200);
+            let amountTokenB = new u64(0);
+            let minMintAmount = new u64(0);
+            let weight = new BN(500);
+            try{
+                let approve_sig = await portfolio.approvePositionWeightSaber(
+                amountTokenA,
+                amountTokenB,
+                minMintAmount,
+                i,
+                weight,
+                genericPayer
+                )
+            } catch (e) {
+
+            }
+        }
+    }) 
+    
+    it('fulfill a position', async() => {
+        const num_positions = 1;
+        let total_amount_USDC = new u64(340000);
+        try {
+            let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, total_amount_USDC);
+
+        } catch (e) {
+            
+        }
+
+        var i = 0
+        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer,i)
+
+        
+
+
+    })
+
+    it('sign a redeem', async() => {
+        let total_amount_USDC = new u64(340000);
+        const num_positions = 1;
+        let amountTokenA = new u64(1);
+        let amountTokenB = new u64(0);
+        let minMintAmount = new u64(0);
+        let sign_withdraw = await portfolio.signApproveWithdrawToUser(genericPayer,total_amount_USDC)
+        var i = 0;
+        let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
+                genericPayer,
+                i,
+                minMintAmount,
+                amountTokenA 
+        )
+
+        
+
+        
+        let approve_sig2 = await portfolio.redeem_single_position_only_one(
+                i,
+                genericPayer,
+        )
+
+
+    let sigs_rest = await portfolio.transfer_to_user(provider.wallet);
+        
+
+    })
+
+    /*
     it('simulate sending to portfolio owned account', async () => {
         let amountTokenA = new u64(340000);
         let sig_reg = await portfolio.registerPortfolio(weights, pool_addresses, genericPayer);
@@ -86,7 +163,8 @@ describe('qPools!', () => {
         }
 
     })
-
+    */
+    /*
     it('read portfolio', async () => {
         let amountTokenA = new u64(1200);
         let sigs_rest = await portfolio.read_from_portfolio(provider.wallet, amountTokenA);
@@ -94,28 +172,31 @@ describe('qPools!', () => {
         console.log("ON the count TRANSACTION SIG ", sigs_rest.toString())
     })
 
-
-    
+    */
+   
+    /*
     
     
     it('simulate a withdraw one', async () => {
 
-        let amount_token = new u64(300);
-        let amount_lp = new u64(3400);
-
+        let amount_token = new u64(1200);
+        let amount_lp = new u64(1200);
+        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer); 
         let sigs_rest = await portfolio.redeem_single_position_only_one(0, new BN(500), amount_lp, amount_token, genericPayer);
-
+        console.log("🦍 TRANSACTION SIG REDEEM ", sig_sign_redeem.toString())
         console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
     })
 
-
+    
     it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
         let amountTokenA = new u64(120000);
         const amounts = [amountTokenA, amountTokenA, amountTokenA]
+        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer); 
         let sigs_rest = await portfolio.redeem_full_portfolio(weights, amounts, genericPayer);
+        console.log("🦍 TRANSACTION SIG REDEEM ", sig_sign_redeem.toString())
 
         for (let smt of sigs_rest) {
             console.log("🦍 TRANSACTION SIG ", smt.toString())
@@ -123,11 +204,13 @@ describe('qPools!', () => {
         }
 
     })
-
+    
     it('simulate a redeem to user', async () => {
 
         let amountTokenA = new u64(3400);
+        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer); 
         let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
+        console.log("🦍 TRANSACTION SIG REDEEM ", sig_sign_redeem.toString())
 
         console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
@@ -159,5 +242,5 @@ describe('qPools!', () => {
         }
 
     })
-    
+    */
 })

@@ -27,12 +27,11 @@ pub struct RedeemSaberPosition<'info> {
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
-        seeds = [portfolio_owner.key().as_ref(),
-        // &_index.to_le_bytes(),seeds::USER_POSITION_STRING,
-        format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-
-        ], 
-         bump = _bump_position
+        // seeds = [portfolio_owner.key().as_ref(),
+        // // &_index.to_le_bytes(),seeds::USER_POSITION_STRING,
+        // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
+        // ],
+        //  bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 

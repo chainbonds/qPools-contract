@@ -94,60 +94,60 @@ export class QPoolsStats {
         this.currencyMint = currencyMint;
         // Now get the associated token addresses for all the other accounts
         // TODO: Refactor this!
-        PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
-
-            PublicKey.findProgramAddress([_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
-                this.solbondProgram.programId
-            ).then(([tvlAccount, bumpTvlAccount]) => {
-                this.tvlAccount = tvlAccount;
-                this.bumpTvlAccount = bumpTvlAccount;
-            });
-
-            this.qPoolAccount = _qPoolAccount;
-            this.bumpQPoolAccount = _bumpQPoolAccount;
-
-            // Fetch the bondPoolAccount
-            let bondPoolAccount;
-            console.log("BondPoolAccount is: ");
-            console.log("this qpoolacount is: ", this.qPoolAccount.toString());
-            (this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)).then((x) => {
-                console.log("1");
-                bondPoolAccount = x as BondPoolAccount;
-
-                console.log("2");
-                // Now assign all variables to this
-                if (!bondPoolAccount.bondPoolCurrencyTokenMint.equals(this.currencyMint.publicKey)) {
-                    console.log(bondPoolAccount.bondPoolCurrencyTokenMint.toString());
-                    console.log(this.currencyMint.publicKey.toString());
-                    throw Error("mint is not the same!: " + this.currencyMint.publicKey.toString());
-                }
-
-                console.log("3");
-                // Again, signers should never be needed!
-                this.currencyMint = new Token(
-                    this.connection,
-                    bondPoolAccount.bondPoolCurrencyTokenMint,
-                    this.solbondProgram.programId,
-                    airdropAdmin
-                );
-                console.log("4");
-                this.QPTokenMint = new Token(
-                    this.connection,
-                    bondPoolAccount.bondPoolRedeemableMint,
-                    this.solbondProgram.programId,
-                    airdropAdmin
-                );
-                console.log("5");
-                this.qPoolQPTAccount = bondPoolAccount.bondPoolRedeemableTokenAccount;
-                console.log("6");
-                this.qPoolCurrencyAccount = bondPoolAccount.bondPoolCurrencyTokenAccount;
-                console.log("7", this.qPoolCurrencyAccount.toString());
-            });
-
-        });
+        // PublicKey.findProgramAddress(
+        //     [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
+        //     this.solbondProgram.programId
+        // ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
+        //
+        //     PublicKey.findProgramAddress([_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+        //         this.solbondProgram.programId
+        //     ).then(([tvlAccount, bumpTvlAccount]) => {
+        //         this.tvlAccount = tvlAccount;
+        //         this.bumpTvlAccount = bumpTvlAccount;
+        //     });
+        //
+        //     this.qPoolAccount = _qPoolAccount;
+        //     this.bumpQPoolAccount = _bumpQPoolAccount;
+        //
+        //     // Fetch the bondPoolAccount
+        //     let bondPoolAccount;
+        //     console.log("BondPoolAccount is: ");
+        //     console.log("this qpoolacount is: ", this.qPoolAccount.toString());
+        //     (this.solbondProgram.account.bondPoolAccount.fetch(this.qPoolAccount)).then((x) => {
+        //         console.log("1");
+        //         bondPoolAccount = x as BondPoolAccount;
+        //
+        //         console.log("2");
+        //         // Now assign all variables to this
+        //         if (!bondPoolAccount.bondPoolCurrencyTokenMint.equals(this.currencyMint.publicKey)) {
+        //             console.log(bondPoolAccount.bondPoolCurrencyTokenMint.toString());
+        //             console.log(this.currencyMint.publicKey.toString());
+        //             throw Error("mint is not the same!: " + this.currencyMint.publicKey.toString());
+        //         }
+        //
+        //         console.log("3");
+        //         // Again, signers should never be needed!
+        //         this.currencyMint = new Token(
+        //             this.connection,
+        //             bondPoolAccount.bondPoolCurrencyTokenMint,
+        //             this.solbondProgram.programId,
+        //             airdropAdmin
+        //         );
+        //         console.log("4");
+        //         this.QPTokenMint = new Token(
+        //             this.connection,
+        //             bondPoolAccount.bondPoolRedeemableMint,
+        //             this.solbondProgram.programId,
+        //             airdropAdmin
+        //         );
+        //         console.log("5");
+        //         this.qPoolQPTAccount = bondPoolAccount.bondPoolRedeemableTokenAccount;
+        //         console.log("6");
+        //         this.qPoolCurrencyAccount = bondPoolAccount.bondPoolCurrencyTokenAccount;
+        //         console.log("7", this.qPoolCurrencyAccount.toString());
+        //     });
+        //
+        // });
         if (collectPriceFeed) {
             this.collectPriceFeed();
         }

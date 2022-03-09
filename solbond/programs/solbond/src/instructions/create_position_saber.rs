@@ -26,10 +26,11 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut,
-        seeds = [owner.key().as_ref(),
-        format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-        ], 
-        bump = _bump_position
+        // seeds = [
+        //     owner.key().as_ref(),
+        //     format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
+        // ],
+        // bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
@@ -88,20 +89,6 @@ pub struct SaberLiquidityInstruction<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[derive(Accounts)]
-#[instruction(_bump_portfolio: u8, _index: u32, amount: u64)]
-pub struct ValidateContext<'info> {
-
-    #[account(mut)]
-    pub owner: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
-    )]
-    pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
-
-}
-
 pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
     _bump_position: u8,
@@ -158,7 +145,7 @@ pub fn handler(
             deposit_context,
             &[
                 [
-                    ctx.accounts.owner.key().as_ref(), 
+                    ctx.accounts.owner.key().as_ref(),
                     seeds::PORTFOLIO_SEED,
                     &[_bump_portfolio]
                 ].as_ref()
@@ -178,21 +165,6 @@ pub fn handler(
         portfolio.fully_created = true;
         portfolio.fulfilled_timestamp = clock.unix_timestamp;
     }
-
-    Ok(())
-}
-
-pub fn validate_position(ctx: Context<ValidateContext>, _bump_portfolio: u8, index: u32, amount:u64) -> ProgramResult {
-
-    /***
-     * This is meant to be bundled up in a TX with create_saber_position
-     * 
-     * ***/
-    assert!(amount >= ctx.accounts.portfolio_pda.remaining_amount_USDC,
-        "Amount too large to create position!");
-    let portfolio = &mut ctx.accounts.portfolio_pda;
-    portfolio.amounts_in[index as usize] =amount;
-    portfolio.remaining_amount_USDC = portfolio.remaining_amount_USDC.checked_sub(amount).ok_or_else(| | {ErrorCode::CustomMathError6})?;;
 
     Ok(())
 }

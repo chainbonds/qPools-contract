@@ -164,7 +164,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
     async fetchSinglePosition(index: number) {
         console.log("#fetchSinglePosition()");
         let [positonPDA, bumpPositon] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
@@ -293,7 +293,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
             this.solbondProgram.programId
         );
         let [positonPDA, bumpPositon] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
@@ -479,7 +479,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("poolPDA ", poolPDA.toString())
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
@@ -611,7 +611,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         console.log("poolPDA ", poolPDA.toString());
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
         console.log("positionPDA ", positonPDA.toString())

@@ -66,94 +66,94 @@ const main = async () => {
 
     // Get the qPoolAccount
     console.log("QPoolAccount");
-    let [qPoolAccount, bumpQPoolAccount] = await PublicKey.findProgramAddress(
-        [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
-        solbondProgram.programId
-    );
-    // Get the account addresses
-    let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
-        [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
-        solbondProgram.programId
-    );
+    // let [qPoolAccount, bumpQPoolAccount] = await PublicKey.findProgramAddress(
+    //     [currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
+    //     solbondProgram.programId
+    // );
+    // // Get the account addresses
+    // let [tvlAccount, tvlAccountBump] = await PublicKey.findProgramAddress(
+    //     [qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+    //     solbondProgram.programId
+    // );
 
-    await createAssociatedTokenAccountSendUnsigned(
-        connection,
-        MOCK.DEV.SABER_USDC,
-        qPoolAccount,
-        provider.wallet
-    );
-    const usdc_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, qPoolAccount);
-    await createAssociatedTokenAccountSendUnsigned(
-        connection,
-        MOCK.DEV.SABER_USDT,
-        qPoolAccount,
-        provider.wallet
-    );
-    const usdt_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDT, qPoolAccount);
-    await createAssociatedTokenAccountSendUnsigned(
-        connection,
-        MOCK.DEV.SABER_CASH,
-        qPoolAccount,
-        provider.wallet
-    );
-    const cash_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_CASH, qPoolAccount);
-    await createAssociatedTokenAccountSendUnsigned(
-        connection,
-        MOCK.DEV.SABER_PAI,
-        qPoolAccount,
-        provider.wallet
-    );
-    const pai_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_PAI, qPoolAccount);
-    await createAssociatedTokenAccountSendUnsigned(
-        connection,
-        MOCK.DEV.SABER_TESTUSD,
-        qPoolAccount,
-        provider.wallet
-    );
-    const testUsd_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_TESTUSD, qPoolAccount);
-
-    /** Periodically calculate the TVL */
-    setInterval(async () => {
-
-        // TODO: The program address inside is not finishing when this is triggered!!
-        // Maybe put this in a separately
-        // await qpoolsStats.collectPriceFeed();
-        await delay(5000);
-        // Damn, dafuq, this was it really! I guess this is also what caused issues on the frontend!
-
-        console.log("Calculate TVL");
-        let {tvl} = await qpoolsStats.calculateTVL();
-
-        // Create associated token account for the respective
-        console.log("RPC");
-        console.log("Writing TVL: ", tvl.toString());
-        let txs = new Transaction();
-        const tx1 = solbondProgram.instruction.setTvl(
-            new BN(tvl),
-            tvlAccountBump,
-            {
-                accounts: {
-                    tvlAccount: tvlAccount,
-                    initializer: wallet.publicKey,
-                    poolAccount: qPoolAccount,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
-                    systemProgram: anchor.web3.SystemProgram.programId
-                },
-            }
-        )
-        txs.add(tx1);
-        let sg = await connection.sendTransaction(txs, [wallet]);
-        await connection.confirmTransaction(sg);
-        console.log("Transaction is: ", sg);
-
-        console.log("Tvl set!");
-        console.log("TVL Account is:", tvlAccount.toString());
-
-        let tvlInUsdc = (await solbondProgram.account.tvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
-        console.log("TVL in USDC is: ", tvlInUsdc.tvlInUsdc.toString());
-
-    }, 10000);
+    // await createAssociatedTokenAccountSendUnsigned(
+    //     connection,
+    //     MOCK.DEV.SABER_USDC,
+    //     qPoolAccount,
+    //     provider.wallet
+    // );
+    // const usdc_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, qPoolAccount);
+    // await createAssociatedTokenAccountSendUnsigned(
+    //     connection,
+    //     MOCK.DEV.SABER_USDT,
+    //     qPoolAccount,
+    //     provider.wallet
+    // );
+    // const usdt_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDT, qPoolAccount);
+    // await createAssociatedTokenAccountSendUnsigned(
+    //     connection,
+    //     MOCK.DEV.SABER_CASH,
+    //     qPoolAccount,
+    //     provider.wallet
+    // );
+    // const cash_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_CASH, qPoolAccount);
+    // await createAssociatedTokenAccountSendUnsigned(
+    //     connection,
+    //     MOCK.DEV.SABER_PAI,
+    //     qPoolAccount,
+    //     provider.wallet
+    // );
+    // const pai_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_PAI, qPoolAccount);
+    // await createAssociatedTokenAccountSendUnsigned(
+    //     connection,
+    //     MOCK.DEV.SABER_TESTUSD,
+    //     qPoolAccount,
+    //     provider.wallet
+    // );
+    // const testUsd_account = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_TESTUSD, qPoolAccount);
+    //
+    // /** Periodically calculate the TVL */
+    // setInterval(async () => {
+    //
+    //     // TODO: The program address inside is not finishing when this is triggered!!
+    //     // Maybe put this in a separately
+    //     // await qpoolsStats.collectPriceFeed();
+    //     await delay(5000);
+    //     // Damn, dafuq, this was it really! I guess this is also what caused issues on the frontend!
+    //
+    //     console.log("Calculate TVL");
+    //     let {tvl} = await qpoolsStats.calculateTVL();
+    //
+    //     // Create associated token account for the respective
+    //     console.log("RPC");
+    //     console.log("Writing TVL: ", tvl.toString());
+    //     let txs = new Transaction();
+    //     const tx1 = solbondProgram.instruction.setTvl(
+    //         new BN(tvl),
+    //         tvlAccountBump,
+    //         {
+    //             accounts: {
+    //                 tvlAccount: tvlAccount,
+    //                 initializer: wallet.publicKey,
+    //                 poolAccount: qPoolAccount,
+    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //                 clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+    //                 systemProgram: anchor.web3.SystemProgram.programId
+    //             },
+    //         }
+    //     )
+    //     txs.add(tx1);
+    //     let sg = await connection.sendTransaction(txs, [wallet]);
+    //     await connection.confirmTransaction(sg);
+    //     console.log("Transaction is: ", sg);
+    //
+    //     console.log("Tvl set!");
+    //     console.log("TVL Account is:", tvlAccount.toString());
+    //
+    //     let tvlInUsdc = (await solbondProgram.account.tvlInfoAccount.fetch(tvlAccount)) as TvlInUsdc;
+    //     console.log("TVL in USDC is: ", tvlInUsdc.tvlInUsdc.toString());
+    //
+    // }, 10000);
 
 }
 

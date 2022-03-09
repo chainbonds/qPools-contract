@@ -66,22 +66,22 @@ export class QPoolsUser {
         // Add the bond pool account here too
         this.currencyMint = currencyMint;
 
-        PublicKey.findProgramAddress(
-            [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
-
-            PublicKey.findProgramAddress(
-                [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
-                this.solbondProgram.programId
-            ).then(([tvlAccount, bumpTvlAccount]) => {
-                this.tvlAccount = tvlAccount;
-                this.bumpTvlAccount = bumpTvlAccount;
-            });
-
-            this.qPoolAccount = _qPoolAccount;
-            this.bumpQPoolAccount = _bumpQPoolAccount;
-        });
+        // PublicKey.findProgramAddress(
+        //     [this.currencyMint.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.BOND_POOL_ACCOUNT))],
+        //     this.solbondProgram.programId
+        // ).then(([_qPoolAccount, _bumpQPoolAccount]) => {
+        //
+        //     PublicKey.findProgramAddress(
+        //         [_qPoolAccount.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TVL_INFO_ACCOUNT))],
+        //         this.solbondProgram.programId
+        //     ).then(([tvlAccount, bumpTvlAccount]) => {
+        //         this.tvlAccount = tvlAccount;
+        //         this.bumpTvlAccount = bumpTvlAccount;
+        //     });
+        //
+        //     this.qPoolAccount = _qPoolAccount;
+        //     this.bumpQPoolAccount = _bumpQPoolAccount;
+        // });
 
     }
 

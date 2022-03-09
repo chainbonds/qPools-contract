@@ -93,7 +93,7 @@ export type Solbond = {
         },
         {
           "name": "portfolioPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

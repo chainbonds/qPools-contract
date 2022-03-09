@@ -12,7 +12,6 @@ use crate::utils::seeds;
     _weights:Vec<u64>, 
     _num_positions:u32,
     _total_amount_USDC: u64,
-
 )]
 pub struct SavePortfolio<'info> {
 
@@ -20,7 +19,7 @@ pub struct SavePortfolio<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = owner,
         space = 8 + PortfolioAccount::LEN,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
@@ -61,6 +60,7 @@ pub struct ApproveWithdrawPortfolio<'info> {
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
+    _weight: u64,
     _max_initial_token_a_amount: u64,
     _max_initial_token_b_amount: u64,
     _min_mint_amount: u64,
@@ -74,22 +74,30 @@ pub struct ApprovePositionWeightSaber<'info> {
     #[account(
         init_if_needed,
         payer = owner,
-        space = 8 + PositionAccountSaber::LEN,
+        space =
+        {
+            msg!("hmmmmmm {:?}", _index.to_le_bytes());
+            msg!("hmmmmmm 2 {:?}", [owner.key().as_ref(), &_index.to_le_bytes(), seeds::USER_POSITION_STRING]);
+            8 + PositionAccountSaber::LEN
+        },
         seeds = [
             owner.key().as_ref(),
-            format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-            //&_index.to_le_bytes(),
-            //seeds::USER_POSITION_STRING,
-        ], 
-        bump = _bump_position
+            &_index.to_le_bytes(),
+            seeds::USER_POSITION_STRING
+            // seeds::USER_POSITION_STRING
+            // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
+            // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
+        ],
+        bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     #[account(
+        mut,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
-    
+
     pub pool_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,
@@ -115,16 +123,18 @@ pub struct ApproveWithdrawAmountSaber<'info> {
 
     #[account(
         mut,
-        seeds = [
-            owner.key().as_ref(),
-            format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-        ], 
-         bump = _bump_position
+        // seeds = [
+        //     owner.key().as_ref(),
+        //     &index.to_le_bytes(),
+        //     seeds::USER_POSITION_STRING
+        //     // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
+        // ],
+        //  bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     #[account(
-        mut, 
+        mut,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
@@ -179,6 +189,10 @@ pub fn approve_position_weight_saber(
     _min_mint_amount: u64,
     _index: u32,
 ) -> ProgramResult {
+
+    // let msg = format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING);
+    // msg!("Seed string is: ");
+    // msg!(&msg);
 
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;

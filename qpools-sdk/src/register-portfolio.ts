@@ -174,7 +174,7 @@ export class Portfolio extends SaberInteractTool {
             this.solbondProgram.programId
         );
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
@@ -308,7 +308,7 @@ export class Portfolio extends SaberInteractTool {
 
         console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
+            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
@@ -676,7 +676,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("poolPDA ", poolPDA.toString())
 
         let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM + index.toString()))],
+            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 

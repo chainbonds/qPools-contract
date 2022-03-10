@@ -12,8 +12,8 @@ pub struct PortfolioAccount {
     pub fully_created: bool,
     //pub all_positions_redeemed: bool,
 
-    pub initial_amount_USDC: u64,
-    pub withdraw_amount_USDC: u64,
+    pub initial_amount_usdc: u64,
+    pub withdraw_amount_usdc: u64,
 
     pub num_redeemed: u32,
     pub num_positions: u32,

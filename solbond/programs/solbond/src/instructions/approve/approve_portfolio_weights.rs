@@ -1,0 +1,64 @@
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token};
+use crate::state::{PortfolioAccount};
+use crate::utils::seeds;
+
+
+
+#[derive(Accounts, Clone)]
+#[instruction(
+    _bump:u8, 
+    _weights:Vec<u64>, 
+    _num_positions:u32,
+    _total_amount_usdc: u64,
+)]
+pub struct SavePortfolio<'info> {
+
+    #[account(mut)]
+    pub owner: Signer<'info>,
+
+    #[account(
+        init_if_needed,
+        payer = owner,
+        space = 8 + PortfolioAccount::LEN,
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
+    )]
+    pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+    
+    
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+
+}
+
+
+pub fn handler(
+    ctx: Context<SavePortfolio>,
+    _bump: u8,
+    _weights: Vec<u64>,
+    _num_positions: u32,
+    _total_amount_usdc: u64,
+) -> ProgramResult {
+    let sum: u64 = _weights.iter().sum();
+    assert!(sum/1000 == 1, "weights do not sum to 1!");
+
+
+    let portfolio_account = &mut ctx.accounts.portfolio_pda;
+  
+    portfolio_account.owner = ctx.accounts.owner.clone().key();
+    
+    portfolio_account.bump = _bump;
+    portfolio_account.fully_created = false;
+    portfolio_account.to_be_redeemed = false;
+    portfolio_account.initial_amount_usdc = _total_amount_usdc;
+    
+    portfolio_account.num_positions = _num_positions;
+    portfolio_account.num_redeemed = 0;
+
+    let clock = Clock::get().unwrap();
+    portfolio_account.start_timestamp = clock.unix_timestamp;
+
+
+    Ok(())
+}

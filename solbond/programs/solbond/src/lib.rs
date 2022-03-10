@@ -69,7 +69,7 @@ pub mod solbond {
         _num_positions: u32,
         _amount: u64,
     ) -> ProgramResult {
-        instructions::create_portfolio::handler(
+        instructions::approve::approve_portfolio_weights::handler(
             ctx,
             _bump, 
             _weights,
@@ -94,7 +94,8 @@ pub mod solbond {
         _min_mint_amount: u64,
         _index: u32,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_position_weight_saber(
+        
+        instructions::approve::saber::approve_position_weight::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
@@ -143,7 +144,7 @@ pub mod solbond {
         _bump: u8,
         _total_amount: u64,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_withdraw_to_user(
+        instructions::approve_portfolio_withdraw::handler(
             ctx,
             _bump,
             _total_amount
@@ -158,7 +159,7 @@ pub mod solbond {
         _minimum_token_amount: u64,
         _index: u32,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_withdraw_amount_saber(
+        instructions::approve::saber::approve_withdraw_amount::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
@@ -169,16 +170,6 @@ pub mod solbond {
     }
 
     
-    pub fn initialize_pool_account(
-        ctx: Context<InitializeLpPoolAccount>,
-        _bump: u8,
-    ) -> ProgramResult {
-        instructions::initialize_lp_pool::handler(
-            ctx,
-            _bump
-        )
-    }
-
 
     pub fn create_position_saber(
         ctx: Context<SaberLiquidityInstruction>,
@@ -186,7 +177,7 @@ pub mod solbond {
         _bump_portfolio: u8,
         _index:u32,
     ) -> ProgramResult {
-        instructions::create_position_saber::handler(
+        instructions::cpi::saber::create_position::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
@@ -202,7 +193,7 @@ pub mod solbond {
         _index: u32,
     ) -> ProgramResult {
 
-        instructions::redeem_position_saber::handler(
+        instructions::cpi::saber::redeem_position_two_sided::handler(
             ctx, 
             _bump_portfolio,
         _bump_position, 
@@ -220,7 +211,7 @@ pub mod solbond {
         //_bump_pool: u8,
         _index: u32,
     ) -> ProgramResult {
-        instructions::redeem_position_one_saber::handler(
+        instructions::cpi::saber::redeem_position_one_sided::handler(
             ctx, 
             _bump_portfolio,
         _bump_position,

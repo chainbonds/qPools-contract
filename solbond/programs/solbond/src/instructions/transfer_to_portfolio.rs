@@ -62,14 +62,14 @@ pub fn handler(
                         &[_bump]
                     ].as_ref()
                 ],
-            ), portfolio.initial_amount_USDC)?;
+            ), portfolio.initial_amount_usdc)?;
     
     Ok(())
 }
 
 
 pub fn read_portfolio_account(ctx: Context<TransferToPortfolio>, _bump: u8, amount: u64) -> ProgramResult {
-    msg!("amount read {}", ctx.accounts.portfolio_pda.initial_amount_USDC);
+    msg!("amount read {}", ctx.accounts.portfolio_pda.initial_amount_usdc);
     Ok(())
 
 }

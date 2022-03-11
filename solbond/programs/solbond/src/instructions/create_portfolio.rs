@@ -8,7 +8,7 @@ use crate::utils::seeds;
 
 #[derive(Accounts, Clone)]
 #[instruction(
-    _bump:u8, 
+    _bump:u8,
     _weights:Vec<u64>, 
     _num_positions:u32,
     _total_amount_USDC: u64,
@@ -84,9 +84,6 @@ pub struct ApprovePositionWeightSaber<'info> {
             owner.key().as_ref(),
             &_index.to_le_bytes(),
             seeds::USER_POSITION_STRING
-            // seeds::USER_POSITION_STRING
-            // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-            // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
         ],
         bump = _bump_position,
     )]
@@ -123,13 +120,12 @@ pub struct ApproveWithdrawAmountSaber<'info> {
 
     #[account(
         mut,
-        // seeds = [
-        //     owner.key().as_ref(),
-        //     &index.to_le_bytes(),
-        //     seeds::USER_POSITION_STRING
-        //     // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-        // ],
-        //  bump = _bump_position
+        seeds = [
+            owner.key().as_ref(),
+            &_index.to_le_bytes(),
+            seeds::USER_POSITION_STRING
+        ],
+        bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
@@ -251,13 +247,13 @@ pub fn approve_withdraw_amount_saber(
 pub fn approve_withdraw_to_user(
     ctx: Context<ApproveWithdrawPortfolio>,
     _bump: u8,
-    _total_amount: u64,
+    _total_amount_USDC: u64,
 ) -> ProgramResult {
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
     //assert!(portfolio_account.fully_created, "portfolio can't be withdrawn before full creation");
     
     portfolio_account.to_be_redeemed = true;
-    portfolio_account.withdraw_amount_USDC = _total_amount;
+    portfolio_account.withdraw_amount_USDC = _total_amount_USDC;
     
     Ok(())
 }

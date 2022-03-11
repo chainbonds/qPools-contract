@@ -8,6 +8,10 @@ const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
 
+export function bnTo8(bn: BN): Uint8Array {
+    return Buffer.from([...bn.toArray("le", 4)])
+}
+
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

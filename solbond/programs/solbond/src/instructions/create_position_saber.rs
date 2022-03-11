@@ -20,23 +20,20 @@ use crate::ErrorCode;
 #[instruction(
     _bump_position: u8,
     _bump_portfolio: u8,
-    _index: u32,
+    _index: u32
 )]
 pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut,
-        // seeds = [
-        //     owner.key().as_ref(),
-        //     format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-        // ],
+        // seeds = [portfolio_owner.key().as_ref(), &_index.to_le_bytes(), seeds::USER_POSITION_STRING],
         // bump = _bump_position
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     #[account(
         mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        // seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 

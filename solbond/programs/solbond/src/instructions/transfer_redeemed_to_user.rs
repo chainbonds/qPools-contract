@@ -14,7 +14,7 @@ pub struct TransferRedeemedToUser<'info> {
     #[account(mut,
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
-    pub portfolio_pda: Account<'info, PortfolioAccount>,
+    pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     //#[account(mut)]
     pub portfolio_owner: AccountInfo<'info>,

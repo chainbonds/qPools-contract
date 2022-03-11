@@ -12,6 +12,7 @@ import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {
+    accountExists,
     bnTo8,
     createAssociatedTokenAccountUnsignedInstruction,
     getAssociatedTokenAddressOffCurve,
@@ -107,13 +108,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         );
         this.portfolioPDA = portfolioPDA;
 
-        console.log("Account item is: ", this.solbondProgram.account);
-        console.log("Account item is: ", this.solbondProgram.account.portfolioAccount);
-        console.log("All methods are: ");
-        if (!this.solbondProgram.account.portfolioAccount) {
-            console.log("Hello!");
-            return
-        }
         // console.log(getMethods(this.solbondProgram.accounts.portfolioAccount).join("\n"));
         // let response = await this.connection.getAccountInfo(portfolioPDA);
         // let portfolioContent1 = bufferToPortfolio(response.data);
@@ -165,6 +159,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         console.log("#getPortfolioInformation");
 
         // Get the saber stableswap state for all positions
+
+        // return empty array if portfolio ID does not exist
+        if (!(await accountExists(this.connection, this.portfolioPDA))) {
+            return []
+        }
 
         // Get the portfolio
         console.log("Fetching portfolio");

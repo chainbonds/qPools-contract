@@ -24,6 +24,14 @@ export const tokenAccountExists = async (
     return info.value !== null
 }
 
+export const accountExists = async (
+    conn: web3.Connection,
+    account: web3.PublicKey
+): Promise<boolean> => {
+    const info = await conn.getParsedAccountInfo(account)
+    return info.value !== null
+}
+
 export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
 

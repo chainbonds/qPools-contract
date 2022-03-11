@@ -18,11 +18,9 @@ import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {createAssociatedTokenAccountSendUnsigned, getAssociatedTokenAddressOffCurve} from "../utils";
 import {SEED} from "../seeds";
-import {PortfolioAccount} from "../types/portfolioAccount";
-import {PositionAccount} from "../types/positionAccount";
-import {TwoWayPoolAccount} from "../types/twoWayPoolAccount";
+import {PortfolioAccount} from "../types/account/portfolioAccount";
+import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {delay} from "../utils";
-import {ExplicitSaberPool, getActivePools} from "../registry/registry-helper";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -104,46 +102,14 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         return portfolioContent;
     }
 
-    async fetchAllPools(): Promise<TwoWayPoolAccount[]> {
-        console.log("#fetchAllPools()");
-        // Right now, we only have 3 liquidity pools, and that's it!
-        let responses = [];
-
-        // For each pool, return the address
-        for (var i = 0; i < 3; i++) {
-            let poolAddress = this.poolAddresses[i];
-
-            const stableSwapState = await this.getPoolState(poolAddress);
-            const {state} = stableSwapState;
-
-            let poolContent = await this.fetchSinglePool(state);
-            console.log("TwoWayPoolAccount Content", poolContent);
-            responses.push(poolContent);
-
-        }
-        console.log("##fetchAllPools()");
-        return responses;
-    }
-
-    async fetchSinglePool(state: StableSwapState): Promise<TwoWayPoolAccount> {
-        console.log("#fetchSinglePool()");
-        // Pool token mint is generated from the unique, pool address. As such, this is already an iterator!
-        let [poolPDA, _] = await PublicKey.findProgramAddress(
-            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        );
-
-        let response = await this.solbondProgram.account.twoWayPoolAccount.fetch(poolPDA);
-        let poolContent = response as TwoWayPoolAccount;
-        console.log("##fetchSinglePool()");
-        return poolContent;
-    }
-
-    async fetchAllPositions(): Promise<PositionAccount[]> {
+    async fetchAllPositions(): Promise<PositionAccountSaber[]> {
         console.log("#fetchAllPositions()");
 
         // Right now, we only have 3 liquidity pools, and that's it!
         let responses = [];
+
+        // TODO: Instead of 3, allow more positions
+        // And iterate over the poolAddresses, after you retrieved all positions
 
         // For each pool, return the address
         for (var i = 0; i < 3; i++) {
@@ -169,7 +135,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         );
 
         let response = await this.solbondProgram.account.positionAccount.fetch(positonPDA);
-        let positionContent = response as PositionAccount;
+        let positionContent = response as PositionAccountSaber;
         console.log("##fetchSinglePosition()");
         return positionContent;
     }

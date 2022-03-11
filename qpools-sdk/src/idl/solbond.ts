@@ -302,72 +302,6 @@ export type Solbond = {
       ]
     },
     {
-      "name": "initializePoolAccount",
-      "accounts": [
-        {
-          "name": "poolPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintLp",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenAccountA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenAccountB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "initializer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        }
-      ]
-    },
-    {
       "name": "createPositionSaber",
       "accounts": [
         {
@@ -875,58 +809,6 @@ export type Solbond = {
           {
             "name": "timestamp",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "twoWayPoolAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "generator",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintA",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintB",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintLp",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenAccountA",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenAccountB",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "totalAmountInA",
-            "type": "u64"
-          },
-          {
-            "name": "totalAmountInB",
-            "type": "u64"
-          },
-          {
-            "name": "tmpA",
-            "type": "u64"
-          },
-          {
-            "name": "tmpB",
-            "type": "u64"
           }
         ]
       }
@@ -1470,72 +1352,6 @@ export const IDL: Solbond = {
       ]
     },
     {
-      "name": "initializePoolAccount",
-      "accounts": [
-        {
-          "name": "poolPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintLp",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenAccountA",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolTokenAccountB",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "initializer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        }
-      ]
-    },
-    {
       "name": "createPositionSaber",
       "accounts": [
         {
@@ -2043,58 +1859,6 @@ export const IDL: Solbond = {
           {
             "name": "timestamp",
             "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "twoWayPoolAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "generator",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintA",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintB",
-            "type": "publicKey"
-          },
-          {
-            "name": "mintLp",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenAccountA",
-            "type": "publicKey"
-          },
-          {
-            "name": "poolTokenAccountB",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "totalAmountInA",
-            "type": "u64"
-          },
-          {
-            "name": "totalAmountInB",
-            "type": "u64"
-          },
-          {
-            "name": "tmpA",
-            "type": "u64"
-          },
-          {
-            "name": "tmpB",
-            "type": "u64"
           }
         ]
       }

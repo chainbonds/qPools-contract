@@ -20,20 +20,6 @@ export const tokenAccountExists = async (
     return info.value !== null
 }
 
-// export const createTokenAccount = async (
-//     mint: PublicKey,
-//     address: PublicKey | null
-// ): Promise<TransactionInstruction> => {
-//     return Token.createAssociatedTokenAccountInstruction(
-//         ASSOCIATED_TOKEN_PROGRAM_ID,
-//         TOKEN_PROGRAM_ID,
-//         mint,
-//         address,
-//         owner,
-//         wallet.publicKey
-//     )
-// }
-
 export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
 

@@ -17,10 +17,12 @@ import {
     tokenAccountExists
 } from "../utils";
 import {SEED} from "../seeds";
-import {PortfolioAccount} from "../types/portfolioAccount";
-import {PositionAccount} from "../types/positionAccount";
-import {TwoWayPoolAccount} from "../types/twoWayPoolAccount";
+import {PortfolioAccount} from "../types/account/portfolioAccount";
+import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {delay} from "../utils";
+import {PositionInfo} from "../types/positionInfo";
+import {getMethods} from "../debug-utils";
+import {saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -103,42 +105,29 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             this.solbondProgram.programId
         );
         this.portfolioPDA = portfolioPDA;
-        let response = await this.solbondProgram.account.portfolioAccount.fetch(portfolioPDA);
-        let portfolioContent = response as PortfolioAccount;
-        console.log("Portfolio Content", portfolioContent);
+
+        console.log("Account item is: ", this.solbondProgram.account);
+        console.log("Account item is: ", this.solbondProgram.account.portfolioAccount);
+        console.log("All methods are: ");
+        if (!this.solbondProgram.account.portfolioAccount) {
+            console.log("Hello!");
+            return
+        }
+        // console.log(getMethods(this.solbondProgram.accounts.portfolioAccount).join("\n"));
+        // let response = await this.connection.getAccountInfo(portfolioPDA);
+        // let portfolioContent1 = bufferToPortfolio(response.data);
+        // // Fetch account, and maybe deserialize manually?
+        // console.log("Portfolio Content", portfolioContent1);
+        // // await delay(5000);
+
+        let portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(portfolioPDA)) as PortfolioAccount;
+        console.log("Now fetching again ...", portfolioContent);
+
         console.log("##fetchPortfolio()");
         return portfolioContent;
     }
 
-    async fetchAllPools(): Promise<TwoWayPoolAccount[]> {
-        console.log("#fetchAllPools()");
-        let responses = [];
-        for (var i = 0; i < 3; i++) {
-            let poolAddress = this.poolAddresses[i];
-            const stableSwapState = await this.getPoolState(poolAddress);
-            const {state} = stableSwapState;
-            let poolContent = await this.fetchSinglePool(state);
-            console.log("TwoWayPoolAccount Content", poolContent);
-            responses.push(poolContent);
-        }
-        console.log("##fetchAllPools()");
-        return responses;
-    }
-
-    async fetchSinglePool(state: StableSwapState): Promise<TwoWayPoolAccount> {
-        console.log("#fetchSinglePool()");
-        // Pool token mint is generated from the unique, pool address. As such, this is already an iterator!
-        let [poolPDA, _] = await PublicKey.findProgramAddress(
-            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        );
-        let response = await this.solbondProgram.account.twoWayPoolAccount.fetch(poolPDA);
-        let poolContent = response as TwoWayPoolAccount;
-        console.log("##fetchSinglePool()");
-        return poolContent;
-    }
-
-    async fetchAllPositions(): Promise<PositionAccount[]> {
+    async fetchAllPositions(): Promise<PositionAccountSaber[]> {
         console.log("#fetchAllPositions()");
         let responses = [];
         for (var i = 0; i < 3; i++) {
@@ -150,17 +139,190 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return responses;
     }
 
-    async fetchSinglePosition(index: number) {
+    async fetchSinglePosition(index: number): Promise<PositionAccountSaber> {
         console.log("#fetchSinglePosition()");
+        let indexAsBuffer = this.bnTo8(new BN(index));
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+            [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
         console.log("Fetching position PDA ..", positionPDA.toString());
-        let response = await this.solbondProgram.account.positionAccount.fetch(positionPDA);
-        let positionContent = response as PositionAccount;
+        let response = await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA);
+        let positionContent = response as PositionAccountSaber;
         console.log("##fetchSinglePosition()");
         return positionContent;
+    }
+
+    /**
+     * Fetch the Portfolio Information from the positions ...
+     * Get the saber state, get the pool address, get all the pool accounts, and LP tokens, and normal tokens from the portfolio
+     * skip counting duplicates
+     *
+     * Perhaps create a dictionary, which maps mint to amount ...
+     */
+    async getPortfolioInformation(): Promise<PositionInfo[]>{
+        console.log("#getPortfolioInformation");
+
+        // Get the saber stableswap state for all positions
+
+        // Get the portfolio
+        console.log("Fetching portfolio");
+        let portfolio: PortfolioAccount = await this.fetchPortfolio();
+        // Get how many positions are in the portfolio
+        // console.log("Num positions are: ", portfolio.numPositions, typeof portfolio.numPositions);
+        let allPositions: number = portfolio.numPositions;
+
+        // fetchSinglePosition
+        let out: PositionInfo[] = [];
+        for (var index = 0; index < allPositions; index++) {
+
+            // Get the single position
+            console.log("Fetching single position");
+            let positionAccount: PositionAccountSaber = await this.fetchSinglePosition(index);
+            console.log("Fetching get pool state");
+            console.log("Pool Address is: ", positionAccount);
+            console.log("Pool Address is: ", positionAccount.poolAddress.toString());
+
+            // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
+            let saberPoolAddress = saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+            console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
+            const stableSwapState = await this.getPoolState(saberPoolAddress);
+            const {state} = stableSwapState;
+
+            // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
+            console.log("Fetching account PDAs");
+            let portfolioAtaA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+            let portfolioAtaB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+            let portfolioAtaLp = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+
+            // Also get the token amounts, I guess lol
+            let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
+            let tokenBAmount = (await this.connection.getTokenAccountBalance(portfolioAtaB)).value;
+            let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
+
+            // Add to the portfolio account
+            out.push({
+                index: index,
+                poolAddress: positionAccount.poolAddress,
+                portfolio: this.portfolioPDA,
+                mintA: state.tokenA.mint,
+                ataA: portfolioAtaA,
+                amountA: tokenAAmount,
+                mintB: state.tokenB.mint,
+                ataB: portfolioAtaB,
+                amountB: tokenBAmount,
+                mintLp: state.poolTokenMint,
+                ataLp: portfolioAtaLp,
+                amountLp: tokenLPAmount
+            })
+        }
+
+        console.log("##getPortfolioInformation");
+        return out;
+    }
+
+    async getLpTokenExchangeRateItems(state: StableSwapState) {
+
+        // Get Reserve A
+        console.log("Token account address is: ", state.tokenA.reserve);
+        let amountReserveA = (await this.connection.getTokenAccountBalance(state.tokenA.reserve)).value.uiAmount;
+        // Get Reserve B
+        console.log("Token account address is: ", state.tokenA.reserve);
+        let amountReserveB = (await this.connection.getTokenAccountBalance(state.tokenB.reserve)).value.uiAmount;
+
+        if (!amountReserveA || !amountReserveB) {
+            throw Error("One of the reserve values is null!" + String(amountReserveA) + " " +  String(amountReserveB));
+        }
+        // Convert Reserve A to it's USD value
+        // Convert Reserve B to it's USD value
+        // Convert to the USD currency (We can skip this step because we focus on USD stablecoins for now..)
+
+        // Add these up, to get an idea of how much total value is in the pool
+        let poolContentsInUsdc = amountReserveA + amountReserveB;
+        let supplyLpToken = (await this.connection.getTokenSupply(state.poolTokenMint)).value.uiAmount;
+
+        return {
+            supplyLpToken: supplyLpToken,
+            poolContentsInUsdc: poolContentsInUsdc
+        };
+    }
+
+    async getPortfolioUsdcValue() {
+        console.log("#getPortfolioUsdcValue");
+        let includedMints: Set<string> = new Set();
+        let storedPositions = await this.getPortfolioInformation();
+        let usdAmount = 0.;
+        let storedPositionUsdcAmounts: any = [];
+
+        console.log("All fetched data is: ", storedPositions);
+        Promise.all(storedPositions.map(async (position: PositionInfo) => {
+
+            let saberPoolAddress = saberPoolLpToken2poolAddress(position.poolAddress);
+            const stableSwapState = await this.getPoolState(saberPoolAddress);
+            const {state} = stableSwapState;
+
+            let {supplyLpToken, poolContentsInUsdc} = await this.getLpTokenExchangeRateItems(state);
+            let amountUserLp = position.amountLp.uiAmount;
+            if (!supplyLpToken) {
+                throw Error("One of the LP information values is null or zero!" + String(supplyLpToken));
+            }
+            // This case is totall fine, actually
+            if ((!amountUserLp) && ((amountUserLp != 0))) {
+                throw Error("One of the LP information values is null or zero!" + String(amountUserLp));
+            }
+
+            // Calculate the exchange rate between lp tokens, and the total reserve values
+            // The second operation defines the exchange rate, but we do it in a "safe" way
+            // perhaps we should treat all these as BN ..
+            let usdValueUserLp = (amountUserLp * poolContentsInUsdc) / supplyLpToken;
+            console.log("User portfolio value is: ", usdValueUserLp);
+
+            console.log("Token account address is: ", state.tokenA.reserve);
+            let amountUserA = position.amountA.uiAmount;
+            // Get Reserve B
+            console.log("Token account address is: ", state.tokenB.reserve);
+            let amountUserB = position.amountB.uiAmount;
+
+            if ((!amountUserA && amountUserA != 0) || (!amountUserB && amountUserB != 0)) {
+                throw Error("One of the reserve values is null!" + String(amountUserA) + " " +  String(amountUserB));
+            }
+
+            // // Also convert here to USD,
+            // let usdValueUserA = amountUserA;
+            // let usdValueUserB = amountUserB;
+            //
+            // // We can skip this step, bcs again, we only use stablecoins for now
+            // let userPositionValue = usdValueUserA + usdValueUserB + usdValueUserLp;
+
+            // Modify with the Pyth price
+            // Treat the LP tokens as 1-to-1 (?)
+            if (!includedMints.has(position.mintA.toString())) {
+                usdAmount += position.amountA.uiAmount!;
+            }
+            if (!includedMints.has(position.mintB.toString())) {
+                usdAmount += position.amountB.uiAmount!;
+            }
+            if (!includedMints.has(position.mintLp.toString())) {
+                usdAmount += usdValueUserLp;
+            }
+
+            includedMints.add(position.mintA.toString());
+            includedMints.add(position.mintB.toString());
+            includedMints.add(position.mintLp.toString());
+
+            storedPositionUsdcAmounts.push(
+                {totalPositionValue: usdValueUserLp}
+            )
+
+        }));
+
+        console.log("##getPortfolioUsdcValue");
+
+        return {
+            storedPositions: storedPositions,
+            usdAmount: usdAmount,
+            storedPositionUsdcAmounts: storedPositionUsdcAmounts,
+        };
     }
 
     /**

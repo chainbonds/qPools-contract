@@ -83,6 +83,11 @@ export class SaberInteractToolFrontendFriendly {
         console.log("💵 qPoolCurrencyAccount", this.qPoolCurrencyAccount!.toString());
     }
 
+    /**
+     * Takes in the saber stable-swap state to get the state.
+     * Perhaps should allow also to input the LP token, and then automatically fetch from there, if it's a token-type
+     * @param pool_address
+     */
     async getPoolState(pool_address: PublicKey) {
         const fetchedStableSwap = await StableSwap.load(
             this.connection,
@@ -164,6 +169,7 @@ export class SaberInteractToolFrontendFriendly {
     async prepareSaberPool(pool_address: PublicKey) {
         //console.log("type of pool address")
         //console.log(typeof pool_address)
+        console.log("Getting pool state ...", pool_address.toString());
         const fetchedStableSwapPool = await this.getPoolState(pool_address);
         //console.log("stable swap pool fetcheed ", fetchedStableSwapPool)
         const {state} = fetchedStableSwapPool

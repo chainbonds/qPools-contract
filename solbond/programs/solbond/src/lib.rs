@@ -168,18 +168,6 @@ pub mod solbond {
         )
     }
 
-    
-    pub fn initialize_pool_account(
-        ctx: Context<InitializeLpPoolAccount>,
-        _bump: u8,
-    ) -> ProgramResult {
-        instructions::initialize_lp_pool::handler(
-            ctx,
-            _bump
-        )
-    }
-
-
     pub fn create_position_saber(
         ctx: Context<SaberLiquidityInstruction>,
         _bump_position: u8,

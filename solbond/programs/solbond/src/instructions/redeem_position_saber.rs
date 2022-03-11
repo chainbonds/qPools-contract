@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount, Mint};
-use crate::state::{TwoWayPoolAccount, PositionAccountSaber, PortfolioAccount};
+use crate::state::{PositionAccountSaber, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext};

@@ -39,7 +39,7 @@ export interface ExplicitToken {
     logoURI: string
     name: string,
     symbol: string,
-    pyth: PythStruct
+    pyth?: PythStruct
 }
 
 export interface ExplicitSaberPool {
@@ -47,7 +47,7 @@ export interface ExplicitSaberPool {
     name: string,
     tokens: SaberToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
     currency: string,
-    lpToken: any,  // Again, should be updated on the fly
+    lpToken: ExplicitToken,  // Again, should be updated on the fly
     plotKey: string,
     swap: StableSwap,
     quarry: string,
@@ -180,6 +180,28 @@ export function getPoolsContainingToken(tokenMint: PublicKey) {
 export function getSerpiusEndpoint() {
     // "https://qpools.serpius.com/weight_status.json";
     return "https://qpools.serpius.com/weight_status_devnet.json";
+}
+
+export function getPoolsContainingLpToken(lpTokenMint: PublicKey) {
+    let allPools: ExplicitSaberPool[] = [];
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+
+        // These are not explicit token types, these are saber token types
+        if (lpTokenMint.toString() === x.lpToken.address.toString()) {
+            allPools.push(x);
+        }
+
+    })
+    return allPools;
+}
+
+export function saberPoolLpToken2poolAddress(poolMint: PublicKey): PublicKey {
+    let all = getPoolsContainingLpToken(poolMint);
+    // Pick the first instance
+    console.assert(all.length == 1);
+    return new PublicKey(all[0].swap.config.swapAccount);
+    // Take first instance lol
+    // Make a simple lookup
 }
 
 // TODO: Write batch functions for all these

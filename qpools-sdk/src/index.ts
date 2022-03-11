@@ -1,7 +1,5 @@
-import {QPoolsUser} from "./qpools-user";
 import {MOCK} from "./const";
-import {BondPoolAccount} from "./types/bondPoolAccount";
-import airdropAdmin from "./airdropAdmin";
+import airdropAdmin from "./devnet/airdropAdmin";
 import {getSolbondProgram} from "./solbond-program";
 import {
     createAssociatedTokenAccountSendUnsigned, createAssociatedTokenAccountUnsigned,
@@ -10,18 +8,18 @@ import {
     createTokenAccount, getAssociatedTokenAddressOffCurve,
     getBlockchainEpoch,
     getPayer,
-    waitForEpoch
+    waitForEpoch,
+    tokenAccountExists
 } from "./utils";
 import { Portfolio } from "./register-portfolio";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 import { PortfolioFrontendFriendlyChainedInstructions } from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
 import { IDL as SolbondIdl } from "./idl/solbond";
 import * as registry from "./registry/registry-helper";
-import { PortfolioAccount } from "./types/portfolioAccount";
+import { PortfolioAccount } from "./types/account/portfolioAccount";
+import { PositionInfo } from "./types/positionInfo";
 
 export {
-    QPoolsUser,
-    BondPoolAccount,
     airdropAdmin,
     getSolbondProgram,
     createMint2,
@@ -39,5 +37,7 @@ export {
     SolbondIdl,
     registry,
     MOCK,
-    PortfolioAccount
+    PortfolioAccount,
+    PositionInfo,
+    tokenAccountExists
 }

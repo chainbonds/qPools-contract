@@ -26,15 +26,12 @@ pub struct ApprovePositionWeightSaber<'info> {
         {
             msg!("hmmmmmm {:?}", _index.to_le_bytes());
             msg!("hmmmmmm 2 {:?}", [owner.key().as_ref(), &_index.to_le_bytes(), seeds::USER_POSITION_STRING]);
-            8 + PositionAccountSaber::LEN
+            8 + PositionAccountSaber::LEN 
         },
         seeds = [
             owner.key().as_ref(),
             &_index.to_le_bytes(),
             seeds::USER_POSITION_STRING
-            // seeds::USER_POSITION_STRING
-            // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
-            // format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING).as_bytes(),
         ],
         bump = _bump_position,
     )]
@@ -46,6 +43,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
+    // pub pool_mint: Account<'info, Mint>,
     pub pool_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,

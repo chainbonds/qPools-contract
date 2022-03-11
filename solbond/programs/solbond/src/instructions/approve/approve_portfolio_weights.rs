@@ -10,7 +10,6 @@ use crate::utils::seeds;
     _bump:u8, 
     _weights:Vec<u64>, 
     _num_positions:u32,
-    _total_amount_usdc: u64,
 )]
 pub struct SavePortfolio<'info> {
 
@@ -38,7 +37,6 @@ pub fn handler(
     _bump: u8,
     _weights: Vec<u64>,
     _num_positions: u32,
-    _total_amount_usdc: u64,
 ) -> ProgramResult {
     let sum: u64 = _weights.iter().sum();
     assert!(sum/1000 == 1, "weights do not sum to 1!");
@@ -51,7 +49,6 @@ pub fn handler(
     portfolio_account.bump = _bump;
     portfolio_account.fully_created = false;
     portfolio_account.to_be_redeemed = false;
-    portfolio_account.initial_amount_usdc = _total_amount_usdc;
     
     portfolio_account.num_positions = _num_positions;
     portfolio_account.num_redeemed = 0;

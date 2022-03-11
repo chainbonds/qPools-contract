@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
-use crate::state::{PortfolioAccount};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer,Mint};
+use crate::state::{PortfolioAccount,UserCurrencyAccount};
 use crate::utils::seeds;
 use crate::ErrorCode;
 
@@ -9,6 +9,7 @@ use crate::ErrorCode;
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio: u8,
+    _bump_user_currency: u8,
 )]
 pub struct TransferRedeemedToUser<'info> {
     #[account(mut,
@@ -20,6 +21,16 @@ pub struct TransferRedeemedToUser<'info> {
     pub portfolio_owner: AccountInfo<'info>,
 
 
+    #[account(
+        mut,
+        seeds = [
+            portfolio_owner.key().as_ref(),
+            currency_mint.key().as_ref(),
+            seeds::USER_CURRENCY_STRING
+        ],
+        bump = _bump_user_currency,
+    )]
+    pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
 
     //      user_token: SwapToken  block
     #[account(
@@ -32,6 +43,9 @@ pub struct TransferRedeemedToUser<'info> {
         constraint = &pda_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
+
+
+    pub currency_mint: Account<'info, Mint>,
 
 
     // #[account(mut)]
@@ -47,6 +61,7 @@ pub struct TransferRedeemedToUser<'info> {
 pub fn handler(
     ctx: Context<TransferRedeemedToUser>,
     _bump_portfolio: u8,
+    _bump_user_currency: u8,
 ) -> ProgramResult {
 
     //let amount_after_fee;

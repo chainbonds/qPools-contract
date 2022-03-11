@@ -5,7 +5,6 @@ use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
-use crate::ErrorCode;
 
 
 #[derive(Accounts)]

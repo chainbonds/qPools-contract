@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 
-use anchor_spl::token::{self,TokenAccount};
 
 #[account]
 pub struct PortfolioAccount {
@@ -12,8 +11,11 @@ pub struct PortfolioAccount {
     pub fully_created: bool,
     //pub all_positions_redeemed: bool,
 
-    pub initial_amount_usdc: u64,
-    pub withdraw_amount_usdc: u64,
+    // pub initial_amount_usdc: u64,
+    // pub withdraw_amount_usdc: u64,
+
+    // pub initial_amount_sol: u64,
+    // pub withdraw_amount_sol: u64,
 
     pub num_redeemed: u32,
     pub num_positions: u32,
@@ -39,7 +41,7 @@ impl PortfolioAccount {
     std::mem::size_of::<Pubkey>() + 
     std::mem::size_of::<u8>() + 
     std::mem::size_of::<bool>()*2 +
-    std::mem::size_of::<u64>()*2 + 
+    //std::mem::size_of::<u64>()*2 + 
     std::mem::size_of::<u32>()*2 +
     std::mem::size_of::<i64>()*2;
 }

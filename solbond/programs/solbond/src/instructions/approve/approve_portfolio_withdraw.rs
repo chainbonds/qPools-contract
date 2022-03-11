@@ -8,7 +8,6 @@ use crate::utils::seeds;
 #[derive(Accounts, Clone)]
 #[instruction(
     _bump:u8, 
-    _total_amount_usdc: u64,
 )]
 pub struct ApproveWithdrawPortfolio<'info> {
 
@@ -35,13 +34,11 @@ pub struct ApproveWithdrawPortfolio<'info> {
 pub fn handler(
     ctx: Context<ApproveWithdrawPortfolio>,
     _bump: u8,
-    _total_amount: u64,
 ) -> ProgramResult {
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
     //assert!(portfolio_account.fully_created, "portfolio can't be withdrawn before full creation");
     
     portfolio_account.to_be_redeemed = true;
-    portfolio_account.withdraw_amount_usdc = _total_amount;
     
     Ok(())
 }

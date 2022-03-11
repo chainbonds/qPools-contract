@@ -20,3 +20,4 @@ anchor-spl = "0.20.1"
 solana-program = "1.8.12"
 spl-token = { version = "3.1.4", features = ["no-entrypoint"] }
 stable-swap-anchor = "1.6.7"
+marinade-finance = {path = "../../deps/liquid-staking-program/programs/marinade-finance/", features = ["no-entrypoint"]}

@@ -1,20 +1,24 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
-use crate::state::{PortfolioAccount};
+use crate::state::{PortfolioAccount, UserCurrencyAccount};
 use crate::utils::seeds;
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 #[derive(Accounts)]
-#[instruction(_bump:u8)]
-pub struct TransferToPortfolio<'info> {
+#[instruction(
+    _bump_portfolio:u8, 
+    _bump_user_currency: u8,
+)]
+
+    pub struct TransferToPortfolio<'info> {
 
     #[account(mut)]
     pub owner: Signer<'info>,
 
     #[account(
         mut,
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
 
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
@@ -26,6 +30,17 @@ pub struct TransferToPortfolio<'info> {
         constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_token_account: Box<Account<'info,TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [
+            owner.key().as_ref(),
+            token_mint.key().as_ref(),
+            seeds::USER_CURRENCY_STRING
+        ],
+        bump = _bump_user_currency,
+    )]
+    pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
 
     pub token_mint: Account<'info, Mint>,
     
@@ -41,7 +56,8 @@ pub struct TransferToPortfolio<'info> {
 
 pub fn handler(
     ctx: Context<TransferToPortfolio>,
-    _bump: u8,
+    _bump_portfolio: u8,
+    _bump_user_currency: u8,
 ) -> ProgramResult {
     msg!("transfer initial funds from user to portfolio");
     let cpi_accounts = Transfer {
@@ -51,7 +67,7 @@ pub fn handler(
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
 
-    let portfolio = &mut ctx.accounts.portfolio_pda;
+    //let portfolio = &mut ctx.accounts.portfolio_pda;
 
     token::transfer(
         CpiContext::new_with_signer(cpi_program, cpi_accounts,
@@ -59,17 +75,12 @@ pub fn handler(
                     [
                         ctx.accounts.owner.key().as_ref(), 
                         seeds::PORTFOLIO_SEED,
-                        &[_bump]
+                        &[_bump_portfolio]
                     ].as_ref()
                 ],
-            ), portfolio.initial_amount_usdc)?;
+            ), ctx.accounts.user_currency_pda_account.initial_amount)?;
     
     Ok(())
 }
 
 
-pub fn read_portfolio_account(ctx: Context<TransferToPortfolio>, _bump: u8, amount: u64) -> ProgramResult {
-    msg!("amount read {}", ctx.accounts.portfolio_pda.initial_amount_usdc);
-    Ok(())
-
-}

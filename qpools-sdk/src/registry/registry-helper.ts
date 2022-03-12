@@ -8,6 +8,7 @@ import {DEV_PORTFOLIOID_TO_TOKEN} from "./devnet/portfolio-to-pool.devnet";
 import {token} from "easy-spl";
 import {StableSwap} from "@saberhq/stableswap-sdk";
 import {parsePriceData, PriceData} from "@pythnetwork/client";
+import {MOCK} from "../const";
 
 // Create interfaces for all getters here for now
 
@@ -82,15 +83,27 @@ function getAllPools(): any {
     return DEV_POOLS_INFO;
 }
 
+
+export function getSaberStableSwapProgramId(): PublicKey {
+    // Probably also replace this with a hardcode.
+    // We should aim to remove all occurrences of MOCK.DEV to this file, and then delete them indefinitely
+    return new PublicKey(MOCK.DEV.stableSwapProgramId);
+}
+
+export function getReferenceCurrencyMint(): PublicKey {
+    return new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
+}
+
+
 /**
  * Get all the pools that are using the USDC pool, as specified below.
  */
 export function getActivePools(): ExplicitSaberPool[] {
     // Return the pool accounts, that correspond to these tokesn ...
     // Get all pools that have as one component USDC
-    let mintUsdc = "VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL";
+    let referenceCurrency = getReferenceCurrencyMint();
     // let usdcToken = getToken(new PublicKey(mintUsdc));
-    return getPoolsContainingToken(new PublicKey(mintUsdc));
+    return getPoolsContainingToken(new PublicKey(referenceCurrency));
 }
 
 /**
@@ -118,6 +131,46 @@ export function getToken(tokenMint: PublicKey): ExplicitToken | null {
             out = x;
         }
     })
+    return out;
+}
+
+export function getPoolsFromSplStringIds(splStringId: string[]): Set<ExplicitSaberPool> {
+    let out: Set<ExplicitSaberPool> = new Set();
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+        if (splStringId.includes(x.name)) {
+            out.add(x);
+        }
+    });
+    return out;
+}
+
+export function getTokensFromSplStringIds(splStringId: string[]): Set<ExplicitToken> {
+    let out: Set<ExplicitToken> = new Set<ExplicitToken>();
+    getAllTokens()["tokens"].map((x: ExplicitToken) => {
+        if (splStringId.includes(x.name)) {
+            out.add(x);
+        }
+    });
+    return out
+}
+
+export function getTokenFromSplStringId(splStringId: string): ExplicitToken {
+    let out: ExplicitToken | null = null;
+    getAllTokens()["tokens"].map((x: ExplicitToken) => {
+        if (x.name === splStringId) {
+            out = x;
+        }
+    });
+    return out;
+}
+
+export function getPoolFromSplStringId(splStringId: string): ExplicitSaberPool {
+    let out: ExplicitSaberPool | null = null;
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+        if (x.name === splStringId) {
+            out = x;
+        }
+    });
     return out;
 }
 

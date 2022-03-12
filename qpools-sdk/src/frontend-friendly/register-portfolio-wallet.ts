@@ -18,8 +18,8 @@ import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {createAssociatedTokenAccountSendUnsigned, getAssociatedTokenAddressOffCurve} from "../utils";
 import {SEED} from "../seeds";
-import {PortfolioAccount} from "../types/account/portfolioAccount";
-import {PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {getPortfolioPda, PortfolioAccount} from "../types/account/portfolioAccount";
+import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {delay} from "../utils";
 
 export interface PositionsInput {
@@ -63,13 +63,10 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
-        PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
-            this.solbondProgram.programId
-        ).then(([portfolioPDA, bumpPortfolio]) => {
+        getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
-        }).finally(() => {});
+        });
         delay(1000);
 
     }
@@ -86,10 +83,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
     async fetchPortfolio(): Promise<PortfolioAccount> {
         console.log("#fetchPortfolio()");
 
-        let [portfolioPDA, _] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
-            this.solbondProgram.programId
-        );
+        let [portfolioPDA, _] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         this.portfolioPDA = portfolioPDA;
 
         // Now get accounts data of this PDA
@@ -129,12 +123,8 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
 
     async fetchSinglePosition(index: number) {
         console.log("#fetchSinglePosition()");
-        let [positonPDA, bumpPositon] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
-        let response = await this.solbondProgram.account.positionAccount.fetch(positonPDA);
+        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
+        let response = await this.solbondProgram.account.positionAccount.fetch(positionPDA);
         let positionContent = response as PositionAccountSaber;
         console.log("##fetchSinglePosition()");
         return positionContent;

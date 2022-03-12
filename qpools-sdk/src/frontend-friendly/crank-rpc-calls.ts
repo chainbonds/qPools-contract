@@ -19,7 +19,8 @@ import * as assert from "assert";
 import {getSolbondProgram} from "../index";
 import {NETWORK} from "../types/cluster";
 import SimpleWallet from "easy-spl";
-import {PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {getPortfolioPda} from "../types/account/portfolioAccount";
 
 
 export class CrankRpcCalls {
@@ -92,13 +93,10 @@ export class CrankRpcCalls {
 
         console.log("(I) Constructor payer is: ", this.payer);
 
-        PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
-            this.solbondProgram.programId
-        ).then(([portfolioPDA, bumpPortfolio]) => {
+        getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
-        }).finally(() => {});
+        });
 
         this.stableSwapProgramId = new PublicKey(MOCK.DEV.stableSwapProgramId);
 
@@ -156,12 +154,7 @@ export class CrankRpcCalls {
 
     async permissionlessFulfillSaber(index: number) {
 
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
+        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState

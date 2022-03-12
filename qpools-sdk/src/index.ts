@@ -17,6 +17,7 @@ import { PortfolioFrontendFriendlyChainedInstructions } from "./frontend-friendl
 import { IDL as SolbondIdl } from "./idl/solbond";
 import * as registry from "./registry/registry-helper";
 import { PortfolioAccount } from "./types/account/portfolioAccount";
+import { PositionAccountSaber } from "./types/account/positionAccountSaber";
 import { PositionInfo } from "./types/positionInfo";
 import { CrankRpcCalls } from "./frontend-friendly/crank-rpc-calls";
 import { NETWORK } from "./types/cluster";
@@ -41,6 +42,7 @@ export {
     MOCK,
     NETWORK,
     PortfolioAccount,
+    PositionAccountSaber,
     PositionInfo,
     tokenAccountExists,
     CrankRpcCalls

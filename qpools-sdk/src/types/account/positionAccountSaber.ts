@@ -1,6 +1,17 @@
 import {PublicKey} from "@solana/web3.js";
 import {u64} from "@solana/spl-token";
-import {BN} from "@project-serum/anchor";
+import {BN, Program} from "@project-serum/anchor";
+import * as anchor from "@project-serum/anchor";
+import {SEED} from "../../seeds";
+import {bnTo8} from "../../utils";
+
+export async function getPositionPda(owner: PublicKey, index: number, solbondProgram: Program) {
+    let indexAsBuffer = bnTo8(new BN(index));
+    return PublicKey.findProgramAddress(
+        [owner.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+        solbondProgram.programId
+    );
+}
 
 export interface PositionAccountSaber {
     portfolioPda: PublicKey,

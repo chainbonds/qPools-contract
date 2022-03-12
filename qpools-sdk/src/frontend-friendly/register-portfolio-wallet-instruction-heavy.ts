@@ -1,9 +1,9 @@
-import {Connection, Keypair, PublicKey, TokenAmount, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {
-    findSwapAuthorityKey, normalizedTradeFee,
+    findSwapAuthorityKey,
     StableSwap,
     StableSwapState
 } from "@saberhq/stableswap-sdk";
@@ -14,17 +14,21 @@ import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {
     accountExists,
     bnTo8,
-    createAssociatedTokenAccountUnsignedInstruction,
+    createAssociatedTokenAccountUnsignedInstruction, getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve,
     tokenAccountExists
 } from "../utils";
 import {SEED} from "../seeds";
-import {PortfolioAccount} from "../types/account/portfolioAccount";
-import {PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {getPortfolioPda, PortfolioAccount} from "../types/account/portfolioAccount";
+import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {delay} from "../utils";
 import {PositionInfo} from "../types/positionInfo";
-import {getMethods} from "../debug-utils";
-import {saberPoolLpToken2poolAddress} from "../registry/registry-helper";
+import {
+    ExplicitSaberPool,
+    saberPoolLpToken2poolAddress
+} from "../registry/registry-helper";
+import * as registry from "../registry/registry-helper";
+import {publicKey} from "@project-serum/anchor/.rollup.cache/home/armaniferrante/Documents/code/src/github.com/project-serum/anchor/ts/types/src/coder/spl-token/buffer-layout";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -41,7 +45,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
-    public poolAddresses: Array<PublicKey>;
+    public poolAddresses: ExplicitSaberPool[];
     public portfolioOwner: PublicKey;
     public qPoolsUsdcFees: PublicKey;
 
@@ -63,37 +67,25 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             solbondProgram
         );
 
-        // Also save all the pool here
-        this.poolAddresses = [
-            MOCK.DEV.SABER_POOL.USDC_USDT,
-            MOCK.DEV.SABER_POOL.USDC_CASH,
-            MOCK.DEV.SABER_POOL.USDC_TEST
-        ];
-
+        this.poolAddresses = registry.getActivePools();
         this.owner = provider.wallet;
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
-        console.log("(I) Constructor payer is: ", this.payer);
-
-        PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
-            this.solbondProgram.programId
-        ).then(([portfolioPDA, bumpPortfolio]) => {
+        getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
-        }).finally(() => {});
+        });
 
         // Replace with currency
         // TODO: Always assume that this address exists. Write a short deploy script that includes this
-        this.getAccountForMintAndPDADontCreate(
-            MOCK.DEV.SABER_USDC,
+        // Replace this by the user's local PublicKey
+        getAccountForMintAndPDADontCreate(
+            registry.getReferenceCurrencyMint(),
             new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs")
         ).then((x: PublicKey) => {
             this.qPoolsUsdcFees = x;
         });
-
-        delay(1000);
 
     }
 
@@ -102,22 +94,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      */
     async fetchPortfolio(): Promise<PortfolioAccount> {
         console.log("#fetchPortfolio()");
-        let [portfolioPDA, _] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
-            this.solbondProgram.programId
-        );
-        this.portfolioPDA = portfolioPDA;
-
-        // console.log(getMethods(this.solbondProgram.accounts.portfolioAccount).join("\n"));
-        // let response = await this.connection.getAccountInfo(portfolioPDA);
-        // let portfolioContent1 = bufferToPortfolio(response.data);
-        // // Fetch account, and maybe deserialize manually?
-        // console.log("Portfolio Content", portfolioContent1);
-        // // await delay(5000);
-
-        let portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(portfolioPDA)) as PortfolioAccount;
+        let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+        this.portfolioPDA = portfolioPda;
+        let portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
         console.log("Now fetching again ...", portfolioContent);
-
         console.log("##fetchPortfolio()");
         return portfolioContent;
     }
@@ -125,8 +105,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async fetchAllPositions(): Promise<PositionAccountSaber[]> {
         console.log("#fetchAllPositions()");
         let responses = [];
-        // Get the portfolio
-        for (var i = 0; i < 3; i++) {
+
+        // Get the portfolio, and iterate through all the positions
+        let portfolioContents: PortfolioAccount = await this.fetchPortfolio();
+        for (let i = 0; i < portfolioContents.numPositions; i++) {
             let positionContent = await this.fetchSinglePosition(i);
             console.log("Position Content", positionContent);
             responses.push(positionContent);
@@ -137,12 +119,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     async fetchSinglePosition(index: number): Promise<PositionAccountSaber> {
         console.log("#fetchSinglePosition()");
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-        console.log("Fetching position PDA ..", positionPDA.toString());
+        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         let response = await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA);
         let positionContent = response as PositionAccountSaber;
         console.log("##fetchSinglePosition()");
@@ -165,17 +142,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         if (!(await accountExists(this.connection, this.portfolioPDA))) {
             return []
         }
-
-        // Get the portfolio
-        console.log("Fetching portfolio");
         let portfolio: PortfolioAccount = await this.fetchPortfolio();
-        // Get how many positions are in the portfolio
-        // console.log("Num positions are: ", portfolio.numPositions, typeof portfolio.numPositions);
-        let allPositions: number = portfolio.numPositions;
-
-        // fetchSinglePosition
         let out: PositionInfo[] = [];
-        for (var index = 0; index < allPositions; index++) {
+        for (var index = 0; index < portfolio.numPositions; index++) {
 
             // Get the single position
             console.log("Fetching single position");
@@ -191,10 +160,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             const {state} = stableSwapState;
 
             // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
-            console.log("Fetching account PDAs");
-            let portfolioAtaA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-            let portfolioAtaB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-            let portfolioAtaLp = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+            let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+            let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+            let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
 
             // Also get the token amounts, I guess lol
             let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
@@ -222,18 +190,20 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return out;
     }
 
+    /**
+     * Get the supply of all the LP tokens, as well as the USDC value of the reserve tokens
+     * We don't return a float, so we can do safe arithmetic later
+     */
     async getLpTokenExchangeRateItems(state: StableSwapState) {
 
-        // Get Reserve A
         console.log("Token account address is: ", state.tokenA.reserve);
         let amountReserveA = (await this.connection.getTokenAccountBalance(state.tokenA.reserve)).value.uiAmount;
-        // Get Reserve B
         console.log("Token account address is: ", state.tokenA.reserve);
         let amountReserveB = (await this.connection.getTokenAccountBalance(state.tokenB.reserve)).value.uiAmount;
-
         if (!amountReserveA || !amountReserveB) {
             throw Error("One of the reserve values is null!" + String(amountReserveA) + " " +  String(amountReserveB));
         }
+        // We skip these right now, because we are based on USDC
         // Convert Reserve A to it's USD value
         // Convert Reserve B to it's USD value
         // Convert to the USD currency (We can skip this step because we focus on USD stablecoins for now..)
@@ -257,9 +227,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
         console.log("All fetched data is: ", storedPositions);
         await Promise.all(storedPositions.map(async (position: PositionInfo) => {
-
             console.log("Position is: ", position);
-
             let saberPoolAddress = saberPoolLpToken2poolAddress(position.poolAddress);
             const stableSwapState = await this.getPoolState(saberPoolAddress);
             const {state} = stableSwapState;
@@ -279,7 +247,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             // perhaps we should treat all these as BN ..
             let usdValueUserLp = (amountUserLp * poolContentsInUsdc) / supplyLpToken;
             console.log("User portfolio value is: ", usdValueUserLp);
-
             console.log("Token account address is: ", state.tokenA.reserve);
             let amountUserA = position.amountA.uiAmount;
             console.log("amountUserB", amountUserA);
@@ -292,6 +259,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 throw Error("One of the reserve values is null!" + String(amountUserA) + " " +  String(amountUserB));
             }
 
+            // Again, we skip this for now because all tokens we work with are USDC-based
             // // Also convert here to USD,
             // let usdValueUserA = amountUserA;
             // let usdValueUserB = amountUserB;
@@ -363,6 +331,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      * 
     */
 
+    /**
+     * Send some SOL to the local keypair wallet
+     */
     async sendToCrankWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
         return web3.SystemProgram.transfer({
             fromPubkey: this.owner.publicKey,
@@ -374,35 +345,94 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     /**
      *  Instructions to create the associated token accounts for the portfolios
      */
-    async registerAtaForLiquidityPortfolio(): Promise<TransactionInstruction[]> {
+    async registerAtaForLiquidityPortfolio(poolAddresses: Array<PublicKey>): Promise<TransactionInstruction[]> {
         console.log("#registerAtaForLiquidityPortfolio()");
         let txs = [];
-        for (var i = 0; i < this.poolAddresses.length; i++) {
-            let poolAddress = this.poolAddresses[i];
+        // I guess this should be called only for the pools, that we are deploying items into.
+        // I will make the poolAddresses an argument instead
+
+        // Just enumerate through all poolAddresses, and return the instructions
+        await Promise.all(poolAddresses.map(async (poolAddress: PublicKey) => {
             const stableSwapState = await this.getPoolState(poolAddress);
             const {state} = stableSwapState;
-
             let tx1 = await this.registerLiquidityPoolAssociatedTokenAccountsForPortfolio(state);
             tx1.map((x: TransactionInstruction) => {
                 if (x) {
                     txs.push(x);
                 }
             })
-        }
+        }));
+
         console.log("##registerAtaForLiquidityPortfolio()");
         return txs;
     }
 
-    
-    async createPortfolioSigned(weights: Array<BN>, initial_amount_USDC: u64): Promise<TransactionInstruction> {
-        const num_positions = new BN(weights.length);
+    async registerLiquidityPoolAssociatedTokenAccountsForPortfolio(state: StableSwapState): Promise<TransactionInstruction[]> {
+        // Creating ATA accounts if not existent yet ...
+        let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+        let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+        let userAccountPoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+
+        let txs = [];
+        // Check for each account if it exists, and if it doesn't exist, create it
+        if (!(await tokenAccountExists(this.connection, userAccountA)) && !this.createdAtaAccounts.has(userAccountA.toString())) {
+            console.log("Chaining userAccountA");
+            this.createdAtaAccounts.add(userAccountA.toString());
+            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                state.tokenA.mint,
+                null,
+                this.portfolioPDA,
+                this.providerWallet,
+            );
+            txs.push(...ix.instructions);
+            console.log("Chained userAccountA");
+        }
+        if (!(await tokenAccountExists(this.connection, userAccountB)) && !this.createdAtaAccounts.has(userAccountB.toString())) {
+            console.log("Chaining userAccountB");
+            this.createdAtaAccounts.add(userAccountB.toString());
+            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                state.tokenB.mint,
+                null,
+                this.portfolioPDA,
+                this.providerWallet,
+            );
+            txs.push(...ix.instructions);
+            console.log("Chained userAccountB");
+        }
+        if (!(await tokenAccountExists(this.connection, userAccountPoolToken)) && !this.createdAtaAccounts.has(userAccountPoolToken.toString())) {
+            console.log("Chaining userAccountPoolToken");
+            this.createdAtaAccounts.add(userAccountPoolToken.toString());
+            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                state.poolTokenMint,
+                null,
+                this.portfolioPDA,
+                this.providerWallet,
+            );
+            // Do I need to sign this? Probably not ...
+            txs.push(...ix.instructions);
+            console.log("Chained userAccountPoolToken");
+        }
+        return txs;
+    }
+
+
+
+    async createPortfolioSigned(weights: Array<BN>, poolAddresses: Array<PublicKey>, initialAmountUsdc: u64): Promise<TransactionInstruction> {
+        console.assert(weights.length === poolAddresses.length);
+        if (weights.length != poolAddresses.length) {
+            throw Error("Does not match in legth!");
+        }
+        const numPositions = new BN(weights.length);
         console.log("Creating Portfolio", this.portfolioPDA.toString());
         // console.log("Who is paying for it: ", this.payer)
         let create_transaction_instructions:TransactionInstruction  = this.solbondProgram.instruction.createPortfolio(
             new BN(this.portfolioBump),
             weights,
-            new BN(num_positions),
-            new BN(initial_amount_USDC),
+            new BN(numPositions),
+            new BN(initialAmountUsdc),
             {
                 accounts: {
                     owner: this.owner.publicKey,
@@ -419,35 +449,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     }
 
-    async approvePositionWeightSaber(amountA: u64, amountB: u64, minMintAmount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
+    async approvePositionWeightSaber(poolAddresses: Array<PublicKey>, amountA: u64, amountB: u64, minMintAmount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
 
-        // console.log("Seed String is:", [this.owner.publicKey.toString(), index.toString() + SEED.POSITION_ACCOUNT_APPENDUM]);
-        // console.log("hurensohn", index);
-        // console.log("hurensohn", (new BN(index)));
-        // console.log("hurensohn", (new BN(index)).toString());
-        // let bnIndex: BN = new BN(index);
-        // console.log(bnIndex);
-        // console.log(bnIndex.toString());
         let indexAsBuffer = bnTo8(new BN(index));
-        // console.log("bn byte is:");
-        // console.log(bn);
-        // console.log(bnIndex.toBuffer());
-        // throw Error('err');
-
-        // console.log("hurensohn", (new BN(index)).toBuffer());
-        // console.log("hurensohn", (new BN(index)).toBuffer('le'));
-        console.log("Seed String is:", [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))]);
-
-        // index.toString()
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
-        let poolAddress = this.poolAddresses[index];
+        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
+        let poolAddress = poolAddresses[index];
         const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState;
 
+        // Make sure to swap amountA and amountB accordingly ...
         // TODO: Make sure that A corresponds to USDC, or do a swap in general (i.e. push whatever there is, to the swap account)
         console.log("All accounts are: ");
         console.log({
@@ -517,18 +527,13 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return ix;
     }
 
-    async approveWithdrawAmountSaber(index: number) {
+    async approveWithdrawAmountSaber(poolAddresses: Array<PublicKey>, index: number) {
 
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-        
-        let poolAddress = this.poolAddresses[index];
+        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
+        let poolAddress = poolAddresses[index];
         const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState;
-        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
 
         let finaltx:TransactionInstruction = await this.solbondProgram.instruction.approveWithdrawAmountSaber(
@@ -541,12 +546,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 accounts: {
                     owner: this.owner.publicKey,
                     positionPda: positionPDA,
-                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey, 
-                    poolMint: state.poolTokenMint,                 
+                    portfolioPda: this.portfolioPDA,
+                    poolMint: state.poolTokenMint,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    // Create liquidity accounts
                 },
                 signers: [this.payer]
             }
@@ -563,7 +567,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async transferUsdcFromUserToPortfolio(): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromUserToPortfolio()");
         let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
-        let pdaUSDCAccount = await this.getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
+        let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferToPortfolio(
             new BN(this.portfolioBump),
@@ -587,137 +591,37 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return ix;
     }
 
-    /**OLD
-     * Register Portfolio Values
-     
-    async registerPortfolio(weights: Array<BN>): Promise<TransactionInstruction> {
-        console.log("#registerPortfolio()");
-
-        let ix: TransactionInstruction = this.solbondProgram.instruction.savePortfolio(
-            this.portfolioBump,
-            weights,
-            {
-                accounts: {
-                    owner: this.owner.publicKey,
-                    portfolioPda: this.portfolioPDA,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-
-                },
-                signers: [this.payer]
-            }
-        )
-        console.log("##registerPortfolio()");
-        return ix;
-    }
-    */
-
-    async registerLiquidityPoolAssociatedTokenAccountsForPortfolio(state: StableSwapState): Promise<TransactionInstruction[]> {
-        // Creating ATA accounts if not existent yet ...
-        let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        let userAccountPoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-
-        let txs = [];
-
-        console.log("The individual accounts are: ");
-        console.log(userAccountA.toString());
-        console.log(userAccountB.toString());
-        console.log(userAccountPoolToken.toString());
-
-        // Check for each account if it exists, and if it doesn't exist, create it
-        if (!(await tokenAccountExists(this.connection, userAccountA)) && !this.createdAtaAccounts.has(userAccountA.toString())) {
-            console.log("Chaining userAccountA");
-            this.createdAtaAccounts.add(userAccountA.toString());
-            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
-                this.connection,
-                state.tokenA.mint,
-                null,
-                this.portfolioPDA,
-                this.providerWallet,
-            );
-            txs.push(...ix.instructions);
-            console.log("Chained userAccountA");
-        }
-        if (!(await tokenAccountExists(this.connection, userAccountB)) && !this.createdAtaAccounts.has(userAccountB.toString())) {
-            console.log("Chaining userAccountB");
-            this.createdAtaAccounts.add(userAccountB.toString());
-            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
-                this.connection,
-                state.tokenB.mint,
-                null,
-                this.portfolioPDA,
-                this.providerWallet,
-            );
-            txs.push(...ix.instructions);
-            console.log("Chained userAccountB");
-        }
-        if (!(await tokenAccountExists(this.connection, userAccountPoolToken)) && !this.createdAtaAccounts.has(userAccountPoolToken.toString())) {
-            console.log("Chaining userAccountPoolToken");
-            this.createdAtaAccounts.add(userAccountPoolToken.toString());
-            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
-                this.connection,
-                state.poolTokenMint,
-                null,
-                this.portfolioPDA,
-                this.providerWallet,
-            );
-            // Do I need to sign this? Probably not ...
-            txs.push(...ix.instructions);
-            console.log("Chained userAccountPoolToken");
-        }
-        return txs;
-    }
-
     // Now any Redeem Logic
     /**
      * Transaction to redeem the entire portfolio
+     * We must get all the pool Addresses from the portfolio object
      */
     async redeemFullPortfolio(): Promise<TransactionInstruction[]> {
         console.log("#redeemFullPortfolio()");
+        let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
         let tx: TransactionInstruction[] = [];
-        for (var i = 0; i < this.poolAddresses.length; i++) {
-            let poolAddress = this.poolAddresses[i];
-            const stableSwapState = await this.getPoolState(poolAddress);
-            const {state} = stableSwapState;
-            let tx0 = await this.redeemSinglePositionOneSide(
-                i,
-                poolAddress,
-                state,
-                stableSwapState
-            );
+        for (let i = 0; i < portfolioAccount.numPositions; i++) {
+            let tx0 = await this.redeemSinglePositionOneSide(i);
             tx.push(tx0);
         }
-        console.log("redeemed! the full portfolio!")
         console.log("##redeemFullPortfolio()");
         return tx;
     }
 
-    async redeemSinglePositionOneSide(
-        index: number,
-        poolAddress: PublicKey,
-        state: StableSwapState,
-        stableSwapState: StableSwap
-    ): Promise<TransactionInstruction> {
+    async redeemSinglePositionOneSide(index: number): Promise<TransactionInstruction> {
         console.log("#redeemSinglePositionOneSide()");
-        /*let [poolPDA, poolBump] = await PublicKey.findProgramAddress(
-            [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
-            this.solbondProgram.programId
-        );*/
-        //console.log("poolPDA ", poolPDA.toString());
+        // Get the pool address from the position PDA
+        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
+        let positionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccountSaber.poolAddress);
+        const stableSwapState = await this.getPoolState(poolAddress);
+        const {state} = stableSwapState;
 
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [this.owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
         console.log("positionPDA ", positionPDA.toString())
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
 
         // Gotta cross-check which one is the currency token, in this case
-
         let currencyMint: PublicKey;
         let userAccount: PublicKey;
 
@@ -731,18 +635,14 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
          *  Terminology: Token A is our currency, and Token B is the other currency
          */
         if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
-            currencyMint = state.tokenA.mint;
-            userAccount = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-
+            userAccount = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
             reserveA = state.tokenA.reserve
             feesA = state.tokenA.adminFeeAccount
             mintA = state.tokenA.mint
             reserveB = state.tokenB.reserve
 
         } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
-            currencyMint = state.tokenB.mint;
-            userAccount = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-
+            userAccount = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
             reserveA = state.tokenB.reserve
             feesA = state.tokenB.adminFeeAccount
             mintA = state.tokenB.mint
@@ -756,10 +656,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                 state.tokenB.mint.toString() + " (MintB) "
             )
         }
+
         // TODO: Again, this tokenAccountPool should be retrieved in the first place,
         //  and should be determined how much USDC it corresponds to, and should be retrieved as
-        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+        let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
 
         let ix: TransactionInstruction = this.solbondProgram.instruction.redeemPositionOneSaber(
             new BN(this.portfolioBump),
@@ -783,9 +683,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    // Create liquidity accounts
                 },
-                //signers:[this.wallet]
             }
         )
         console.log("##redeemSinglePositionOneSide()");
@@ -798,14 +696,13 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async transferUsdcFromPortfolioToUser(): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromPortfolioToUser()");
         let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
-        let pdaUSDCAccount = await this.getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
+        let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         // TODO: We assume this account exists ... gotta enforce it I guess lol
         // TODO: Again, we assume that this account exists
         let totalPDA_USDCAmount = (await this.connection.getTokenAccountBalance(pdaUSDCAccount)).value.amount;
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferRedeemedToUser(
             new BN(this.portfolioBump),
-            //new BN(totalPDA_USDCAmount),
             {
                 accounts: {
                     portfolioOwner: this.owner.publicKey,
@@ -818,8 +715,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     feesQpoolsA: this.qPoolsUsdcFees
-                },
-                //signers: [this.payer]
+                }
             }
 
         )

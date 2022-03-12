@@ -168,6 +168,10 @@ export const createAssociatedTokenAccountSendUnsigned = async (
     return address
 }
 
+export const getAccountForMintAndPDADontCreate = async (mintKey: PublicKey, pda: PublicKey) => {
+    return await getAssociatedTokenAddressOffCurve(mintKey, pda);
+}
+
 export const getAssociatedTokenAddressOffCurve = async (
     mint: web3.PublicKey,
     user: web3.PublicKey

@@ -9,6 +9,7 @@ import {MOCK} from "./const";
 import {sendAndConfirm} from "easy-spl/dist/util";
 import {bnTo8, createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
 import {SEED} from "./seeds";
+import {getPositionPda} from "./types/account/positionAccountSaber";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -161,12 +162,7 @@ export class Portfolio extends SaberInteractTool {
     async approvePositionWeightSaber(token_a_amount: u64, token_b_amount: u64, min_mint_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
 
         console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
+        let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
@@ -257,11 +253,7 @@ export class Portfolio extends SaberInteractTool {
     }
 
     async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-                    [owner_keypair.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
+        let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
@@ -303,19 +295,12 @@ export class Portfolio extends SaberInteractTool {
 
     async permissionlessFulfillSaber(owner_keypair: Keypair, index: number) {
 
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
+        let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
-
         
         let poolTokenMint = state.poolTokenMint
-
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
@@ -496,12 +481,7 @@ export class Portfolio extends SaberInteractTool {
 
         console.log("poolPDA ", poolPDA.toString())*/
 
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
+        let [positonPDA, bumpPositon] = await getPositionPda(owner.publicKey, index, this.solbondProgram);
         console.log("positionPDA ", positonPDA.toString())
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
@@ -781,12 +761,7 @@ export class Portfolio extends SaberInteractTool {
 
         // console.log("poolPDA ", poolPDA.toString())
 
-        let indexAsBuffer = bnTo8(new BN(index));
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [owner.publicKey.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
-            this.solbondProgram.programId
-        );
-
+        let [positonPDA, bumpPositon] = await getPositionPda(owner.publicKey, index, this.solbondProgram);
         console.log("positionPDA ", positonPDA.toString())
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);

@@ -5,6 +5,7 @@ use crate::utils::seeds;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
+use std::cmp;
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
@@ -136,6 +137,13 @@ pub fn handler(
 
     let approved_position_details = &mut ctx.accounts.position_pda;
 
+    // Will print out the user's balance
+    msg!("Printing the user portfolio's A and B amounts, as well as the amount to be distributed");
+    msg!(&format!("{}", ctx.accounts.qpools_a.amount));
+    msg!(&format!("{}", ctx.accounts.qpools_b.amount));
+    msg!(&format!("{}", approved_position_details.max_initial_token_a_amount));
+    msg!(&format!("{}", approved_position_details.max_initial_token_b_amount));
+
     stable_swap_anchor::deposit(
         CpiContext::new_with_signer(
             saber_swap_program,
@@ -148,7 +156,7 @@ pub fn handler(
                 ].as_ref()
             ]
         ),
-        approved_position_details.max_initial_token_a_amount,
+        std::cmp::(approved_position_details.max_initial_token_a_amount, ctx.accounts.qpools_a.amount),
         approved_position_details.max_initial_token_b_amount,
         approved_position_details.min_mint_amount,
     )?;

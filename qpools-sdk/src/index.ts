@@ -18,6 +18,8 @@ import { IDL as SolbondIdl } from "./idl/solbond";
 import * as registry from "./registry/registry-helper";
 import { PortfolioAccount } from "./types/account/portfolioAccount";
 import { PositionInfo } from "./types/positionInfo";
+import { CrankRpcCalls } from "./frontend-friendly/crank-rpc-calls";
+import { NETWORK } from "./types/cluster";
 
 export {
     airdropAdmin,
@@ -37,7 +39,9 @@ export {
     SolbondIdl,
     registry,
     MOCK,
+    NETWORK,
     PortfolioAccount,
     PositionInfo,
-    tokenAccountExists
+    tokenAccountExists,
+    CrankRpcCalls
 }

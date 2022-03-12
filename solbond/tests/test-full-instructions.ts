@@ -1,21 +1,11 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {u64} from '@solana/spl-token';
 import {Keypair, PublicKey} from "@solana/web3.js";
-
-import {NETWORK} from "@qpools/sdk/lib/cluster";
-
-import {
-    getSolbondProgram,
-} from "@qpools/sdk";
-
-
-import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
-const {
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-} = require("@solana/spl-token");
+import {NETWORK} from "@qpools/sdk";
+import {getSolbondProgram} from "@qpools/sdk";
+import {Portfolio} from "@qpools/sdk";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
-
 
 describe('qPools!', () => {
 

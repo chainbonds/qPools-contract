@@ -10,10 +10,6 @@ import {
 } from "@qpools/sdk";
 import {Token} from "@solana/spl-token";
 import {NETWORK} from "@qpools/sdk/lib/cluster";
-import {delay} from "@qpools/sdk/lib/utils";
-import {TvlInUsdc} from "@qpools/sdk/lib/types/tvlAccount";
-import {SEED} from "@qpools/sdk/lib/seeds";
-import {createAssociatedTokenAccountSend} from "easy-spl/dist/tx/associated-token-account";
 
 /**
  * Calculate TVL and

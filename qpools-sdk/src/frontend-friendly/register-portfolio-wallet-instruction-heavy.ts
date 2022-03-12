@@ -125,6 +125,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async fetchAllPositions(): Promise<PositionAccountSaber[]> {
         console.log("#fetchAllPositions()");
         let responses = [];
+        // Get the portfolio
         for (var i = 0; i < 3; i++) {
             let positionContent = await this.fetchSinglePosition(i);
             console.log("Position Content", positionContent);
@@ -362,6 +363,14 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      * 
     */
 
+    async sendToCrankWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
+        return web3.SystemProgram.transfer({
+            fromPubkey: this.owner.publicKey,
+            toPubkey: tmpKeypair,
+            lamports: lamports,
+        })
+    }
+
     /**
      *  Instructions to create the associated token accounts for the portfolios
      */
@@ -397,7 +406,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             {
                 accounts: {
                     owner: this.owner.publicKey,
-                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    portfolioPda: this.portfolioPDA, //randomOwner.publicKey,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -454,6 +463,8 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             },
             signers: [this.payer]
         })
+        
+        // TODO: Gotta define how much to pay in, depending on if mintA == USDC, or mintB == USDC
 
         let accounts: any = {
             accounts: {
@@ -544,7 +555,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return finaltx;
 
     }
-
 
 
     /**

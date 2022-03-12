@@ -2,11 +2,38 @@ import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
 import {PublicKey, Keypair, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
+import * as anchor from "@project-serum/anchor";
+import {Wallet} from "@project-serum/anchor/src/provider";
+import {Buffer} from "buffer";
+import process from "process";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
+
+export default class QWallet implements Wallet {
+
+    constructor(readonly payer: Keypair) {
+        this.payer = payer
+    }
+
+    async signTransaction(tx: Transaction): Promise<Transaction> {
+        tx.partialSign(this.payer);
+        return tx;
+    }
+
+    async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+        return txs.map((t) => {
+            t.partialSign(this.payer);
+            return t;
+        });
+    }
+
+    get publicKey(): PublicKey {
+        return this.payer.publicKey;
+    }
+}
 
 export function bnTo8(bn: BN): Uint8Array {
     return Buffer.from([...bn.toArray("le", 4)])

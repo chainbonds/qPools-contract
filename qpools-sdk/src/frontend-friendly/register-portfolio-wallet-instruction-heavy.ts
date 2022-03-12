@@ -18,17 +18,14 @@ import {
     getAssociatedTokenAddressOffCurve,
     tokenAccountExists
 } from "../utils";
-import {SEED} from "../seeds";
 import {getPortfolioPda, PortfolioAccount} from "../types/account/portfolioAccount";
 import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
-import {delay} from "../utils";
 import {PositionInfo} from "../types/positionInfo";
 import {
     ExplicitSaberPool,
     saberPoolLpToken2poolAddress
 } from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
-import {publicKey} from "@project-serum/anchor/.rollup.cache/home/armaniferrante/Documents/code/src/github.com/project-serum/anchor/ts/types/src/coder/spl-token/buffer-layout";
 
 export interface PositionsInput {
     percentageWeight: BN,

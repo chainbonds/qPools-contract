@@ -134,21 +134,22 @@ export function getToken(tokenMint: PublicKey): ExplicitToken | null {
     return out;
 }
 
-export function getPoolsFromSplStringIds(splStringId: string[]): Set<ExplicitSaberPool> {
-    let out: Set<ExplicitSaberPool> = new Set();
+export function getPoolsFromSplStringIds(splStringId: string[]): Array<ExplicitSaberPool> {
+    let out: Array<ExplicitSaberPool> = new Array();
     getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+        // TODO: Include case that this is not already in the list, and if it is done, then this is probably because of an error
         if (splStringId.includes(x.name)) {
-            out.add(x);
+            out.push(x);
         }
     });
     return out;
 }
 
-export function getTokensFromSplStringIds(splStringId: string[]): Set<ExplicitToken> {
-    let out: Set<ExplicitToken> = new Set<ExplicitToken>();
+export function getTokensFromSplStringIds(splStringId: string[]): Array<ExplicitToken> {
+    let out: Array<ExplicitToken> = new Array<ExplicitToken>();
     getAllTokens()["tokens"].map((x: ExplicitToken) => {
         if (splStringId.includes(x.name)) {
-            out.add(x);
+            out.push(x);
         }
     });
     return out

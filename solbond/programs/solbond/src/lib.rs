@@ -99,6 +99,24 @@ pub mod solbond {
         )
 
     }
+
+    pub fn approve_position_weight_marinade(
+        ctx: Context<ApprovePositionWeightMarinade>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _weight: u64,
+        _initial_sol_amount: u64,
+        _index: u32
+    ) -> ProgramResult {
+        instructions::approve::marinade::approve_position_weight_marinade::handler(
+            ctx,
+            _bump_portfolio,
+            _bump_position,
+            _weight,
+            _initial_sol_amount,
+            _index
+        )
+    }
     /**
      * Permissioned. Transfer the agreed to amount to the portfolio owned token account
     */
@@ -187,7 +205,21 @@ pub mod solbond {
         )
     }
 
-    
+
+
+    pub fn create_position_mariande(
+        ctx: Context<MarinadePositionInstruction>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _index: u32,
+    ) -> ProgramResult {
+        instructions::cpi::marinade::create_position_mariande::handler(
+            ctx, 
+            _bump_portfolio, 
+            _bump_position,
+            _index
+        )
+    }
 
     pub fn create_position_saber(
         ctx: Context<SaberLiquidityInstruction>,

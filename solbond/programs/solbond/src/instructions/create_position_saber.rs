@@ -54,7 +54,7 @@ pub struct SaberLiquidityInstruction<'info> {
     pub swap_authority: AccountInfo<'info>,
 
     /// The swap.
-    //#[account(mut)]
+    //#[account(mut)]approved_position_details
     pub swap: AccountInfo<'info>,
 
     // input block
@@ -144,6 +144,8 @@ pub fn handler(
     msg!(&format!("{}", approved_position_details.max_initial_token_a_amount));
     msg!(&format!("{}", approved_position_details.max_initial_token_b_amount));
 
+    // TODO: Make take the min between tokenamount and max initial token amount ?
+
     stable_swap_anchor::deposit(
         CpiContext::new_with_signer(
             saber_swap_program,
@@ -156,7 +158,7 @@ pub fn handler(
                 ].as_ref()
             ]
         ),
-        std::cmp::(approved_position_details.max_initial_token_a_amount, ctx.accounts.qpools_a.amount),
+        approved_position_details.max_initial_token_a_amount,
         approved_position_details.max_initial_token_b_amount,
         approved_position_details.min_mint_amount,
     )?;

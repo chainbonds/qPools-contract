@@ -1,12 +1,10 @@
-import {Connection, Keypair, PublicKey} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {WalletI} from "easy-spl";
-import {BN, Program, Provider, Wallet, web3} from "@project-serum/anchor";
+import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import {MOCK} from "../const";
 import * as anchor from "@project-serum/anchor";
-import {SEED} from "../seeds";
 import QWallet, {
     accountExists,
-    bnTo8,
     createAssociatedTokenAccountUnsigned,
     delay,
     getAssociatedTokenAddressOffCurve,
@@ -16,12 +14,11 @@ import {findSwapAuthorityKey, StableSwap, StableSwapState} from "@saberhq/stable
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {sendAndConfirm} from "easy-spl/dist/util";
 import * as assert from "assert";
-import {getSolbondProgram} from "../index";
+import {getSolbondProgram, PortfolioAccount} from "../index";
 import {NETWORK} from "../types/cluster";
-import SimpleWallet from "easy-spl";
 import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {getPortfolioPda} from "../types/account/portfolioAccount";
-
+import * as registry from "../registry/registry-helper";
 
 export class CrankRpcCalls {
 
@@ -33,7 +30,7 @@ export class CrankRpcCalls {
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
-    public poolAddresses: Array<PublicKey>;
+    public poolAddresses: registry.ExplicitSaberPool[];
     public portfolioOwner: PublicKey;
     public qPoolsUsdcFees: PublicKey;
 
@@ -61,12 +58,7 @@ export class CrankRpcCalls {
         // Create a new provider
         // The crank covers the keypair within the provider
 
-        // new Wallet
         this.crankWallet = new QWallet(tmpKeypair);
-
-        // this.crankWallet = new Wallet(tmpKeypair);
-        // web3.Keypair.fromSecretKey();
-
         this.crankProvider = new anchor.Provider(this.connection, this.crankWallet, {
             preflightCommitment: "confirmed"
         });
@@ -81,24 +73,19 @@ export class CrankRpcCalls {
 
         // Also save all the pool here
         // TODO: Again, these are also duplicates. Make sure that you merge all these items!
-        this.poolAddresses = [
-            MOCK.DEV.SABER_POOL.USDC_USDT,
-            MOCK.DEV.SABER_POOL.USDC_CASH,
-            MOCK.DEV.SABER_POOL.USDC_TEST
-        ];
+        this.poolAddresses = registry.getActivePools();
 
         this.owner = provider.wallet;
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
-
-        console.log("(I) Constructor payer is: ", this.payer);
 
         getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
         });
 
-        this.stableSwapProgramId = new PublicKey(MOCK.DEV.stableSwapProgramId);
+        // TODO: Maybe also bring to registry
+        this.stableSwapProgramId = registry.getSaberStableSwapProgramId();
 
         delay(1000);
     }
@@ -152,41 +139,52 @@ export class CrankRpcCalls {
         return await getAssociatedTokenAddressOffCurve(mintKey, pda);
     }
 
+    async fullfillAllPermissionless() {
+        let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        for (let index = 0; index < portfolioAccount.numPositions; index++) {
+            await this.permissionlessFulfillSaber(index);
+        }
+    }
+
+    /**
+     * Send all the rest of SOL back to the user
+     */
+    async sendToUsersWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
+        return web3.SystemProgram.transfer({
+            fromPubkey: tmpKeypair,
+            toPubkey: this.owner.publicKey,
+            lamports: lamports,
+        })
+    }
+
     async permissionlessFulfillSaber(index: number) {
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
-        const pool_address = this.poolAddresses[index];
-        const stableSwapState = await this.getPoolState(pool_address)
+
+        // Make a request, and convert it
+        let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
+
+        const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState
 
         // Fetch this position PDA
-        if (await accountExists(this.connection, positionPDA)) {
-            let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
+        // if (await accountExists(this.connection, positionPDA)) {
+            // let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
             // Return if the current position was already fulfilled
-            if (currentPosition.isFulfilled) {
-                console.log("Orders were already fulfilled!");
-                return "";
-            }
-
+        if (currentPosition.isFulfilled) {
+            console.log("Orders were already fulfilled!");
+            return "";
         }
-
-        let poolTokenMint = state.poolTokenMint
+        // }
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
-
         let userAccountA = await this.getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
-
         console.log("userA ", userAccountA.toString())
         let userAccountB = await this.getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
-
         console.log("userB ", userAccountA.toString())
-
-
-        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(poolTokenMint, this.portfolioPDA);
-        //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
+        let userAccountpoolToken = await this.getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
 
         console.log("Sending RPC Permissionless");
         let finaltx = await this.crankSolbondProgram.rpc.createPositionSaber(
@@ -199,7 +197,7 @@ export class CrankRpcCalls {
                     positionPda: positionPDA,
                     portfolioPda: this.portfolioPDA, //randomOwner.publicKey,
                     outputLp:  userAccountpoolToken,
-                    poolMint: poolTokenMint,
+                    poolMint: state.poolTokenMint,
                     swapAuthority: stableSwapState.config.authority,
                     swap: stableSwapState.config.swapAccount,
                     qpoolsA: userAccountA,
@@ -209,11 +207,9 @@ export class CrankRpcCalls {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     saberSwapProgram: this.stableSwapProgramId,
                     systemProgram: web3.SystemProgram.programId,
-                    poolAddress: pool_address,
+                    poolAddress: poolAddress,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    // Create liquidity accounts
                 },
-                //signers: [owner_keypair]
             }
         )
         console.log("Sending RPC Permissionless");
@@ -224,5 +220,4 @@ export class CrankRpcCalls {
         console.log("FulfillSaberPosition Transaction Signature is: ", finaltx);
         return finaltx;
     }
-
 }

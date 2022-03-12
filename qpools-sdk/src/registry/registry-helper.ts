@@ -202,6 +202,7 @@ export async function getTokenPythToUsdcPrice(
     // Can do this by making a get request to a pyth object
     // get_account_info then parse that data as a PythPriceAccount
     let priceAccount = new PublicKey(token.pyth.price);
+    console.log("price account is: ", typeof priceAccount)
     let priceData: PriceData = parsePriceData((await connection.getAccountInfo(priceAccount)).data);
     console.log("Price data is: ", priceData.price);
     return priceData.price;

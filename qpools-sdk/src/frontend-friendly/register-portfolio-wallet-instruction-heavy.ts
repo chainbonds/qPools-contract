@@ -9,7 +9,7 @@ import {
 } from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "../const";
-import {WalletI} from "easy-spl";
+import {account, WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {
     accountExists,
@@ -88,6 +88,25 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     /**
      * A bunch of fetch functions
      */
+    async portfolioExists(): Promise<boolean> {
+        let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+        if (this.connection) {
+            return accountExists(this.connection, portfolioPda);
+        } else {
+            // Maybe let it rerun after a second again ...
+            return false;
+        }
+    }
+
+    async portfolioExistsAndIsFulfilled(): Promise<boolean> {
+        if (await this.portfolioExists()) {
+            let portfolio: PortfolioAccount = await this.fetchPortfolio();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     async fetchPortfolio(): Promise<PortfolioAccount> {
         console.log("#fetchPortfolio()");
         let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
@@ -311,7 +330,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
     /**
      * This model creates a portfolio where the base currency is USDC i.e the user only pays in USDC.
-     * The steps 1-3 are permissioned, meaning that the user has to sign client side. The point is to 
+     * The steps 1-3 are permissioned, meaning that the user has to sign client side. The point is to
      * make these instructions fairly small such that they can all be bundled together in one transaction. 
      * Create a Portfolio workflow:
      * 1) create_portfolio(ctx,bump,weights,num_pos,amount_total):
@@ -492,6 +511,22 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return approveWeightInstruction;
     }
 
+    /**
+     * Withdraw a Portfolio workflow:
+     * 1) approve_withdraw_to_user(ctx,amount_total):
+     *      ctx: context of the portfolio
+     *      amount: total amount of USDC in the portfolio
+     *
+     * 2) for position_i in range(num_positions):
+     *          approve_withdraw_amount_{PROTOCOL_NAME}(ctx, args)
+     * 3) for position_i in range(num_positions):
+     *          withdraw
+     *
+     * 3) transfer_redeemed_to_user():
+     *      transfers the funds back to the user
+     *
+     */
+
     async signApproveWithdrawToUser(totalAmount: BN) {
         let ix = await this.solbondProgram.instruction.approveWithdrawToUser(
             this.portfolioBump,
@@ -499,11 +534,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             {
                 accounts: {
                     owner: this.owner.publicKey,
-                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    portfolioPda: this.portfolioPDA,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    // Create liquidity accounts
                 },
                 signers: [this.payer]
             }
@@ -513,16 +547,31 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return ix;
     }
 
-    async approveWithdrawAmountSaber(poolAddresses: Array<PublicKey>, index: number) {
+    async approveRedeemFullPortfolio(): Promise<TransactionInstruction[]> {
+        console.log("#redeemFullPortfolio()");
+        console.log("(3) portfolio PDA: ", this.portfolioPDA, typeof this.portfolioPDA);
+        let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        let tx: TransactionInstruction[] = [];
+        for (let i = 0; i < portfolioAccount.numPositions; i++) {
+            let tx0 = await this.approveWithdrawAmountSaber(i);
+            tx.push(tx0);
+        }
+        console.log("##redeemFullPortfolio()");
+        return tx;
+    }
+
+    async approveWithdrawAmountSaber(index: number): Promise<TransactionInstruction> {
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
-        let poolAddress = poolAddresses[index];
+        // Fetch the position
+        let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState;
         let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
 
-        let finaltx:TransactionInstruction = await this.solbondProgram.instruction.approveWithdrawAmountSaber(
+        let ix: TransactionInstruction = await this.solbondProgram.instruction.approveWithdrawAmountSaber(
             this.portfolioBump,
             new BN(bumpPosition),
             new BN(lpAmount),
@@ -542,7 +591,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             }
         )
 
-        return finaltx;
+        return ix;
 
     }
 
@@ -552,7 +601,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      */
     async transferUsdcFromUserToPortfolio(): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromUserToPortfolio()");
-        let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
+        let userUSDCAta = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.owner.publicKey);
         let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         let ix: TransactionInstruction = this.solbondProgram.instruction.transferToPortfolio(
@@ -610,9 +659,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         console.log("authority ", authority.toString())
 
         // Gotta cross-check which one is the currency token, in this case
-        let currencyMint: PublicKey;
         let userAccount: PublicKey;
-
         let reserveA: PublicKey;
         let feesA: PublicKey;
         let mintA: PublicKey;
@@ -622,6 +669,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         /**
          *  Terminology: Token A is our currency, and Token B is the other currency
          */
+        // TODO: Replace the main currency
         if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
             userAccount = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
             reserveA = state.tokenA.reserve
@@ -683,7 +731,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      */
     async transferUsdcFromPortfolioToUser(): Promise<TransactionInstruction> {
         console.log("#transferUsdcFromPortfolioToUser()");
-        let userUSDCAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey);
+        let userUSDCAta = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.owner.publicKey);
         let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
 
         // TODO: We assume this account exists ... gotta enforce it I guess lol

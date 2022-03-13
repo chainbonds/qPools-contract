@@ -28,6 +28,7 @@ pub struct ApproveInitialCurrencyAmount<'info> {
     )]
     pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
     
+    #[account(mut)]
     pub currency_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,

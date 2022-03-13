@@ -38,8 +38,8 @@ pub fn handler(
     _weights: Vec<u64>,
     _num_positions: u32,
 ) -> ProgramResult {
-    let sum: u64 = _weights.iter().sum();
-    assert!(sum/1000 == 1, "weights do not sum to 1!");
+    //let sum: u64 = _weights.iter().sum();
+    //assert!(sum/1000 == 1, "weights do not sum to 1!");
 
 
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
@@ -51,7 +51,7 @@ pub fn handler(
     portfolio_account.to_be_redeemed = false;
     
     portfolio_account.num_positions = _num_positions;
-    portfolio_account.num_redeemed = 0;
+    portfolio_account.num_redeemed = 0 as u32;
 
     let clock = Clock::get().unwrap();
     portfolio_account.start_timestamp = clock.unix_timestamp;

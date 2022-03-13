@@ -39,11 +39,11 @@ pub struct MarinadePositionInstruction<'info> {
     )]
     pub position_pda: Box<Account<'info, PositionAccountMarinade>>,
 
-    #[account(
-        mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
-    )]
-    pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+    //#[account(
+    //    mut, 
+    //    seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+    //)]
+    //pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     #[account(mut)]
     pub state: AccountInfo<'info>, // marinadeState.marinadeStateAddress,
@@ -62,8 +62,11 @@ pub struct MarinadePositionInstruction<'info> {
     #[account(mut)]
     pub reserve_pda: AccountInfo<'info>, // marinadeState.reserveAddress(),
 
-    #[account(mut)]
-    pub transfer_from: AccountInfo<'info>, // this is pda owned token account
+    #[account(
+        mut, 
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+    )]
+    pub transfer_from: Account<'info, PortfolioAccount>, // this is pda owned token account
 
     #[account(mut)]
     pub mint_to: Account<'info,TokenAccount>, // associatedMSolTokenAccountAddress, need to create this
@@ -71,8 +74,8 @@ pub struct MarinadePositionInstruction<'info> {
     pub msol_mint_authority: AccountInfo<'info>, // await marinadeState.mSolMintAuthority(),
 
 
-    //#[account(mut)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: AccountInfo<'info>, //
 
     //#[account(address = marinade_finance::ID)]
     pub marinade_program: AccountInfo<'info>,
@@ -91,7 +94,7 @@ impl<'info> MarinadePositionInstruction<'info> {
             liq_pool_msol_leg: self.liq_pool_msol_leg.to_account_info(),
             liq_pool_msol_leg_authority: self.liq_pool_msol_leg_authority.clone(),
             reserve_pda: self.reserve_pda.clone(),
-            transfer_from: self.transfer_from.clone(),
+            transfer_from: self.transfer_from.to_account_info().clone(),
             mint_to: self.mint_to.to_account_info(),
             msol_mint_authority: self.msol_mint_authority.clone(),
             system_program:self.system_program.to_account_info(),
@@ -135,7 +138,9 @@ pub fn handler(
     // deposit_amt.serialize(&mut dep_in_bytes)?;
     // let marinade_program = ctx.accounts.marinade_program.clone();
     
-    
+    // have to unwrap wsol and send it from ata to pda 
+ 
+
     let cpi_ctx = ctx.accounts.into_marinade_deposit_cpi_ctx(_bump_portfolio);
     let data = marinade_finance::instruction::Deposit{ lamports:dep_amt };
 
@@ -149,6 +154,10 @@ pub fn handler(
             ]
     )  
     ,data)?;
+
+    //cpi_util::invoke_signed(cpi_ctx
+    //
+    //,data)?;
     //marinade_onchain_helper::cpi_util::invoke_signed(
     //    CpiContext::new_with_signer(
     //        marinade_program,

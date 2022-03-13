@@ -5,7 +5,7 @@ pub struct PositionAccountMarinade {
 
    
     pub portfolio_pda: Pubkey,
-    pub pool_address: Pubkey,
+    //pub pool_address: Pubkey,
     
 
     // is position already fulfilled or no?
@@ -33,7 +33,7 @@ pub struct PositionAccountMarinade {
 
 impl PositionAccountMarinade {
     pub const LEN: usize =
-            std::mem::size_of::<Pubkey>() * 2 // portfolio_pda, pool_address
+            std::mem::size_of::<Pubkey>()  // portfolio_pda, pool_address
             + std::mem::size_of::<bool>()*3      // is_fulfilled
             + std::mem::size_of::<u32>()      // index
             + std::mem::size_of::<u64>() * 3   // weight, a_amount, b_amount, min_mint_amount

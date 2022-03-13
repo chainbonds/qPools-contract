@@ -37,7 +37,7 @@ pub struct ApprovePositionWeightMarinade<'info> {
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     // pub pool_mint: Account<'info, Mint>,
-    pub pool_mint: Account<'info, Mint>,
+    //pub pool_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -72,7 +72,7 @@ pub fn handler(
     position_account.redeem_approved = false;
     position_account.bump = _bump_position;
 
-    position_account.pool_address = ctx.accounts.pool_mint.key().clone();
+    //position_account.pool_address = ctx.accounts.pool_mint.key().clone();
     position_account.portfolio_pda = ctx.accounts.portfolio_pda.key().clone();
     
 

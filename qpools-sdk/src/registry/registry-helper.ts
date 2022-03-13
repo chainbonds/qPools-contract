@@ -183,7 +183,7 @@ export function getPoolFromSplStringId(splStringId: string): ExplicitSaberPool {
 export function getPool(poolAddress: PublicKey): ExplicitSaberPool | null {
     let out: ExplicitSaberPool | null = null;
     getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
-        if (x.swap.config.swapAccount.equals(poolAddress)) {
+        if (new PublicKey(x.swap.config.swapAccount).equals(poolAddress)) {
             out = x;
         }
     })

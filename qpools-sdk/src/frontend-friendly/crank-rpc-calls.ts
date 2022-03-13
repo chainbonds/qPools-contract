@@ -79,15 +79,18 @@ export class CrankRpcCalls {
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
-        getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
-            this.portfolioPDA = portfolioPDA
-            this.portfolioBump = bumpPortfolio
-        });
+        this.loadPortfolioPdas();
 
         // TODO: Maybe also bring to registry
         this.stableSwapProgramId = registry.getSaberStableSwapProgramId();
 
         delay(1000);
+    }
+
+    async loadPortfolioPdas() {
+        let [portfolioPDA, bumpPortfolio] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+        this.portfolioPDA = portfolioPDA
+        this.portfolioBump = bumpPortfolio
     }
 
     // TODO: Watch out, this line of code is a duplicate from within saber-cpi-endpoints!
@@ -135,11 +138,13 @@ export class CrankRpcCalls {
         return userAccount;
     }
 
-    async fullfillAllPermissionless(): Promise<void> {
+    async fullfillAllPermissionless(): Promise<boolean> {
+        await this.loadPortfolioPdas();
         let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
         for (let index = 0; index < portfolioAccount.numPositions; index++) {
             await this.permissionlessFulfillSaber(index);
         }
+        return true;
     }
 
     /**
@@ -157,8 +162,16 @@ export class CrankRpcCalls {
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
 
+        // TODO: Perhaps just skip it, or check first if this exists (?)
         // Make a request, and convert it
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+
+        // TODO: Skip, if the isFullfilled boolean is correct
+        if (currentPosition.isFulfilled) {
+            console.log("Already fulfilled!");
+            return;
+        }
+
         let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
 
         const stableSwapState = await this.getPoolState(poolAddress);
@@ -230,6 +243,11 @@ export class CrankRpcCalls {
         // Fetch the pool address from the position
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
+
+        if (currentPosition.isRedeemed) {
+            console.log("Crank Orders were already redeemed!");
+            return;
+        }
 
         const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState;

@@ -554,13 +554,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let tx: TransactionInstruction[] = [];
         for (let i = 0; i < portfolioAccount.numPositions; i++) {
             let tx0 = await this.approveWithdrawAmountSaber(i);
-            tx.push(tx0);
+            if (tx0) {
+                tx.push(tx0);
+            }
         }
         console.log("##redeemFullPortfolio()");
         return tx;
     }
 
-    async approveWithdrawAmountSaber(index: number): Promise<TransactionInstruction> {
+    async approveWithdrawAmountSaber(index: number): Promise<TransactionInstruction | null> {
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
@@ -570,6 +572,13 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         const {state} = stableSwapState;
         let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+
+        // Skip this instruction, if Position has already been redeemed
+        console.log("Is Redeemed is: ", positionAccount.isRedeemed);
+        console.log(JSON.stringify(positionAccount));
+        if (positionAccount.isRedeemed) {
+            return null;
+        }
 
         let ix: TransactionInstruction = await this.solbondProgram.instruction.approveWithdrawAmountSaber(
             this.portfolioBump,

@@ -5,6 +5,6 @@
  */
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed229",
-    POSITION_ACCOUNT_APPENDUM: "SaberPosition239"
+    PORTFOLIO_ACCOUNT: "portFolioSeed230",
+    POSITION_ACCOUNT_APPENDUM: "SaberPosition240"
 }

@@ -45,6 +45,9 @@ export const tokenAccountExists = async (
     conn: web3.Connection,
     account: web3.PublicKey,
 ): Promise<boolean> => {
+    if (!account) {
+        return false;
+    }
     const info = await conn.getParsedAccountInfo(account)
     return info.value !== null
 }
@@ -53,6 +56,10 @@ export const accountExists = async (
     conn: web3.Connection,
     account: web3.PublicKey
 ): Promise<boolean> => {
+    // Return false, if account is null!
+    if (!account) {
+        return false;
+    }
     const info = await conn.getParsedAccountInfo(account)
     return info.value !== null
 }

@@ -244,6 +244,12 @@ export class CrankRpcCalls {
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
 
+        if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {
+            console.log("Crank Orders were already redeemed!");
+            throw Error("Something major is off!");
+            return;
+        }
+
         if (currentPosition.isRedeemed) {
             console.log("Crank Orders were already redeemed!");
             return;
@@ -355,7 +361,7 @@ export class CrankRpcCalls {
         console.log("userUsdcata", await tokenAccountExists(this.connection, userUsdcata));
         console.log("pdaUSDCAccount", await tokenAccountExists(this.connection, pdaUSDCAccount));
 
-        let finaltx = await this.solbondProgram.rpc.transferRedeemedToUser(
+        let finaltx = await this.crankSolbondProgram.rpc.transferRedeemedToUser(
             new BN(this.portfolioBump),
             {
                 accounts: {

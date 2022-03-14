@@ -107,12 +107,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         }
     }
 
-    async fetchPortfolio(): Promise<PortfolioAccount> {
+    async fetchPortfolio(): Promise<PortfolioAccount | null> {
         console.log("#fetchPortfolio()");
         let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         this.portfolioPDA = portfolioPda;
         console.log("(1) portfolio PDA: ", this.portfolioPDA, typeof this.portfolioPDA);
-        let portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        let portfolioContent = null;
+        if (await accountExists(this.connection, this.portfolioPDA)) {
+            portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        }
         console.log("Now fetching again ...", portfolioContent);
         console.log("##fetchPortfolio()");
         return portfolioContent;
@@ -156,12 +159,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // Get the saber stableswap state for all positions
 
         // return empty array if portfolio ID does not exist
+        console.log("Hello");
+        console.log("Portfolio PDA is: ", this.portfolioPDA.toString());
         if (!(await accountExists(this.connection, this.portfolioPDA))) {
+            console.log("Empty Portfolio");
             return []
         }
         let portfolio: PortfolioAccount = await this.fetchPortfolio();
         let out: PositionInfo[] = [];
-        for (var index = 0; index < portfolio.numPositions; index++) {
+        for (let index = 0; index < portfolio.numPositions; index++) {
 
             // Get the single position
             console.log("Fetching single position");
@@ -575,7 +581,10 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
         // Skip this instruction, if Position has already been redeemed
         console.log("Is Redeemed is: ", positionAccount.isRedeemed);
-        console.log(JSON.stringify(positionAccount));
+        console.log(positionAccount);
+        if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
+            throw Error("Something major is off 2");
+        }
         if (positionAccount.isRedeemed) {
             return null;
         }

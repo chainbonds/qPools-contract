@@ -89,23 +89,27 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      * A bunch of fetch functions
      */
     async portfolioExists(): Promise<boolean> {
+        console.log("#portfolioExists");
+        let out: boolean
         let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         if (this.connection) {
-            return accountExists(this.connection, portfolioPda);
+            out = await accountExists(this.connection, portfolioPda);
         } else {
             // Maybe let it rerun after a second again ...
-            return false;
+            out = false;
         }
+        console.log("##portfolioExists");
+        return out;
     }
 
-    async portfolioExistsAndIsFulfilled(): Promise<boolean> {
-        if (await this.portfolioExists()) {
-            let portfolio: PortfolioAccount = await this.fetchPortfolio();
-            return true;
-        } else {
-            return false;
-        }
-    }
+    // async portfolioExistsAndIsFulfilled(): Promise<boolean> {
+    //     if (await this.portfolioExists()) {
+    //         // let portfolio: PortfolioAccount = await this.fetchPortfolio();
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     async fetchPortfolio(): Promise<PortfolioAccount | null> {
         console.log("#fetchPortfolio()");
@@ -113,7 +117,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         this.portfolioPDA = portfolioPda;
         console.log("(1) portfolio PDA: ", this.portfolioPDA, typeof this.portfolioPDA);
         let portfolioContent = null;
+        console.log("Before trying to fetch");
         if (await accountExists(this.connection, this.portfolioPDA)) {
+            console.log("Exists and trying to fetch");
             portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
         }
         console.log("Now fetching again ...", portfolioContent);
@@ -136,12 +142,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return responses;
     }
 
-    async fetchSinglePosition(index: number): Promise<PositionAccountSaber> {
+    async fetchSinglePosition(index: number): Promise<PositionAccountSaber | null> {
         console.log("#fetchSinglePosition()");
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
-        let response = await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA);
-        let positionContent = response as PositionAccountSaber;
+        let positionContent = null;
+        if (await accountExists(this.connection, positionPDA)) {
+            let response = await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA);
+            positionContent = response as PositionAccountSaber;
+        }
         console.log("##fetchSinglePosition()");
         return positionContent;
     }
@@ -556,7 +565,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async approveRedeemFullPortfolio(): Promise<TransactionInstruction[]> {
         console.log("#redeemFullPortfolio()");
         console.log("(3) portfolio PDA: ", this.portfolioPDA, typeof this.portfolioPDA);
+        console.log("aaa 1");
         let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        console.log("aaa 2");
         let tx: TransactionInstruction[] = [];
         for (let i = 0; i < portfolioAccount.numPositions; i++) {
             let tx0 = await this.approveWithdrawAmountSaber(i);
@@ -572,7 +583,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
+        console.log("aaa 3");
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        console.log("aaa 4");
         let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState;
@@ -652,7 +665,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     async redeemFullPortfolio(): Promise<TransactionInstruction[]> {
         console.log("#redeemFullPortfolio()");
         console.log("(3) portfolio PDA: ", this.portfolioPDA, typeof this.portfolioPDA);
+        console.log("aaa 4");
         let portfolioAccount: PortfolioAccount = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        console.log("aaa 5");
         let tx: TransactionInstruction[] = [];
         for (let i = 0; i < portfolioAccount.numPositions; i++) {
             let tx0 = await this.redeemSinglePositionOneSide(i);
@@ -667,7 +682,9 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // Get the pool address from the position PDA
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         console.log("(4) portfolio PDA: ", positionPDA, typeof positionPDA);
+        console.log("aaa 6");
         let positionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        console.log("aaa 7");
         let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccountSaber.poolAddress);
         const stableSwapState = await this.getPoolState(poolAddress);
         const {state} = stableSwapState;

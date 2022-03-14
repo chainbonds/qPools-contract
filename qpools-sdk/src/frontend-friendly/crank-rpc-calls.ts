@@ -140,7 +140,9 @@ export class CrankRpcCalls {
 
     async fullfillAllPermissionless(): Promise<boolean> {
         await this.loadPortfolioPdas();
+        console.log("aaa 8");
         let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        console.log("aaa 9");
         for (let index = 0; index < portfolioAccount.numPositions; index++) {
             await this.permissionlessFulfillSaber(index);
         }
@@ -164,8 +166,9 @@ export class CrankRpcCalls {
 
         // TODO: Perhaps just skip it, or check first if this exists (?)
         // Make a request, and convert it
+        console.log("aaa 10");
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
-
+        console.log("aaa 11");
         // TODO: Skip, if the isFullfilled boolean is correct
         if (currentPosition.isFulfilled) {
             console.log("Already fulfilled!");
@@ -231,7 +234,9 @@ export class CrankRpcCalls {
     }
 
     async fullfillAllWithdrawalsPermissionless(): Promise<void> {
+        console.log("aaa 12");
         let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
+        console.log("aaa 13");
         for (let index = 0; index < portfolioAccount.numPositions; index++) {
             await this.redeemSinglePositionOnlyOne(index);
         }
@@ -241,7 +246,9 @@ export class CrankRpcCalls {
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the pool address from the position
+        console.log("aaa 14");
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        console.log("aaa 15");
         let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
 
         if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {

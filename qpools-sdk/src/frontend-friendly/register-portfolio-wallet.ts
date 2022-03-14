@@ -16,7 +16,7 @@ import {MOCK} from "../const";
 import {sendAndConfirm} from "easy-spl/dist/util";
 import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
-import {createAssociatedTokenAccountSendUnsigned, getAssociatedTokenAddressOffCurve} from "../utils";
+import {accountExists, createAssociatedTokenAccountSendUnsigned, getAssociatedTokenAddressOffCurve} from "../utils";
 import {SEED} from "../seeds";
 import {getPortfolioPda, PortfolioAccount} from "../types/account/portfolioAccount";
 import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
@@ -80,7 +80,7 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
     /**
      * Get all the portfolio's that were created by the user
      */
-    async fetchPortfolio(): Promise<PortfolioAccount> {
+    async fetchPortfolio(): Promise<PortfolioAccount | null> {
         console.log("#fetchPortfolio()");
 
         let [portfolioPDA, _] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
@@ -89,8 +89,12 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         // Now get accounts data of this PDA
         // this.solbondProgram.account
         // Of course, this might not exist yet!
-        let response = await this.solbondProgram.account.portfolioAccount.fetch(portfolioPDA);
-        let portfolioContent = response as PortfolioAccount;
+        let portfolioContent = null;
+        if (await accountExists(this.connection, this.portfolioPDA)) {
+            console.log("aaa 16");
+            portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(portfolioPDA)) as PortfolioAccount;
+            console.log("aaa 17");
+        }
         console.log("Portfolio Content", portfolioContent);
         console.log("##fetchPortfolio()");
         return portfolioContent;
@@ -121,11 +125,15 @@ export class PortfolioFrontendFriendly extends SaberInteractToolFrontendFriendly
         return responses;
     }
 
-    async fetchSinglePosition(index: number) {
+    async fetchSinglePosition(index: number): Promise<PositionAccountSaber | null> {
         console.log("#fetchSinglePosition()");
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
-        let response = await this.solbondProgram.account.positionAccount.fetch(positionPDA);
-        let positionContent = response as PositionAccountSaber;
+        let positionContent = null;
+        if (await accountExists(this.connection, positionPDA)) {
+            console.log("aaa 18");
+            positionContent = (await this.solbondProgram.account.positionAccount.fetch(positionPDA)) as PositionAccountSaber;
+            console.log("aaa 19");
+        }
         console.log("##fetchSinglePosition()");
         return positionContent;
     }

@@ -9,7 +9,8 @@ import {
     getBlockchainEpoch,
     getPayer,
     waitForEpoch,
-    tokenAccountExists
+    tokenAccountExists,
+    accountExists
 } from "./utils";
 import { Portfolio } from "./register-portfolio";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
@@ -45,5 +46,6 @@ export {
     PositionAccountSaber,
     PositionInfo,
     tokenAccountExists,
+    accountExists,
     CrankRpcCalls
 }

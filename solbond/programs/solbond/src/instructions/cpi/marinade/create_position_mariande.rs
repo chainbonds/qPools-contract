@@ -2,6 +2,11 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::{state::{PositionAccountMarinade, PortfolioAccount}};
 use crate::utils::seeds;
+use anchor_lang::{
+    prelude::*,
+    InstructionData,
+    solana_program::instruction::{Instruction},
+};
 use marinade_finance;
 use marinade_onchain_helper::{
     cpi_context_accounts::{
@@ -89,9 +94,11 @@ pub fn handler(
 
     let dep_amt: u64 = ctx.accounts.position_pda.initial_sol_amount;
     msg!("depamt {}", dep_amt);
+    msg!("owner of pda {}", ctx.accounts.position_pda.to_account_info().owner);
+    msg!("owner of pdaportfo {}", ctx.accounts.portfolio_pda.to_account_info().owner);
+    msg!("owner of pdaportfo {}", ctx.accounts.liq_pool_sol_leg_pda.to_account_info().owner);
 
-    let data = marinade_finance::instruction::Deposit{ lamports:0 };
-
+    let data = marinade_finance::instruction::Deposit{ lamports:dep_amt };
     let cpi_accounts = MarinadeDeposit {
         state: ctx.accounts.state.to_account_info(),
         msol_mint: ctx.accounts.msol_mint.to_account_info(),
@@ -105,11 +112,27 @@ pub fn handler(
         system_program:ctx.accounts.system_program.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
     };
+    let cpictx = CpiContext::new(ctx.accounts.marinade_program.to_account_info(),
+    cpi_accounts,
+    );
+ 
+    let ix = Instruction {
+        program_id: *cpictx.program.key,
+        accounts: cpictx.to_account_metas(None).into_iter()
+                                                    .map(|mut meta| {
+                                                        if meta.pubkey == ctx.accounts.position_pda.to_account_info().key() {
+                                                            meta.is_signer = true;
+                                                        }
+                                                        meta
+                                                    }).collect(),
+        data: data.data()
 
-    cpi_util::invoke_signed(CpiContext::new_with_signer(
-        ctx.accounts.marinade_program.to_account_info(),
-         cpi_accounts,
-         &[
+    };
+
+    anchor_lang::solana_program::program::invoke_signed(
+        &ix, 
+        &cpictx.to_account_infos(),
+        &[
             [
                 ctx.accounts.owner.key().as_ref(),
                 &_index.to_le_bytes(),
@@ -117,8 +140,50 @@ pub fn handler(
                 &[_bump_position]
             ].as_ref()
         ]
-    )
-    ,data)?;
+
+    )?;
+
+    /* 
+    let ix = Instruction {
+        program_id: *CpiContext::new_with_signer(
+            ctx.accounts.marinade_program.to_account_info(),
+             cpi_accounts,
+             &[
+                [
+                    ctx.accounts.owner.key().as_ref(),
+                    &_index.to_le_bytes(),
+                    seeds::USER_POSITION_STRING,
+                    &[_bump_position]
+                ].as_ref()
+            ]).program.key,
+        accounts: CpiContext::new_with_signer(
+            ctx.accounts.marinade_program.to_account_info(),
+             cpi_accounts,
+             &[
+                [
+                    ctx.accounts.owner.key().as_ref(),
+                    &_index.to_le_bytes(),
+                    seeds::USER_POSITION_STRING,
+                    &[_bump_position]
+                ].as_ref()
+            ]).accounts.to_account_metas(None),
+        data: data.data(),
+    };
+
+    anchor_lang::solana_program::program::invoke(
+        &ix,
+        &CpiContext::new_with_signer(
+            ctx.accounts.marinade_program.to_account_info(),
+             cpi_accounts,
+             &[
+                [
+                    ctx.accounts.owner.key().as_ref(),
+                    &_index.to_le_bytes(),
+                    seeds::USER_POSITION_STRING,
+                    &[_bump_position]
+                ].as_ref()
+            ]).to_account_infos(),
+    )?;*/
 
   
     Ok(())

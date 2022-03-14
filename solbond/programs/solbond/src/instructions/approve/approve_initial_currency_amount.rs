@@ -21,14 +21,14 @@ pub struct ApproveInitialCurrencyAmount<'info> {
         space = 8 + UserCurrencyAccount::LEN,
         seeds = [
             owner.key().as_ref(),
-            currency_mint.key().as_ref(),
+            //currency_mint.key().as_ref(),
             seeds::USER_CURRENCY_STRING
         ],
         bump = _bump_user_currency,
     )]
     pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
     
-    #[account(mut)]
+    //#[account(mut)]
     pub currency_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,
@@ -44,7 +44,7 @@ pub fn handler(
 ) -> ProgramResult {
     
 
-
+    msg!("currency pda owner {}", ctx.accounts.user_currency_pda_account.to_account_info().owner);
     let user_currency_pda_account = &mut ctx.accounts.user_currency_pda_account;
   
     user_currency_pda_account.owner = ctx.accounts.owner.clone().key();
@@ -53,7 +53,7 @@ pub fn handler(
     user_currency_pda_account.initial_amount = _total_amount_currency;
     user_currency_pda_account.withdraw_amount = 0;
     
-    user_currency_pda_account.mint = ctx.accounts.currency_mint.clone().key();
+    //user_currency_pda_account.mint = ctx.accounts.currency_mint.clone().key();
 
     Ok(())
 }

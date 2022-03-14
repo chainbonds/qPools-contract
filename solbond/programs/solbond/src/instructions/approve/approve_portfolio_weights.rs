@@ -17,7 +17,7 @@ pub struct SavePortfolio<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        init_if_needed,
+        init,
         payer = owner,
         space = 8 + PortfolioAccount::LEN,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump

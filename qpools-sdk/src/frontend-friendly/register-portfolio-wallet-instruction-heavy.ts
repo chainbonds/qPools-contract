@@ -240,9 +240,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         // Convert Reserve B to it's USD value
         // Convert to the USD currency (We can skip this step because we focus on USD stablecoins for now..)
 
+        console.log("Amount A and Amount B are: ", amountReserveA.toString(), amountReserveB.toString());
         // Add these up, to get an idea of how much total value is in the pool
         let poolContentsInUsdc = amountReserveA + amountReserveB;
         let supplyLpToken = (await this.connection.getTokenSupply(state.poolTokenMint)).value.uiAmount;
+        console.log("Supply of all LP tokens is: ", supplyLpToken.toString());
 
         return {
             supplyLpToken: supplyLpToken,
@@ -266,6 +268,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
             let {supplyLpToken, poolContentsInUsdc} = await this.getLpTokenExchangeRateItems(state);
             let amountUserLp = position.amountLp.uiAmount;
+            console.log("Amount of Users LP tokens: ", amountUserLp.toString());
             if (!supplyLpToken) {
                 throw Error("One of the LP information values is null or zero!" + String(supplyLpToken));
             }

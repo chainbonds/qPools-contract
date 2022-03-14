@@ -16,12 +16,9 @@ pub struct TransferRedeemedToUser<'info> {
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
-    //#[account(mut)]
+    #[account(mut)]
     pub portfolio_owner: AccountInfo<'info>,
 
-
-
-    //      user_token: SwapToken  block
     #[account(
         mut,
         //constraint = &user_owned_user_a.owner == &portfolio_pda.key(),

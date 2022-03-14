@@ -5,7 +5,7 @@ pub struct PositionAccountMarinade {
 
    
     pub portfolio_pda: Pubkey,
-    //pub pool_address: Pubkey,
+    //pub marinade_position_sol_account: Pubkey,
     
 
     // is position already fulfilled or no?

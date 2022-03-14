@@ -287,6 +287,13 @@ export class Portfolio extends SaberInteractTool {
         
         const pda_msol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, this.portfolioPDA);
         const pda_wsol = await this.getAccountForMintAndPDA(NATIVE_MINT, this.portfolioPDA);
+
+
+        console.log("owner ", owner_keypair.toString())
+        console.log("positionPDA ", positionPDA.toString())
+        console.log("portfolioPDA ", this.portfolioPDA.toString())
+        console.log("state ", marinade_state.marinadeStateAddress.toString())
+        console.log("msolMInt ", marinade_state.mSolMintAddress.toString())
         let finaltx = await this.solbondProgram.rpc.createPositionMariande(
             this.portfolioBump,
             bumpPosition,
@@ -295,14 +302,14 @@ export class Portfolio extends SaberInteractTool {
                 accounts: {
                     owner: owner_keypair.publicKey,
                     positionPda: positionPDA,
-                    //portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
                     state: marinade_state.marinadeStateAddress,
                     msolMint: marinade_state.mSolMintAddress,
                     liqPoolSolLegPda: await marinade_state.solLeg(),
                     liqPoolMsolLeg: marinade_state.mSolLeg,
                     liqPoolMsolLegAuthority: await marinade_state.mSolLegAuthority(),
                     reservePda: await marinade_state.reserveAddress(),
-                    transferFrom:this.portfolioPDA,
+                    //transferFrom:this.portfolioPDA,//pda_wsol,
                     mintTo:pda_msol,
                     msolMintAuthority:await marinade_state.mSolMintAuthority(),
                     marinadeProgram:marinade_state.marinadeFinanceProgramId,
@@ -311,7 +318,6 @@ export class Portfolio extends SaberInteractTool {
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     // Create liquidity accounts
                 },
-                //signers: [owner_keypair]
             }
         )
         console.log("Signing separately")

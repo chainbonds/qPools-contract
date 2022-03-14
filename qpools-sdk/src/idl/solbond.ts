@@ -431,6 +431,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "state",
           "isMut": true,
           "isSigner": false
@@ -461,11 +466,6 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "transferFrom",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "mintTo",
           "isMut": true,
           "isSigner": false
@@ -477,7 +477,7 @@ export type Solbond = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1723,6 +1723,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "state",
           "isMut": true,
           "isSigner": false
@@ -1753,11 +1758,6 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "transferFrom",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "mintTo",
           "isMut": true,
           "isSigner": false
@@ -1769,7 +1769,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {

@@ -92,7 +92,7 @@ describe('qPools!', () => {
     it("create a marinade position and deposit", async () => {
         const marinadeState = await MarinadeState.fetch(marinade);
         //const weights = [new BN(500), new BN(500), new BN(500)];
-        const amount = new BN(2);
+        const amount = new BN(2e9);
         // create a portfolio with 1 base currency (sol)
         const init_sig = await portfolio.createPortfolioSigned(
             weights, 
@@ -153,22 +153,22 @@ describe('qPools!', () => {
         await provider.connection.confirmTransaction(sendsig);
         console.log("send money from user to portfolio: ", sendsig);
 
-        try {
-        
-        const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL); 
-    
-        } catch (err) {}
-        try {
-        const send_sig = await portfolio.transfer_to_portfolio(genericPayer,wSOL, wrappedSolAccount)
-        } catch (err) {}
+        //try {
+        //
+        //const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL); 
+        //
+        // } catch (err) {}
+        // try {
+        // const send_sig = await portfolio.transfer_to_portfolio(genericPayer,wSOL, wrappedSolAccount)
+        // } catch (err) {}
         // create a single position 
         
-        const pos_sig = await portfolio.approvePositionWeightMarinade(
-            amount,
-            0,
-            new BN(1000),
-            genericPayer
-        )
+        //const pos_sig = await portfolio.approvePositionWeightMarinade(
+        //    amount,
+        //    0,
+        //    new BN(1000),
+        //    genericPayer
+        //)
 
 
         // cpi to marinade 

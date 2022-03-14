@@ -39,11 +39,11 @@ pub struct MarinadePositionInstruction<'info> {
     )]
     pub position_pda: Box<Account<'info, PositionAccountMarinade>>,
 
-    //#[account(
-    //    mut, 
-    //    seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
-    //)]
-    //pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+    #[account(
+        mut, 
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+    )]
+    pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     #[account(mut)]
     pub state: AccountInfo<'info>, // marinadeState.marinadeStateAddress,
@@ -62,19 +62,13 @@ pub struct MarinadePositionInstruction<'info> {
     #[account(mut)]
     pub reserve_pda: AccountInfo<'info>, // marinadeState.reserveAddress(),
 
-    #[account(
-        mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
-    )]
-    pub transfer_from: Account<'info, PortfolioAccount>, // this is pda owned token account
-
     #[account(mut)]
     pub mint_to: Account<'info,TokenAccount>, // associatedMSolTokenAccountAddress, need to create this
 
     pub msol_mint_authority: AccountInfo<'info>, // await marinadeState.mSolMintAuthority(),
 
 
-    #[account(mut)]
+    //#[account(mut)]
     pub owner: AccountInfo<'info>, //
 
     //#[account(address = marinade_finance::ID)]
@@ -85,28 +79,6 @@ pub struct MarinadePositionInstruction<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> MarinadePositionInstruction<'info> {
-    pub fn into_marinade_deposit_cpi_ctx(&self, _bump_portfolio:u8) -> CpiContext<'_,'_,'_, 'info, MarinadeDeposit<'info>> {
-        let cpi_accounts = MarinadeDeposit {
-            state: self.state.clone(),
-            msol_mint: self.msol_mint.clone(),
-            liq_pool_sol_leg_pda: self.liq_pool_sol_leg_pda.clone(),
-            liq_pool_msol_leg: self.liq_pool_msol_leg.to_account_info(),
-            liq_pool_msol_leg_authority: self.liq_pool_msol_leg_authority.clone(),
-            reserve_pda: self.reserve_pda.clone(),
-            transfer_from: self.transfer_from.to_account_info().clone(),
-            mint_to: self.mint_to.to_account_info(),
-            msol_mint_authority: self.msol_mint_authority.clone(),
-            system_program:self.system_program.to_account_info(),
-            token_program: self.token_program.to_account_info(),
-        };
-        
-        CpiContext::new(
-            self.marinade_program.clone(),
-             cpi_accounts,
-            )
-    }
-}
 
 pub fn handler(
     ctx: Context<MarinadePositionInstruction>,
@@ -114,73 +86,40 @@ pub fn handler(
     _bump_position: u8,
     _index: u32,
 ) -> ProgramResult {
-    //msg!("Creating a single saber position!");
-    //msg!("getting portfolio details!");
-    
-    // if ctx.accounts.position_pda.is_fulfilled {
-    //     return Err(ErrorCode::PositionAlreadyFulfilledError.into());
-    // }
-    // if ctx.accounts.position_pda.index > ctx.accounts.portfolio_pda.num_positions || ctx.accounts.portfolio_pda.fully_created {
-    //     return Err(ErrorCode::PositionFullyCreatedError.into());
-    // }
-    // if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
-    //     return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
-    // }
-    // if ctx.accounts.pool_mint.key() != ctx.accounts.position_pda.pool_address {
-    //     return Err(ErrorCode::ProvidedMintNotMatching.into());
-    // }
 
     let dep_amt: u64 = ctx.accounts.position_pda.initial_sol_amount;
-    // let deposit_amt = MarinadeDepositAmount {
-    //     lamports: dep_amt
-    // };
-    // let mut dep_in_bytes: Vec<u8> = Vec::new();
-    // deposit_amt.serialize(&mut dep_in_bytes)?;
-    // let marinade_program = ctx.accounts.marinade_program.clone();
-    
-    // have to unwrap wsol and send it from ata to pda 
- 
+    msg!("depamt {}", dep_amt);
 
-    let cpi_ctx = ctx.accounts.into_marinade_deposit_cpi_ctx(_bump_portfolio);
-    let data = marinade_finance::instruction::Deposit{ lamports:dep_amt };
+    let data = marinade_finance::instruction::Deposit{ lamports:0 };
 
-    cpi_util::invoke_signed(cpi_ctx.with_signer(
-        &[
-                [
-                    ctx.accounts.owner.key().as_ref(),
-                    seeds::PORTFOLIO_SEED,
-                    &[_bump_portfolio]
-                ].as_ref()
-            ]
-    )  
+    let cpi_accounts = MarinadeDeposit {
+        state: ctx.accounts.state.to_account_info(),
+        msol_mint: ctx.accounts.msol_mint.to_account_info(),
+        liq_pool_sol_leg_pda: ctx.accounts.liq_pool_sol_leg_pda.to_account_info(),
+        liq_pool_msol_leg: ctx.accounts.liq_pool_msol_leg.to_account_info(),
+        liq_pool_msol_leg_authority: ctx.accounts.liq_pool_msol_leg_authority.to_account_info(),
+        reserve_pda: ctx.accounts.reserve_pda.to_account_info(),
+        transfer_from: ctx.accounts.position_pda.to_account_info(),
+        mint_to: ctx.accounts.mint_to.to_account_info(),
+        msol_mint_authority: ctx.accounts.msol_mint_authority.to_account_info(),
+        system_program:ctx.accounts.system_program.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+    };
+
+    cpi_util::invoke_signed(CpiContext::new_with_signer(
+        ctx.accounts.marinade_program.to_account_info(),
+         cpi_accounts,
+         &[
+            [
+                ctx.accounts.owner.key().as_ref(),
+                &_index.to_le_bytes(),
+                seeds::USER_POSITION_STRING,
+                &[_bump_position]
+            ].as_ref()
+        ]
+    )
     ,data)?;
 
-    //cpi_util::invoke_signed(cpi_ctx
-    //
-    //,data)?;
-    //marinade_onchain_helper::cpi_util::invoke_signed(
-    //    CpiContext::new_with_signer(
-    //        marinade_program,
-    //        marinade_deposit_context,
-    //        &[
-    //            [
-    //                ctx.accounts.owner.key().as_ref(),
-    //                seeds::PORTFOLIO_SEED,
-    //                &[_bump_portfolio]
-    //            ].as_ref()
-    //        ]
-    //    ),
-    //    &deposit_amt,
-    //    
-    //)?;
-
-
-
-    /***
-     * DEFENIETLY CHECK IF MARINADE PROGRAM IS THE RIGHT ONE
-     */
   
-
-
     Ok(())
 }

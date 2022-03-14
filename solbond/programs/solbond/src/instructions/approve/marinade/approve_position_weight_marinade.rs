@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint};
 use crate::state::{PortfolioAccount, PositionAccountMarinade};
 use crate::utils::seeds;
+use anchor_lang::solana_program::{program::invoke, system_instruction, system_program};
 
 
 #[derive(Accounts)]
@@ -35,6 +36,9 @@ pub struct ApprovePositionWeightMarinade<'info> {
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+
+    //#[account(mut)]
+    //marinade_position_sol_account: AccountInfo<'info>,
 
     // pub pool_mint: Account<'info, Mint>,
     //pub pool_mint: Account<'info, Mint>,
@@ -74,7 +78,24 @@ pub fn handler(
 
     //position_account.pool_address = ctx.accounts.pool_mint.key().clone();
     position_account.portfolio_pda = ctx.accounts.portfolio_pda.key().clone();
-    
+
+    // transfer the sol amount from owner to the marinade_position_sol_account
+    invoke(
+        &system_instruction::transfer(
+            ctx.accounts.owner.key,
+            ctx.accounts.position_pda.to_account_info().key,
+            _initial_sol_amount,
+        ),
+        &[
+            ctx.accounts.owner.to_account_info().clone(),
+            ctx.accounts.position_pda.to_account_info().clone(),
+            ctx.accounts.system_program.to_account_info().clone()
+        ]
+    );
+
+    //position_account.marinade_position_sol_account = ctx.accounts.marinade_position_sol_account.key().clone();
+
+
 
 
     Ok(())

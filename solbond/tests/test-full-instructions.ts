@@ -155,7 +155,7 @@ describe('qPools!', () => {
 
         //try {
         //
-        //const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL); 
+        const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL); 
         //
         // } catch (err) {}
         // try {
@@ -163,12 +163,12 @@ describe('qPools!', () => {
         // } catch (err) {}
         // create a single position 
         
-        //const pos_sig = await portfolio.approvePositionWeightMarinade(
-        //    amount,
-        //    0,
-        //    new BN(1000),
-        //    genericPayer
-        //)
+        const pos_sig = await portfolio.approvePositionWeightMarinade(
+            amount,
+            0,
+            new BN(1000),
+            genericPayer
+        )
 
 
         // cpi to marinade 

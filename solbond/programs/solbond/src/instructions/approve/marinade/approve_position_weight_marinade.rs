@@ -9,6 +9,7 @@ use anchor_lang::solana_program::{program::invoke, system_instruction, system_pr
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_marinade: u8,
     _weight: u64,
     _initial_sol_amount: u64,
     _index: u32,
@@ -27,6 +28,7 @@ pub struct ApprovePositionWeightMarinade<'info> {
             &_index.to_le_bytes(),
             seeds::USER_POSITION_STRING
         ],
+
         bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountMarinade>>,
@@ -36,6 +38,12 @@ pub struct ApprovePositionWeightMarinade<'info> {
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+
+    #[account(
+        mut,
+        seeds = [owner.key().as_ref(), seeds::USER_MARINADE_SEED], bump = _bump_marinade
+    )] // have to put a check on this that its the right account
+    pub owner_sol_pda: AccountInfo<'info>,
 
     //#[account(mut)]
     //marinade_position_sol_account: AccountInfo<'info>,
@@ -53,6 +61,7 @@ pub fn handler(
     ctx: Context<ApprovePositionWeightMarinade>,
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_marinade: u8,
     _weight: u64,
     _initial_sol_amount: u64,
     _index: u32,
@@ -80,18 +89,32 @@ pub fn handler(
     position_account.portfolio_pda = ctx.accounts.portfolio_pda.key().clone();
 
     // transfer the sol amount from owner to the marinade_position_sol_account
+
     invoke(
         &system_instruction::transfer(
             ctx.accounts.owner.key,
-            ctx.accounts.position_pda.to_account_info().key,
+            ctx.accounts.owner_sol_pda.key,
             _initial_sol_amount,
         ),
         &[
             ctx.accounts.owner.to_account_info().clone(),
-            ctx.accounts.position_pda.to_account_info().clone(),
+            ctx.accounts.owner_sol_pda.clone(),
             ctx.accounts.system_program.to_account_info().clone()
         ]
     );
+
+    //invoke(
+    //    &system_instruction::transfer(
+    //        ctx.accounts.owner.key,
+    //        ctx.accounts.position_pda.to_account_info().key,
+    //        _initial_sol_amount,
+    //    ),
+    //    &[
+    //        ctx.accounts.owner.to_account_info().clone(),
+    //        ctx.accounts.position_pda.to_account_info().clone(),
+    //        ctx.accounts.system_program.to_account_info().clone()
+    //    ]
+    //);
 
     //position_account.marinade_position_sol_account = ctx.accounts.marinade_position_sol_account.key().clone();
 

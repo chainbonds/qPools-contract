@@ -134,7 +134,7 @@ export class Portfolio extends SaberInteractTool {
 
     async createPortfolioSigned(weights: Array<u64>, owner_keypair: Keypair, num_positions: BN, pool_addresses:Array<PublicKey>) {
         this.poolAddresses = pool_addresses;
-
+        console.log("asb")
         let [portfolioPDAtmp, bumpPortfoliotmp] = await PublicKey.findProgramAddress(
             [owner_keypair.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
             this.solbondProgram.programId
@@ -143,23 +143,23 @@ export class Portfolio extends SaberInteractTool {
         this.portfolioPDA = portfolioPDAtmp
         this.portfolioBump = bumpPortfoliotmp
 
-        // console.log("Inputs are: ");
-        // console.log({
-        //     bump: this.portfolioBump,
-        //     weights: weights,
-        //     
-        //     accounts: {
-        //         accounts: {
-        //             owner: owner_keypair.publicKey,
-        //             portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
-        //             tokenProgram: TOKEN_PROGRAM_ID,
-        //             systemProgram: web3.SystemProgram.programId,
-        //             rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        //             // Create liquidity accounts
-        //         },
-        //         signers: [owner_keypair]
-        //     }
-        // })
+        console.log("Inputs are: ");
+        console.log({
+            bump: this.portfolioBump,
+            weights: weights,
+            
+            accounts: {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        })
 
         let finaltx = await this.solbondProgram.rpc.createPortfolio(
             this.portfolioBump,
@@ -245,9 +245,15 @@ export class Portfolio extends SaberInteractTool {
             this.solbondProgram.programId
         );
 
+        let [ownerSolPda, bumpMarinade] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_MARINADE_SEED))],
+            this.solbondProgram.programId
+        );
+
         let finaltx = await this.solbondProgram.rpc.approvePositionWeightMarinade(
             this.portfolioBump,
             bumpPosition,
+            new BN(bumpMarinade),
             new BN(weight),
             new BN(init_sol_amount),
             new BN(index),
@@ -256,6 +262,7 @@ export class Portfolio extends SaberInteractTool {
                     owner: owner_keypair.publicKey,
                     positionPda: positionPDA,
                     portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    ownerSolPda:ownerSolPda ,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -284,6 +291,10 @@ export class Portfolio extends SaberInteractTool {
             this.solbondProgram.programId
         )
 
+        let [ownerSolPda, bumpMarinade] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_MARINADE_SEED))],
+            this.solbondProgram.programId
+        );
         
         const pda_msol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, this.portfolioPDA);
         const pda_wsol = await this.getAccountForMintAndPDA(NATIVE_MINT, this.portfolioPDA);
@@ -297,6 +308,7 @@ export class Portfolio extends SaberInteractTool {
         let finaltx = await this.solbondProgram.rpc.createPositionMariande(
             this.portfolioBump,
             bumpPosition,
+            new BN(bumpMarinade),
             new BN(index),
             {
                 accounts: {
@@ -310,6 +322,7 @@ export class Portfolio extends SaberInteractTool {
                     liqPoolMsolLegAuthority: await marinade_state.mSolLegAuthority(),
                     reservePda: await marinade_state.reserveAddress(),
                     //transferFrom:this.portfolioPDA,//pda_wsol,
+                    ownerSolPda: ownerSolPda,
                     mintTo:pda_msol,
                     msolMintAuthority:await marinade_state.mSolMintAuthority(),
                     marinadeProgram:marinade_state.marinadeFinanceProgramId,

@@ -29,6 +29,7 @@ use marinade_onchain_helper::{
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_marinade: u8,
     _index: u32,
 )]
 pub struct MarinadePositionInstruction<'info> {
@@ -72,7 +73,11 @@ pub struct MarinadePositionInstruction<'info> {
 
     pub msol_mint_authority: AccountInfo<'info>, // await marinadeState.mSolMintAuthority(),
 
-
+    #[account(
+        mut,
+        seeds = [owner.key().as_ref(), seeds::USER_MARINADE_SEED], bump = _bump_marinade
+    )]
+    pub owner_sol_pda: AccountInfo<'info>, // check this the right one
     //#[account(mut)]
     pub owner: AccountInfo<'info>, //
 
@@ -89,6 +94,7 @@ pub fn handler(
     ctx: Context<MarinadePositionInstruction>,
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_marinade: u8,
     _index: u32,
 ) -> ProgramResult {
 
@@ -106,7 +112,7 @@ pub fn handler(
         liq_pool_msol_leg: ctx.accounts.liq_pool_msol_leg.to_account_info(),
         liq_pool_msol_leg_authority: ctx.accounts.liq_pool_msol_leg_authority.to_account_info(),
         reserve_pda: ctx.accounts.reserve_pda.to_account_info(),
-        transfer_from: ctx.accounts.position_pda.to_account_info(),
+        transfer_from: ctx.accounts.owner_sol_pda.to_account_info(),
         mint_to: ctx.accounts.mint_to.to_account_info(),
         msol_mint_authority: ctx.accounts.msol_mint_authority.to_account_info(),
         system_program:ctx.accounts.system_program.to_account_info(),
@@ -120,7 +126,7 @@ pub fn handler(
         program_id: *cpictx.program.key,
         accounts: cpictx.to_account_metas(None).into_iter()
                                                     .map(|mut meta| {
-                                                        if meta.pubkey == ctx.accounts.position_pda.to_account_info().key() {
+                                                        if meta.pubkey == ctx.accounts.owner_sol_pda.to_account_info().key() {
                                                             meta.is_signer = true;
                                                         }
                                                         meta
@@ -135,9 +141,8 @@ pub fn handler(
         &[
             [
                 ctx.accounts.owner.key().as_ref(),
-                &_index.to_le_bytes(),
-                seeds::USER_POSITION_STRING,
-                &[_bump_position]
+                seeds::USER_MARINADE_SEED,
+                &[_bump_marinade]
             ].as_ref()
         ]
 

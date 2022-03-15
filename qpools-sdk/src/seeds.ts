@@ -6,7 +6,8 @@
 
 export const SEED = {
     LP_POOL_ACCOUNT: "twoWayPool9",
-    PORTFOLIO_ACCOUNT: "portFolioSeed317",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition327",
-    USER_CURRENCY_STRING: "UserCurrency0021"
+    PORTFOLIO_ACCOUNT: "portFolioSeed539",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition231",
+    USER_CURRENCY_STRING: "UserCurrency1121",
+    USER_MARINADE_SEED: "UserMarinade0001"
 }

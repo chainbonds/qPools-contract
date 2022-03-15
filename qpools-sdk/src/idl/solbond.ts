@@ -137,6 +137,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -159,6 +164,10 @@ export type Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
           "type": "u8"
         },
         {
@@ -476,6 +485,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "owner",
           "isMut": false,
           "isSigner": false
@@ -508,6 +522,10 @@ export type Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
           "type": "u8"
         },
         {
@@ -1429,6 +1447,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1451,6 +1474,10 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
           "type": "u8"
         },
         {
@@ -1768,6 +1795,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "owner",
           "isMut": false,
           "isSigner": false
@@ -1800,6 +1832,10 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
           "type": "u8"
         },
         {

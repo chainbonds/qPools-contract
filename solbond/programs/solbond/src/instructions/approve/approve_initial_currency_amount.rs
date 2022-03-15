@@ -21,14 +21,14 @@ pub struct ApproveInitialCurrencyAmount<'info> {
         space = 8 + UserCurrencyAccount::LEN,
         seeds = [
             owner.key().as_ref(),
-            //currency_mint.key().as_ref(),
+            currency_mint.key().as_ref(),
             seeds::USER_CURRENCY_STRING
         ],
         bump = _bump_user_currency,
     )]
     pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
     
-    //#[account(mut)]
+    #[account(mut)]
     pub currency_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,

@@ -68,19 +68,6 @@ export class SaberInteractTool {
 
     }
 
-    prettyPrintAccounts() {
-        console.log("solbondProgram", this.solbondProgram.programId.toString());
-        console.log("wallet", this.wallet.publicKey.toString());
-
-        console.log("🟢 qPoolAccount", this.qPoolAccount!.toString());
-        console.log("🟢 bumpQPoolAccount", this.bumpQPoolAccount!.toString());
-
-        console.log("🌊 QPTokenMint", this.QPTokenMint!.publicKey.toString());
-        console.log("🌊 qPoolQPAccount", this.qPoolQPAccount!.toString());
-
-        console.log("💵 qPoolCurrencyAccount", this.qPoolCurrencyAccount!.toString());
-    }
-
     async getPoolState(pool_address: PublicKey) {
         const fetchedStableSwap = await StableSwap.load(
             this.connection,

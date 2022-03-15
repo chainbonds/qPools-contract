@@ -8,6 +8,7 @@ import {DEV_PORTFOLIOID_TO_TOKEN} from "./devnet/portfolio-to-pool.devnet";
 import {token} from "easy-spl";
 import {StableSwap} from "@saberhq/stableswap-sdk";
 import {parsePriceData, PriceData} from "@pythnetwork/client";
+import {MOCK} from "../const";
 
 // Create interfaces for all getters here for now
 
@@ -39,7 +40,7 @@ export interface ExplicitToken {
     logoURI: string
     name: string,
     symbol: string,
-    pyth: PythStruct
+    pyth?: PythStruct
 }
 
 export interface ExplicitSaberPool {
@@ -47,7 +48,7 @@ export interface ExplicitSaberPool {
     name: string,
     tokens: SaberToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
     currency: string,
-    lpToken: any,  // Again, should be updated on the fly
+    lpToken: ExplicitToken,  // Again, should be updated on the fly
     plotKey: string,
     swap: StableSwap,
     quarry: string,
@@ -82,15 +83,27 @@ function getAllPools(): any {
     return DEV_POOLS_INFO;
 }
 
+
+export function getSaberStableSwapProgramId(): PublicKey {
+    // Probably also replace this with a hardcode.
+    // We should aim to remove all occurrences of MOCK.DEV to this file, and then delete them indefinitely
+    return new PublicKey(MOCK.DEV.stableSwapProgramId);
+}
+
+export function getReferenceCurrencyMint(): PublicKey {
+    return new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
+}
+
+
 /**
  * Get all the pools that are using the USDC pool, as specified below.
  */
 export function getActivePools(): ExplicitSaberPool[] {
     // Return the pool accounts, that correspond to these tokesn ...
     // Get all pools that have as one component USDC
-    let mintUsdc = "VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL";
+    let referenceCurrency = getReferenceCurrencyMint();
     // let usdcToken = getToken(new PublicKey(mintUsdc));
-    return getPoolsContainingToken(new PublicKey(mintUsdc));
+    return getPoolsContainingToken(new PublicKey(referenceCurrency));
 }
 
 /**
@@ -121,6 +134,47 @@ export function getToken(tokenMint: PublicKey): ExplicitToken | null {
     return out;
 }
 
+export function getPoolsFromSplStringIds(splStringId: string[]): Array<ExplicitSaberPool> {
+    let out: Array<ExplicitSaberPool> = new Array();
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+        // TODO: Include case that this is not already in the list, and if it is done, then this is probably because of an error
+        if (splStringId.includes(x.name)) {
+            out.push(x);
+        }
+    });
+    return out;
+}
+
+export function getTokensFromSplStringIds(splStringId: string[]): Array<ExplicitToken> {
+    let out: Array<ExplicitToken> = new Array<ExplicitToken>();
+    getAllTokens()["tokens"].map((x: ExplicitToken) => {
+        if (splStringId.includes(x.name)) {
+            out.push(x);
+        }
+    });
+    return out
+}
+
+export function getTokenFromSplStringId(splStringId: string): ExplicitToken {
+    let out: ExplicitToken | null = null;
+    getAllTokens()["tokens"].map((x: ExplicitToken) => {
+        if (x.name === splStringId) {
+            out = x;
+        }
+    });
+    return out;
+}
+
+export function getPoolFromSplStringId(splStringId: string): ExplicitSaberPool {
+    let out: ExplicitSaberPool | null = null;
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+        if (x.name === splStringId) {
+            out = x;
+        }
+    });
+    return out;
+}
+
 /**
  * From a public key representing the pool (i.e. liquidity pool, or lending pool),
  * retrieve the Token Object
@@ -129,7 +183,7 @@ export function getToken(tokenMint: PublicKey): ExplicitToken | null {
 export function getPool(poolAddress: PublicKey): ExplicitSaberPool | null {
     let out: ExplicitSaberPool | null = null;
     getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
-        if (x.swap.config.swapAccount.equals(poolAddress)) {
+        if (new PublicKey(x.swap.config.swapAccount).equals(poolAddress)) {
             out = x;
         }
     })
@@ -148,6 +202,7 @@ export async function getTokenPythToUsdcPrice(
     // Can do this by making a get request to a pyth object
     // get_account_info then parse that data as a PythPriceAccount
     let priceAccount = new PublicKey(token.pyth.price);
+    console.log("price account is: ", typeof priceAccount)
     let priceData: PriceData = parsePriceData((await connection.getAccountInfo(priceAccount)).data);
     console.log("Price data is: ", priceData.price);
     return priceData.price;
@@ -180,6 +235,28 @@ export function getPoolsContainingToken(tokenMint: PublicKey) {
 export function getSerpiusEndpoint() {
     // "https://qpools.serpius.com/weight_status.json";
     return "https://qpools.serpius.com/weight_status_devnet.json";
+}
+
+export function getPoolsContainingLpToken(lpTokenMint: PublicKey) {
+    let allPools: ExplicitSaberPool[] = [];
+    getAllPools()["saberLiquidityPools"].map((x: ExplicitSaberPool) => {
+
+        // These are not explicit token types, these are saber token types
+        if (lpTokenMint.toString() === x.lpToken.address.toString()) {
+            allPools.push(x);
+        }
+
+    })
+    return allPools;
+}
+
+export function saberPoolLpToken2poolAddress(poolMint: PublicKey): PublicKey {
+    let all = getPoolsContainingLpToken(poolMint);
+    // Pick the first instance
+    console.assert(all.length == 1);
+    return new PublicKey(all[0].swap.config.swapAccount);
+    // Take first instance lol
+    // Make a simple lookup
 }
 
 // TODO: Write batch functions for all these

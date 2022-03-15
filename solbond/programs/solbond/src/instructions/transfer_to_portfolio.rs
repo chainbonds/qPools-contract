@@ -3,8 +3,6 @@ use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 use crate::state::{PortfolioAccount, UserCurrencyAccount};
 use crate::utils::seeds;
 
-//use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
-
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio:u8, 

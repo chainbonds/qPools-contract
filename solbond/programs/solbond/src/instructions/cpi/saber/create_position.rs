@@ -5,6 +5,7 @@ use crate::utils::seeds;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
+use std::cmp;
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
@@ -20,7 +21,7 @@ use crate::ErrorCode;
 #[instruction(
     _bump_position: u8,
     _bump_portfolio: u8,
-    _index: u32,
+    _index: u32
 )]
 pub struct SaberLiquidityInstruction<'info> {
 
@@ -37,7 +38,7 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        // seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
@@ -57,7 +58,7 @@ pub struct SaberLiquidityInstruction<'info> {
     pub swap_authority: AccountInfo<'info>,
 
     /// The swap.
-    //#[account(mut)]
+    //#[account(mut)]approved_position_details
     pub swap: AccountInfo<'info>,
 
     // input block
@@ -139,6 +140,15 @@ pub fn handler(
     let saber_swap_program = ctx.accounts.saber_swap_program.to_account_info();
 
     let approved_position_details = &mut ctx.accounts.position_pda;
+
+    // Will print out the user's balance
+    msg!("Printing the user portfolio's A and B amounts, as well as the amount to be distributed");
+    msg!(&format!("{}", ctx.accounts.qpools_a.amount));
+    msg!(&format!("{}", ctx.accounts.qpools_b.amount));
+    msg!(&format!("{}", approved_position_details.max_initial_token_a_amount));
+    msg!(&format!("{}", approved_position_details.max_initial_token_b_amount));
+
+    // TODO: Make take the min between tokenamount and max initial token amount ?
 
     stable_swap_anchor::deposit(
         CpiContext::new_with_signer(

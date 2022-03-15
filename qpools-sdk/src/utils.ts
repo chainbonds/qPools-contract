@@ -1,12 +1,41 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
+import {Wallet} from "@project-serum/anchor/src/provider";
+import {Buffer} from "buffer";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
+
+export default class QWallet implements Wallet {
+
+    constructor(readonly payer: Keypair) {
+        this.payer = payer
+    }
+
+    async signTransaction(tx: Transaction): Promise<Transaction> {
+        tx.partialSign(this.payer);
+        return tx;
+    }
+
+    async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+        return txs.map((t) => {
+            t.partialSign(this.payer);
+            return t;
+        });
+    }
+
+    get publicKey(): PublicKey {
+        return this.payer.publicKey;
+    }
+}
+
+export function bnTo8(bn: BN): Uint8Array {
+    return Buffer.from([...bn.toArray("le", 4)])
+}
 
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -16,23 +45,24 @@ export const tokenAccountExists = async (
     conn: web3.Connection,
     account: web3.PublicKey,
 ): Promise<boolean> => {
+    if (!account) {
+        return false;
+    }
     const info = await conn.getParsedAccountInfo(account)
     return info.value !== null
 }
 
-// export const createTokenAccount = async (
-//     mint: PublicKey,
-//     address: PublicKey | null
-// ): Promise<TransactionInstruction> => {
-//     return Token.createAssociatedTokenAccountInstruction(
-//         ASSOCIATED_TOKEN_PROGRAM_ID,
-//         TOKEN_PROGRAM_ID,
-//         mint,
-//         address,
-//         owner,
-//         wallet.publicKey
-//     )
-// }
+export const accountExists = async (
+    conn: web3.Connection,
+    account: web3.PublicKey
+): Promise<boolean> => {
+    // Return false, if account is null!
+    if (!account) {
+        return false;
+    }
+    const info = await conn.getParsedAccountInfo(account)
+    return info.value !== null
+}
 
 export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
@@ -141,6 +171,10 @@ export const createAssociatedTokenAccountSendUnsigned = async (
     const tx = await createAssociatedTokenAccountUnsigned(conn, mint, address, owner, wallet);
     await util.sendAndConfirm(conn, tx);
     return address
+}
+
+export const getAccountForMintAndPDADontCreate = async (mintKey: PublicKey, pda: PublicKey) => {
+    return await getAssociatedTokenAddressOffCurve(mintKey, pda);
 }
 
 export const getAssociatedTokenAddressOffCurve = async (

@@ -2,20 +2,20 @@ import * as anchor from "@project-serum/anchor";
 import {Connection} from "@solana/web3.js";
 import {Provider} from "@project-serum/anchor";
 import {IDL} from "./idl/solbond";
-import {NETWORK} from "./cluster";
+import {NETWORK} from "./types/cluster";
 
 export const getSolbondProgram = (connection: Connection, provider: Provider, network: NETWORK = NETWORK.LOCALNET) => {
 
     // Have a list of all addresses, based on DEVNET, MAINNET, ETC.
     let programAddress;
     if (network == NETWORK.LOCALNET) {
-        programAddress = "EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H";
+        programAddress = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8";
     } else if (network == NETWORK.DEVNET) {
-        programAddress = "EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H";
+        programAddress = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8";
     } else if (network == NETWORK.TESTNET) {
-        programAddress = "EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H";
+        programAddress = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8";
     } else if (network == NETWORK.MAINNET) {
-        programAddress = "EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H";
+        programAddress = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8";
     } else {
         throw Error("Solana Cluster not specified!" + String(network));
     }

@@ -33,7 +33,6 @@ const {
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
-
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.

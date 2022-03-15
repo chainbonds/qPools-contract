@@ -1,12 +1,6 @@
 import {Program, Provider} from "@project-serum/anchor";
 import {Connection, PublicKey} from "@solana/web3.js";
-import * as anchor from "@project-serum/anchor";
-import {SEED} from "../seeds";
 import {WalletI} from "easy-spl";
-import {u64} from "@solana/spl-token";
-import {PortfolioAccount} from "../types/portfolioAccount";
-import {PositionAccount} from "../types/positionAccount";
-
 
 export class DisplayPortfolios {
 

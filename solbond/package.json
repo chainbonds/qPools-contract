@@ -1,7 +1,6 @@
 {
     "scripts": {
-        "test:qPools": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts",
-        "test:saber-only-devnet": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/simple-end-to-end-devnet-saber.spec.ts"
+        "test:qPools": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts"
     },
     "dependencies": {
         "@project-serum/anchor": "^0.20.1",
@@ -11,7 +10,7 @@
         "@saberhq/stableswap-sdk": "^1.12.34",
         "@solana/buffer-layout": "^4.0.0",
         "@solana/spl-token": "^0.1.8",
-        "easy-spl": "^0.5.0"
+        "easy-spl": "^1.1.0"
     },
     "devDependencies": {
         "@types/chai": "^4.3.0",

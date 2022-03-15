@@ -6,7 +6,7 @@ mod state;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
-declare_id!("EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H");
+declare_id!("GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8");
 
 
 

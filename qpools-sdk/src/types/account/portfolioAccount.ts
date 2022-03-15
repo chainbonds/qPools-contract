@@ -4,7 +4,10 @@ import {u64} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {SEED} from "../../seeds";
 
-export async function getPortfolioPda(owner: PublicKey, solbondProgram: Program) {
+export async function getPortfolioPda(
+    owner: PublicKey,
+    solbondProgram: Program
+): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
         [owner.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
         solbondProgram.programId

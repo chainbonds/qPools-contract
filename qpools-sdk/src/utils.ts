@@ -1,6 +1,6 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction, Connection} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
 import {Wallet} from "@project-serum/anchor/src/provider";
 import {Buffer} from "buffer";
@@ -33,6 +33,10 @@ export default class QWallet implements Wallet {
     }
 }
 
+/**
+ * Big Number to u32 (32 bit integer)
+ * @param bn
+ */
 export function bnTo8(bn: BN): Uint8Array {
     return Buffer.from([...bn.toArray("le", 4)])
 }
@@ -175,6 +179,31 @@ export const createAssociatedTokenAccountSendUnsigned = async (
 
 export const getAccountForMintAndPDADontCreate = async (mintKey: PublicKey, pda: PublicKey) => {
     return await getAssociatedTokenAddressOffCurve(mintKey, pda);
+}
+
+export const getAccountForMintAndPDA = async (connection: Connection, wallet: WalletI, payer: Keypair, mintKey: PublicKey, pda: PublicKey) => {
+    try {
+        // console.log("this wallet ", this.wallet.publicKey.toString())
+        // console.log("this provider wallet  ", this.provider.wallet.publicKey.toString())
+        // console.log("this qpoolacc ", this.qPoolAccount.toString())
+
+        let tx = await createAssociatedTokenAccountUnsigned(
+            connection,
+            mintKey,
+            null,
+            pda,
+            wallet,
+        );
+        const sg = await connection.sendTransaction(tx, [payer]);
+        await connection.confirmTransaction(sg);
+        //console.log("Signature for token A is: ", sg);
+    } catch (e) {
+        //console.log("Error is: ");
+        //console.log(e);
+    }
+
+    const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
+    return userAccount;
 }
 
 export const getAssociatedTokenAddressOffCurve = async (

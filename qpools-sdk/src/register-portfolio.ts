@@ -6,11 +6,15 @@ import {SaberInteractTool} from "./saber-cpi-endpoints";
 import {findSwapAuthorityKey} from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "./const";
-import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
+import {bnTo8, createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
 import {SEED} from "./seeds";
 import { NATIVE_MINT } from "@solana/spl-token";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {getPositionPda} from "./types/account/positionAccountSaber";
+import {getUserCurrencyPda} from "./types/account/userCurrencyAccount";
+
+// TODO: Replace all these functions by the functional functions
+// And make sure that the tests are passing
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -193,15 +197,11 @@ export class Portfolio extends SaberInteractTool {
 
     async registerCurrencyInputInPortfolio(owner_keypair: Keypair, amount: u64, currencyMint: PublicKey) {
 
-
-        let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(),
-                currencyMint.toBuffer() ,
-                Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_CURRENCY_STRING))
-            ],
-            this.solbondProgram.programId
+        let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(
+            this.solbondProgram,
+            owner_keypair.publicKey,
+            currencyMint
         );
-
 
         let finaltx = await this.solbondProgram.rpc.approveInitialCurrencyAmount(
             new BN(bumpCurrency),
@@ -231,12 +231,8 @@ export class Portfolio extends SaberInteractTool {
         return finaltx;
     }
 
-
-    bnTo8(bn: BN): Uint8Array {
-        return Buffer.from([...bn.toArray("le", 4)])
-    }
     async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
-        let indexAsBuffer = this.bnTo8(new BN(index));
+        let indexAsBuffer = bnTo8(new BN(index));
 
 
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
@@ -283,7 +279,7 @@ export class Portfolio extends SaberInteractTool {
 
     async createPositionMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
 
-        let indexAsBuffer = this.bnTo8(new BN(index));
+        let indexAsBuffer = bnTo8(new BN(index));
 
          let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
             [owner_keypair.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
@@ -792,19 +788,6 @@ export class Portfolio extends SaberInteractTool {
         return [finaltx];
     }
 
-    async redeem_full_portfolio(weights: Array<BN>, amounts: Array<u64>, owner: Keypair) {
-        let transactions_sigs = []
-        for (var i = 0; i < weights.length; i++) {
-            let w = weights[i];
-            let amountTokenA = amounts[i];
-            let tx = await this.redeem_single_position(i, owner)
-            transactions_sigs = transactions_sigs.concat(tx)
-        }
-
-        console.log("redeemed! the full portfolio!")
-        return transactions_sigs;
-    }
-
     async transfer_to_portfolio(owner: Keypair, currencyMint: PublicKey, wrappedSolAccount:PublicKey) {
 
         let [portfolioPDAtmp, bumpPortfoliotmp] = await PublicKey.findProgramAddress(
@@ -853,48 +836,6 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
-    async read_from_portfolio(owner: IWallet, amount: u64) {
-        if (!this.userOwnedUSDCAccount) {
-            console.log("Creating a userOwnedUSDCAccount");
-            this.userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
-                this.connection,
-                this.USDC_mint,
-                this.wallet.publicKey,
-                owner,
-            );
-            console.log("Done!");
-        }
-
-        let pdaUSDCAccount = await this.getAccountForMintAndPDA(this.USDC_mint, this.portfolioPDA);
-        console.log("HHH")
-        console.log("pda ", pdaUSDCAccount.toString())
-        // @ts-expect-error
-        let signer = this.provider.wallet.payer as keypair
-        let finaltx = await this.solbondProgram.rpc.readPortfolio(
-            new BN(this.portfolioBump),
-            amount,
-            {
-                accounts: {
-                    owner: owner.publicKey,
-                    portfolioPda: this.portfolioPDA,
-                    userOwnedTokenAccount: this.userOwnedUSDCAccount,
-                    pdaOwnedTokenAccount: pdaUSDCAccount,
-                    tokenMint: this.USDC_mint,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-
-                },
-                signers:[signer]
-            }
-        )
-
-        await this.provider.connection.confirmTransaction(finaltx);
-        console.log("🍄🌝🌖 ", finaltx);
-        return finaltx;
-
-    }
-
     async transfer_to_user(owner: IWallet) {
         //this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs"));
 
@@ -939,6 +880,7 @@ export class Portfolio extends SaberInteractTool {
         return [finaltx];
     }
 
+    // TODO: Ported, and final I believe
     async redeem_single_position_only_one(index: number, owner: Keypair) {
 
         const pool_address = this.poolAddresses[index];

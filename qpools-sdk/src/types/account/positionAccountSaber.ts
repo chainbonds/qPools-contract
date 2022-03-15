@@ -5,7 +5,11 @@ import * as anchor from "@project-serum/anchor";
 import {SEED} from "../../seeds";
 import {bnTo8} from "../../utils";
 
-export async function getPositionPda(owner: PublicKey, index: number, solbondProgram: Program) {
+export async function getPositionPda(
+    owner: PublicKey,
+    index: number,
+    solbondProgram: Program
+): Promise<[PublicKey, number]> {
     let indexAsBuffer = bnTo8(new BN(index));
     return PublicKey.findProgramAddress(
         [owner.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],

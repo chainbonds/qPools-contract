@@ -5,8 +5,20 @@ import * as anchor from "@project-serum/anchor";
 import {SEED} from "../../seeds";
 import {bnTo8} from "../../utils";
 
-export async function getUserCurrencyAccount(owner: PublicKey, index: number, solbondProgram: Program) {
-    throw Error("getUserCurrencyAccount not Implemented Yet!");
+export async function getUserCurrencyPda(
+    solbondProgram: Program,
+    owner: PublicKey,
+    currencyMint: PublicKey
+): Promise<[PublicKey, number]> {
+    // throw Error("getUserCurrencyAccount not Implemented Yet!");
+    let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
+        [owner.toBuffer(),
+            currencyMint.toBuffer() ,
+            Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_CURRENCY_STRING))
+        ],
+        solbondProgram.programId
+    );
+    return [currencyPDA, bumpCurrency]
 }
 
 export interface UserCurrencyAccount {

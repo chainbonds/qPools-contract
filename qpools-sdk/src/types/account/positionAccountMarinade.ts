@@ -5,7 +5,11 @@ import * as anchor from "@project-serum/anchor";
 import {SEED} from "../../seeds";
 import {bnTo8} from "../../utils";
 
-export async function getPositionAccountMarinade(owner: PublicKey, index: number, solbondProgram: Program) {
+export async function getPositionAccountMarinade(
+    owner: PublicKey,
+    index: number,
+    solbondProgram: Program
+): Promise<[PublicKey, number]> {
     throw Error("getPositionAccountMarinade not Implemented Yet!");
 }
 

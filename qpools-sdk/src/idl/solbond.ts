@@ -68,7 +68,7 @@ export type Solbond = {
         },
         {
           "name": "poolMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1448,7 +1448,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolMint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

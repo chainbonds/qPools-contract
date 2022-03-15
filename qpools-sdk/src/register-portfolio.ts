@@ -343,10 +343,11 @@ export class Portfolio extends SaberInteractTool {
 
 
     async approvePositionWeightSaber(token_a_amount: u64, token_b_amount: u64, min_mint_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
+        let indexAsBuffer = this.bnTo8(new BN(index));
 
         console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer,Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 

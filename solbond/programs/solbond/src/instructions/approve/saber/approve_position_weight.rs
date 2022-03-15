@@ -20,7 +20,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        init_if_needed,
+        init,
         payer = owner,
         space =
         {
@@ -44,6 +44,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
     // pub pool_mint: Account<'info, Mint>,
+    #[account(mut)]
     pub pool_mint: Account<'info, Mint>,
 
     pub system_program: Program<'info, System>,

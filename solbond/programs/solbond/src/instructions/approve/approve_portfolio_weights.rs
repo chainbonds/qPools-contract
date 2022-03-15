@@ -52,6 +52,7 @@ pub fn handler(
     
     portfolio_account.num_positions = _num_positions;
     portfolio_account.num_redeemed = 0 as u32;
+    portfolio_account.num_created = 0 as u32;
 
     let clock = Clock::get().unwrap();
     portfolio_account.start_timestamp = clock.unix_timestamp;

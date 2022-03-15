@@ -148,6 +148,18 @@ pub fn handler(
 
     )?;
 
+    let approved_position_details = &mut ctx.accounts.position_pda;
+    approved_position_details.is_fulfilled = true;
+    
+    let clock = Clock::get().unwrap();
+    approved_position_details.timestamp = clock.unix_timestamp;
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.num_created += 1;
+    if portfolio.num_created >= portfolio.num_positions {
+        portfolio.fully_created = true;
+        portfolio.fulfilled_timestamp = clock.unix_timestamp;
+    }
+
   
     Ok(())
 }

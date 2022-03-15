@@ -86,19 +86,19 @@ describe('qPools!', () => {
             let minMintAmount = new u64(0);
             let weight = new BN(1000);
 
-            let approve_sig = await portfolio.approvePositionWeightSaber(
-                pool_addresses,
-                amountTokenA,
-                amountTokenB,
-                minMintAmount,
-                i,
-                weight,
-                genericPayer
-            )
-            // } catch (e) {
-            //     console.log("Approving position")
-            //
-            // }
+            try {
+                let approve_sig = await portfolio.approvePositionWeightSaber(
+                    pool_addresses,
+                    amountTokenA,
+                    amountTokenB,
+                    minMintAmount,
+                    i,
+                    weight,
+                    genericPayer
+                )
+            } catch (e) {
+                console.log("Approving position")
+            }
         }
     })
 
@@ -120,12 +120,15 @@ describe('qPools!', () => {
     })
 
     it('sign a redeem', async() => {
-        let total_amount_USDC = new u64(340_000);
+        let total_amount_USDC = new BN(340_000);
         const num_positions = 1;
         let amountTokenA = new u64(1);
         let amountTokenB = new u64(0);
         let minMintAmount = new u64(0);
-        let sign_withdraw = await portfolio.signApproveWithdrawToUser(genericPayer, total_amount_USDC)
+        let sign_withdraw = await portfolio.signApproveWithdrawToUser(
+            genericPayer,
+            total_amount_USDC
+        );
         var i = 0;
         let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
             genericPayer,

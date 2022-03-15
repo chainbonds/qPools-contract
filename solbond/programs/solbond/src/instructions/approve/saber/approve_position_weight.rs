@@ -20,7 +20,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     pub owner: Signer<'info>,
 
     #[account(
-        init_if_needed,
+        init,
         payer = owner,
         space =
         {

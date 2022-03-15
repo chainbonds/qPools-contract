@@ -1,4 +1,78 @@
 export const DEV_POOLS_INFO = {
+    "liquidStakingPools": [
+        {
+            "id": "marinade",
+            "name": "marinade",
+            "tokens": [
+                {
+                    "address": "So11111111111111111111111111111111111111112",
+                    "chainId": 101,
+                    "decimals": 9,
+                    "extensions": {
+                        "coingeckoId": "solana",
+                        "currency": "SOL",
+                        "serumV3Usdc": "9wFFyRfZBsuAha4YcuxcXLKwMxJR43S7fPfQLusDBzvT",
+                        "serumV3Usdt": "HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1",
+                        "website": "https://solana.com/"
+                    },
+                    "logoURI": "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png",
+                    "name": "Wrapped SOL",
+                    "symbol": "SOL",
+                    "tags": ["saber-mkt-sol"],
+                    "pyth": {}
+                }
+            ],
+            "currency": "mSOL",
+            "lpToken": {
+                "address": "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+                "chainId": 101,
+                "decimals": 9,
+                "extensions": {
+                    "coingeckoId": "msol",
+                    "currency": "SOL",
+                    "discord": "https://discord.gg/mGqZA5pjRN",
+                    "github": "https://github.com/marinade-finance",
+                    "medium": "https://medium.com/marinade-finance",
+                    "serumV3Usdc": "6oGsL2puUgySccKzn9XA9afqF217LfxP5ocq4B3LWsjy",
+                    "serumV3Usdt": "HxkQdUnrPdHwXP5T9kewEXs3ApgvbufuTfdw9v1nApFd",
+                    "source": "marinade",
+                    "sourceUrl": "https://marinade.finance/app/staking",
+                    "twitter": "https://twitter.com/MarinadeFinance",
+                    "website": "https://marinade.finance"
+                },
+                "logoURI": "https://spl-token-icons.static-assets.ship.capital/icons/101/mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So.png",
+                "name": "Marinade staked SOL (mSOL)",
+                "symbol": "mSOL",
+                "tags": ["saber-mkt-sol"],
+                "pyth": {}
+            },
+            "fees": {
+                "adminTrade": {
+                    "formatted": "0.0000000000",
+                    "numerator": "0",
+                    "denominator": "10000"
+                },
+                "adminWithdraw": {
+                    "formatted": "0.0000000000",
+                    "numerator": "0",
+                    "denominator": "10000"
+                },
+                "trade": {
+                    "formatted": "0.0000000000",
+                    "numerator": "0",
+                    "denominator": "10000"
+                },
+                "withdraw": {
+                    "formatted": "0.03",
+                    "numerator": "3",
+                    "denominator": "10000"
+                }
+            },
+            "config": {
+                "cpiAddress": null  // Can get this using the marinade SDK ...
+            }
+        }
+    ],
     "saberLiquidityPools": [
         {
             "id": "btc",

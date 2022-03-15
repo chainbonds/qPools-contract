@@ -81,7 +81,7 @@ pub struct MarinadePositionInstruction<'info> {
     //#[account(mut)]
     pub owner: AccountInfo<'info>, //
 
-    //#[account(address = marinade_finance::ID)]
+    #[account(address = marinade_finance::ID)]
     pub marinade_program: AccountInfo<'info>,
     
     pub system_program: Program<'info, System>,

@@ -20,6 +20,7 @@ pub struct PositionAccountMarinade {
 
     // initial amount of tokens inputed into this specific position
     pub initial_sol_amount: u64,
+    pub msol_out_amount: u64,
 
     // stuff for redeem
     pub withdraw_sol_amount: u64,
@@ -36,7 +37,7 @@ impl PositionAccountMarinade {
             std::mem::size_of::<Pubkey>()  // portfolio_pda, pool_address
             + std::mem::size_of::<bool>()*3      // is_fulfilled
             + std::mem::size_of::<u32>()      // index
-            + std::mem::size_of::<u64>() * 3   // weight, a_amount, b_amount, min_mint_amount
+            + std::mem::size_of::<u64>() * 4   // weight, a_amount, b_amount, min_mint_amount
             + std::mem::size_of::<u8>()       // bump
             + std::mem::size_of::<i64>();     // time
 

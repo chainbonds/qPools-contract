@@ -343,6 +343,68 @@ export type Solbond = {
       ]
     },
     {
+      "name": "approveWithdrawMarinade",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
+          "type": "u8"
+        },
+        {
+          "name": "msolOutAmount",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "approveInitialCurrencyAmount",
       "accounts": [
         {
@@ -923,6 +985,10 @@ export type Solbond = {
             "type": "u32"
           },
           {
+            "name": "numCreated",
+            "type": "u32"
+          },
+          {
             "name": "startTimestamp",
             "type": "i64"
           },
@@ -964,6 +1030,10 @@ export type Solbond = {
           },
           {
             "name": "initialSolAmount",
+            "type": "u64"
+          },
+          {
+            "name": "msolOutAmount",
             "type": "u64"
           },
           {
@@ -1653,6 +1723,68 @@ export const IDL: Solbond = {
       ]
     },
     {
+      "name": "approveWithdrawMarinade",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
+          "type": "u8"
+        },
+        {
+          "name": "msolOutAmount",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "approveInitialCurrencyAmount",
       "accounts": [
         {
@@ -2233,6 +2365,10 @@ export const IDL: Solbond = {
             "type": "u32"
           },
           {
+            "name": "numCreated",
+            "type": "u32"
+          },
+          {
             "name": "startTimestamp",
             "type": "i64"
           },
@@ -2274,6 +2410,10 @@ export const IDL: Solbond = {
           },
           {
             "name": "initialSolAmount",
+            "type": "u64"
+          },
+          {
+            "name": "msolOutAmount",
             "type": "u64"
           },
           {

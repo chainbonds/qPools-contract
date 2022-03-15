@@ -342,14 +342,15 @@ export class Portfolio extends SaberInteractTool {
     }
 
 
-    async approvePositionWeightSaber(token_a_amount: u64, token_b_amount: u64, min_mint_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
+    async approvePositionWeightSaber(pool_addresses: PublicKey[], token_a_amount: u64, token_b_amount: u64, min_mint_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
 
         console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
         let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
-        const pool_address = this.poolAddresses[index];
-        const stableSwapState = await this.getPoolState(pool_address)
+        const pool_address = pool_addresses[index];
+        const stableSwapState = await this.getPoolState(pool_address);
         const {state} = stableSwapState
 
+        // Gotta switch tokenA or tokenB ...
 
         let poolTokenMint = state.poolTokenMint
         console.log("Inputs are: ");
@@ -476,10 +477,10 @@ export class Portfolio extends SaberInteractTool {
 
 
 
-    async permissionlessFulfillSaber(owner_keypair: Keypair, index: number) {
+    async permissionlessFulfillSaber(owner_keypair: Keypair, pool_addresses: PublicKey[], index: number) {
 
         let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
-        const pool_address = this.poolAddresses[index];
+        const pool_address = pool_addresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
         

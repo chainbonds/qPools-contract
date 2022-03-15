@@ -19,11 +19,12 @@ export interface PortfolioAccount {
     fullyCreated: boolean,
     //pub all_positions_redeemed: bool,
 
-    initialAmountUSDC: u64,
-    withdrawAmountUSDC: u64,
+    // initialAmountUSDC: u64,
+    // withdrawAmountUSDC: u64,
 
     numRedeemed: number,
     numPositions: number,
+    numCreated: number,
 
     // time when portfolio signed
     startTimestamp: BN,

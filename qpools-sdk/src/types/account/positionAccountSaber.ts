@@ -20,7 +20,7 @@ export interface PositionAccountSaber {
     isFulfilled: boolean,
     isRedeemed: boolean,
     redeemApproved: boolean,
-    index: BN,
+    index: number,
     weight: u64,
     max_initial_token_a_amount: u64,
     max_initial_token_b_amount: u64,

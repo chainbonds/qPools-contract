@@ -14,7 +14,7 @@ use crate::ErrorCode;
     _index: u32,
 )]
 pub struct RedeemOneSaberPosition<'info> {
-    // doesn't have to be mut
+
     #[account(
     mut,
     seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
@@ -155,6 +155,5 @@ pub fn handler(
 
     msg!("withdraw completed successfully");
   
-
     Ok(())
 }

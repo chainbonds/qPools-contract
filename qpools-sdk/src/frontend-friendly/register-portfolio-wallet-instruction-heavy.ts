@@ -127,6 +127,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return portfolioContent;
     }
 
+    // TODO: Gotta make this cross-protocol
     async fetchAllPositions(): Promise<PositionAccountSaber[]> {
         console.log("#fetchAllPositions()");
         let responses = [];
@@ -162,6 +163,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      *
      * Perhaps create a dictionary, which maps mint to amount ...
      */
+    // TODO: Also gotta make this cross-protocol
     async getPortfolioInformation(): Promise<PositionInfo[]>{
         console.log("#getPortfolioInformation");
 
@@ -226,6 +228,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      * Get the supply of all the LP tokens, as well as the USDC value of the reserve tokens
      * We don't return a float, so we can do safe arithmetic later
      */
+    // TODO: Again, make one getter for each protocol ...
     async getLpTokenExchangeRateItems(state: StableSwapState) {
 
         console.log("Token account address is: ", state.tokenA.reserve);
@@ -252,6 +255,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         };
     }
 
+    // TODO: Again, make this cross-protocol compatible
     async getPortfolioUsdcValue() {
         console.log("#getPortfolioUsdcValue");
         let includedMints: Set<string> = new Set();
@@ -380,6 +384,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     /**
      *  Instructions to create the associated token accounts for the portfolios
      */
+    // TODO: Make this also cross-platform (?)
     async registerAtaForLiquidityPortfolio(poolAddresses: PublicKey[]): Promise<TransactionInstruction[]> {
         console.log("#registerAtaForLiquidityPortfolio()");
         let txs = [];

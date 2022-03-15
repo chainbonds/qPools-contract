@@ -6,6 +6,7 @@ pub struct PositionAccountSaber {
    
     pub portfolio_pda: Pubkey,
     pub pool_address: Pubkey,
+    
 
     // is position already fulfilled or no?
     pub is_fulfilled: bool,
@@ -29,6 +30,8 @@ pub struct PositionAccountSaber {
 
     pub bump: u8,
     pub timestamp: i64,
+
+    
 
 }
 

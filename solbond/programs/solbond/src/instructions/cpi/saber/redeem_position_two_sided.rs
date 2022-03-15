@@ -5,7 +5,6 @@ use crate::utils::seeds;
 use stable_swap_anchor::*;
 use stable_swap_anchor::{SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
-use crate::ErrorCode;
 
 
 #[derive(Accounts)]
@@ -27,8 +26,13 @@ pub struct RedeemSaberPosition<'info> {
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
-        seeds = [portfolio_owner.key().as_ref(), &_index.to_le_bytes(),seeds::USER_POSITION_STRING],
-        bump = _bump_position
+        mut,
+        seeds = [
+            portfolio_owner.key().as_ref(),
+            &_index.to_le_bytes(),
+            seeds::USER_POSITION_STRING
+        ],
+        bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 

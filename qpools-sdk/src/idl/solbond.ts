@@ -3,32 +3,6 @@ export type Solbond = {
   "name": "solbond",
   "instructions": [
     {
-      "name": "healthcheck",
-      "accounts": [
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "createPortfolio",
       "accounts": [
         {
@@ -71,10 +45,6 @@ export type Solbond = {
         {
           "name": "numPositions",
           "type": "u32"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
         }
       ]
     },
@@ -149,6 +119,72 @@ export type Solbond = {
       ]
     },
     {
+      "name": "approvePositionWeightMarinade",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
+          "type": "u8"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
+        },
+        {
+          "name": "initialSolAmount",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "transferToPortfolio",
       "accounts": [
         {
@@ -168,6 +204,11 @@ export type Solbond = {
         },
         {
           "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userCurrencyPdaAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -194,7 +235,11 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpUserCurrency",
           "type": "u8"
         }
       ]
@@ -230,12 +275,8 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "bumpPortfolio",
           "type": "u8"
-        },
-        {
-          "name": "totalAmount",
-          "type": "u64"
         }
       ]
     },
@@ -294,6 +335,198 @@ export type Solbond = {
         {
           "name": "minimumTokenAmount",
           "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "approveInitialCurrencyAmount",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userCurrencyPdaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currencyMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpUserCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "withdrawAmountCurrency",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "approveCurrencyWithdrawAmount",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userCurrencyPdaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpUserCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "withdrawAmountCurrency",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "createPositionMarinade",
+      "accounts": [
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "msolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolSolLegPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolMsolLeg",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolMsolLegAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reservePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintTo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "msolMintAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marinadeProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
+          "type": "u8"
         },
         {
           "name": "index",
@@ -415,7 +648,7 @@ export type Solbond = {
         },
         {
           "name": "positionPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -599,61 +832,6 @@ export type Solbond = {
       ]
     },
     {
-      "name": "readPortfolio",
-      "accounts": [
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "portfolioPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userOwnedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "pdaOwnedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "transferRedeemedToUser",
       "accounts": [
         {
@@ -663,6 +841,11 @@ export type Solbond = {
         },
         {
           "name": "portfolioOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userCurrencyPdaAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -677,6 +860,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "currencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -694,7 +882,11 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpUserCurrency",
           "type": "u8"
         }
       ]
@@ -723,14 +915,6 @@ export type Solbond = {
             "type": "bool"
           },
           {
-            "name": "initialAmountUsdc",
-            "type": "u64"
-          },
-          {
-            "name": "withdrawAmountUsdc",
-            "type": "u64"
-          },
-          {
             "name": "numRedeemed",
             "type": "u32"
           },
@@ -744,6 +928,54 @@ export type Solbond = {
           },
           {
             "name": "fulfilledTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionAccountMarinade",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "portfolioPda",
+            "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialSolAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawSolAmount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
             "type": "i64"
           }
         ]
@@ -809,6 +1041,34 @@ export type Solbond = {
           {
             "name": "timestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "userCurrencyAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "initialAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawAmount",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
           }
         ]
       }
@@ -1053,32 +1313,6 @@ export const IDL: Solbond = {
   "name": "solbond",
   "instructions": [
     {
-      "name": "healthcheck",
-      "accounts": [
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "createPortfolio",
       "accounts": [
         {
@@ -1121,10 +1355,6 @@ export const IDL: Solbond = {
         {
           "name": "numPositions",
           "type": "u32"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
         }
       ]
     },
@@ -1199,6 +1429,72 @@ export const IDL: Solbond = {
       ]
     },
     {
+      "name": "approvePositionWeightMarinade",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
+          "type": "u8"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
+        },
+        {
+          "name": "initialSolAmount",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "transferToPortfolio",
       "accounts": [
         {
@@ -1218,6 +1514,11 @@ export const IDL: Solbond = {
         },
         {
           "name": "pdaOwnedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userCurrencyPdaAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -1244,7 +1545,11 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpUserCurrency",
           "type": "u8"
         }
       ]
@@ -1280,12 +1585,8 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "bumpPortfolio",
           "type": "u8"
-        },
-        {
-          "name": "totalAmount",
-          "type": "u64"
         }
       ]
     },
@@ -1344,6 +1645,198 @@ export const IDL: Solbond = {
         {
           "name": "minimumTokenAmount",
           "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "approveInitialCurrencyAmount",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userCurrencyPdaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currencyMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpUserCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "withdrawAmountCurrency",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "approveCurrencyWithdrawAmount",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userCurrencyPdaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpUserCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "withdrawAmountCurrency",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "createPositionMarinade",
+      "accounts": [
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "msolMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolSolLegPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolMsolLeg",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liqPoolMsolLegAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reservePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintTo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "msolMintAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerSolPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marinadeProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMarinade",
+          "type": "u8"
         },
         {
           "name": "index",
@@ -1465,7 +1958,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "positionPda",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1649,61 +2142,6 @@ export const IDL: Solbond = {
       ]
     },
     {
-      "name": "readPortfolio",
-      "accounts": [
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "portfolioPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userOwnedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "pdaOwnedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "transferRedeemedToUser",
       "accounts": [
         {
@@ -1713,6 +2151,11 @@ export const IDL: Solbond = {
         },
         {
           "name": "portfolioOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userCurrencyPdaAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -1727,6 +2170,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "currencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1744,7 +2192,11 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpUserCurrency",
           "type": "u8"
         }
       ]
@@ -1773,14 +2225,6 @@ export const IDL: Solbond = {
             "type": "bool"
           },
           {
-            "name": "initialAmountUsdc",
-            "type": "u64"
-          },
-          {
-            "name": "withdrawAmountUsdc",
-            "type": "u64"
-          },
-          {
             "name": "numRedeemed",
             "type": "u32"
           },
@@ -1794,6 +2238,54 @@ export const IDL: Solbond = {
           },
           {
             "name": "fulfilledTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionAccountMarinade",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "portfolioPda",
+            "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialSolAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawSolAmount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
             "type": "i64"
           }
         ]
@@ -1859,6 +2351,34 @@ export const IDL: Solbond = {
           {
             "name": "timestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "userCurrencyAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "initialAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawAmount",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
           }
         ]
       }

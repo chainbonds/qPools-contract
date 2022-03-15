@@ -27,8 +27,12 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut,
-        // seeds = [portfolio_owner.key().as_ref(), &_index.to_le_bytes(), seeds::USER_POSITION_STRING],
-        // bump = _bump_position
+        seeds = [
+            owner.key().as_ref(),
+            &_index.to_le_bytes(),
+            seeds::USER_POSITION_STRING
+        ],
+        bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 

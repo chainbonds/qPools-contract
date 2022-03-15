@@ -1,0 +1,6 @@
+[submodule "solbond/deps/marinade-onchain-helper"]
+	path = solbond/deps/marinade-onchain-helper
+	url = git@github.com:chainbonds/marinade-onchain-helper.git
+[submodule "solbond/deps/liquid-staking-program"]
+	path = solbond/deps/liquid-staking-program
+	url = git@github.com:chainbonds/liquid-staking-program.git

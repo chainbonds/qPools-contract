@@ -5,7 +5,6 @@ mod state;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
-
 use instructions::*;
 declare_id!("GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8");
 
@@ -29,12 +28,6 @@ pub struct BalancePools<'info> {
 pub mod solbond {
     use super::*;
 
-    /**
-    * A simple health checkpoint which checks if the program is up and running
-    */
-    pub fn healthcheck(ctx: Context<Healthcheck>) -> ProgramResult {
-        instructions::healthcheck::handler(ctx)
-    }
 
     /**
      * This model creates a portfolio where the base currency is USDC i.e the user only pays in USDC.
@@ -67,14 +60,13 @@ pub mod solbond {
         _bump: u8,
         _weights: Vec<u64>, 
         _num_positions: u32,
-        _amount: u64,
     ) -> ProgramResult {
-        instructions::create_portfolio::handler(
+        instructions::approve::approve_portfolio_weights::handler(
             ctx,
             _bump, 
             _weights,
             _num_positions,
-        _amount,)
+        )
     }
 
     /**
@@ -94,7 +86,8 @@ pub mod solbond {
         _min_mint_amount: u64,
         _index: u32,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_position_weight_saber(
+        
+        instructions::approve::saber::approve_position_weight::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
@@ -106,17 +99,39 @@ pub mod solbond {
         )
 
     }
+
+    pub fn approve_position_weight_marinade(
+        ctx: Context<ApprovePositionWeightMarinade>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _bump_marinade: u8,
+        _weight: u64,
+        _initial_sol_amount: u64,
+        _index: u32
+    ) -> ProgramResult {
+        instructions::approve::marinade::approve_position_weight_marinade::handler(
+            ctx,
+            _bump_portfolio,
+            _bump_position,
+            _bump_marinade,
+            _weight,
+            _initial_sol_amount,
+            _index
+        )
+    }
     /**
      * Permissioned. Transfer the agreed to amount to the portfolio owned token account
     */
 
     pub fn transfer_to_portfolio(
         ctx: Context<TransferToPortfolio>,
-        bump: u8
+        _bump_portfolio: u8,
+        _bump_user_currency: u8,
     ) -> ProgramResult {
             instructions::transfer_to_portfolio::handler(
                 ctx,
-                bump
+                _bump_portfolio,
+                _bump_user_currency,
             )
     }
 
@@ -140,13 +155,11 @@ pub mod solbond {
 
     pub fn approve_withdraw_to_user(
         ctx: Context<ApproveWithdrawPortfolio>,
-        _bump: u8,
-        _total_amount: u64,
+        _bump_portfolio: u8,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_withdraw_to_user(
+        instructions::approve_portfolio_withdraw::handler(
             ctx,
-            _bump,
-            _total_amount
+            _bump_portfolio,
         )
     }
 
@@ -158,7 +171,7 @@ pub mod solbond {
         _minimum_token_amount: u64,
         _index: u32,
     ) -> ProgramResult {
-        instructions::create_portfolio::approve_withdraw_amount_saber(
+        instructions::approve::saber::approve_withdraw_amount::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
@@ -168,13 +181,57 @@ pub mod solbond {
         )
     }
 
+    pub fn approve_initial_currency_amount(
+        ctx: Context<ApproveInitialCurrencyAmount>,
+        _bump_user_currency: u8,
+        _withdraw_amount_currency: u64,
+    ) -> ProgramResult {
+        instructions::approve::approve_initial_currency_amount::handler(
+            ctx,
+            _bump_user_currency,
+            _withdraw_amount_currency,
+        )
+    }
+
+    pub fn approve_currency_withdraw_amount(
+        ctx: Context<ApproveCurrencyWithdrawAmount>,
+        _bump_portfolio: u8,
+        _bump_user_currency: u8,
+        _withdraw_amount_currency: u64,
+    ) -> ProgramResult {
+        instructions::approve::approve_currency_withdraw_amount::handler(
+            ctx,
+            _bump_portfolio,
+            _bump_user_currency,
+            _withdraw_amount_currency,
+        )
+    }
+
+
+
+    pub fn create_position_marinade(
+        ctx: Context<MarinadePositionInstruction>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _bump_marinade: u8,
+        _index: u32,
+    ) -> ProgramResult {
+        instructions::cpi::marinade::create_position_marinade::handler(
+            ctx, 
+            _bump_portfolio, 
+            _bump_position,
+            _bump_marinade,
+            _index
+        )
+    }
+
     pub fn create_position_saber(
         ctx: Context<SaberLiquidityInstruction>,
         _bump_position: u8,
         _bump_portfolio: u8,
         _index:u32,
     ) -> ProgramResult {
-        instructions::create_position_saber::handler(
+        instructions::cpi::saber::create_position::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
@@ -190,7 +247,7 @@ pub mod solbond {
         _index: u32,
     ) -> ProgramResult {
 
-        instructions::redeem_position_saber::handler(
+        instructions::cpi::saber::redeem_position_two_sided::handler(
             ctx, 
             _bump_portfolio,
         _bump_position, 
@@ -208,7 +265,7 @@ pub mod solbond {
         //_bump_pool: u8,
         _index: u32,
     ) -> ProgramResult {
-        instructions::redeem_position_one_saber::handler(
+        instructions::cpi::saber::redeem_position_one_sided::handler(
             ctx, 
             _bump_portfolio,
         _bump_position,
@@ -219,24 +276,17 @@ pub mod solbond {
     
     
 
-    pub fn read_portfolio(
-        ctx: Context<TransferToPortfolio>,
-        bump: u8, amount: u64) -> ProgramResult {
-            instructions::transfer_to_portfolio::read_portfolio_account(
-                ctx,
-                bump,
-                amount
-            )
-    }
     
     pub fn transfer_redeemed_to_user(
         ctx: Context<TransferRedeemedToUser>,
-        bump: u8,
+        _bump_portfolio: u8,
+        _bump_user_currency: u8,
     ) -> ProgramResult {
 
         instructions::transfer_redeemed_to_user::handler(
             ctx,
-            bump,
+            _bump_portfolio,
+            _bump_user_currency,
         )
     }
 

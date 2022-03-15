@@ -148,48 +148,6 @@ pub fn handler(
 
     )?;
 
-    /* 
-    let ix = Instruction {
-        program_id: *CpiContext::new_with_signer(
-            ctx.accounts.marinade_program.to_account_info(),
-             cpi_accounts,
-             &[
-                [
-                    ctx.accounts.owner.key().as_ref(),
-                    &_index.to_le_bytes(),
-                    seeds::USER_POSITION_STRING,
-                    &[_bump_position]
-                ].as_ref()
-            ]).program.key,
-        accounts: CpiContext::new_with_signer(
-            ctx.accounts.marinade_program.to_account_info(),
-             cpi_accounts,
-             &[
-                [
-                    ctx.accounts.owner.key().as_ref(),
-                    &_index.to_le_bytes(),
-                    seeds::USER_POSITION_STRING,
-                    &[_bump_position]
-                ].as_ref()
-            ]).accounts.to_account_metas(None),
-        data: data.data(),
-    };
-
-    anchor_lang::solana_program::program::invoke(
-        &ix,
-        &CpiContext::new_with_signer(
-            ctx.accounts.marinade_program.to_account_info(),
-             cpi_accounts,
-             &[
-                [
-                    ctx.accounts.owner.key().as_ref(),
-                    &_index.to_le_bytes(),
-                    seeds::USER_POSITION_STRING,
-                    &[_bump_position]
-                ].as_ref()
-            ]).to_account_infos(),
-    )?;*/
-
   
     Ok(())
 }

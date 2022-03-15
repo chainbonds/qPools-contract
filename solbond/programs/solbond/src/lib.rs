@@ -209,14 +209,14 @@ pub mod solbond {
 
 
 
-    pub fn create_position_mariande(
+    pub fn create_position_marinade(
         ctx: Context<MarinadePositionInstruction>,
         _bump_portfolio: u8,
         _bump_position: u8,
         _bump_marinade: u8,
         _index: u32,
     ) -> ProgramResult {
-        instructions::cpi::marinade::create_position_mariande::handler(
+        instructions::cpi::marinade::create_position_marinade::handler(
             ctx, 
             _bump_portfolio, 
             _bump_position,

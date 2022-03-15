@@ -432,7 +432,7 @@ export type Solbond = {
       ]
     },
     {
-      "name": "createPositionMariande",
+      "name": "createPositionMarinade",
       "accounts": [
         {
           "name": "positionPda",
@@ -1742,7 +1742,7 @@ export const IDL: Solbond = {
       ]
     },
     {
-      "name": "createPositionMariande",
+      "name": "createPositionMarinade",
       "accounts": [
         {
           "name": "positionPda",

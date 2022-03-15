@@ -305,7 +305,7 @@ export class Portfolio extends SaberInteractTool {
         console.log("portfolioPDA ", this.portfolioPDA.toString())
         console.log("state ", marinade_state.marinadeStateAddress.toString())
         console.log("msolMInt ", marinade_state.mSolMintAddress.toString())
-        let finaltx = await this.solbondProgram.rpc.createPositionMariande(
+        let finaltx = await this.solbondProgram.rpc.createPositionMarinade(
             this.portfolioBump,
             bumpPosition,
             new BN(bumpMarinade),
@@ -321,7 +321,6 @@ export class Portfolio extends SaberInteractTool {
                     liqPoolMsolLeg: marinade_state.mSolLeg,
                     liqPoolMsolLegAuthority: await marinade_state.mSolLegAuthority(),
                     reservePda: await marinade_state.reserveAddress(),
-                    //transferFrom:this.portfolioPDA,//pda_wsol,
                     ownerSolPda: ownerSolPda,
                     mintTo:pda_msol,
                     msolMintAuthority:await marinade_state.mSolMintAuthority(),
@@ -329,7 +328,6 @@ export class Portfolio extends SaberInteractTool {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    // Create liquidity accounts
                 },
             }
         )

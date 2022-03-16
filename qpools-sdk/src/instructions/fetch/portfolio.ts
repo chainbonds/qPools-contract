@@ -4,6 +4,9 @@ import {PortfolioAccount} from "../../types/account/portfolioAccount";
 import {accountExists} from "../../utils";
 import {getPortfolioPda} from "../../types/account/pdas";
 
+/**
+ * Check if the portfolio exists
+ */
 export async function portfolioExists(
     connection: Connection,
     solbondProgram: Program,
@@ -22,6 +25,9 @@ export async function portfolioExists(
     return out;
 }
 
+/**
+ * Fetch the portfolio account
+ */
 export async function fetchPortfolio(
     connection: Connection,
     solbondProgram: Program,

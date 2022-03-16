@@ -9,13 +9,11 @@ import {
 } from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "../const";
-import {account, WalletI} from "easy-spl";
+import {WalletI} from "easy-spl";
 import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
 import {
     accountExists,
-    bnTo8,
     createAssociatedTokenAccountUnsignedInstruction, getAccountForMintAndPDADontCreate,
-    getAssociatedTokenAddressOffCurve,
     tokenAccountExists
 } from "../utils";
 import {PortfolioAccount} from "../types/account/portfolioAccount";
@@ -27,7 +25,12 @@ import {
 } from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
-import {portfolioExists} from "../instructions/fetch/portfolio";
+import {portfolioExists, fetchPortfolio} from "../instructions/fetch/portfolio";
+import {fetchSinglePosition} from "../instructions/fetch/position";
+import {getLpTokenExchangeRateItems} from "../instructions/fetch/saber";
+import {createPortfolioSigned, sendLamports} from "../instructions/modify/portfolio";
+import {approvePositionWeightSaber} from "../instructions/modify/saber";
+import {signApproveWithdrawToUser} from "../instructions/modify/portfolio-transfer";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -94,58 +97,52 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return await portfolioExists(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
-    // async portfolioExistsAndIsFulfilled(): Promise<boolean> {
-    //     if (await this.portfolioExists()) {
-    //         // let portfolio: PortfolioAccount = await this.fetchPortfolio();
-    //         return true;
-    //     } else {
-    //         return false;
-    //     }
-    // }
-
     async fetchPortfolio(): Promise<PortfolioAccount | null> {
-        console.log("#fetchPortfolio()");
-        let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
-        this.portfolioPDA = portfolioPda;
-        console.log("(1) portfolio PDA: ", this.portfolioPDA, typeof this.portfolioPDA);
-        let portfolioContent = null;
-        console.log("Before trying to fetch");
-        if (await accountExists(this.connection, this.portfolioPDA)) {
-            console.log("Exists and trying to fetch");
-            portfolioContent = (await this.solbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-        }
-        console.log("Now fetching again ...", portfolioContent);
-        console.log("##fetchPortfolio()");
-        return portfolioContent;
-    }
-
-    // TODO: Gotta make this cross-protocol
-    async fetchAllPositions(): Promise<PositionAccountSaber[]> {
-        console.log("#fetchAllPositions()");
-        let responses = [];
-
-        // Get the portfolio, and iterate through all the positions
-        let portfolioContents: PortfolioAccount = await this.fetchPortfolio();
-        for (let i = 0; i < portfolioContents.numPositions; i++) {
-            let positionContent = await this.fetchSinglePosition(i);
-            console.log("Position Content", positionContent);
-            responses.push(positionContent);
-        }
-        console.log("##fetchAllPositions()");
-        return responses;
+        return await fetchPortfolio(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
     async fetchSinglePosition(index: number): Promise<PositionAccountSaber | null> {
-        console.log("#fetchSinglePosition()");
-        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
-        console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
-        let positionContent = null;
-        if (await accountExists(this.connection, positionPDA)) {
-            let response = await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA);
-            positionContent = response as PositionAccountSaber;
-        }
-        console.log("##fetchSinglePosition()");
-        return positionContent;
+        return await fetchSinglePosition(this.connection, this.solbondProgram, this.owner.publicKey, index);
+    }
+
+    async getLpTokenExchangeRateItems(state: StableSwapState) {
+        return await getLpTokenExchangeRateItems(this.connection, this.solbondProgram, this.owner.publicKey, state);
+    }
+
+    /**
+     * Send some SOL to the local keypair wallet
+     */
+    async sendToCrankWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
+        return sendLamports(this.owner.publicKey, tmpKeypair, lamports);
+    }
+
+    async createPortfolioSigned(weights: Array<BN>, poolAddresses: Array<PublicKey>, initialAmountUsdc: u64): Promise<TransactionInstruction> {
+        return await createPortfolioSigned(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            weights,
+            poolAddresses,
+            initialAmountUsdc
+        );
+    }
+
+    async approvePositionWeightSaber(poolAddresses: Array<PublicKey>, amountA: u64, amountB: u64, minMintAmount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
+        return await approvePositionWeightSaber(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            poolAddresses,
+            amountA,
+            amountB,
+            minMintAmount,
+            index,
+            weight,
+        )
+    }
+
+    async signApproveWithdrawToUser(totalAmount: BN) {
+        return await signApproveWithdrawToUser(this.connection, this.solbondProgram, this.owner.publicKey, totalAmount);
     }
 
     /**
@@ -214,37 +211,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
 
         console.log("##getPortfolioInformation");
         return out;
-    }
-
-    /**
-     * Get the supply of all the LP tokens, as well as the USDC value of the reserve tokens
-     * We don't return a float, so we can do safe arithmetic later
-     */
-    // TODO: Again, make one getter for each protocol ...
-    async getLpTokenExchangeRateItems(state: StableSwapState) {
-
-        console.log("Token account address is: ", state.tokenA.reserve);
-        let amountReserveA = (await this.connection.getTokenAccountBalance(state.tokenA.reserve)).value.uiAmount;
-        console.log("Token account address is: ", state.tokenA.reserve);
-        let amountReserveB = (await this.connection.getTokenAccountBalance(state.tokenB.reserve)).value.uiAmount;
-        if (!amountReserveA || !amountReserveB) {
-            throw Error("One of the reserve values is null!" + String(amountReserveA) + " " +  String(amountReserveB));
-        }
-        // We skip these right now, because we are based on USDC
-        // Convert Reserve A to it's USD value
-        // Convert Reserve B to it's USD value
-        // Convert to the USD currency (We can skip this step because we focus on USD stablecoins for now..)
-
-        console.log("Amount A and Amount B are: ", amountReserveA.toString(), amountReserveB.toString());
-        // Add these up, to get an idea of how much total value is in the pool
-        let poolContentsInUsdc = amountReserveA + amountReserveB;
-        let supplyLpToken = (await this.connection.getTokenSupply(state.poolTokenMint)).value.uiAmount;
-        console.log("Supply of all LP tokens is: ", supplyLpToken.toString());
-
-        return {
-            supplyLpToken: supplyLpToken,
-            poolContentsInUsdc: poolContentsInUsdc
-        };
     }
 
     // TODO: Again, make this cross-protocol compatible
@@ -363,17 +329,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     */
 
     /**
-     * Send some SOL to the local keypair wallet
-     */
-    async sendToCrankWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
-        return web3.SystemProgram.transfer({
-            fromPubkey: this.owner.publicKey,
-            toPubkey: tmpKeypair,
-            lamports: lamports,
-        })
-    }
-
-    /**
      *  Instructions to create the associated token accounts for the portfolios
      */
     // TODO: Make this also cross-platform (?)
@@ -457,75 +412,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return txs;
     }
 
-    async createPortfolioSigned(weights: Array<BN>, poolAddresses: Array<PublicKey>, initialAmountUsdc: u64): Promise<TransactionInstruction> {
-        console.assert(weights.length === poolAddresses.length);
-        if (weights.length != poolAddresses.length) {
-            throw Error("Does not match in legth!");
-        }
-        const numPositions = new BN(weights.length);
-        console.log("Creating Portfolio", this.portfolioPDA.toString());
-        // console.log("Who is paying for it: ", this.payer)
-        let create_transaction_instructions:TransactionInstruction  = this.solbondProgram.instruction.createPortfolio(
-            new BN(this.portfolioBump),
-            weights,
-            new BN(numPositions),
-            new BN(initialAmountUsdc),
-            {
-                accounts: {
-                    owner: this.owner.publicKey,
-                    portfolioPda: this.portfolioPDA, //randomOwner.publicKey,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                },
-                signers: [this.payer]
-            }
-        )
-        console.log("##createPortfolio{Instruction}")
-        return create_transaction_instructions;
-
-    }
-
-    async approvePositionWeightSaber(poolAddresses: Array<PublicKey>, amountA: u64, amountB: u64, minMintAmount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
-
-        let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
-        let poolAddress = poolAddresses[index];
-        const stableSwapState = await this.getPoolState(poolAddress);
-        const {state} = stableSwapState;
-
-        // Make sure to swap amountA and amountB accordingly ...
-        // TODO: Make sure that A corresponds to USDC, or do a swap in general (i.e. push whatever there is, to the swap account)
-        // TODO: Gotta define how much to pay in, depending on if mintA == USDC, or mintB == USDC
-        let accounts: any = {
-            accounts: {
-                owner: this.owner.publicKey,
-                positionPda: positionPDA,
-                portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
-                poolMint: state.poolTokenMint,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                systemProgram: web3.SystemProgram.programId,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                // Create liquidity accounts
-            },
-        };
-        if (this.payer) {
-            accounts = {...accounts, signers: [this.payer]}
-        }
-        console.log("Printing accounts: ", accounts);
-        let approveWeightInstruction: TransactionInstruction = await this.solbondProgram.instruction.approvePositionWeightSaber(
-            this.portfolioBump,
-            bumpPosition,
-            new BN(weight),
-            new BN(amountA),
-            new BN(amountB),
-            new BN(minMintAmount),
-            new BN(index),
-            accounts
-        )
-
-        return approveWeightInstruction;
-    }
-
     /**
      * Withdraw a Portfolio workflow:
      * 1) approve_withdraw_to_user(ctx,amount_total):
@@ -541,26 +427,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      *      transfers the funds back to the user
      *
      */
-
-    async signApproveWithdrawToUser(totalAmount: BN) {
-        let ix = await this.solbondProgram.instruction.approveWithdrawToUser(
-            this.portfolioBump,
-            totalAmount,
-            {
-                accounts: {
-                    owner: this.owner.publicKey,
-                    portfolioPda: this.portfolioPDA,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: web3.SystemProgram.programId,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                },
-                signers: [this.payer]
-            }
-        )
-        console.log("Signing separately")
-        console.log("Done RPC Call!");
-        return ix;
-    }
 
     async approveRedeemFullPortfolio(): Promise<TransactionInstruction[]> {
         console.log("#redeemFullPortfolio()");

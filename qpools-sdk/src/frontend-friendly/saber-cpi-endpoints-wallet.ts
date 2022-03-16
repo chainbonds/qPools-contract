@@ -118,21 +118,4 @@ export class SaberInteractToolFrontendFriendly {
         return userAccount;
     }
 
-    async prepareSaberPool(pool_address: PublicKey) {
-        const fetchedStableSwapPool = await this.getPoolState(pool_address);
-        const {state} = fetchedStableSwapPool
-
-        // TODO: Load these if these don't exist yet
-        this.mintA = new Token(this.connection, state.tokenA.mint, TOKEN_PROGRAM_ID, this.wallet);
-        this.mintB = new Token(this.connection, state.tokenB.mint, TOKEN_PROGRAM_ID, this.wallet);
-        this.poolMint = new Token(this.connection, state.poolTokenMint, TOKEN_PROGRAM_ID, this.wallet);
-
-        this.userAccountA = await this.getAccountForMint(state.tokenA.mint);
-        this.userAccountB = await this.getAccountForMint(state.tokenB.mint);
-        this.userAccountPoolToken = await this.getAccountForMint(state.poolTokenMint);
-
-        this.fetchedStableSwapPool = fetchedStableSwapPool;
-        this.stableSwapState = state;
-    }
-
 }

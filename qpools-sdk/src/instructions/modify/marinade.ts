@@ -1,4 +1,4 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {getMarinadeSolPda, getPortfolioPda, getPositionPda} from "../../types/account/pdas";
@@ -90,5 +90,39 @@ export async function createPositionMarinade(
         }
     )
     console.log("##createPositionMarinade");
+    return ix;
+}
+
+export async function approveWithdrawToMarinade(
+    connection: Connection,
+    solbondProgram: Program,
+    owner: PublicKey,
+    index: number,
+    marinade_state: MarinadeState
+) {
+    console.log("#approveWithdrawToMarinade()");
+    let [portfolioPda, bumpPortfolio] = await getPortfolioPda(owner, solbondProgram);
+    let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
+    const pda_msol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, portfolioPda);
+    const usermsol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, owner);
+
+    let ix = await solbondProgram.instruction.approveWithdrawMarinade(
+        bumpPortfolio,
+        new BN(bumpPosition),
+        new BN(index),
+        {
+            accounts: {
+                owner: owner,
+                positionPda: positionPDA,
+                portfolioPda: portfolioPda,
+                pdaMsolAccount: pda_msol,
+                userMsolAccount: usermsol,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                systemProgram: web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            }
+        }
+    )
+    console.log("##approveWithdrawToMarinade()");
     return ix;
 }

@@ -1,6 +1,24 @@
-import {StableSwapState} from "@saberhq/stableswap-sdk";
+import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
 import {Connection, PublicKey} from "@solana/web3.js";
 import {Program} from "@project-serum/anchor";
+import assert from "assert";
+import {stableSwapProgramId} from "../saber";
+
+/**
+ * Private helper functions
+ */
+export async function getPoolState(
+    connection: Connection,
+    poolAddress: PublicKey
+) {
+    const fetchedStableSwap = await StableSwap.load(
+        connection,
+        poolAddress,
+        stableSwapProgramId
+    );
+    assert.ok(fetchedStableSwap.config.swapAccount.equals(poolAddress));
+    return fetchedStableSwap;
+}
 
 /**
  * Get the supply of all the LP tokens, as well as the USDC value of the reserve tokens
@@ -14,7 +32,7 @@ export async function getLpTokenExchangeRateItems(
     owner: PublicKey,
     state: StableSwapState
 ) {
-
+    console.log("#getLpTokenExchangeRateItems()");
     console.log("Token account address is: ", state.tokenA.reserve);
     let amountReserveA = (await connection.getTokenAccountBalance(state.tokenA.reserve)).value.uiAmount;
     console.log("Token account address is: ", state.tokenA.reserve);
@@ -33,6 +51,7 @@ export async function getLpTokenExchangeRateItems(
     let supplyLpToken = (await connection.getTokenSupply(state.poolTokenMint)).value.uiAmount;
     console.log("Supply of all LP tokens is: ", supplyLpToken.toString());
 
+    console.log("##getLpTokenExchangeRateItems()");
     return {
         supplyLpToken: supplyLpToken,
         poolContentsInUsdc: poolContentsInUsdc

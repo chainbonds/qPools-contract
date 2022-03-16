@@ -1,6 +1,6 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction, Connection} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
 import {Wallet} from "@project-serum/anchor/src/provider";
 import {Buffer} from "buffer";
@@ -31,6 +31,15 @@ export default class QWallet implements Wallet {
     get publicKey(): PublicKey {
         return this.payer.publicKey;
     }
+}
+
+export async function sendAndSignInstruction(provider: Provider, ix: TransactionInstruction) {
+    let tx = new Transaction();
+    tx.add(ix);
+    let sg = await provider.send(tx);
+    await provider.connection.confirmTransaction(sg, "confirmed");
+    console.log("Transaction Signature is: ", sg);
+    return sg;
 }
 
 /**

@@ -2,6 +2,8 @@ import {BN, Provider} from '@project-serum/anchor';
 import {u64} from '@solana/spl-token';
 import {Keypair, PublicKey} from "@solana/web3.js";
 import {MOCK, NETWORK} from "@qpools/sdk";
+import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
+import {MarinadeState} from  '@marinade.finance/marinade-ts-sdk';
 import {getSolbondProgram} from "@qpools/sdk";
 import {Portfolio} from "@qpools/sdk";
 import {getAccountForMintAndPDADontCreate} from "@qpools/sdk/lib/utils";
@@ -55,10 +57,18 @@ describe('qPools!', () => {
     })
 
     it("Create all the Associated Token Accounts", async () => {
+        const marinadeConfig = new MarinadeConfig({
+            connection: connection,
+            publicKey: provider.wallet.publicKey,
+
+        });
+        let marinade = new Marinade(marinadeConfig);
+        const marinade_state = await MarinadeState.fetch(marinade);
         await portfolio.createAssociatedTokenAccounts(
             pool_addresses,
             genericPayer,
-            provider.wallet
+            provider.wallet,
+            marinade_state
         )
     })
 

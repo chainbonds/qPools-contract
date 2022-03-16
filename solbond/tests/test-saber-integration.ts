@@ -45,6 +45,8 @@ describe('qPools!', () => {
         // wSOL_pubkey = new PublicKey("So11111111111111111111111111111111111111112");
 
         weights = [new BN(1000)];
+
+        //
         pool_addresses = [USDC_USDT_pubkey];
 
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
@@ -115,7 +117,7 @@ describe('qPools!', () => {
         }
 
         let i = 0
-        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer, pool_addresses, i);
+        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer, pool_addresses[0], i);
 
     })
 
@@ -130,14 +132,17 @@ describe('qPools!', () => {
             total_amount_USDC
         );
         var i = 0;
+        // TODO: Gotta check the instruction-heavy or frontend implementation to cleanly deal with poolAddresses
         let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
             genericPayer,
+            pool_addresses[0],
             i,
             minMintAmount,
             amountTokenA
         )
 
         let approve_sig2 = await portfolio.redeem_single_position_only_one(
+            pool_addresses,
             i,
             genericPayer,
         )

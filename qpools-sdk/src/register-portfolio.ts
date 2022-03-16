@@ -6,7 +6,7 @@ import {SaberInteractTool} from "./saber-cpi-endpoints";
 import {findSwapAuthorityKey} from "@saberhq/stableswap-sdk";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "./const";
-import {bnTo8, createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
+import {createAssociatedTokenAccountSendUnsigned, IWallet} from "./utils";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {getMarinadeSolPda, getPortfolioPda, getPositionPda, getUserCurrencyPda} from "./types/account/pdas";
 
@@ -22,9 +22,6 @@ export interface PositionsInput {
 // Probably put into a separate file, so we can outsource the SDK into a separate set of imports ...
 export class Portfolio extends SaberInteractTool {
 
-    public poolAddresses: Array<PublicKey>;
-    public portfolio_owner: PublicKey;
-    public qPools_USDC_fees: PublicKey;
     public USDC_mint = new PublicKey(MOCK.DEV.SABER_USDC);
     public userOwnedUSDCAccount: PublicKey;
 
@@ -408,25 +405,15 @@ export class Portfolio extends SaberInteractTool {
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
 
-
         let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, portfolioPDA);
-        //let userAccountA = await this.getAccountForMint(state.tokenA.mint);
-
-
         console.log("userA ", userAccountA.toString())
         let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, portfolioPDA);
-        //let userAccountB = await this.getAccountForMint(state.tokenB.mint);
-
         console.log("userB ", userAccountA.toString())
-
-
         let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, portfolioPDA);
-        //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
         let amount_a = new u64(0);
         let amount_b = new u64(0);
 
         let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
-
 
         if (state.tokenA.mint.toString() === MOCK.DEV.SABER_USDC.toString()) {
             amount_a = new u64(1);
@@ -437,27 +424,19 @@ export class Portfolio extends SaberInteractTool {
         }
 
         console.log("👀 positionPda ", positonPDA.toString())
-
         console.log("😸 portfolioPda", portfolioPDA.toString());
         console.log("👾 owner.publicKey", owner.publicKey.toString());
-
         console.log("🟢 poolTokenMint", poolTokenMint.toString());
         console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
-
         console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
-        //console.log("🤯 poolPDA", poolPDA.toString());
-
         console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
         console.log("🤥 userAccountA", userAccountA.toString());
         console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
-
         console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
         console.log("👹 userAccountB", userAccountB.toString());
-
         console.log("🦒 mint A", state.tokenA.mint.toString());
         console.log("🦒 mint B", state.tokenB.mint.toString());
         console.log("🦒 mint LP", poolTokenMint.toString());
-
 
         let finaltx = await this.solbondProgram.rpc.redeemPositionSaber(
             new BN(portfolioBump),
@@ -467,7 +446,6 @@ export class Portfolio extends SaberInteractTool {
                 accounts: {
                     positionPda: positonPDA,
                     portfolioPda: portfolioPDA,
-                    //poolPda: poolPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,
                     inputLp: userAccountpoolToken,
@@ -483,9 +461,7 @@ export class Portfolio extends SaberInteractTool {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: web3.SystemProgram.programId,
-                    // Create liquidity accounts
                 },
-                //signers: [owner,]
             }
         )
 
@@ -569,9 +545,9 @@ export class Portfolio extends SaberInteractTool {
     }
 
     // TODO: Ported, and final I believe
-    async redeem_single_position_only_one(index: number, owner: Keypair) {
+    async redeem_single_position_only_one(pool_addresses: PublicKey[], index: number, owner: Keypair) {
 
-        const pool_address = this.poolAddresses[index];
+        const pool_address = pool_addresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
 

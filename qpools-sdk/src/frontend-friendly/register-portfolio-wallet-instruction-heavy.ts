@@ -27,6 +27,7 @@ import {
 } from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
+import {portfolioExists} from "../instructions/fetch/portfolio";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -90,17 +91,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      * A bunch of fetch functions
      */
     async portfolioExists(): Promise<boolean> {
-        console.log("#portfolioExists");
-        let out: boolean
-        let [portfolioPda, _ ] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
-        if (this.connection) {
-            out = await accountExists(this.connection, portfolioPda);
-        } else {
-            // Maybe let it rerun after a second again ...
-            out = false;
-        }
-        console.log("##portfolioExists");
-        return out;
+        return await portfolioExists(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
     // async portfolioExistsAndIsFulfilled(): Promise<boolean> {

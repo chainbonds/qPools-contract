@@ -1,12 +1,7 @@
 import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
-import {
-    createAssociatedTokenAccountSendUnsigned,
-    getAccountForMintAndPDADontCreate,
-    getAssociatedTokenAddressOffCurve
-} from "../../utils";
-import {MOCK} from "../../const";
+import {getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve} from "../../utils";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 
@@ -26,7 +21,7 @@ export async function signApproveWithdrawToUser(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey
-) {
+): Promise<TransactionInstruction> {
     console.log("#signApproveWithdrawToUser()");
     let [portfolioPDA, bumpPortfolio] = await getPortfolioPda(owner, solbondProgram);
     let ix = await solbondProgram.instruction.approveWithdrawToUser(
@@ -55,7 +50,7 @@ export async function transferUsdcFromUserToPortfolio(
     console.log("#transferUsdcFromUserToPortfolio()");
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(solbondProgram, owner, currencyMint);
-    let pdaUSDCAccount = await this.getAccountForMintAndPDA(currencyMint, portfolioPda);
+    let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPda);
 
     let ix = await solbondProgram.instruction.transferToPortfolio(
         new BN(portfolioBump),
@@ -83,14 +78,14 @@ export async function transfer_to_user(
     solbondProgram: Program,
     owner: PublicKey,
     currencyMint: PublicKey
-) {
+): Promise<TransactionInstruction> {
     console.log("#transfer_to_user()");
-    let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, this.solbondProgram);
-    let pdaUSDCAccount = await this.getAccountForMintAndPDA(currencyMint, portfolioPDA);
-    let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(this.solbondProgram, owner, currencyMint);
-    let userOwnedUSDCAccount = await getAssociatedTokenAddressOffCurve(currencyMint, owner);
+    let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA);
+    let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(solbondProgram, owner, currencyMint);
+    let userOwnedUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, owner);
 
-    let ix = await this.solbondProgram.instruction.transferRedeemedToUser(
+    let ix = await solbondProgram.instruction.transferRedeemedToUser(
         new BN(portfolioBump),
         new BN(bumpCurrency),
         {

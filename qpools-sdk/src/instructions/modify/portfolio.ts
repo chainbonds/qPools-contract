@@ -56,11 +56,10 @@ export async function registerCurrencyInputInPortfolio(
         {
             accounts: {
                 owner: owner,
-                userCurrencyPdaAccount: currencyPDA,//randomOwner.publicKey,
+                userCurrencyPdaAccount: currencyPDA,
                 currencyMint: currencyMint,
                 systemProgram: web3.SystemProgram.programId,
                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                // Create liquidity accounts
             }
         }
     )

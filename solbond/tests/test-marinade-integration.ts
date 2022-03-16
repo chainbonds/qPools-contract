@@ -128,7 +128,7 @@ describe('qPools!', () => {
         const givemoney = new Transaction().add(await SystemProgram.transfer({
                 fromPubkey: genericPayer.publicKey,
                 toPubkey: wrappedSolAccount,
-                lamports: 2e9,
+                lamports: 1e9,
             }),
             // createSyncNativeInstruction(wrappedSolAccount)
         )
@@ -137,8 +137,10 @@ describe('qPools!', () => {
         console.log("send money from user to portfolio: ", sendsig);
 
         try {
-        const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL);
-        } catch (err) {}
+            const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL);
+        } catch (err) {
+
+        }
 
         // try {
         // const send_sig = await portfolio.transfer_to_portfolio(genericPayer,wSOL, wrappedSolAccount)

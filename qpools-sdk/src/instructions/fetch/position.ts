@@ -3,7 +3,6 @@ import {Program} from "@project-serum/anchor";
 import {PositionAccountSaber} from "../../types/account/positionAccountSaber";
 import {getPositionPda} from "../../types/account/pdas";
 import {accountExists} from "../../utils";
-import {PortfolioAccount} from "../../types/account/portfolioAccount";
 
 // TODO: This position can either be a Marinade Position, or a Saber Position. Make sure to distinguish between the two!
 /**

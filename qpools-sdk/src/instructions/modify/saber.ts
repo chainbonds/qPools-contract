@@ -1,4 +1,4 @@
-import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda} from "../../types/account/pdas";
@@ -9,16 +9,12 @@ import {getAccountForMintAndPDADontCreate} from "../../utils";
 import {getPoolState} from "../fetch/saber";
 import {findSwapAuthorityKey} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
-import {MOCK} from "../../const";
 
-// TODO: Replace pool_addresses with individual addresses
-// TODO: Add signature to every function ...
-// TODO: Add console.log everywhere for function start and function end
 export async function approvePositionWeightSaber(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    poolAddresses: Array<PublicKey>,
+    poolAddress: PublicKey,
     amountA: u64,
     amountB: u64,
     minMintAmount: u64,
@@ -28,9 +24,10 @@ export async function approvePositionWeightSaber(
     console.log("#approvePositionWeightSaber()");
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
-    let poolAddress = poolAddresses[index];
-    const stableSwapState = await this.getPoolState(poolAddress);
+    const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
+
+    // Double check if already fulfilled, and skip it if not ...
 
     // Make sure to swap amountA and amountB accordingly ...
     // TODO: Make sure that A corresponds to USDC, or do a swap in general (i.e. push whatever there is, to the swap account)
@@ -47,7 +44,7 @@ export async function approvePositionWeightSaber(
             accounts: {
                 owner: owner,
                 positionPda: positionPDA,
-                portfolioPda: portfolioPDA,//randomOwner.publicKey,
+                portfolioPda: portfolioPDA,
                 poolMint: state.poolTokenMint,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 systemProgram: web3.SystemProgram.programId,
@@ -166,11 +163,11 @@ export async function permissionlessFulfillSaber(
     const [authority] = await findSwapAuthorityKey(state.adminAccount, stableSwapProgramId);
     console.log("authority ", authority.toString())
     // TODO: Gotta replace the this. functionality
-    let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, portfolioPDA);
+    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
     console.log("userA ", userAccountA.toString());
-    let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, portfolioPDA);
+    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
     console.log("userB ", userAccountA.toString());
-    let userAccountpoolToken = await this.getAccountForMintAndPDA(state.poolTokenMint, portfolioPDA);
+    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
 
     let ix = await solbondProgram.instruction.createPositionSaber(
         bumpPosition,
@@ -180,7 +177,7 @@ export async function permissionlessFulfillSaber(
             accounts: {
                 owner: owner,
                 positionPda: positionPDA,
-                portfolioPda: portfolioPDA,//randomOwner.publicKey,
+                portfolioPda: portfolioPDA,
                 outputLp: userAccountpoolToken,
                 poolMint: state.poolTokenMint,
                 swapAuthority: stableSwapState.config.authority,
@@ -205,25 +202,24 @@ export async function redeemSinglePositionOnlyOne(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    pool_addresses: PublicKey[],
+    pool_address: PublicKey,
     index: number,
 ) {
     console.log("#redeemSinglePositionOnlyOne()");
-    const pool_address = pool_addresses[index];
     const stableSwapState = await getPoolState(connection, pool_address);
     const {state} = stableSwapState;
     console.log("got state ", state);
     console.log("poolTokenMint ", state.poolTokenMint.toString());
-    let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, this.solbondProgram);
-    let [positonPDA, bumpPositon] = await getPositionPda(owner, index, this.solbondProgram);
+    let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    let [positonPDA, bumpPositon] = await getPositionPda(owner, index, solbondProgram);
     console.log("positionPDA ", positonPDA.toString())
 
-    const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
+    const [authority] = await findSwapAuthorityKey(state.adminAccount, stableSwapProgramId);
     console.log("authority ", authority.toString())
-    let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, portfolioPDA);
-    let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, portfolioPDA);
+    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
+    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
     console.log("userA ", userAccountA.toString())
-    let userAccountpoolToken = await this.getAccountForMintAndPDA(state.poolTokenMint, portfolioPDA);
+    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
     let totalLPTokens = (await connection.getTokenAccountBalance(userAccountpoolToken)).value;
 
     console.log("👀 positionPda ", positonPDA.toString())
@@ -283,24 +279,23 @@ export async function redeem_single_position(
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
 
     console.log("got state ", state);
-    let poolTokenMint = state.poolTokenMint
-    console.log("poolTokenMint ", poolTokenMint.toString());
+    console.log("poolTokenMint ", state.poolTokenMint.toString());
     let [positonPDA, bumpPositon] = await getPositionPda(owner, index, solbondProgram);
     console.log("positionPDA ", positonPDA.toString())
 
     const [authority] = await findSwapAuthorityKey(state.adminAccount, stableSwapProgramId);
     console.log("authority ", authority.toString())
 
-    let userAccountA = await this.getAccountForMintAndPDA(state.tokenA.mint, portfolioPDA);
+    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
     console.log("userA ", userAccountA.toString())
-    let userAccountB = await this.getAccountForMintAndPDA(state.tokenB.mint, portfolioPDA);
+    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
     console.log("userB ", userAccountA.toString())
-    let userAccountpoolToken = await this.getAccountForMintAndPDA(poolTokenMint, portfolioPDA);
+    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
 
     console.log("👀 positionPda ", positonPDA.toString())
     console.log("😸 portfolioPda", portfolioPDA.toString());
     console.log("👾 owner.publicKey", owner.toString());
-    console.log("🟢 poolTokenMint", poolTokenMint.toString());
+    console.log("🟢 poolTokenMint", state.poolTokenMint.toString());
     console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
     console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
     console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
@@ -310,7 +305,7 @@ export async function redeem_single_position(
     console.log("👹 userAccountB", userAccountB.toString());
     console.log("🦒 mint A", state.tokenA.mint.toString());
     console.log("🦒 mint B", state.tokenB.mint.toString());
-    console.log("🦒 mint LP", poolTokenMint.toString());
+    console.log("🦒 mint LP", state.poolTokenMint.toString());
 
     let ix = await solbondProgram.instruction.redeemPositionSaber(
         new BN(portfolioBump),
@@ -321,7 +316,7 @@ export async function redeem_single_position(
                 positionPda: positonPDA,
                 portfolioPda: portfolioPDA,
                 portfolioOwner: owner,
-                poolMint: poolTokenMint,
+                poolMint: state.poolTokenMint,
                 inputLp: userAccountpoolToken,
                 swapAuthority: stableSwapState.config.authority,
                 swap: stableSwapState.config.swapAccount,

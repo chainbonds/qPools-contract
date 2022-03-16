@@ -1,9 +1,9 @@
-import {Connection, Keypair, PublicKey} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {
     createAssociatedTokenAccountSendUnsigned,
-    createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve,
+    createAssociatedTokenAccountUnsigned, getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve,
     IWallet,
     sendAndSignInstruction
 } from "./utils";
@@ -25,6 +25,9 @@ import {
     transfer_to_user,
     transferUsdcFromUserToPortfolio
 } from "./instructions/modify/portfolio-transfer";
+import {getPortfolioPda, getPositionPda} from "./types/account/pdas";
+import {getPoolState} from "./instructions/fetch/saber";
+import {MOCK} from "./const";
 
 // TODO: Replace all these functions by the functional functions
 // And make sure that the tests are passing
@@ -54,7 +57,6 @@ export class Portfolio {
         this.provider = provider;
         this.solbondProgram = solbondProgram
 
-        //// @ts-expect-error
         this.wallet = wallet;
         this.providerWallet = this.provider.wallet;
     }
@@ -81,6 +83,48 @@ export class Portfolio {
 
         const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
         return userAccount;
+    }
+
+    // TODO: Create Associated Token Accounts for all Pools, Mints, Etc.
+    // users' currency ATAs
+    // portfolio's currency ATAs
+    // portfolioPDA for all pools's Reserve Mints, and LP Mints
+    async createAssociatedTokenAccounts(
+        saber_pool_addresses: PublicKey[],
+        owner_keypair: Keypair,
+        marinade_state: MarinadeState
+    ) {
+
+        let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
+        // For the Portfolio!
+        // For all saber pool addresses (tokenA, tokenB, LPToken), create associated token address
+        // For MSOL, create associated token addresses
+        // For USDC currency, create associated token account
+        await Promise.all(saber_pool_addresses.map(async (poolAddress: PublicKey) => {
+            const stableSwapState = await getPoolState(this.connection, poolAddress);
+            const {state} = stableSwapState;
+
+            let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
+            console.log("userA ", userAccountA.toString())
+            let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
+            console.log("userB ", userAccountB.toString())
+            let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+            console.log("userAccountPoolToken ", userAccountpoolToken.toString())
+        }));
+
+        // For the User!
+        // Iterate through every currency ...
+        // For USDC currency, create associated token account
+        let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
+        let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
+        // For MSOL, create associated token addresses
+        // TODO:; What MSOL Token was used ...?
+        let wSOL = new PublicKey("So11111111111111111111111111111111111111112");
+        // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, portfolioPDA);
+        // let userMSolAccount = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, owner_keypair.publicKey);
+        let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
+        let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
+
     }
 
     /**
@@ -136,11 +180,12 @@ export class Portfolio {
     }
 
     async approvePositionWeightSaber(pool_addresses: PublicKey[], token_a_amount: u64, token_b_amount: u64, min_mint_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
+        let pool_address = pool_addresses[index];
         let ix = await approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey,
-            pool_addresses,
+            pool_address,
             token_a_amount,
             token_b_amount,
             min_mint_amount,
@@ -235,11 +280,12 @@ export class Portfolio {
 
     // TODO: Ported, and final I believe
     async redeem_single_position_only_one(pool_addresses: PublicKey[], index: number, owner: Keypair) {
+        const pool_address = pool_addresses[index];
         let ix = await redeemSinglePositionOnlyOne(
             this.connection,
             this.solbondProgram,
             owner.publicKey,
-            pool_addresses,
+            pool_address,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);

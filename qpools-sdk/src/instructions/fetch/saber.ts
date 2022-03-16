@@ -10,7 +10,7 @@ import {stableSwapProgramId} from "../saber";
 export async function getPoolState(
     connection: Connection,
     poolAddress: PublicKey
-) {
+): Promise<StableSwap> {
     const fetchedStableSwap = await StableSwap.load(
         connection,
         poolAddress,

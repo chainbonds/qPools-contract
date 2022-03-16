@@ -1,9 +1,10 @@
-import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {getMarinadeSolPda, getPortfolioPda, getPositionPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
+import {getAccountForMintAndPDADontCreate} from "../../utils";
 
 export async function approvePositionWeightMarinade(
     connection: Connection,
@@ -55,8 +56,7 @@ export async function createPositionMarinade(
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     let [ownerSolPda, bumpMarinade] = await getMarinadeSolPda(owner, solbondProgram);
 
-    // TODO: Replace this with the getAccountForMintAndPDA function
-    const pda_msol = await this.getAccountForMintAndPDA(marinadeState.mSolMintAddress, portfolioPda);
+    const pda_msol = await getAccountForMintAndPDADontCreate(marinadeState.mSolMintAddress, portfolioPda);
 
     console.log("owner ", owner.toString())
     console.log("positionPDA ", positionPDA.toString())
@@ -99,12 +99,12 @@ export async function approveWithdrawToMarinade(
     owner: PublicKey,
     index: number,
     marinade_state: MarinadeState
-) {
+): Promise<TransactionInstruction> {
     console.log("#approveWithdrawToMarinade()");
     let [portfolioPda, bumpPortfolio] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
-    const pda_msol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, portfolioPda);
-    const usermsol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, owner);
+    const pda_msol = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, portfolioPda);
+    const usermsol = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, owner);
 
     let ix = await solbondProgram.instruction.approveWithdrawMarinade(
         bumpPortfolio,

@@ -72,7 +72,8 @@ export class Portfolio {
     async createAssociatedTokenAccounts(
         saber_pool_addresses: PublicKey[],
         owner_keypair: Keypair,
-        wallet: IWallet
+        wallet: IWallet,
+        marinadeState: MarinadeState
     ) {
 
         let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
@@ -102,11 +103,11 @@ export class Portfolio {
         await this.provider.connection.confirmTransaction(sg, "confirmed");
         console.log("SG is: ", sg);
 
-        // let wSOL = new PublicKey("So11111111111111111111111111111111111111112");
-        let wSOL = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+        let wSOL = new PublicKey("So11111111111111111111111111111111111111112");
         // For the User!
         // Iterate through every currency ...
         // For USDC currency, create associated token account
+        console.log("ATA1!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, portfolioPDA)))) {
             let tx1 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
@@ -119,6 +120,7 @@ export class Portfolio {
             await this.provider.connection.confirmTransaction(sg1, "confirmed");
         }
         // let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
+        console.log("ATA2!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, owner_keypair.publicKey)))) {
             let tx2 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
@@ -131,6 +133,7 @@ export class Portfolio {
             await this.provider.connection.confirmTransaction(sg2, "confirmed");
         }
         // let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
+        console.log("ATA3!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, portfolioPDA)))) {
             let tx3 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
@@ -143,6 +146,7 @@ export class Portfolio {
             await this.provider.connection.confirmTransaction(sg3, "confirmed");
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
+        console.log("ATA4!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, owner_keypair.publicKey)))) {
             let tx4 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
@@ -153,6 +157,31 @@ export class Portfolio {
             );
             let sg4 = await this.provider.send(tx4);
             await this.provider.connection.confirmTransaction(sg4, "confirmed");
+        }
+        console.log("ATA5!");
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(marinadeState.mSolMintAddress, portfolioPDA)))) {
+            let tx5 = await createAssociatedTokenAccountUnsigned(
+                this.connection,
+                marinadeState.mSolMintAddress,
+                null,
+                portfolioPDA,
+                wallet,
+            );
+            let sg5 = await this.provider.send(tx5);
+            await this.provider.connection.confirmTransaction(sg5, "confirmed");
+        }
+        // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
+        console.log("ATA6!");
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(marinadeState.mSolMintAddress, owner_keypair.publicKey)))) {
+            let tx6 = await createAssociatedTokenAccountUnsigned(
+                this.connection,
+                marinadeState.mSolMintAddress,
+                null,
+                owner_keypair.publicKey,
+                wallet,
+            );
+            let sg6 = await this.provider.send(tx6);
+            await this.provider.connection.confirmTransaction(sg6, "confirmed");
         }
         // let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
         // For MSOL, create associated token addresses

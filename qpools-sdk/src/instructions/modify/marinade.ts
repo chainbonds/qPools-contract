@@ -103,6 +103,7 @@ export async function approveWithdrawToMarinade(
     console.log("#approveWithdrawToMarinade()");
     let [portfolioPda, bumpPortfolio] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
+    console.log("1111 pda for msol is: ", marinade_state.mSolMintAddress);
     const pda_msol = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, portfolioPda);
     const usermsol = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, owner);
 

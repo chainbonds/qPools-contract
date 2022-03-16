@@ -49,8 +49,7 @@ describe('qPools!', () => {
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
         USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
         USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
-        // wSOL = new PublicKey("So11111111111111111111111111111111111111112");
-        wSOL = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+        wSOL = new PublicKey("So11111111111111111111111111111111111111112");
 
         weights = [new BN(500), new BN(500), new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
@@ -66,12 +65,13 @@ describe('qPools!', () => {
 
 
     })
-
     it("Create all the Associated Token Accounts", async () => {
+        const marinadeState = await MarinadeState.fetch(marinade);
         await portfolio.createAssociatedTokenAccounts(
             pool_addresses,
             genericPayer,
-            provider.wallet
+            provider.wallet,
+            marinadeState
         )
     })
 

@@ -1,11 +1,14 @@
-import {Connection, Keypair, PublicKey, Transaction} from "@solana/web3.js";
-import {BN, Program, Provider} from "@project-serum/anchor";
+import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {BN, Program, Provider, web3} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {
     createAssociatedTokenAccountSendUnsigned,
-    createAssociatedTokenAccountUnsigned, getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve,
+    createAssociatedTokenAccountUnsigned,
+    createAssociatedTokenAccountUnsignedInstruction,
+    getAccountForMintAndPDADontCreate,
+    getAssociatedTokenAddressOffCurve,
     IWallet,
-    sendAndSignInstruction
+    sendAndSignInstruction, tokenAccountExists
 } from "./utils";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {createPortfolioSigned, registerCurrencyInputInPortfolio} from "./instructions/modify/portfolio";
@@ -18,7 +21,7 @@ import {
     approvePositionWeightSaber,
     permissionlessFulfillSaber, redeemSinglePositionOnlyOne,
     signApproveWithdrawAmountSaber,
-    redeem_single_position
+    redeem_single_position, registerLiquidityPoolAssociatedTokenAccountsForPortfolio
 } from "./instructions/modify/saber";
 import {
     signApproveWithdrawToUser,
@@ -28,6 +31,7 @@ import {
 import {getPortfolioPda, getPositionPda} from "./types/account/pdas";
 import {getPoolState} from "./instructions/fetch/saber";
 import {MOCK} from "./const";
+import {sendAndConfirm} from "easy-spl/dist/util";
 
 // TODO: Replace all these functions by the functional functions
 // And make sure that the tests are passing
@@ -61,30 +65,6 @@ export class Portfolio {
         this.providerWallet = this.provider.wallet;
     }
 
-    async getAccountForMintAndPDA(mintKey: PublicKey, pda: PublicKey) {
-
-        // Gotta Hmm, should we pass on this function (?)
-        // I guess better to just create these accounts if they don't exist yet ...
-        try {
-            let tx = await createAssociatedTokenAccountUnsigned(
-                this.connection,
-                mintKey,
-                null,
-                pda,
-                this.providerWallet,
-            );
-
-            const sg = await this.connection.sendTransaction(tx, [this.wallet]);
-            await this.connection.confirmTransaction(sg);
-        } catch (e) {
-            console.log("Error is: ");
-            console.log(e);
-        }
-
-        const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
-        return userAccount;
-    }
-
     // TODO: Create Associated Token Accounts for all Pools, Mints, Etc.
     // users' currency ATAs
     // portfolio's currency ATAs
@@ -92,39 +72,99 @@ export class Portfolio {
     async createAssociatedTokenAccounts(
         saber_pool_addresses: PublicKey[],
         owner_keypair: Keypair,
-        marinade_state: MarinadeState
+        wallet: IWallet
     ) {
 
         let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
+        let createdAtaAccounts: Set<string> = new Set();
         // For the Portfolio!
         // For all saber pool addresses (tokenA, tokenB, LPToken), create associated token address
         // For MSOL, create associated token addresses
         // For USDC currency, create associated token account
+
+        let tx: Transaction = new Transaction();
         await Promise.all(saber_pool_addresses.map(async (poolAddress: PublicKey) => {
+
             const stableSwapState = await getPoolState(this.connection, poolAddress);
             const {state} = stableSwapState;
-
-            let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
-            console.log("userA ", userAccountA.toString())
-            let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
-            console.log("userB ", userAccountB.toString())
-            let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
-            console.log("userAccountPoolToken ", userAccountpoolToken.toString())
+            let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
+                this.connection,
+                this.solbondProgram,
+                owner_keypair.publicKey,
+                wallet,
+                state,
+                createdAtaAccounts
+            );
+            ixs.map((x: TransactionInstruction) => {tx.add(x)})
         }));
+        // Sign this transaction
+        let sg = await this.provider.send(tx);
+        await this.provider.connection.confirmTransaction(sg, "confirmed");
+        console.log("SG is: ", sg);
 
+        // let wSOL = new PublicKey("So11111111111111111111111111111111111111112");
+        let wSOL = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
         // For the User!
         // Iterate through every currency ...
         // For USDC currency, create associated token account
-        let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
-        let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, portfolioPDA)))) {
+            let tx1 = await createAssociatedTokenAccountUnsigned(
+                this.connection,
+                MOCK.DEV.SABER_USDC,
+                null,
+                portfolioPDA,
+                wallet,
+            );
+            let sg1 = await this.provider.send(tx1);
+            await this.provider.connection.confirmTransaction(sg1, "confirmed");
+        }
+        // let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, owner_keypair.publicKey)))) {
+            let tx2 = await createAssociatedTokenAccountUnsigned(
+                this.connection,
+                MOCK.DEV.SABER_USDC,
+                null,
+                owner_keypair.publicKey,
+                wallet,
+            );
+            let sg2 = await this.provider.send(tx2);
+            await this.provider.connection.confirmTransaction(sg2, "confirmed");
+        }
+        // let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, portfolioPDA)))) {
+            let tx3 = await createAssociatedTokenAccountUnsigned(
+                this.connection,
+                wSOL,
+                null,
+                portfolioPDA,
+                wallet,
+            );
+            let sg3 = await this.provider.send(tx3);
+            await this.provider.connection.confirmTransaction(sg3, "confirmed");
+        }
+        // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, owner_keypair.publicKey)))) {
+            let tx4 = await createAssociatedTokenAccountUnsigned(
+                this.connection,
+                wSOL,
+                null,
+                owner_keypair.publicKey,
+                wallet,
+            );
+            let sg4 = await this.provider.send(tx4);
+            await this.provider.connection.confirmTransaction(sg4, "confirmed");
+        }
+        // let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
         // For MSOL, create associated token addresses
         // TODO:; What MSOL Token was used ...?
-        let wSOL = new PublicKey("So11111111111111111111111111111111111111112");
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, portfolioPDA);
         // let userMSolAccount = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, owner_keypair.publicKey);
-        let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
-        let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
 
+        // Now execute all these ...
+        // let sg = await this.provider.send(tx);
+        // await this.provider.connection.confirmTransaction(sg, "confirmed");
+        // console.log("Signature is: ", sg);
+        // return sg;
     }
 
     /**

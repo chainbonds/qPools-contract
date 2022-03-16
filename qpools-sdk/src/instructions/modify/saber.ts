@@ -1,14 +1,19 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {PositionAccountSaber} from "../../types/account/positionAccountSaber";
 import * as registry from "../../registry/registry-helper";
-import {getAccountForMintAndPDADontCreate} from "../../utils";
+import {
+    createAssociatedTokenAccountUnsignedInstruction,
+    getAccountForMintAndPDADontCreate, IWallet,
+    tokenAccountExists
+} from "../../utils";
 import {getPoolState} from "../fetch/saber";
-import {findSwapAuthorityKey} from "@saberhq/stableswap-sdk";
+import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
+import {WalletI} from "easy-spl";
 
 export async function approvePositionWeightSaber(
     connection: Connection,
@@ -335,4 +340,68 @@ export async function redeem_single_position(
     );
     console.log("##redeem_single_position()");
     return ix;
+}
+
+
+export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
+    connection: Connection,
+    solbondProgram: Program,
+    owner: PublicKey,
+    providerWallet: IWallet,
+    state: StableSwapState,
+    createdAtaAccounts: Set<string>
+): Promise<TransactionInstruction[]> {
+    console.log("#registerLiquidityPoolAssociatedTokenAccountsForPortfolio()");
+    // Creating ATA accounts if not existent yet ...
+    let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    console.log("Checkpoint (2.1)");
+    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
+    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
+    let userAccountPoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+    console.log("Checkpoint (2.2)");
+
+    let txs = [];
+    // Check for each account if it exists, and if it doesn't exist, create it
+    if (!(await tokenAccountExists(connection, userAccountA)) && !createdAtaAccounts.has(userAccountA.toString())) {
+        console.log("Chaining userAccountA");
+        createdAtaAccounts.add(userAccountA.toString());
+        let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
+            connection,
+            state.tokenA.mint,
+            null,
+            portfolioPDA,
+            providerWallet,
+        );
+        txs.push(...ix.instructions);
+        console.log("Chained userAccountA");
+    }
+    if (!(await tokenAccountExists(connection, userAccountB)) && !createdAtaAccounts.has(userAccountB.toString())) {
+        console.log("Chaining userAccountB");
+        createdAtaAccounts.add(userAccountB.toString());
+        let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
+            connection,
+            state.tokenB.mint,
+            null,
+            portfolioPDA,
+            providerWallet
+        );
+        txs.push(...ix.instructions);
+        console.log("Chained userAccountB");
+    }
+    if (!(await tokenAccountExists(connection, userAccountPoolToken)) && !createdAtaAccounts.has(userAccountPoolToken.toString())) {
+        console.log("Chaining userAccountPoolToken");
+        createdAtaAccounts.add(userAccountPoolToken.toString());
+        let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
+            connection,
+            state.poolTokenMint,
+            null,
+            portfolioPDA,
+            providerWallet
+        );
+        // Do I need to sign this? Probably not ...
+        txs.push(...ix.instructions);
+    }
+    console.log("Checkpoint (2.3)");
+    console.log("##registerLiquidityPoolAssociatedTokenAccountsForPortfolio()");
+    return txs;
 }

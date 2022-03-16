@@ -29,7 +29,10 @@ import {portfolioExists, fetchPortfolio} from "../instructions/fetch/portfolio";
 import {fetchSinglePosition} from "../instructions/fetch/position";
 import {getLpTokenExchangeRateItems} from "../instructions/fetch/saber";
 import {createPortfolioSigned} from "../instructions/modify/portfolio";
-import {approvePositionWeightSaber} from "../instructions/modify/saber";
+import {
+    approvePositionWeightSaber,
+    registerLiquidityPoolAssociatedTokenAccountsForPortfolio
+} from "../instructions/modify/saber";
 import {sendLamports, signApproveWithdrawToUser} from "../instructions/modify/portfolio-transfer";
 
 export interface PositionsInput {
@@ -122,17 +125,17 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             this.solbondProgram,
             this.owner.publicKey,
             weights,
-            poolAddresses,
-            initialAmountUsdc
+            poolAddresses
         );
     }
 
     async approvePositionWeightSaber(poolAddresses: Array<PublicKey>, amountA: u64, amountB: u64, minMintAmount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
+        let poolAddress = poolAddresses[index];
         return await approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            poolAddresses,
+            poolAddress,
             amountA,
             amountB,
             minMintAmount,
@@ -142,7 +145,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     }
 
     async signApproveWithdrawToUser(totalAmount: BN) {
-        return await signApproveWithdrawToUser(this.connection, this.solbondProgram, this.owner.publicKey, totalAmount);
+        return await signApproveWithdrawToUser(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey
+        );
     }
 
     /**
@@ -359,57 +366,14 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     }
 
     async registerLiquidityPoolAssociatedTokenAccountsForPortfolio(state: StableSwapState): Promise<TransactionInstruction[]> {
-        // Creating ATA accounts if not existent yet ...
-        console.log("Checkpoint (2.1)");
-        let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        let userAccountPoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-        console.log("Checkpoint (2.2)");
-
-        let txs = [];
-        // Check for each account if it exists, and if it doesn't exist, create it
-        if (!(await tokenAccountExists(this.connection, userAccountA)) && !this.createdAtaAccounts.has(userAccountA.toString())) {
-            console.log("Chaining userAccountA");
-            this.createdAtaAccounts.add(userAccountA.toString());
-            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
-                this.connection,
-                state.tokenA.mint,
-                null,
-                this.portfolioPDA,
-                this.providerWallet,
-            );
-            txs.push(...ix.instructions);
-            console.log("Chained userAccountA");
-        }
-        if (!(await tokenAccountExists(this.connection, userAccountB)) && !this.createdAtaAccounts.has(userAccountB.toString())) {
-            console.log("Chaining userAccountB");
-            this.createdAtaAccounts.add(userAccountB.toString());
-            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
-                this.connection,
-                state.tokenB.mint,
-                null,
-                this.portfolioPDA,
-                this.providerWallet,
-            );
-            txs.push(...ix.instructions);
-            console.log("Chained userAccountB");
-        }
-        if (!(await tokenAccountExists(this.connection, userAccountPoolToken)) && !this.createdAtaAccounts.has(userAccountPoolToken.toString())) {
-            console.log("Chaining userAccountPoolToken");
-            this.createdAtaAccounts.add(userAccountPoolToken.toString());
-            let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
-                this.connection,
-                state.poolTokenMint,
-                null,
-                this.portfolioPDA,
-                this.providerWallet,
-            );
-            // Do I need to sign this? Probably not ...
-            txs.push(...ix.instructions);
-            console.log("Chained userAccountPoolToken");
-        }
-        console.log("Checkpoint (2.3)");
-        return txs;
+        return await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            this.providerWallet,
+            state,
+            this.createdAtaAccounts
+        );
     }
 
     /**

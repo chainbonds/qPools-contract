@@ -232,16 +232,6 @@ export const createAssociatedTokenAccountUnsignedInstruction = async (
     if (!address) {
         address = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner, true);
     }
-    console.log("ASSOCIATED_TOKEN_PROGRAM_ID", ASSOCIATED_TOKEN_PROGRAM_ID.toString(), TOKEN_PROGRAM_ID.toString());
-    console.log("Stuff is not working. let's check accounts: ");
-    console.log({
-        "ASSOCIATED_TOKEN_PROGRAM_ID": ASSOCIATED_TOKEN_PROGRAM_ID.toString(),
-        "TOKEN_PROGRAM_ID": TOKEN_PROGRAM_ID.toString(),
-        "mint": mint.toString(),
-        "address": address.toString(),
-        "owner": owner.toString(),
-        "wallet": wallet.publicKey.toString()
-    })
     let instructions = [
         Token.createAssociatedTokenAccountInstruction(
             ASSOCIATED_TOKEN_PROGRAM_ID,

@@ -12,6 +12,7 @@ import {
 } from "@qpools/sdk";
 import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 import {getUserCurrencyPda} from "@qpools/sdk/lib/types/account/pdas";
+import {getAccountForMintAndPDADontCreate} from "@qpools/sdk/lib/utils";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -48,7 +49,8 @@ describe('qPools!', () => {
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
         USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
         USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
-        wSOL = new PublicKey("So11111111111111111111111111111111111111112");
+        // wSOL = new PublicKey("So11111111111111111111111111111111111111112");
+        wSOL = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
 
         weights = [new BN(500), new BN(500), new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
@@ -65,11 +67,18 @@ describe('qPools!', () => {
 
     })
 
+    it("Create all the Associated Token Accounts", async () => {
+        await portfolio.createAssociatedTokenAccounts(
+            pool_addresses,
+            genericPayer,
+            provider.wallet
+        )
+    })
 
     it("create a marinade position and deposit", async () => {
         const marinadeState = await MarinadeState.fetch(marinade);
         //const weights = [new BN(500), new BN(500), new BN(500)];
-        const amount = new BN(2e9);
+        const amount = new BN(1e9);
         // create a portfolio with 1 base currency (sol)
         try {
             const init_sig = await portfolio.createPortfolioSigned(
@@ -121,7 +130,7 @@ describe('qPools!', () => {
         //await sendAndConfirmTransaction(connection, transaction, [payer], confirmOptions);
 
 
-        const wrappedSolAccount = await portfolio.getAccountForMintAndPDA(wSOL, genericPayer.publicKey);
+        const wrappedSolAccount = await getAccountForMintAndPDADontCreate(wSOL, genericPayer.publicKey);
         //const wsolkeypair = Keypair.generate();
         // await createAccount(connection, genericPayer, NATIVE_MINT, genericPayer, wsolkeypair, TOKEN_PROGRAM_ID);
 

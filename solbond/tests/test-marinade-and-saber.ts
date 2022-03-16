@@ -61,6 +61,13 @@ describe('qPools!', () => {
 
     })
 
+    it("Create all the Associated Token Accounts", async () => {
+        await portfolio.createAssociatedTokenAccounts(
+            pool_addresses,
+            genericPayer,
+            provider.wallet
+        )
+    })
 
     it("create a marinade position and deposit", async () => {
         const marinadeState = await MarinadeState.fetch(marinade);

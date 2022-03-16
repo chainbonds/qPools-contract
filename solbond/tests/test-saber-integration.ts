@@ -54,6 +54,14 @@ describe('qPools!', () => {
 
     })
 
+    it("Create all the Associated Token Accounts", async () => {
+        await portfolio.createAssociatedTokenAccounts(
+            pool_addresses,
+            genericPayer,
+            provider.wallet
+        )
+    })
+
     it('create a new portfolio', async() => {
         let total_amount_USDC = new u64(340000);
         let num_positions = new BN(1);
@@ -108,7 +116,7 @@ describe('qPools!', () => {
         const num_positions = 1;
         let total_amount_USDC = new u64(340000);
         // Get user's wrapped SOL ATA
-        let usdc_ATA = await portfolio.getAccountForMintAndPDA(MOCK.DEV.SABER_USDC, genericPayer.publicKey);
+        let usdc_ATA = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, genericPayer.publicKey);
         try {
             let sigs_rest = await portfolio.transfer_to_portfolio(genericPayer, MOCK.DEV.SABER_USDC, usdc_ATA);
         } catch (e) {

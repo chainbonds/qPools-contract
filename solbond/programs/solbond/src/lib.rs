@@ -185,16 +185,12 @@ pub mod solbond {
         ctx: Context<ApproveWithdrawMarinade>,
         _bump_portfolio: u8,
         _bump_position: u8,
-        _bump_marinade: u8,
-        _msol_out_amount: u64,
         _index: u32,
     ) -> ProgramResult {
         instructions::approve::marinade::approve_withdraw_marinade::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
-            _bump_marinade,
-            _msol_out_amount,
             _index,
         )
     }

@@ -228,7 +228,7 @@ export class Portfolio extends SaberInteractTool {
         return finaltx;
     }
 
-    async signApproveWithdrawToUser(owner_keypair: Keypair, totalAmount: BN) {
+    async signApproveWithdrawToUser(owner_keypair: Keypair) {
 
         let [portfolioPda, portfolioBump] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
         let finaltx = await this.solbondProgram.rpc.approveWithdrawToUser(
@@ -250,7 +250,38 @@ export class Portfolio extends SaberInteractTool {
         return finaltx;
     }
 
-    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+    async approveWithdrawToMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
+
+        let [portfolioPda, bumpPortfolio] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
+        let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
+        const pda_msol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, portfolioPda);
+        const usermsol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, owner_keypair.publicKey);
+
+        let finaltx = await this.solbondProgram.rpc.approveWithdrawMarinade(
+            bumpPortfolio,
+            new BN(bumpPosition),
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: portfolioPda,
+                    pdaMsolAccount: pda_msol,
+                    userMsolAccount: usermsol,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                },
+                signers: [owner_keypair]
+            }
+        )
+
+    }
+
+
+
+
+        async signApproveWithdrawAmountSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
 
         let [portfolioPda, portfolioBump] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
         let [positionPDA, bumpPosition] = await getPositionPda(owner_keypair.publicKey, index, this.solbondProgram);
@@ -507,30 +538,42 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
-    async transfer_to_user(owner: IWallet) {
+    async transfer_to_user(owner: IWallet, currencyMint: PublicKey) {
         if (!this.userOwnedUSDCAccount) {
             console.log("Creating a userOwnedUSDCAccount");
             this.userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
                 this.connection,
-                this.USDC_mint,
+                currencyMint,
                 this.wallet.publicKey,
                 owner,
             );
             console.log("Done!");
         }
         let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner.publicKey, this.solbondProgram);
-        let pdaUSDCAccount = await this.getAccountForMintAndPDA(this.USDC_mint, portfolioPDA);
+        let pdaUSDCAccount = await this.getAccountForMintAndPDA(currencyMint, portfolioPDA);
+        let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(this.solbondProgram, owner.publicKey, currencyMint);
+
+        let userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
+            this.connection,
+            currencyMint,
+            this.wallet.publicKey,
+            owner
+        );
+
         console.log("HHH")
         console.log("pda ", pdaUSDCAccount.toString())
         // @ts-expect-error
         let signer = this.provider.wallet.payer as keypair
         let finaltx = await this.solbondProgram.rpc.transferRedeemedToUser(
             new BN(portfolioBump),
+            new BN(bumpCurrency),
             {
                 accounts: {
                     portfolioPda: portfolioPDA,
                     portfolioOwner: owner.publicKey,
-                    userOwnedUserA: this.userOwnedUSDCAccount,
+                    userCurrencyPdaAccount: currencyPDA,
+                    userOwnedUserA: userOwnedUSDCAccount,
+                    currencyMint: currencyMint,
                     pdaOwnedUserA: pdaUSDCAccount,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,

@@ -1,5 +1,5 @@
 [provider]
-cluster = "devnet"
+cluster = "https://api.google.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]

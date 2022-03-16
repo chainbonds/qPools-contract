@@ -28,9 +28,9 @@ import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {portfolioExists, fetchPortfolio} from "../instructions/fetch/portfolio";
 import {fetchSinglePosition} from "../instructions/fetch/position";
 import {getLpTokenExchangeRateItems} from "../instructions/fetch/saber";
-import {createPortfolioSigned, sendLamports} from "../instructions/modify/portfolio";
+import {createPortfolioSigned} from "../instructions/modify/portfolio";
 import {approvePositionWeightSaber} from "../instructions/modify/saber";
-import {signApproveWithdrawToUser} from "../instructions/modify/portfolio-transfer";
+import {sendLamports, signApproveWithdrawToUser} from "../instructions/modify/portfolio-transfer";
 
 export interface PositionsInput {
     percentageWeight: BN,

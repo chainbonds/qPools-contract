@@ -1,6 +1,6 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {NETWORK} from "@qpools/sdk";
+import {MOCK, NETWORK} from "@qpools/sdk";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk'
 import {MarinadeState} from  '@marinade.finance/marinade-ts-sdk'
 import {
@@ -11,6 +11,7 @@ import {
     getSolbondProgram,
 } from "@qpools/sdk";
 import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
+import {getUserCurrencyPda} from "@qpools/sdk/lib/types/account/pdas";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -27,6 +28,7 @@ describe('qPools!', () => {
     const genericPayer = provider.wallet.payer as Keypair;
     let stableSwapProgramId: PublicKey;
 
+    let currencyMint: PublicKey = MOCK.DEV.SABER_USDC;
     let weights: Array<BN>;
     let pool_addresses: Array<PublicKey>;
     let USDC_USDT_pubkey: PublicKey;
@@ -118,6 +120,7 @@ describe('qPools!', () => {
 
         //await sendAndConfirmTransaction(connection, transaction, [payer], confirmOptions);
 
+
         const wrappedSolAccount = await portfolio.getAccountForMintAndPDA(wSOL, genericPayer.publicKey);
         //const wsolkeypair = Keypair.generate();
         // await createAccount(connection, genericPayer, NATIVE_MINT, genericPayer, wsolkeypair, TOKEN_PROGRAM_ID);
@@ -133,15 +136,14 @@ describe('qPools!', () => {
         await provider.connection.confirmTransaction(sendsig);
         console.log("send money from user to portfolio: ", sendsig);
 
-        //try {
-        //
+        try {
         const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL);
-        //
-        // } catch (err) {}
+        } catch (err) {}
+
         // try {
         // const send_sig = await portfolio.transfer_to_portfolio(genericPayer,wSOL, wrappedSolAccount)
         // } catch (err) {}
-        // create a single position 
+        // create a single position
 
         const pos_sig = await portfolio.approvePositionWeightMarinade(
             amount,
@@ -151,15 +153,26 @@ describe('qPools!', () => {
         )
 
 
-        // cpi to marinade 
+        // cpi to marinade
         const marinade_state = await MarinadeState.fetch(marinade)
         const marinade_sig = await portfolio.createPositionMarinade(
             genericPayer,
             0,
             marinade_state
-        )
+        );
+        console.log("Create position marinade done", marinade_sig);
 
         // easy
+        const withdraw_marinade_sig = await portfolio.approveWithdrawToMarinade(
+            genericPayer,
+            0,
+            marinade_state
+        );
+        console.log("Withdraw done", withdraw_marinade_sig);
+
+        const redeem_portfolio = await portfolio.transfer_to_user(provider.wallet, wSOL);
+        console.log("Redeem portfolio done", redeem_portfolio);
+
     })
 
     /*

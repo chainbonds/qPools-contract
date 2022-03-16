@@ -361,8 +361,13 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "poolMint",
-          "isMut": false,
+          "name": "userMsolAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaMsolAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -389,14 +394,6 @@ export type Solbond = {
         {
           "name": "bumpPosition",
           "type": "u8"
-        },
-        {
-          "name": "bumpMarinade",
-          "type": "u8"
-        },
-        {
-          "name": "msolOutAmount",
-          "type": "u64"
         },
         {
           "name": "index",
@@ -1741,8 +1738,13 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "poolMint",
-          "isMut": false,
+          "name": "userMsolAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pdaMsolAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1769,14 +1771,6 @@ export const IDL: Solbond = {
         {
           "name": "bumpPosition",
           "type": "u8"
-        },
-        {
-          "name": "bumpMarinade",
-          "type": "u8"
-        },
-        {
-          "name": "msolOutAmount",
-          "type": "u64"
         },
         {
           "name": "index",

@@ -48,7 +48,7 @@ export class Portfolio extends SaberInteractTool {
 
 
     // TODO: Replace keypair by whatever is compatible with frontend / provider ...
-    async createSinglePositionInstruction(index: number, weight: BN, amountTokenA: u64, owner: Keypair): Promise<Transaction> {
+    /*async createSinglePositionInstruction(index: number, weight: BN, amountTokenA: u64, owner: Keypair): Promise<Transaction> {
 
         let transactions: Transaction = new Transaction();
         let tx: TransactionInstruction;
@@ -62,8 +62,10 @@ export class Portfolio extends SaberInteractTool {
             [state.poolTokenMint.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.LP_POOL_ACCOUNT))],
             this.solbondProgram.programId
         );
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
@@ -90,7 +92,7 @@ export class Portfolio extends SaberInteractTool {
 
         tx = this.solbondProgram.instruction.createPositionSaber(
             new BN(poolBump),
-            new BN(bumpPositon),
+            new BN(bumpPosition),
             new BN(this.portfolioBump),
             new BN(index),
             new BN(weight),
@@ -99,7 +101,7 @@ export class Portfolio extends SaberInteractTool {
             new BN(0),
             {
                 accounts: {
-                    positionPda: positonPDA,
+                    positionPda: bumpPosition,
                     portfolioPda: this.portfolioPDA,
                     owner: owner.publicKey,//randomOwner.publicKey,
                     poolMint: state.poolTokenMint,
@@ -125,7 +127,7 @@ export class Portfolio extends SaberInteractTool {
         
 
         return transactions;
-    }
+    }*/
 
 
 
@@ -415,7 +417,6 @@ export class Portfolio extends SaberInteractTool {
 
         let finaltx = await this.solbondProgram.rpc.approveWithdrawToUser(
             this.portfolioBump,
-            totalAmount,
             {
                 accounts: {
                     owner: owner_keypair.publicKey,
@@ -439,11 +440,50 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
-    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+    async approveWithdrawToMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
+
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer,Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
+        const pda_msol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, this.portfolioPDA);
+        const usermsol = await this.getAccountForMintAndPDA(marinade_state.mSolMintAddress, owner_keypair.publicKey);
+        
+        let finaltx = await this.solbondProgram.rpc.approveWithdrawMarinade(
+            this.portfolioBump,
+            new BN(bumpPosition),
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,   
+                    pdaMsolAccount: pda_msol,
+                    userMsolAccount:usermsol,               
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        )
+
+
+    }
+
+    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer,Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        );
+
         const pool_address = this.poolAddresses[index];
         const stableSwapState = await this.getPoolState(pool_address)
         const {state} = stableSwapState
@@ -484,9 +524,10 @@ export class Portfolio extends SaberInteractTool {
 
 
     async permissionlessFulfillSaber(owner_keypair: Keypair, index: number) {
+        let indexAsBuffer = this.bnTo8(new BN(index));
 
         let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
-            [owner_keypair.publicKey.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(index.toString()+SEED.POSITION_ACCOUNT_APPENDUM))],
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
@@ -714,12 +755,14 @@ export class Portfolio extends SaberInteractTool {
 
         console.log("poolPDA ", poolPDA.toString())
 
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [this.portfolioPDA.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
-        console.log("positionPDA ", positonPDA.toString())
+        console.log("positionPDA ", positionPDA.toString())
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
@@ -740,7 +783,7 @@ export class Portfolio extends SaberInteractTool {
         //let userAccountpoolToken = await this.getAccountForMint(poolTokenMint);
 
 
-        console.log("👀 positionPda ", positonPDA.toString())
+        console.log("👀 positionPda ", positionPDA.toString())
 
         console.log("😸 portfolioPda", this.portfolioPDA.toString());
         console.log("👾 owner.publicKey", owner.publicKey.toString());
@@ -775,7 +818,7 @@ export class Portfolio extends SaberInteractTool {
 
         let finaltx = await this.solbondProgram.rpc.createPositionSaber(
             new BN(poolBump),
-            new BN(bumpPositon),
+            new BN(bumpPosition),
             new BN(this.portfolioBump),
             new BN(index),
             new BN(weight),
@@ -784,7 +827,7 @@ export class Portfolio extends SaberInteractTool {
             new BN(0),
             {
                 accounts: {
-                    positionPda: positonPDA,
+                    positionPda: positionPDA,
                     portfolioPda: this.portfolioPDA,
                     owner: owner.publicKey,//randomOwner.publicKey,
                     poolMint: poolTokenMint,
@@ -868,12 +911,14 @@ export class Portfolio extends SaberInteractTool {
 
         console.log("poolPDA ", poolPDA.toString())*/
 
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
 
-        console.log("positionPDA ", positonPDA.toString())
+        console.log("positionPDA ", positionPDA.toString())
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
@@ -906,7 +951,7 @@ export class Portfolio extends SaberInteractTool {
             console.log("B IS THE WAY")
         }
 
-        console.log("👀 positionPda ", positonPDA.toString())
+        console.log("👀 positionPda ", positionPDA.toString())
 
         console.log("😸 portfolioPda", this.portfolioPDA.toString());
         console.log("👾 owner.publicKey", owner.publicKey.toString());
@@ -931,11 +976,11 @@ export class Portfolio extends SaberInteractTool {
 
         let finaltx = await this.solbondProgram.rpc.redeemPositionSaber(
             new BN(this.portfolioBump),
-            new BN(bumpPositon),
+            new BN(bumpPosition),
             new BN(index),
             {
                 accounts: {
-                    positionPda: positonPDA,
+                    positionPda: positionPDA,
                     portfolioPda: this.portfolioPDA,
                     //poolPda: poolPDA,
                     portfolioOwner: owner.publicKey,
@@ -1089,7 +1134,7 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
-    async transfer_to_user(owner: IWallet) {
+    async transfer_to_user(owner: IWallet, currencyMint: PublicKey) {
         //this.qPools_USDC_fees = await this.getAccountForMintAndPDA(this.USDC_mint, new PublicKey("DiPga2spUbnyY8vJVZUYaeXcosEAuXnzx9EzuKuUaSxs"));
 
         if (!this.userOwnedUSDCAccount) {
@@ -1106,18 +1151,28 @@ export class Portfolio extends SaberInteractTool {
         let pdaUSDCAccount = await this.getAccountForMintAndPDA(this.USDC_mint, this.portfolioPDA);
         console.log("HHH")
         console.log("pda ", pdaUSDCAccount.toString())
+        let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
+            [owner.publicKey.toBuffer(),
+                currencyMint.toBuffer() ,
+                Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_CURRENCY_STRING))
+            ],
+            this.solbondProgram.programId
+        );
         // @ts-expect-error
         let signer = this.provider.wallet.payer as keypair
         let finaltx = await this.solbondProgram.rpc.transferRedeemedToUser(
             new BN(this.portfolioBump),
+            new BN(bumpCurrency),
             //new BN(amount),
 
             {
                 accounts: {
                     portfolioPda: this.portfolioPDA,
                     portfolioOwner: owner.publicKey,
+                    userCurrencyPdaAccount: currencyPDA,
                     userOwnedUserA: this.userOwnedUSDCAccount,
                     pdaOwnedUserA: pdaUSDCAccount,
+                    currencyMint: currencyMint,
                     //feesQpoolsA: this.qPools_USDC_fees,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: web3.SystemProgram.programId,
@@ -1153,12 +1208,13 @@ export class Portfolio extends SaberInteractTool {
 
         // console.log("poolPDA ", poolPDA.toString())
 
-        let [positonPDA, bumpPositon] = await await PublicKey.findProgramAddress(
-            [owner.publicKey.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(index.toString() + SEED.POSITION_ACCOUNT_APPENDUM))],
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
             this.solbondProgram.programId
         );
-
-        console.log("positionPDA ", positonPDA.toString())
+        console.log("positionPDA ", positionPDA.toString())
 
         const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
         console.log("authority ", authority.toString())
@@ -1181,7 +1237,7 @@ export class Portfolio extends SaberInteractTool {
         let totalLPTokens = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value;
 
 
-        console.log("👀 positionPda ", positonPDA.toString())
+        console.log("👀 positionPda ", positionPDA.toString())
 
         console.log("😸 portfolioPda", this.portfolioPDA.toString());
         console.log("👾 owner.publicKey",  owner.publicKey.toString());
@@ -1205,11 +1261,11 @@ export class Portfolio extends SaberInteractTool {
 
         let finaltx = await this.solbondProgram.rpc.redeemPositionOneSaber(
             new BN(this.portfolioBump),
-            new BN(bumpPositon),
+            new BN(bumpPosition),
             new BN(index),
             {
                 accounts: {
-                    positionPda: positonPDA,
+                    positionPda: positionPDA,
                     portfolioPda: this.portfolioPDA,
                     portfolioOwner: owner.publicKey,
                     poolMint: poolTokenMint,

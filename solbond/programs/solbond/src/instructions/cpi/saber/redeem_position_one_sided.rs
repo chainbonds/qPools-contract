@@ -154,6 +154,15 @@ pub fn handler(
     position.is_redeemed = true;
 
     msg!("withdraw completed successfully");
+
+    // close position account
+    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
+    let user_starting_lamports = owner_acc_info.lamports();
+    let position_acc_info = ctx.accounts.position_pda.to_account_info();
+    **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(position_acc_info.lamports()).unwrap();
+    **position_acc_info.lamports.borrow_mut() = 0;
+    let mut position_data = position_acc_info.data.borrow_mut();
+    position_data.fill(0);
   
     Ok(())
 }

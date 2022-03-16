@@ -94,13 +94,14 @@ describe('qPools!', () => {
         //const weights = [new BN(500), new BN(500), new BN(500)];
         const amount = new BN(2e9);
         // create a portfolio with 1 base currency (sol)
+        try {
         const init_sig = await portfolio.createPortfolioSigned(
             weights, 
             genericPayer,
-            new BN(1), 
+            new BN(2), 
             pool_addresses
         )
-
+        } catch (e) {}
         // create a wrapped SOL account
         // if ((await connection.getBalance(genericPayer.publicKey)) <= 3e9) {
         //     let tx1 = await connection.requestAirdrop(genericPayer.publicKey, 3e9);
@@ -138,46 +139,72 @@ describe('qPools!', () => {
 
         //await sendAndConfirmTransaction(connection, transaction, [payer], confirmOptions);
         
-        const wrappedSolAccount = await portfolio.getAccountForMintAndPDA(wSOL, genericPayer.publicKey);
+        //const wrappedSolAccount = await portfolio.getAccountForMintAndPDA(wSOL, genericPayer.publicKey);
         //const wsolkeypair = Keypair.generate();
         // await createAccount(connection, genericPayer, NATIVE_MINT, genericPayer, wsolkeypair, TOKEN_PROGRAM_ID);
         
-        const givemoney = new Transaction().add(await SystemProgram.transfer({
-                 fromPubkey: genericPayer.publicKey,
-                 toPubkey: wrappedSolAccount,
-                 lamports: 2e9,
-        }),
-        createSyncNativeInstruction(wrappedSolAccount)
-        )
-        let sendsig = await provider.send(givemoney)
-        await provider.connection.confirmTransaction(sendsig);
-        console.log("send money from user to portfolio: ", sendsig);
-
-        //try {
-        //
+        // const givemoney = new Transaction().add(await SystemProgram.transfer({
+        //          fromPubkey: genericPayer.publicKey,
+        //          toPubkey: wrappedSolAccount,
+        //          lamports: 2e9,
+        // }),
+        // createSyncNativeInstruction(wrappedSolAccount)
+        // )
+        // let sendsig = await provider.send(givemoney)
+        // await provider.connection.confirmTransaction(sendsig);
+        // console.log("send money from user to portfolio: ", sendsig);
+        try {
+        
         const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL); 
-        //
-        // } catch (err) {}
+        
+        } catch (err) {}
         // try {
         // const send_sig = await portfolio.transfer_to_portfolio(genericPayer,wSOL, wrappedSolAccount)
         // } catch (err) {}
         // create a single position 
-        
-        const pos_sig = await portfolio.approvePositionWeightMarinade(
-            amount,
-            0,
-            new BN(1000),
-            genericPayer
-        )
+        // let approve_sig1 = await portfolio.approvePositionWeightSaber(
+        //     new BN(0),
+        //     new BN(0),
+        //     new BN(0),
+        //     0,
+        //     new BN(0),
+        //     genericPayer
+        // )
+        // const pos_sig = await portfolio.approvePositionWeightMarinade(
+        //     amount,
+        //     1,
+        //     new BN(1000),
+        //     genericPayer
+        // )
+        // //cpi to marinade 
+        // const marinade_state = await MarinadeState.fetch(marinade)
+        // const marinade_sig = await portfolio.createPositionMarinade(
+        //     genericPayer,
+        //     1,
+        //     marinade_state
+        // )
+        // let approve_sig_SABER = await portfolio.permissionlessFulfillSaber(genericPayer,0)
+        //console.log("saber thing ", approve_sig_SABER.toString())
 
+    //const marinade_state = await MarinadeState.fetch(marinade)
 
-        // cpi to marinade 
-        const marinade_state = await MarinadeState.fetch(marinade)
-        const marinade_sig = await portfolio.createPositionMarinade(
-            genericPayer,
-            0,
-            marinade_state
-        )
+    // let sign_withdraw = await portfolio.signApproveWithdrawToUser(genericPayer,new BN(0))
+    // try {
+    // let with_mar = await portfolio.approveWithdrawToMarinade(genericPayer,1, marinade_state)
+    // } catch (e) {}
+    // let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
+    //     genericPayer,
+    //     0,
+    //     new BN(0),
+    //     new BN(0) 
+    // )
+    // let approve_sig2 = await portfolio.redeem_single_position_only_one(
+    //     0,
+    //     genericPayer,
+    // )
+
+    let sigs_rest = await portfolio.transfer_to_user(provider.wallet, wSOL);
+
 
         // easy
     })

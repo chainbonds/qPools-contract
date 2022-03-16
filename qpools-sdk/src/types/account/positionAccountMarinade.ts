@@ -1,9 +1,6 @@
 import {PublicKey} from "@solana/web3.js";
 import {u64} from "@solana/spl-token";
 import {BN, Program} from "@project-serum/anchor";
-import * as anchor from "@project-serum/anchor";
-import {SEED} from "../../seeds";
-import {bnTo8} from "../../utils";
 
 export async function getPositionAccountMarinade(
     owner: PublicKey,

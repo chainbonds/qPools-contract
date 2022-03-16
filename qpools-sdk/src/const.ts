@@ -3,6 +3,8 @@ import {BN} from "@project-serum/anchor";
 
 export const REDEEMABLES_DECIMALS = 9;
 
+// TODO: Make it your goal to delete this file!
+
 export const MOCK = {
     // DEV: {
     //     SOL: new PublicKey("F8G26LpQSBUvdoYtAXJccLKUqQqzTdHwaoHixTDhcLJ1"),

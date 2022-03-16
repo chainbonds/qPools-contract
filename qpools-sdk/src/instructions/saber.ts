@@ -1,10 +1,10 @@
-import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {accountExists, getAccountForMintAndPDADontCreate} from "../utils";
 import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
-import {getPortfolioPda} from "../types/account/portfolioAccount";
+import {getPositionPda, getPortfolioPda} from "../types/account/pdas";
 import * as registry from "../registry/registry-helper";
 import {findSwapAuthorityKey, StableSwap} from "@saberhq/stableswap-sdk";
 import * as assert from "assert";
@@ -30,24 +30,6 @@ async function getPoolState(
     );
     assert.ok(fetchedStableSwap.config.swapAccount.equals(poolAddress));
     return fetchedStableSwap;
-}
-
-export async function fetchSinglePosition(
-    connection: Connection,
-    solbondProgram: Program,
-    owner: PublicKey,
-    index: number
-): Promise<PositionAccountSaber | null> {
-    console.log("#fetchSinglePosition()");
-    let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
-    console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
-    let positionContent = null;
-    if (await accountExists(connection, positionPDA)) {
-        let response = await solbondProgram.account.positionAccountSaber.fetch(positionPDA);
-        positionContent = response as PositionAccountSaber;
-    }
-    console.log("##fetchSinglePosition()");
-    return positionContent;
 }
 
 export async function approvePositionWeightSaber(

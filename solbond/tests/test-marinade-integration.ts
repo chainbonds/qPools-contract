@@ -1,25 +1,15 @@
 import {BN, Provider} from '@project-serum/anchor';
-import {u64} from '@solana/spl-token';
 import {Keypair, PublicKey} from "@solana/web3.js";
-
 import {NETWORK} from "@qpools/sdk";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk'
 import {MarinadeState} from  '@marinade.finance/marinade-ts-sdk'
-
 import {
-    ConfirmOptions,
-    Connection,
-
-    sendAndConfirmTransaction,
-    Signer,
     SystemProgram,
     Transaction,
 } from '@solana/web3.js';
 import {
     getSolbondProgram,
 } from "@qpools/sdk";
-import { NATIVE_MINT,  } from '@solana/spl-token';
-import {createAssociatedTokenAccountSendUnsigned} from "@qpools/sdk"
 import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
@@ -35,10 +25,7 @@ describe('qPools!', () => {
     const payer = Keypair.generate();
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
-    // const genericPayer = payer;
-
     let stableSwapProgramId: PublicKey;
-
 
     let weights: Array<BN>;
     let pool_addresses: Array<PublicKey>;
@@ -48,8 +35,6 @@ describe('qPools!', () => {
     let wSOL: PublicKey;
     let portfolio: Portfolio;
     let marinade;
-
-
 
     // Do some airdrop before we start the tests ...
     before(async () => {

@@ -16,9 +16,9 @@ import {sendAndConfirm} from "easy-spl/dist/util";
 import * as assert from "assert";
 import {getSolbondProgram, PortfolioAccount} from "../index";
 import {NETWORK} from "../types/cluster";
-import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
-import {getPortfolioPda} from "../types/account/portfolioAccount";
+import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import * as registry from "../registry/registry-helper";
+import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 
 export class CrankRpcCalls {
 

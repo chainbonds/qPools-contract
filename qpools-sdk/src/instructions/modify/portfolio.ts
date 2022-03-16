@@ -1,57 +1,11 @@
-import {getPortfolioPda, PortfolioAccount} from "../types/account/portfolioAccount";
-import {
-    accountExists,
-    bnTo8,
-    createAssociatedTokenAccountSendUnsigned,
-    getAccountForMintAndPDADontCreate,
-    IWallet
-} from "../utils";
-import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
-import {NATIVE_MINT, TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
+import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
-import {MOCK} from "../const";
-import {getUserCurrencyPda} from "../types/account/userCurrencyAccount";
-import {SEED} from "../seeds";
-import {getPositionPda} from "../types/account/positionAccountSaber";
-import {getMarinadeSolPda} from "../types/account/pdas";
-import {sol} from "easy-spl";
+import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
+import {getAccountForMintAndPDADontCreate} from "../../utils";
+import {MOCK} from "../../const";
 
-export async function portfolioExists(
-    connection: Connection,
-    solbondProgram: Program,
-    owner: PublicKey
-): Promise<boolean> {
-    console.log("#portfolioExists");
-    let out: boolean
-    let [portfolioPda, _] = await getPortfolioPda(owner, solbondProgram);
-    if (connection) {
-        out = await accountExists(connection, portfolioPda);
-    } else {
-        // Maybe let it rerun after a second again ...
-        out = false;
-    }
-    console.log("##portfolioExists");
-    return out;
-}
-
-export async function fetchPortfolio(
-    connection: Connection,
-    solbondProgram: Program,
-    owner: PublicKey
-): Promise<PortfolioAccount | null> {
-    console.log("#fetchPortfolio()");
-    let [portfolioPda, _] = await getPortfolioPda(owner, solbondProgram);
-    let portfolioContent = null;
-    console.log("Before trying to fetch");
-    if (await accountExists(connection, portfolioPda)) {
-        console.log("Exists and trying to fetch");
-        portfolioContent = (await solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
-    }
-    console.log("Now fetching again ...", portfolioContent);
-    console.log("##fetchPortfolio()");
-    return portfolioContent;
-}
 
 export async function createPortfolioSigned(
     connection: Connection,
@@ -154,6 +108,7 @@ export async function transferUsdcFromUserToPortfolio(
     console.log("##transferUsdcFromUserToPortfolio()");
     return ix;
 }
+
 // TODO: Merge logic
 // async transfer_to_portfolio(owner: Keypair, currencyMint: PublicKey, wrappedSolAccount:PublicKey) {
 //

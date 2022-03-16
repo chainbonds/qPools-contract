@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "test:integrate-msol": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-full-instructions.ts",
+        "test:integrate-marinade": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-integration.ts",
         "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts"
     },
     "dependencies": {

@@ -1,11 +1,9 @@
 import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
-import {getPositionPda} from "../types/account/positionAccountSaber";
-import {getMarinadeSolPda} from "../types/account/pdas";
+import {getMarinadeSolPda, getPortfolioPda, getPositionPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
-import {getPortfolioPda} from "../types/account/portfolioAccount";
 
 export async function approvePositionWeightMarinade(
     connection: Connection,

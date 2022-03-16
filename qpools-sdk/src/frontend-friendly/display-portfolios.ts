@@ -18,9 +18,7 @@ export class DisplayPortfolios {
         this.connection = connection;
         this.provider = provider;
         this.solbondProgram = solbondProgram;
-
         this.owner = this.provider.wallet;
-
     }
 
 
@@ -29,8 +27,6 @@ export class DisplayPortfolios {
      * @param portfolio
      */
     async getAllPortfolioPDAs(portfolio: PublicKey) {
-
-
     }
 
 }

@@ -18,14 +18,15 @@ import {
     getAssociatedTokenAddressOffCurve,
     tokenAccountExists
 } from "../utils";
-import {getPortfolioPda, PortfolioAccount} from "../types/account/portfolioAccount";
-import {getPositionPda, PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {PortfolioAccount} from "../types/account/portfolioAccount";
+import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import {PositionInfo} from "../types/positionInfo";
 import {
     ExplicitSaberPool,
     saberPoolLpToken2poolAddress
 } from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
+import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 
 export interface PositionsInput {
     percentageWeight: BN,

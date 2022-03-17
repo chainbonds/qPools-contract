@@ -299,7 +299,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             storedPositionUsdcAmounts.push(
                 {totalPositionValue: usdValueUserLp}
             )
-
         }));
 
         console.log("##getPortfolioUsdcValue");

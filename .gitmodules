@@ -4,3 +4,6 @@
 [submodule "solbond/deps/liquid-staking-program"]
 	path = solbond/deps/liquid-staking-program
 	url = git@github.com:chainbonds/liquid-staking-program.git
+[submodule "solbond/deps/larix-lending-anchor"]
+	path = solbond/deps/larix-lending-anchor
+	url = git@github.com:ProjectLarix/larix-lending-anchor.git

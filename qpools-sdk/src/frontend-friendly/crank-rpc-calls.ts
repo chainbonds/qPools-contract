@@ -1,20 +1,14 @@
 import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {WalletI} from "easy-spl";
 import {BN, Program, Provider, web3} from "@project-serum/anchor";
-import {MOCK} from "../const";
 import * as anchor from "@project-serum/anchor";
 import QWallet, {
-    accountExists, createAssociatedTokenAccountSendUnsigned,
-    createAssociatedTokenAccountUnsigned,
-    delay, getAccountForMintAndPDADontCreate,
-    getAssociatedTokenAddressOffCurve,
-    IWallet, sendAndSignInstruction, tokenAccountExists
+     createAssociatedTokenAccountSendUnsigned,
+    delay,
+    IWallet, sendAndSignInstruction
 } from "../utils";
-import {findSwapAuthorityKey, StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
-import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {sendAndConfirm} from "easy-spl/dist/util";
-import * as assert from "assert";
-import {getSolbondProgram, PortfolioAccount} from "../index";
+import {StableSwapState} from "@saberhq/stableswap-sdk";
+import {getSolbondProgram} from "../index";
 import {NETWORK} from "../types/cluster";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import * as registry from "../registry/registry-helper";
@@ -42,14 +36,11 @@ export class CrankRpcCalls {
     public portfolioBump: number;
     public poolAddresses: registry.ExplicitSaberPool[];
     public portfolioOwner: PublicKey;
-    public qPoolsUsdcFees: PublicKey;
 
     public payer: Keypair;
     public owner: WalletI;
 
-    public stableSwapProgramId: PublicKey | undefined;
-    public stableSwapState: StableSwapState | undefined;
-
+    // Gotta make sure that the crank-wallet sends the signatures
     public crankWallet;
     public crankProvider;
     public crankSolbondProgram;
@@ -94,9 +85,6 @@ export class CrankRpcCalls {
         this.payer = provider.wallet.payer as Keypair;
 
         this.loadPortfolioPdas();
-
-        // TODO: Maybe also bring to registry
-        this.stableSwapProgramId = registry.getSaberStableSwapProgramId();
 
         const marinadeConfig = new MarinadeConfig({
             connection: connection,

@@ -17,29 +17,6 @@ export async function sendLamports(
     })
 }
 
-export async function signApproveWithdrawToUser(
-    connection: Connection,
-    solbondProgram: Program,
-    owner: PublicKey
-): Promise<TransactionInstruction> {
-    console.log("#signApproveWithdrawToUser()");
-    let [portfolioPDA, bumpPortfolio] = await getPortfolioPda(owner, solbondProgram);
-    let ix = await solbondProgram.instruction.approveWithdrawToUser(
-        bumpPortfolio,
-        {
-            accounts: {
-                owner: owner,
-                portfolioPda: portfolioPDA,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                systemProgram: web3.SystemProgram.programId,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            }
-        }
-    )
-    console.log("##signApproveWithdrawToUser()");
-    return ix;
-}
-
 export async function transferUsdcFromUserToPortfolio(
     connection: Connection,
     solbondProgram: Program,

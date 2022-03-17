@@ -26,7 +26,6 @@ import {
     redeem_single_position, registerLiquidityPoolAssociatedTokenAccountsForPortfolio
 } from "./instructions/modify/saber";
 import {
-    signApproveWithdrawToUser,
     transfer_to_user,
     transferUsdcFromUserToPortfolio
 } from "./instructions/modify/portfolio-transfer";
@@ -265,8 +264,8 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async signApproveWithdrawToUser(owner_keypair: Keypair) {
-        let ix = await signApproveWithdrawToUser(
+    async approveWithdrawPortfolio(owner_keypair: Keypair) {
+        let ix = await approvePortfolioWithdraw(
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey
@@ -281,15 +280,6 @@ export class Portfolio {
             owner_keypair.publicKey,
             index,
             marinade_state
-        );
-        return await sendAndSignInstruction(this.provider, ix);
-    }
-
-    async approveWithdrawPortfolio(owner_keypair: Keypair) {
-        let ix = await approvePortfolioWithdraw(
-            this.connection,
-            this.solbondProgram,
-            owner_keypair.publicKey
         );
         return await sendAndSignInstruction(this.provider, ix);
     }

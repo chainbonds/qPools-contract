@@ -110,12 +110,6 @@ export class CrankRpcCalls {
      */
     async transfer_to_user(currencyMint: PublicKey) {
         // Creating the user-account if it doesn't yet exist
-        let userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
-            this.connection,
-            currencyMint,
-            this.wallet.publicKey,
-            this.owner
-        );
         let ix = await transfer_to_user(
             this.connection,
             this.solbondProgram,
@@ -159,7 +153,6 @@ export class CrankRpcCalls {
             console.log("Orders were already fulfilled!");
             return "";
         }
-        // }
 
         let ix = await permissionlessFulfillSaber(
             this.connection,

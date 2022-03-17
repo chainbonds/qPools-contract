@@ -145,7 +145,7 @@ describe('qPools!', () => {
         let amountTokenA = new u64(1);
         let amountTokenB = new u64(0);
         let minMintAmount = new u64(0);
-        let sign_withdraw = await portfolio.signApproveWithdrawToUser(genericPayer);
+        let sign_withdraw = await portfolio.approveWithdrawPortfolio(genericPayer);
         var i = 0;
         // TODO: Gotta check the instruction-heavy or frontend implementation to cleanly deal with poolAddresses
         let approve_sig = await portfolio.signApproveWithdrawAmountSaber(

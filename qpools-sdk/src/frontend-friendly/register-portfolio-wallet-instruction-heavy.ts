@@ -31,7 +31,6 @@ import {
 } from "../instructions/modify/saber";
 import {
     sendLamports,
-    signApproveWithdrawToUser,
     transferUsdcFromUserToPortfolio
 } from "../instructions/modify/portfolio-transfer";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
@@ -264,9 +263,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     // Create Operations
     async createPortfolioSigned(
         weights: Array<u64>,
-        num_positions: BN,
         pool_addresses: Array<PublicKey>
-    ) {
+    ): Promise<TransactionInstruction> {
         let ix = await createPortfolioSigned(
             this.connection,
             this.solbondProgram,
@@ -277,7 +275,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
 
-    async registerCurrencyInputInPortfolio(amount: u64, currencyMint: PublicKey) {
+    async registerCurrencyInputInPortfolio(amount: u64, currencyMint: PublicKey): Promise<TransactionInstruction> {
         let ix = await registerCurrencyInputInPortfolio(
             this.connection,
             this.solbondProgram,
@@ -289,22 +287,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     // Redeem Operations
-    async approveWithdrawPortfolio() {
+    async approveWithdrawPortfolio(): Promise<TransactionInstruction> {
         let ix = await approvePortfolioWithdraw(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey
         );
-        return await sendAndSignInstruction(this.provider, ix);
-    }
-
-    async signApproveWithdrawToUser() {
-        let ix = await signApproveWithdrawToUser(
-            this.connection,
-            this.solbondProgram,
-            this.owner.publicKey
-        );
-        return await sendAndSignInstruction(this.provider, ix);
+        return ix;
     }
 
     /**
@@ -332,7 +321,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         min_mint_amount: u64,
         index: number,
         weight: BN
-    ) {
+    ): Promise<TransactionInstruction> {
         let ix = await approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
@@ -347,7 +336,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
     // Withdraw
-    async signApproveWithdrawAmountSaber(index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+    async signApproveWithdrawAmountSaber(index: number, tokenAAmount: u64): Promise<TransactionInstruction> {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
@@ -384,7 +373,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      * POSITION: Marinade Operations (Fetch Approve);
      */
     // Deposit
-    async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN) {
+    async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
         let ix = await approvePositionWeightMarinade(
             this.connection,
             this.solbondProgram,
@@ -397,7 +386,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     // Withdraw
-    async approveWithdrawToMarinade(index: number) {
+    async approveWithdrawToMarinade(index: number): Promise<TransactionInstruction> {
         let ix = await approveWithdrawToMarinade(
             this.connection,
             this.solbondProgram,

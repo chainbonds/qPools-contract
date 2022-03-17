@@ -29,7 +29,7 @@ pub struct TransferRedeemedToUser<'info> {
         ],
         bump = _bump_user_currency,
     )]
-    pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
+    pub user_currency_pda_account: Box<Account<'info, UserCurrencyAccount>>,
 
     //      user_token: SwapToken  block
     #[account(

@@ -66,3 +66,26 @@ export async function registerCurrencyInputInPortfolio(
     console.log("##registerCurrencyInputInPortfolio()");
     return ix;
 }
+
+export async function approvePortfolioWithdraw(
+    connection: Connection,
+    solbondProgram: Program,
+    owner: PublicKey
+): Promise<TransactionInstruction> {
+    console.log("#registerCurrencyInputInPortfolio()");
+    let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    let ix: TransactionInstruction = solbondProgram.instruction.approveWithdrawToUser(
+        new BN(portfolioBump),
+        {
+            accounts: {
+                owner: owner,
+                portfolioPda: portfolioPda,
+                systemProgram: web3.SystemProgram.programId,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY
+            }
+        }
+    )
+    console.log("##registerCurrencyInputInPortfolio()");
+    return ix;
+}

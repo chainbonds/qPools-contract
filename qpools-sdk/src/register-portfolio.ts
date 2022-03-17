@@ -11,7 +11,11 @@ import {
     sendAndSignInstruction, tokenAccountExists
 } from "./utils";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
-import {createPortfolioSigned, registerCurrencyInputInPortfolio} from "./instructions/modify/portfolio";
+import {
+    approvePortfolioWithdraw,
+    createPortfolioSigned,
+    registerCurrencyInputInPortfolio
+} from "./instructions/modify/portfolio";
 import {
     approvePositionWeightMarinade,
     approveWithdrawToMarinade,
@@ -280,6 +284,15 @@ export class Portfolio {
             owner_keypair.publicKey,
             index,
             marinade_state
+        );
+        return await sendAndSignInstruction(this.provider, ix);
+    }
+
+    async approveWithdrawPortfolio(owner_keypair: Keypair) {
+        let ix = await approvePortfolioWithdraw(
+            this.connection,
+            this.solbondProgram,
+            owner_keypair.publicKey
         );
         return await sendAndSignInstruction(this.provider, ix);
     }

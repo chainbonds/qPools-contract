@@ -4,10 +4,10 @@ import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
 
 const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed562",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition344",
-    USER_CURRENCY_STRING: "UserCurrency1234",
-    USER_MARINADE_SEED: "UserMarinade0024"
+    PORTFOLIO_ACCOUNT: "portFolioSeed567",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition349",
+    USER_CURRENCY_STRING: "UserCurrency1239",
+    USER_MARINADE_SEED: "UserMarinade0029"
 }
 
 /**
@@ -18,7 +18,7 @@ export async function getMarinadeSolPda(
     solbondProgram: Program
 ): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
-        [owner.toBuffer(),Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_MARINADE_SEED))],
+        [owner.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_MARINADE_SEED))],
         solbondProgram.programId
     );
 }

@@ -1,6 +1,6 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {MOCK, NETWORK} from "@qpools/sdk";
+import {MOCK, NETWORK, PortfolioAccount} from "@qpools/sdk";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk'
 import {MarinadeState} from  '@marinade.finance/marinade-ts-sdk'
 import {
@@ -11,8 +11,9 @@ import {
     getSolbondProgram,
 } from "@qpools/sdk";
 import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
-import {getUserCurrencyPda} from "@qpools/sdk/lib/types/account/pdas";
+import {getPortfolioPda, getPositionPda, getUserCurrencyPda} from "@qpools/sdk/lib/types/account/pdas";
 import {getAccountForMintAndPDADontCreate} from "@qpools/sdk/lib/utils";
+import {PositionAccountMarinade} from "@qpools/sdk/lib/types/account/positionAccountMarinade";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -42,8 +43,7 @@ describe('qPools!', () => {
     // Do some airdrop before we start the tests ...
     before(async () => {
 
-        await connection.requestAirdrop(genericPayer.publicKey, 1e9);
-
+        // await connection.requestAirdrop(genericPayer.publicKey, 1e9);
         console.log("swapprogramid");
         stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
@@ -51,8 +51,10 @@ describe('qPools!', () => {
         USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
         wSOL = new PublicKey("So11111111111111111111111111111111111111112");
 
-        weights = [new BN(500), new BN(500), new BN(500)];
-        pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
+        // new BN(500), new BN(500)
+        weights = [new BN(1000)];
+        // , USDC_CASH_pubkey, USDC_TEST_pubkey
+        pool_addresses = [USDC_USDT_pubkey];
 
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
 
@@ -173,6 +175,17 @@ describe('qPools!', () => {
         );
         console.log("Create position marinade done", marinade_sig);
 
+        console.log("Marinade position before is: ");
+        let [portfolioPda, portfolioBump] = await getPortfolioPda(genericPayer.publicKey, portfolio.solbondProgram);
+        let portfolioAccountMarinadeBefore = (await portfolio.solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
+        console.log("Portfolio Account (before) is: ", portfolioAccountMarinadeBefore);
+        let [positionPda, positionBump] = await getPositionPda(genericPayer.publicKey, 0, portfolio.solbondProgram);
+        let positionAccountMarinadeBefore = (await portfolio.solbondProgram.account.positionAccountMarinade.fetch(positionPda)) as PositionAccountMarinade;
+        console.log("Position Account Marinade (before) is: ", positionAccountMarinadeBefore);
+
+        const withdraw_portfolio_sig = await portfolio.approveWithdrawPortfolio(genericPayer);
+        console.log("Withdraw Portfolio Instruction ...", withdraw_portfolio_sig);
+
         // easy
         const withdraw_marinade_sig = await portfolio.approveWithdrawToMarinade(
             genericPayer,
@@ -180,6 +193,11 @@ describe('qPools!', () => {
             marinade_state
         );
         console.log("Withdraw done", withdraw_marinade_sig);
+
+        let portfolioAccountMarinadeAfter = (await portfolio.solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
+        console.log("Portfolio Account (after) is: ", portfolioAccountMarinadeAfter);
+        // let positionAccountMarinadeAfter = (await portfolio.solbondProgram.account.positionAccountMarinade.fetch(positionPda)) as PositionAccountMarinade;
+        // console.log("Position Account Marinade (after) is: ", positionAccountMarinadeAfter);
 
         const redeem_portfolio = await portfolio.transfer_to_user(provider.wallet, wSOL);
         console.log("Redeem portfolio done", redeem_portfolio);
@@ -195,7 +213,7 @@ describe('qPools!', () => {
         } catch (e) {
 
         }
-        
+
         for (var i = 0; i < num_positions; i++) {
             let amountTokenA = new u64(1200);
             let amountTokenB = new u64(0);
@@ -214,7 +232,7 @@ describe('qPools!', () => {
 
             }
         }
-    }) 
+    })
     */
     /*
     it('fulfill a position', async() => {
@@ -224,13 +242,13 @@ describe('qPools!', () => {
             let sigs_rest = await portfolio.transfer_to_portfolio(provider.wallet, total_amount_USDC);
 
         } catch (e) {
-            
+
         }
 
         var i = 0
         let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer,i)
 
-        
+
 
 
     })
@@ -247,12 +265,12 @@ describe('qPools!', () => {
                 genericPayer,
                 i,
                 minMintAmount,
-                amountTokenA 
+                amountTokenA
         )
 
-        
 
-        
+
+
         let approve_sig2 = await portfolio.redeem_single_position_only_one(
                 i,
                 genericPayer,
@@ -260,7 +278,7 @@ describe('qPools!', () => {
 
 
     let sigs_rest = await portfolio.transfer_to_user(provider.wallet);
-        
+
 
     })
     */
@@ -277,7 +295,7 @@ describe('qPools!', () => {
 
 
     })
-    
+
     it('simulate a portfolio purchase', async () => {
 
         // first, initialize a portfolio
@@ -304,26 +322,26 @@ describe('qPools!', () => {
     */
 
     /*
-    
-    
+
+
     it('simulate a withdraw one', async () => {
 
         let amount_token = new u64(1200);
         let amount_lp = new u64(1200);
-        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer); 
+        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer);
         let sigs_rest = await portfolio.redeem_single_position_only_one(0, new BN(500), amount_lp, amount_token, genericPayer);
         console.log("🦍 TRANSACTION SIG REDEEM ", sig_sign_redeem.toString())
         console.log("🦍 TRANSACTION SIG ", sigs_rest.toString())
 
     })
 
-    
+
     it('simulate a full portfolio redeem', async () => {
 
         // first, initialize a portfolio
         let amountTokenA = new u64(120000);
         const amounts = [amountTokenA, amountTokenA, amountTokenA]
-        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer); 
+        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer);
         let sigs_rest = await portfolio.redeem_full_portfolio(weights, amounts, genericPayer);
         console.log("🦍 TRANSACTION SIG REDEEM ", sig_sign_redeem.toString())
 
@@ -333,11 +351,11 @@ describe('qPools!', () => {
         }
 
     })
-    
+
     it('simulate a redeem to user', async () => {
 
         let amountTokenA = new u64(3400);
-        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer); 
+        let sig_sign_redeem = await portfolio.signRedeemPortfolio(pool_addresses, genericPayer);
         let sigs_rest = await portfolio.transfer_to_user(provider.wallet, amountTokenA);
         console.log("🦍 TRANSACTION SIG REDEEM ", sig_sign_redeem.toString())
 

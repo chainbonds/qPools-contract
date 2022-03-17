@@ -9,7 +9,7 @@ import {accountExists} from "../../utils";
  * Fetch the position account
  * @param index The index at which this position is stored. Be careful not to mix the protocol types with the indecies
  */
-export async function fetchSinglePosition(
+export async function fetchSinglePositionSaber(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
@@ -21,6 +21,24 @@ export async function fetchSinglePosition(
     let positionContent = null;
     if (await accountExists(connection, positionPDA)) {
         let response = await solbondProgram.account.positionAccountSaber.fetch(positionPDA);
+        positionContent = response as PositionAccountSaber;
+    }
+    console.log("##fetchSinglePosition()");
+    return positionContent;
+}
+
+export async function fetchSinglePositionMarinade(
+    connection: Connection,
+    solbondProgram: Program,
+    owner: PublicKey,
+    index: number
+): Promise<PositionAccountSaber | null> {
+    console.log("#fetchSinglePosition()");
+    let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
+    console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
+    let positionContent = null;
+    if (await accountExists(connection, positionPDA)) {
+        let response = await solbondProgram.account.positionAccountMarinade.fetch(positionPDA);
         positionContent = response as PositionAccountSaber;
     }
     console.log("##fetchSinglePosition()");

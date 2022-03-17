@@ -1,6 +1,7 @@
 import {PublicKey, TokenAmount} from "@solana/web3.js";
 
 export interface PositionInfo {
+    protocolType: string,
     index: number,
     poolAddress: PublicKey,
     portfolio: PublicKey,

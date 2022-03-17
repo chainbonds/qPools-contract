@@ -5,6 +5,7 @@ import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {
+    accountExists,
     createAssociatedTokenAccountUnsigned, delay,
     getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve,
@@ -13,11 +14,11 @@ import {
 } from "../utils";
 import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
-import {ExplicitSaberPool} from "../registry/registry-helper";
+import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {portfolioExists, fetchPortfolio} from "../instructions/fetch/portfolio";
-import {getPoolState} from "../instructions/fetch/saber";
+import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
 import {
     approvePortfolioWithdraw,
     createPortfolioSigned,
@@ -34,6 +35,8 @@ import {
     transferUsdcFromUserToPortfolio
 } from "../instructions/modify/portfolio-transfer";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
+import {PositionInfo} from "../types/positionInfo";
+import {fetchSinglePositionMarinade, fetchSinglePositionSaber} from "../instructions/fetch/position";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -120,8 +123,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async createAssociatedTokenAccounts(
         saber_pool_addresses: PublicKey[],
         wallet: IWallet
-    ) {
+    ): Promise<Transaction> {
 
+        let instructions: TransactionInstruction[] = [];
         // Change according to mainnet, or registry ...
 
         let [portfolioPDA, portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
@@ -147,9 +151,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             ixs.map((x: TransactionInstruction) => {tx.add(x)})
         }));
         // Sign this transaction
-        let sg = await this.provider.send(tx);
-        await this.provider.connection.confirmTransaction(sg, "confirmed");
-        console.log("SG is: ", sg);
 
         let wSOL = new PublicKey("So11111111111111111111111111111111111111112");
         // For the User!
@@ -164,8 +165,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 portfolioPDA,
                 wallet,
             );
-            let sg1 = await this.provider.send(tx1);
-            await this.provider.connection.confirmTransaction(sg1, "confirmed");
+            tx.add(tx1);
+            // let sg1 = await this.provider.send(tx1);
+            // await this.provider.connection.confirmTransaction(sg1, "confirmed");
         }
         // let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
         console.log("ATA2!");
@@ -177,8 +179,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 this.owner.publicKey,
                 wallet,
             );
-            let sg2 = await this.provider.send(tx2);
-            await this.provider.connection.confirmTransaction(sg2, "confirmed");
+            tx.add(tx2);
+            // let sg2 = await this.provider.send(tx2);
+            // await this.provider.connection.confirmTransaction(sg2, "confirmed");
         }
         // let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
         console.log("ATA3!");
@@ -190,8 +193,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 portfolioPDA,
                 wallet,
             );
-            let sg3 = await this.provider.send(tx3);
-            await this.provider.connection.confirmTransaction(sg3, "confirmed");
+            tx.add(tx3);
+            // let sg3 = await this.provider.send(tx3);
+            // await this.provider.connection.confirmTransaction(sg3, "confirmed");
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA4!");
@@ -203,8 +207,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 this.owner.publicKey,
                 wallet,
             );
-            let sg4 = await this.provider.send(tx4);
-            await this.provider.connection.confirmTransaction(sg4, "confirmed");
+            tx.add(tx4);
+            // let sg4 = await this.provider.send(tx4);
+            // await this.provider.connection.confirmTransaction(sg4, "confirmed");
         }
         console.log("ATA5!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, portfolioPDA)))) {
@@ -215,8 +220,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 portfolioPDA,
                 wallet,
             );
-            let sg5 = await this.provider.send(tx5);
-            await this.provider.connection.confirmTransaction(sg5, "confirmed");
+            tx.add(tx5);
+            // let sg5 = await this.provider.send(tx5);
+            // await this.provider.connection.confirmTransaction(sg5, "confirmed");
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA6!");
@@ -228,8 +234,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 this.owner.publicKey,
                 wallet,
             );
-            let sg6 = await this.provider.send(tx6);
-            await this.provider.connection.confirmTransaction(sg6, "confirmed");
+            tx.add(tx6);
+            // let sg6 = await this.provider.send(tx6);
+            // await this.provider.connection.confirmTransaction(sg6, "confirmed");
         }
         // let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
         // For MSOL, create associated token addresses
@@ -242,6 +249,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // await this.provider.connection.confirmTransaction(sg, "confirmed");
         // console.log("Signature is: ", sg);
         // return sg;
+        return tx;
     }
 
     /**
@@ -423,164 +431,258 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
 
-    // /**
-    //  * Fetch the Portfolio Information from the positions ...
-    //  * Get the saber state, get the pool address, get all the pool accounts, and LP tokens, and normal tokens from the portfolio
-    //  * skip counting duplicates
-    //  *
-    //  * Perhaps create a dictionary, which maps mint to amount ...
-    //  */
-    // // TODO: Also gotta make this cross-protocol
-    // async getPortfolioInformation(): Promise<PositionInfo[]>{
-    //     console.log("#getPortfolioInformation");
-    //
-    //     // Get the saber stableswap state for all positions
-    //
-    //     // return empty array if portfolio ID does not exist
-    //     console.log("Hello");
-    //     console.log("Portfolio PDA is: ", this.portfolioPDA.toString());
-    //     if (!(await accountExists(this.connection, this.portfolioPDA))) {
-    //         console.log("Empty Portfolio");
-    //         return []
-    //     }
-    //     let portfolio: PortfolioAccount = await this.fetchPortfolio();
-    //     let out: PositionInfo[] = [];
-    //     for (let index = 0; index < portfolio.numPositions; index++) {
-    //
-    //         // Get the single position
-    //         console.log("Fetching single position");
-    //         let positionAccount: PositionAccountSaber = await this.fetchSinglePosition(index);
-    //         console.log("Fetching get pool state");
-    //         console.log("Pool Address is: ", positionAccount);
-    //         console.log("Pool Address is: ", positionAccount.poolAddress.toString());
-    //
-    //         // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
-    //         let saberPoolAddress = saberPoolLpToken2poolAddress(positionAccount.poolAddress);
-    //         console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
-    //         const stableSwapState = await this.getPoolState(saberPoolAddress);
-    //         const {state} = stableSwapState;
-    //
-    //         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
-    //         let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-    //         let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-    //         let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-    //
-    //         // Also get the token amounts, I guess lol
-    //         let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
-    //         let tokenBAmount = (await this.connection.getTokenAccountBalance(portfolioAtaB)).value;
-    //         let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
-    //
-    //         // Add to the portfolio account
-    //         out.push({
-    //             index: index,
-    //             poolAddress: positionAccount.poolAddress,
-    //             portfolio: this.portfolioPDA,
-    //             mintA: state.tokenA.mint,
-    //             ataA: portfolioAtaA,
-    //             amountA: tokenAAmount,
-    //             mintB: state.tokenB.mint,
-    //             ataB: portfolioAtaB,
-    //             amountB: tokenBAmount,
-    //             mintLp: state.poolTokenMint,
-    //             ataLp: portfolioAtaLp,
-    //             amountLp: tokenLPAmount
-    //         })
-    //     }
-    //
-    //     console.log("##getPortfolioInformation");
-    //     return out;
-    // }
-    //
-    // // TODO: Again, make this cross-protocol compatible
-    // async getPortfolioUsdcValue() {
-    //     console.log("#getPortfolioUsdcValue");
-    //     let includedMints: Set<string> = new Set();
-    //     let storedPositions = await this.getPortfolioInformation();
-    //     let usdAmount = 0.;
-    //     let storedPositionUsdcAmounts: any = [];
-    //
-    //     console.log("All fetched data is: ", storedPositions);
-    //     await Promise.all(storedPositions.map(async (position: PositionInfo) => {
-    //         console.log("Position is: ", position);
-    //         let saberPoolAddress = saberPoolLpToken2poolAddress(position.poolAddress);
-    //         const stableSwapState = await this.getPoolState(saberPoolAddress);
-    //         const {state} = stableSwapState;
-    //
-    //         let {supplyLpToken, poolContentsInUsdc} = await this.getLpTokenExchangeRateItems(state);
-    //         let amountUserLp = position.amountLp.uiAmount;
-    //         console.log("Amount of Users LP tokens: ", amountUserLp.toString());
-    //         if (!supplyLpToken) {
-    //             throw Error("One of the LP information values is null or zero!" + String(supplyLpToken));
-    //         }
-    //         // This case is totall fine, actually
-    //         if ((!amountUserLp) && ((amountUserLp != 0))) {
-    //             throw Error("One of the LP information values is null or zero!" + String(amountUserLp));
-    //         }
-    //
-    //         // Calculate the exchange rate between lp tokens, and the total reserve values
-    //         // The second operation defines the exchange rate, but we do it in a "safe" way
-    //         // perhaps we should treat all these as BN ..
-    //         let usdValueUserLp = (amountUserLp * poolContentsInUsdc) / supplyLpToken;
-    //         console.log("User portfolio value is: ", usdValueUserLp);
-    //         console.log("Token account address is: ", state.tokenA.reserve);
-    //         let amountUserA = position.amountA.uiAmount;
-    //         console.log("amountUserB", amountUserA);
-    //         // Get Reserve B
-    //         console.log("Token account address is: ", state.tokenB.reserve);
-    //         let amountUserB = position.amountB.uiAmount;
-    //         console.log("amountUserB", amountUserB);
-    //
-    //         if ((!amountUserA && amountUserA != 0) || (!amountUserB && amountUserB != 0)) {
-    //             throw Error("One of the reserve values is null!" + String(amountUserA) + " " +  String(amountUserB));
-    //         }
-    //
-    //         // Again, we skip this for now because all tokens we work with are USDC-based
-    //         // // Also convert here to USD,
-    //         // let usdValueUserA = amountUserA;
-    //         // let usdValueUserB = amountUserB;
-    //         //
-    //         // // We can skip this step, bcs again, we only use stablecoins for now
-    //         // let userPositionValue = usdValueUserA + usdValueUserB + usdValueUserLp;
-    //
-    //         // Modify with the Pyth price
-    //         // Treat the LP tokens as 1-to-1 (?)
-    //         if (!includedMints.has(position.mintA.toString())) {
-    //             console.log("Adding: position.mintA ", position.mintA.toString())
-    //             usdAmount += amountUserA;
-    //         } else {
-    //             console.log("Skipping: position.mintA ", position.mintA.toString())
-    //         }
-    //         if (!includedMints.has(position.mintB.toString())) {
-    //             console.log("Adding: position.mintB ", position.mintB.toString())
-    //             usdAmount += amountUserB;
-    //         } else {
-    //             console.log("Skipping: position.mintB ", position.mintB.toString())
-    //         }
-    //         if (!includedMints.has(position.mintLp.toString())) {
-    //             console.log("Adding: position.mintLp ", position.mintLp.toString())
-    //             usdAmount += usdValueUserLp;
-    //         } else {
-    //             console.log("Skipping: position.mintLp ", position.mintLp.toString())
-    //         }
-    //
-    //         includedMints.add(position.mintA.toString());
-    //         includedMints.add(position.mintB.toString());
-    //         includedMints.add(position.mintLp.toString());
-    //
-    //         storedPositionUsdcAmounts.push(
-    //             {totalPositionValue: usdValueUserLp}
-    //         )
-    //     }));
-    //
-    //     console.log("##getPortfolioUsdcValue");
-    //
-    //     return {
-    //         storedPositions: storedPositions,
-    //         usdAmount: usdAmount,
-    //         storedPositionUsdcAmounts: storedPositionUsdcAmounts,
-    //     };
-    // }
-    //
+    /**
+     *
+     *
+     *
+     *
+     * Start of Legacy Items!
+     *
+     *
+     *
+     *
+     *
+     */
+
+
+
+
+    /**
+     * Fetch the Portfolio Information from the positions ...
+     * Get the saber state, get the pool address, get all the pool accounts, and LP tokens, and normal tokens from the portfolio
+     * skip counting duplicates
+     *
+     * Perhaps create a dictionary, which maps mint to amount ...
+     */
+    // TODO: Also gotta make this cross-protocol
+    async getPortfolioInformation(): Promise<PositionInfo[]>{
+        console.log("#getPortfolioInformation");
+
+        // Get the saber stableswap state for all positions
+
+        // return empty array if portfolio ID does not exist
+        console.log("Hello");
+        console.log("Portfolio PDA is: ", this.portfolioPDA.toString());
+        if (!(await accountExists(this.connection, this.portfolioPDA))) {
+            console.log("Empty Portfolio");
+            return []
+        }
+        let portfolio: PortfolioAccount = await this.fetchPortfolio();
+        let out: PositionInfo[] = [];
+
+        // right now, position 0 is saber, position 1 is marinade ....
+        console.log("Fetching the portfolio account: ", portfolio);
+
+        for (let index = 0; index < portfolio.numPositions; index++) {
+
+            if (portfolio.numPositions > 2) {
+                console.log("Doesn't work");
+                throw Error("Don't do number of positions more than 2! stupid monkey finalizing-coding for hackahton!");
+            }
+
+            if (index == 0) {
+                // Get the single position
+                console.log("Fetching single position");
+                let positionAccount: PositionAccountSaber = await fetchSinglePositionSaber(this.connection, this.solbondProgram, this.owner.publicKey, index);
+                console.log("Fetching get pool state");
+                console.log("Pool Address is: ", positionAccount);
+                console.log("Pool Address is: ", positionAccount.poolAddress.toString());
+
+                // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
+                let saberPoolAddress = saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+                console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
+                const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
+                const {state} = stableSwapState;
+
+                // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
+                let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+                let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+                let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+
+                // Also get the token amounts, I guess lol
+                let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
+                let tokenBAmount = (await this.connection.getTokenAccountBalance(portfolioAtaB)).value;
+                let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
+
+                // Add to the portfolio account
+                out.push({
+                    protocolType: "DEX",
+                    index: index,
+                    poolAddress: positionAccount.poolAddress,
+                    portfolio: this.portfolioPDA,
+                    mintA: state.tokenA.mint,
+                    ataA: portfolioAtaA,
+                    amountA: tokenAAmount,
+                    mintB: state.tokenB.mint,
+                    ataB: portfolioAtaB,
+                    amountB: tokenBAmount,
+                    mintLp: state.poolTokenMint,
+                    ataLp: portfolioAtaLp,
+                    amountLp: tokenLPAmount
+                })
+            } else {
+                console.log("Fetching single position");
+                let positionAccount: PositionAccountSaber = await fetchSinglePositionMarinade(this.connection, this.solbondProgram, this.owner.publicKey, index);
+                console.log("Pool Address is: ", positionAccount);
+                // You can make the pool address the mSOL mint for now
+                // console.log("Pool Address is: ", positionAccount.poolAddress.toString());
+
+                // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
+
+                // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
+                let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+                let portfolioAtaMSol = await getAccountForMintAndPDADontCreate(mSOLMint, this.portfolioPDA);
+
+                // Also get the token amounts, I guess lol
+                let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
+
+                // Add to the portfolio account
+                out.push({
+                    protocolType: "staking",
+                    index: index,
+                    poolAddress: positionAccount.poolAddress,
+                    portfolio: this.portfolioPDA,
+                    mintA: mSOLMint,
+                    ataA: portfolioAtaMSol,
+                    amountA: mSOLAmount,
+                    mintB: null,
+                    ataB: null,
+                    amountB: null,
+                    mintLp: null,
+                    ataLp: null,
+                    amountLp: null
+                })
+
+            }
+
+        }
+
+        console.log("##getPortfolioInformation");
+        return out;
+    }
+
+    // TODO: Again, make this cross-protocol compatible
+    async getPortfolioUsdcValue() {
+        console.log("#getPortfolioUsdcValue");
+        let includedMints: Set<string> = new Set();
+        let storedPositions = await this.getPortfolioInformation();
+        let usdAmount = 0.;
+        let storedPositionUsdcAmounts: any = [];
+
+        console.log("All fetched data is: ", storedPositions);
+        await Promise.all(storedPositions.map(async (position: PositionInfo) => {
+
+            if (position.protocolType === "DEX") {
+                console.log("Position is: ", position);
+                let saberPoolAddress = saberPoolLpToken2poolAddress(position.poolAddress);
+                const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
+                const {state} = stableSwapState;
+
+                let {supplyLpToken, poolContentsInUsdc} = await getLpTokenExchangeRateItems(
+                    this.connection,
+                    this.solbondProgram,
+                    this.owner.publicKey,
+                    state
+                );
+                let amountUserLp = position.amountLp.uiAmount;
+                console.log("Amount of Users LP tokens: ", amountUserLp.toString());
+                if (!supplyLpToken) {
+                    throw Error("One of the LP information values is null or zero!" + String(supplyLpToken));
+                }
+                // This case is totall fine, actually
+                if ((!amountUserLp) && ((amountUserLp != 0))) {
+                    throw Error("One of the LP information values is null or zero!" + String(amountUserLp));
+                }
+
+                // Calculate the exchange rate between lp tokens, and the total reserve values
+                // The second operation defines the exchange rate, but we do it in a "safe" way
+                // perhaps we should treat all these as BN ..
+                let usdValueUserLp = (amountUserLp * poolContentsInUsdc) / supplyLpToken;
+                console.log("User portfolio value is: ", usdValueUserLp);
+                console.log("Token account address is: ", state.tokenA.reserve);
+                let amountUserA = position.amountA.uiAmount;
+                console.log("amountUserA", amountUserA);
+                // Get Reserve B
+
+                console.log("Token account address is: ", state.tokenB.reserve);
+                let amountUserB = position.amountB.uiAmount;
+                console.log("amountUserB", amountUserB);
+
+                if ((!amountUserA && amountUserA != 0) || (!amountUserB && amountUserB != 0)) {
+                    throw Error("One of the reserve values is null!" + String(amountUserA) + " " +  String(amountUserB));
+                }
+
+                // Again, we skip this for now because all tokens we work with are USDC-based
+                // // Also convert here to USD,
+                // let usdValueUserA = amountUserA;
+                // let usdValueUserB = amountUserB;
+                //
+                // // We can skip this step, bcs again, we only use stablecoins for now
+                // let userPositionValue = usdValueUserA + usdValueUserB + usdValueUserLp;
+
+                // Modify with the Pyth price
+                // Treat the LP tokens as 1-to-1 (?)
+                if (!includedMints.has(position.mintA.toString())) {
+                    console.log("Adding: position.mintA ", position.mintA.toString())
+                    usdAmount += amountUserA;
+                } else {
+                    console.log("Skipping: position.mintA ", position.mintA.toString())
+                }
+                if (!includedMints.has(position.mintB.toString())) {
+                    console.log("Adding: position.mintB ", position.mintB.toString())
+                    usdAmount += amountUserB;
+                } else {
+                    console.log("Skipping: position.mintB ", position.mintB.toString())
+                }
+                if (!includedMints.has(position.mintLp.toString())) {
+                    console.log("Adding: position.mintLp ", position.mintLp.toString())
+                    usdAmount += usdValueUserLp;
+                } else {
+                    console.log("Skipping: position.mintLp ", position.mintLp.toString())
+                }
+
+                includedMints.add(position.mintA.toString());
+                includedMints.add(position.mintB.toString());
+                includedMints.add(position.mintLp.toString());
+
+                storedPositionUsdcAmounts.push(
+                    {totalPositionValue: usdValueUserLp}
+                )
+            } else if (position.protocolType === "staking") {
+
+                let marinadeToken = position.amountA.uiAmount;
+                // Multiply this with the marinade token
+                // TODO: Change this with pyth oracle pricing from registry
+                let marinadeUsdcAmount = marinadeToken * 93.23;
+                usdAmount += marinadeUsdcAmount
+                // Again, we skip this for now because all tokens we work with are USDC-based
+                // // Also convert here to USD,
+                // let usdValueUserA = amountUserA;
+                // let usdValueUserB = amountUserB;
+                //
+                // // We can skip this step, bcs again, we only use stablecoins for now
+                // let userPositionValue = usdValueUserA + usdValueUserB + usdValueUserLp;
+
+                includedMints.add(position.mintA.toString());
+
+                storedPositionUsdcAmounts.push(
+                    {totalPositionValue: marinadeUsdcAmount}
+                )
+            } else {
+                throw Error("Protocol Type is none of: " + new String(position.protocolType));
+            }
+
+        }));
+
+        console.log("##getPortfolioUsdcValue");
+
+        return {
+            storedPositions: storedPositions,
+            usdAmount: usdAmount,
+            storedPositionUsdcAmounts: storedPositionUsdcAmounts,
+        };
+    }
+
     // /**
     //  * This model creates a portfolio where the base currency is USDC i.e the user only pays in USDC.
     //  * The steps 1-3 are permissioned, meaning that the user has to sign client side. The point is to

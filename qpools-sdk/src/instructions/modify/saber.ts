@@ -14,6 +14,7 @@ import {getPoolState} from "../fetch/saber";
 import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
 import {WalletI} from "easy-spl";
+import {MOCK} from "../../const";
 
 export async function approvePositionWeightSaber(
     connection: Connection,
@@ -226,6 +227,31 @@ export async function redeemSinglePositionOnlyOne(
     console.log("userA ", userAccountA.toString())
     let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
     let totalLPTokens = (await connection.getTokenAccountBalance(userAccountpoolToken)).value;
+
+    // TODO: Hardcode to check for IF-ELSE statement on USDC ...
+    // Probably can use this template
+    // if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
+    //     userAccount = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+    //     reserveA = state.tokenA.reserve
+    //     feesA = state.tokenA.adminFeeAccount
+    //     mintA = state.tokenA.mint
+    //     reserveB = state.tokenB.reserve
+    //
+    // } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
+    //     userAccount = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+    //     reserveA = state.tokenB.reserve
+    //     feesA = state.tokenB.adminFeeAccount
+    //     mintA = state.tokenB.mint
+    //     reserveB = state.tokenA.reserve
+    //
+    // } else {
+    //     throw Error(
+    //         "Could not find overlapping USDC Pool Mint Address!! " +
+    //         MOCK.DEV.SABER_USDC.toString() + " (Saber USDC) " +
+    //         state.tokenA.mint.toString() + " (MintA) " +
+    //         state.tokenB.mint.toString() + " (MintB) "
+    //     )
+    // }
 
     console.log("👀 positionPda ", positonPDA.toString())
     console.log("😸 portfolioPda", portfolioPDA.toString());

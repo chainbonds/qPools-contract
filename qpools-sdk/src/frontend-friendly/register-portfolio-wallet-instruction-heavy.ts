@@ -298,7 +298,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     // Create Operations
     async createPortfolioSigned(
-        weights: Array<BN>,
+        weights: Array<u64>,
         pool_addresses: Array<PublicKey>
     ): Promise<TransactionInstruction> {
         let ix = await createPortfolioSigned(

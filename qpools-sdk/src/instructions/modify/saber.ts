@@ -33,9 +33,21 @@ export async function approvePositionWeightSaber(
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
-    // Double check if already fulfilled, and skip it if not ...
+    console.assert(amountB.eq(new BN(0)));
 
-    // Make sure to swap amountA and amountB accordingly ...
+    // Double check if already fulfilled, and skip it if not ...
+    if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {
+        console.log("tokenA");
+        // Don't do any swap
+    } else if (state.tokenB.mint.equals(MOCK.DEV.SABER_USDC)) {
+        console.log("tokenB");
+        amountB = amountA;
+        amountA = new BN(0);
+    } else {
+        throw Error("KSLDJLKAJSD ERROR");
+    }
+
+    // Make sure to swap asomountA and amountB accordingly ...
     // TODO: Make sure that A corresponds to USDC, or do a swap in general (i.e. push whatever there is, to the swap account)
     // TODO: Gotta define how much to pay in, depending on if mintA == USDC, or mintB == USDC
     let approveWeightInstruction: TransactionInstruction = await solbondProgram.instruction.approvePositionWeightSaber(

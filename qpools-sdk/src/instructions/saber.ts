@@ -15,4 +15,5 @@ import {MOCK} from "../const";
  * You should probably include these in the registry.
  */
 // TODO: Put this into the registry!
-export const stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
+export const stableSwapProgramId = registry.getSaberStableSwapProgramId();
+// new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");

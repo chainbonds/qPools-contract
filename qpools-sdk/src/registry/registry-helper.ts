@@ -87,7 +87,8 @@ function getAllPools(): any {
 export function getSaberStableSwapProgramId(): PublicKey {
     // Probably also replace this with a hardcode.
     // We should aim to remove all occurrences of MOCK.DEV to this file, and then delete them indefinitely
-    return new PublicKey(MOCK.DEV.stableSwapProgramId);
+    // return new PublicKey(MOCK.DEV.stableSwapProgramId);
+    return new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
 }
 
 export function getReferenceCurrencyMint(): PublicKey {

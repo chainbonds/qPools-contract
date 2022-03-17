@@ -50,7 +50,7 @@ export async function transferUsdcFromUserToPortfolio(
     console.log("#transferUsdcFromUserToPortfolio()");
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(solbondProgram, owner, currencyMint);
-    let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPda);
+    let pdaCurrencyAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPda);
 
     let ix = await solbondProgram.instruction.transferToPortfolio(
         new BN(portfolioBump),
@@ -60,7 +60,7 @@ export async function transferUsdcFromUserToPortfolio(
                 owner: owner,
                 portfolioPda: portfolioPda,
                 userOwnedTokenAccount: wrappedSolAccount,
-                pdaOwnedTokenAccount: pdaUSDCAccount,
+                pdaOwnedTokenAccount: pdaCurrencyAccount,
                 userCurrencyPdaAccount: currencyPDA,
                 tokenMint: currencyMint,
                 tokenProgram: TOKEN_PROGRAM_ID,

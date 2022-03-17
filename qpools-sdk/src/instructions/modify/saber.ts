@@ -278,6 +278,8 @@ export async function redeem_single_position(
     index: number
 ) {
     console.log("#redeem_single_position()");
+
+    // TODO : replace this, by fetching the poolAddress from the position ...
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 

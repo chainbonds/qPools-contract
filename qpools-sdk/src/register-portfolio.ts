@@ -238,7 +238,6 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    // TODO: Move to Crank for frontend ...
     async createPositionMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
         let ix = await createPositionMarinade(
             this.connection,
@@ -308,7 +307,6 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    // TODO: Move to Crank
     async permissionlessFulfillSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number) {
         let ix = await permissionlessFulfillSaber(
             this.connection,
@@ -320,7 +318,6 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    // TODO: Move to Crank
     async redeem_single_position(poolAddress: PublicKey, index: number, owner: Keypair) {
         // TODO: Rename to sth saber, or make module imports ...
         let ix = await redeem_single_position(
@@ -344,7 +341,6 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    // TODO: Move to Crank
     async transfer_to_user(owner: IWallet, currencyMint: PublicKey) {
         // Creating the user-account if it doesn't yet exist
         let userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
@@ -362,7 +358,6 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    // TODO: Move to Crank
     async redeem_single_position_only_one(pool_addresses: PublicKey[], index: number, owner: Keypair) {
         // TODO: Rename function to include saber
         // Or make modular imports

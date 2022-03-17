@@ -1,14 +1,11 @@
 import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
-import {BN, Program, Provider, web3} from "@project-serum/anchor";
-import * as anchor from "@project-serum/anchor";
-import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
+import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
-import {SaberInteractToolFrontendFriendly} from "./saber-cpi-endpoints-wallet";
+import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {
-    accountExists, createAssociatedTokenAccountUnsigned,
+    createAssociatedTokenAccountUnsigned, delay,
     getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve,
     IWallet, sendAndSignInstruction,
@@ -16,13 +13,11 @@ import {
 } from "../utils";
 import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
-import {PositionInfo} from "../types/positionInfo";
-import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
+import {ExplicitSaberPool} from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {portfolioExists, fetchPortfolio} from "../instructions/fetch/portfolio";
-import {fetchSinglePosition} from "../instructions/fetch/position";
-import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
+import {getPoolState} from "../instructions/fetch/saber";
 import {
     approvePortfolioWithdraw,
     createPortfolioSigned,
@@ -61,15 +56,22 @@ export interface PositionsInput {
  *
  * The actual heavy-lifting (creating, etc.) is done by the cranks
  */
-export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractToolFrontendFriendly {
+export class PortfolioFrontendFriendlyChainedInstructions {
+
+    public connection: Connection;
+    public solbondProgram: Program;
+    public provider: Provider;
+    public providerWallet: IWallet;
+    public wallet: Keypair;
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
     public poolAddresses: ExplicitSaberPool[];
-    public portfolioOwner: PublicKey;
 
     public payer: Keypair;
     public owner: WalletI;
+
+    public marinadeState: MarinadeState;
 
     // There are a lot of accounts that need would be created twice
     // (assuming we use the same pool, but that pool has not been instantiated yet)
@@ -80,21 +82,37 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         provider: Provider,
         solbondProgram: Program
     ) {
-        super(
-            connection,
-            provider,
-            solbondProgram
-        );
 
         this.owner = provider.wallet;
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
+        this.connection = connection;
+        this.provider = provider;
+        this.solbondProgram = solbondProgram
+
+        this.providerWallet = this.provider.wallet;
+        // Get the keypair from the provider wallet
+        // @ts-expect-error
+        this.wallet = this.provider.wallet.payer as Keypair;
+
+        const marinadeConfig = new MarinadeConfig({
+            connection: connection,
+            publicKey: provider.wallet.publicKey,
+
+        });
+        let marinade = new Marinade(marinadeConfig);
+        MarinadeState.fetch(marinade).then((marinadeState: MarinadeState) => {
+            this.marinadeState = marinadeState;
+        });
+
+        // Perhaps initialize this with the mints ....
         getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
             this.portfolioPDA = portfolioPDA
             this.portfolioBump = bumpPortfolio
         });
-
+        // Wait until portfolio PDA is loaded
+        delay(1000);
     }
 
     /**
@@ -102,14 +120,12 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      */
     async createAssociatedTokenAccounts(
         saber_pool_addresses: PublicKey[],
-        owner_keypair: Keypair,
-        wallet: IWallet,
-        marinadeState: MarinadeState
+        wallet: IWallet
     ) {
 
         // Change according to mainnet, or registry ...
 
-        let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner_keypair.publicKey, this.solbondProgram);
+        let [portfolioPDA, portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         let createdAtaAccounts: Set<string> = new Set();
         // For the Portfolio!
         // For all saber pool addresses (tokenA, tokenB, LPToken), create associated token address
@@ -124,7 +140,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
             let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
                 this.connection,
                 this.solbondProgram,
-                owner_keypair.publicKey,
+                this.owner.publicKey,
                 wallet,
                 state,
                 createdAtaAccounts
@@ -154,12 +170,12 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         }
         // let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
         console.log("ATA2!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, owner_keypair.publicKey)))) {
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey)))) {
             let tx2 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
                 MOCK.DEV.SABER_USDC,
                 null,
-                owner_keypair.publicKey,
+                this.owner.publicKey,
                 wallet,
             );
             let sg2 = await this.provider.send(tx2);
@@ -180,22 +196,22 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA4!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, owner_keypair.publicKey)))) {
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, this.owner.publicKey)))) {
             let tx4 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
                 wSOL,
                 null,
-                owner_keypair.publicKey,
+                this.owner.publicKey,
                 wallet,
             );
             let sg4 = await this.provider.send(tx4);
             await this.provider.connection.confirmTransaction(sg4, "confirmed");
         }
         console.log("ATA5!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(marinadeState.mSolMintAddress, portfolioPDA)))) {
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, portfolioPDA)))) {
             let tx5 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
-                marinadeState.mSolMintAddress,
+                this.marinadeState.mSolMintAddress,
                 null,
                 portfolioPDA,
                 wallet,
@@ -205,12 +221,12 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA6!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(marinadeState.mSolMintAddress, owner_keypair.publicKey)))) {
+        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, this.owner.publicKey)))) {
             let tx6 = await createAssociatedTokenAccountUnsigned(
                 this.connection,
-                marinadeState.mSolMintAddress,
+                this.marinadeState.mSolMintAddress,
                 null,
-                owner_keypair.publicKey,
+                this.owner.publicKey,
                 wallet,
             );
             let sg6 = await this.provider.send(tx6);
@@ -248,25 +264,24 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     // Create Operations
     async createPortfolioSigned(
         weights: Array<u64>,
-        owner_keypair: Keypair,
         num_positions: BN,
         pool_addresses: Array<PublicKey>
     ) {
         let ix = await createPortfolioSigned(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey,
+            this.owner.publicKey,
             weights,
             pool_addresses
         );
         return ix;
     }
 
-    async registerCurrencyInputInPortfolio(owner_keypair: Keypair, amount: u64, currencyMint: PublicKey) {
+    async registerCurrencyInputInPortfolio(amount: u64, currencyMint: PublicKey) {
         let ix = await registerCurrencyInputInPortfolio(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey,
+            this.owner.publicKey,
             amount,
             currencyMint
         );
@@ -274,20 +289,20 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     }
 
     // Redeem Operations
-    async approveWithdrawPortfolio(owner_keypair: Keypair) {
+    async approveWithdrawPortfolio() {
         let ix = await approvePortfolioWithdraw(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey
+            this.owner.publicKey
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async signApproveWithdrawToUser(owner_keypair: Keypair) {
+    async signApproveWithdrawToUser() {
         let ix = await signApproveWithdrawToUser(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey
+            this.owner.publicKey
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
@@ -316,13 +331,12 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         token_b_amount: u64,
         min_mint_amount: u64,
         index: number,
-        weight: BN,
-        owner_keypair: Keypair
+        weight: BN
     ) {
         let ix = await approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey,
+            this.owner.publicKey,
             pool_address,
             token_a_amount,
             token_b_amount,
@@ -333,7 +347,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return ix;
     }
     // Withdraw
-    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+    async signApproveWithdrawAmountSaber(index: number, poolTokenAmount: u64, tokenAAmount: u64) {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
@@ -342,7 +356,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 4");
         let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
-        const stableSwapState = await this.getPoolState(poolAddress);
+        const stableSwapState = await getPoolState(this.connection, poolAddress);
         const {state} = stableSwapState;
         let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
@@ -357,7 +371,7 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         let ix = await signApproveWithdrawAmountSaber(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey,
+            this.owner.publicKey,
             poolAddress,
             index,
             new BN(lpAmount),
@@ -370,11 +384,11 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
      * POSITION: Marinade Operations (Fetch Approve);
      */
     // Deposit
-    async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN, owner_keypair: Keypair) {
+    async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN) {
         let ix = await approvePositionWeightMarinade(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey,
+            this.owner.publicKey,
             init_sol_amount,
             index,
             weight
@@ -383,13 +397,13 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     }
 
     // Withdraw
-    async approveWithdrawToMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
+    async approveWithdrawToMarinade(index: number) {
         let ix = await approveWithdrawToMarinade(
             this.connection,
             this.solbondProgram,
-            owner_keypair.publicKey,
+            this.owner.publicKey,
             index,
-            marinade_state
+            this.marinadeState
         );
         return ix;
     }
@@ -404,11 +418,15 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     /**
      * Send USDC from the User's Wallet, to the Portfolio Account
      */
-    async transfer_to_portfolio(owner: Keypair, currencyMint: PublicKey, wrappedSolAccount: PublicKey) {
+    // TODO: Why the fuck does it take the wrapped SOL account.
+    // This should just take a currency, and transfer it there
+    // Figure this out from the frontend
+    async transfer_to_portfolio(currencyMint: PublicKey, wrappedSolAccount: PublicKey) {
+        // TODO: Fix this function!
         let ix = await transferUsdcFromUserToPortfolio(
             this.connection,
             this.solbondProgram,
-            owner.publicKey,
+            this.owner.publicKey,
             currencyMint,
             wrappedSolAccount
         );

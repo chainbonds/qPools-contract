@@ -61,17 +61,6 @@ export class SaberInteractToolFrontendFriendly {
      * Perhaps should allow also to input the LP token, and then automatically fetch from there, if it's a token-type
      * @param poolAddress
      */
-    async getPoolState(poolAddress: PublicKey) {
-        const fetchedStableSwap = await StableSwap.load(
-            this.connection,
-            poolAddress,
-            this.stableSwapProgramId
-        );
-
-        assert.ok(fetchedStableSwap.config.swapAccount.equals(poolAddress));
-        return fetchedStableSwap;
-    }
-
     async getAccountForMintAndPDA(mintKey: PublicKey, pda: PublicKey) {
         try {
             console.log("Inputs are: ");

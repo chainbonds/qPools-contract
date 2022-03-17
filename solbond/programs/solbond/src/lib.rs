@@ -58,7 +58,7 @@ pub mod solbond {
     pub fn create_portfolio(
         ctx: Context<SavePortfolio>,
         _bump: u8,
-        _weights: Vec<u64>, 
+        _weights: Vec<u64>,
         _num_positions: u32,
     ) -> ProgramResult {
         instructions::approve::approve_portfolio_weights::handler(

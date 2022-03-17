@@ -91,7 +91,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         this.connection = connection;
         this.provider = provider;
-        this.solbondProgram = solbondProgram
+        this.solbondProgram = solbondProgram;
+
+        if (!this.solbondProgram) {
+            throw Error("Solbond Program is empty ..");
+        }
+        if (!this.connection) {
+            throw Error("Connection is empty ..");
+        }
 
         this.providerWallet = this.provider.wallet;
         // Get the keypair from the provider wallet
@@ -291,8 +298,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     // Create Operations
     async createPortfolioSigned(
-        weights: Array<u64>,
-        pool_addresses: Array<PublicKey>
+        weights: [u64, u64],
+        pool_addresses: [PublicKey, PublicKey]
     ): Promise<TransactionInstruction> {
         let ix = await createPortfolioSigned(
             this.connection,

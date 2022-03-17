@@ -8,7 +8,7 @@ use crate::utils::seeds;
 #[derive(Accounts, Clone)]
 #[instruction(
     _bump:u8, 
-    _weights:Vec<u64>, 
+    _weights:Vec<u64>,
     _num_positions:u32,
 )]
 pub struct SavePortfolio<'info> {

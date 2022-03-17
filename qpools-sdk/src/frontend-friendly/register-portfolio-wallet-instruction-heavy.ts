@@ -333,7 +333,6 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
         return ix;
     }
     // Withdraw
-    // Gotta replace poolAddress with the LP-Token Mint
     async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
@@ -767,38 +766,4 @@ export class PortfolioFrontendFriendlyChainedInstructions extends SaberInteractT
     //     console.log("##redeemSinglePositionOneSide()");
     //     return ix;
     // }
-    //
-    // /**
-    //  * Send USDC from the Portfolio Account to the User's Wallet
-    //  */
-    // async transferUsdcFromPortfolioToUser(): Promise<TransactionInstruction> {
-    //     console.log("#transferUsdcFromPortfolioToUser()");
-    //     let userUSDCAta = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.owner.publicKey);
-    //     let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
-    //
-    //     // TODO: We assume this account exists ... gotta enforce it I guess lol
-    //     // TODO: Again, we assume that this account exists
-    //     let totalPDA_USDCAmount = (await this.connection.getTokenAccountBalance(pdaUSDCAccount)).value.amount;
-    //     let ix: TransactionInstruction = this.solbondProgram.instruction.transferRedeemedToUser(
-    //         new BN(this.portfolioBump),
-    //         {
-    //             accounts: {
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 portfolioPda: this.portfolioPDA,
-    //                 userOwnedUserA: userUSDCAta,
-    //                 pdaOwnedUserA: pdaUSDCAccount,
-    //                 // TODO: Also replace MOCK.DEV here
-    //                 tokenMint: MOCK.DEV.SABER_USDC,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //                 feesQpoolsA: this.qPoolsUsdcFees
-    //             }
-    //         }
-    //
-    //     )
-    //     console.log("##transferUsdcFromPortfolioToUser()");
-    //     return ix;
-    // }
-
 }

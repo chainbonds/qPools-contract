@@ -128,6 +128,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let instructions: TransactionInstruction[] = [];
         // Change according to mainnet, or registry ...
 
+        console.log("Getting portfolio PDA");
         let [portfolioPDA, portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         let createdAtaAccounts: Set<string> = new Set();
         // For the Portfolio!
@@ -137,6 +138,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         let tx: Transaction = new Transaction();
         await Promise.all(saber_pool_addresses.map(async (poolAddress: PublicKey) => {
+
+            console.log("Getting portfolio PDA");
+            // Hmm, portfolio PDA is not
 
             const stableSwapState = await getPoolState(this.connection, poolAddress);
             const {state} = stableSwapState;
@@ -482,7 +486,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
             if (index == 0) {
                 // Get the single position
-                console.log("Fetching single position");
+                console.log("Fetching single position Saber");
                 let positionAccount: PositionAccountSaber = await fetchSinglePositionSaber(this.connection, this.solbondProgram, this.owner.publicKey, index);
                 console.log("Fetching get pool state");
                 console.log("Pool Address is: ", positionAccount);
@@ -521,7 +525,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                     amountLp: tokenLPAmount
                 })
             } else {
-                console.log("Fetching single position");
+                console.log("Fetching single position Marinade");
                 let positionAccount: PositionAccountSaber = await fetchSinglePositionMarinade(this.connection, this.solbondProgram, this.owner.publicKey, index);
                 console.log("Pool Address is: ", positionAccount);
                 // You can make the pool address the mSOL mint for now

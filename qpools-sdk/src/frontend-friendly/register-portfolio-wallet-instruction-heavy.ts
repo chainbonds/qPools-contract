@@ -6,7 +6,7 @@ import {WalletI} from "easy-spl";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {
     accountExists,
-    createAssociatedTokenAccountUnsigned, delay,
+    createAssociatedTokenAccountUnsigned, createAssociatedTokenAccountUnsignedInstruction, delay,
     getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve,
     IWallet, sendAndSignInstruction,
@@ -161,84 +161,101 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Iterate through every currency ...
         // For USDC currency, create associated token account
         console.log("ATA1!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, portfolioPDA)))) {
-            let tx1 = await createAssociatedTokenAccountUnsigned(
+        let usdcPortfolioAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, portfolioPDA)
+        if (!(await tokenAccountExists(this.connection, usdcPortfolioAta)) && !(createdAtaAccounts.has(usdcPortfolioAta.toString()))) {
+            console.log("Adding usdcPortfolioAta 1");
+            let tx1 = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 MOCK.DEV.SABER_USDC,
                 null,
                 portfolioPDA,
                 wallet,
             );
+            createdAtaAccounts.add(usdcPortfolioAta.toString());
             tx.add(tx1);
-            // let sg1 = await this.provider.send(tx1);
-            // await this.provider.connection.confirmTransaction(sg1, "confirmed");
+            console.log("Adding usdcPortfolioAta 2");
         }
         // let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
         console.log("ATA2!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey)))) {
-            let tx2 = await createAssociatedTokenAccountUnsigned(
+        let usdcUserAta = await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, this.owner.publicKey)
+        if (!(await tokenAccountExists(this.connection, usdcUserAta)) && !(createdAtaAccounts.has(usdcUserAta.toString()))) {
+            console.log("Adding usdcUserAta 1");
+            let tx2 = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 MOCK.DEV.SABER_USDC,
                 null,
                 this.owner.publicKey,
                 wallet,
             );
+            createdAtaAccounts.add(usdcUserAta.toString());
             tx.add(tx2);
-            // let sg2 = await this.provider.send(tx2);
-            // await this.provider.connection.confirmTransaction(sg2, "confirmed");
+            console.log("Adding usdcUserAta 2");
         }
         // let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
         console.log("ATA3!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, portfolioPDA)))) {
-            let tx3 = await createAssociatedTokenAccountUnsigned(
+        let wrappedSolPortfolioAta = await getAssociatedTokenAddressOffCurve(wSOL, portfolioPDA);
+        if (!(await tokenAccountExists(this.connection, wrappedSolPortfolioAta)) && !(createdAtaAccounts.has(wrappedSolPortfolioAta.toString()))) {
+            console.log("Adding wrappedSolPortfolioAta 1");
+            let tx3 = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 wSOL,
                 null,
                 portfolioPDA,
                 wallet,
             );
+            createdAtaAccounts.add(wrappedSolPortfolioAta.toString());
             tx.add(tx3);
-            // let sg3 = await this.provider.send(tx3);
-            // await this.provider.connection.confirmTransaction(sg3, "confirmed");
+            console.log("Adding wrappedSolPortfolioAta 2");
         }
-        // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA4!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, this.owner.publicKey)))) {
-            let tx4 = await createAssociatedTokenAccountUnsigned(
+        let wrappedSolOwnerAta = await getAssociatedTokenAddressOffCurve(wSOL, this.owner.publicKey);
+        if (!(await tokenAccountExists(this.connection, wrappedSolOwnerAta)) && !(createdAtaAccounts.has(wrappedSolOwnerAta.toString()))) {
+            console.log("Adding wrappedSolOwnerAta 1");
+            let tx4 = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 wSOL,
                 null,
                 this.owner.publicKey,
                 wallet,
             );
+            createdAtaAccounts.add(wrappedSolOwnerAta.toString());
             tx.add(tx4);
+            console.log("Adding wrappedSolOwnerAta 2");
             // let sg4 = await this.provider.send(tx4);
             // await this.provider.connection.confirmTransaction(sg4, "confirmed");
         }
         console.log("ATA5!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, portfolioPDA)))) {
-            let tx5 = await createAssociatedTokenAccountUnsigned(
+        let mSolPortfolioAta = await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, portfolioPDA);
+        if (!(await tokenAccountExists(this.connection, mSolPortfolioAta)) && !(createdAtaAccounts.has(mSolPortfolioAta.toString()))) {
+            console.log("Adding mSolPortfolioAta 1");
+            let tx5 = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 this.marinadeState.mSolMintAddress,
                 null,
                 portfolioPDA,
                 wallet,
             );
+            createdAtaAccounts.add(mSolPortfolioAta.toString());
             tx.add(tx5);
+            console.log("Adding mSolPortfolioAta 2");
             // let sg5 = await this.provider.send(tx5);
             // await this.provider.connection.confirmTransaction(sg5, "confirmed");
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA6!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, this.owner.publicKey)))) {
-            let tx6 = await createAssociatedTokenAccountUnsigned(
+        let mSolOwnerAta = await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, this.owner.publicKey);
+        if (!(await tokenAccountExists(this.connection, mSolOwnerAta)) && !(createdAtaAccounts.has(mSolOwnerAta.toString()))) {
+            console.log("Adding mSolOwnerAta 1");
+            let tx6 = await createAssociatedTokenAccountUnsignedInstruction(
                 this.connection,
                 this.marinadeState.mSolMintAddress,
                 null,
                 this.owner.publicKey,
                 wallet,
             );
+            createdAtaAccounts.add(mSolOwnerAta.toString());
             tx.add(tx6);
+            console.log("Adding mSolOwnerAta 2");
             // let sg6 = await this.provider.send(tx6);
             // await this.provider.connection.confirmTransaction(sg6, "confirmed");
         }

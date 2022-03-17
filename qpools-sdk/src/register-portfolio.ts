@@ -1,11 +1,9 @@
 import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
-import {BN, Program, Provider, web3} from "@project-serum/anchor";
+import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {
     createAssociatedTokenAccountSendUnsigned,
     createAssociatedTokenAccountUnsigned,
-    createAssociatedTokenAccountUnsignedInstruction,
-    getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve,
     IWallet,
     sendAndSignInstruction, tokenAccountExists
@@ -32,10 +30,9 @@ import {
     transfer_to_user,
     transferUsdcFromUserToPortfolio
 } from "./instructions/modify/portfolio-transfer";
-import {getPortfolioPda, getPositionPda} from "./types/account/pdas";
+import {getPortfolioPda} from "./types/account/pdas";
 import {getPoolState} from "./instructions/fetch/saber";
 import {MOCK} from "./const";
-import {sendAndConfirm} from "easy-spl/dist/util";
 
 // TODO: Replace all these functions by the functional functions
 // And make sure that the tests are passing
@@ -241,6 +238,7 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
+    // TODO: Move to Crank for frontend ...
     async createPositionMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
         let ix = await createPositionMarinade(
             this.connection,
@@ -310,6 +308,7 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
+    // TODO: Move to Crank
     async permissionlessFulfillSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number) {
         let ix = await permissionlessFulfillSaber(
             this.connection,
@@ -321,7 +320,9 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
+    // TODO: Move to Crank
     async redeem_single_position(poolAddress: PublicKey, index: number, owner: Keypair) {
+        // TODO: Rename to sth saber, or make module imports ...
         let ix = await redeem_single_position(
             this.connection,
             this.solbondProgram,
@@ -343,6 +344,7 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
+    // TODO: Move to Crank
     async transfer_to_user(owner: IWallet, currencyMint: PublicKey) {
         // Creating the user-account if it doesn't yet exist
         let userOwnedUSDCAccount = await createAssociatedTokenAccountSendUnsigned(
@@ -360,8 +362,10 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    // TODO: Ported, and final I believe
+    // TODO: Move to Crank
     async redeem_single_position_only_one(pool_addresses: PublicKey[], index: number, owner: Keypair) {
+        // TODO: Rename function to include saber
+        // Or make modular imports
         const pool_address = pool_addresses[index];
         let ix = await redeemSinglePositionOnlyOne(
             this.connection,

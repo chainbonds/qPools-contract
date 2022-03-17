@@ -95,27 +95,4 @@ export class SaberInteractToolFrontendFriendly {
         return userAccount;
     }
 
-    // Yeah, the addresses will not change, but they may not be initialized yet.
-    // Initialization must be done over RPC if this is not the case yet!
-    async getAccountForMint(mintKey: PublicKey) {
-        try {
-            let tx = await createAssociatedTokenAccountUnsigned(
-                this.connection,
-                mintKey,
-                null,
-                this.wallet.publicKey,
-                this.providerWallet,
-            );
-
-            const sg = await this.connection.sendTransaction(tx, [this.wallet]);
-            await this.connection.confirmTransaction(sg);
-        } catch (e) {
-            console.log("Error is: ");
-            console.log(e);
-        }
-
-        const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, this.qPoolAccount);
-        return userAccount;
-    }
-
 }

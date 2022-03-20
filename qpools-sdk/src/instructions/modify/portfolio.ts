@@ -8,8 +8,8 @@ export async function createPortfolioSigned(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    weights: Array<BN>,
-    poolAddresses: Array<PublicKey>
+    weights: BN[],
+    poolAddresses: PublicKey[]
 ): Promise<TransactionInstruction> {
     console.log("#createPortfolioSigned()");
     console.assert(weights.length === poolAddresses.length);
@@ -18,7 +18,7 @@ export async function createPortfolioSigned(
     }
     let sumOfWeights: BN = weights.reduce((sum, current) => sum.add(current), new BN(0));
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    const numPositions = new BN(weights.length);
+    const numPositions = weights.length;
     console.log("Creating Portfolio", portfolioPda.toString());
     let create_transaction_instructions: TransactionInstruction = solbondProgram.instruction.createPortfolio(
         portfolioBump,

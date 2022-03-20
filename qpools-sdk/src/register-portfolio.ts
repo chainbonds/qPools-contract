@@ -203,7 +203,12 @@ export class Portfolio {
      * @param num_positions
      * @param pool_addresses
      */
-    async createPortfolioSigned(weights: Array<u64>, owner_keypair: Keypair, num_positions: BN, pool_addresses: Array<PublicKey>) {
+    async createPortfolioSigned(
+        weights: BN[],
+        owner_keypair: Keypair,
+        num_positions: BN,
+        pool_addresses: PublicKey[]
+    ) {
         let ix = await createPortfolioSigned(
             this.connection,
             this.solbondProgram,
@@ -284,12 +289,11 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
         let ix = await signApproveWithdrawAmountSaber(
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey,
-            poolAddress,
             index,
             poolTokenAmount,
             tokenAAmount

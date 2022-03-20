@@ -147,9 +147,9 @@ describe('qPools!', () => {
         let sign_withdraw = await portfolio.approveWithdrawPortfolio(genericPayer);
         var i = 0;
         // TODO: Gotta check the instruction-heavy or frontend implementation to cleanly deal with poolAddresses
+        // TODO: Instead of fetching the pool address, here, fetch it in the underlying function from the devnet sate!
         let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
             genericPayer,
-            pool_addresses[0],
             i,
             minMintAmount,
             amountTokenA

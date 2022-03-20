@@ -75,24 +75,77 @@ export async function approvePositionWeightSaber(
 }
 
 
-export async function approveWithdrawAmountSaber(
+// export async function approveWithdrawAmountSaber(
+//     connection: Connection,
+//     solbondProgram: Program,
+//     owner: PublicKey,
+//     index: number
+// ): Promise<TransactionInstruction | null> {
+//     console.log("#approveWithdrawAmountSaber()");
+//     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+//     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
+//     // Fetch the position
+//     console.log("aaa 3");
+//     let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+//     console.log("aaa 4");
+//     let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+//     const stableSwapState = await getPoolState(connection, poolAddress);
+//     const {state} = stableSwapState;
+//     let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+//     let lpAmount = (await connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+//
+//     // Skip this instruction, if Position has already been redeemed
+//     console.log("Is Redeemed is: ", positionAccount.isRedeemed);
+//     console.log(positionAccount);
+//     if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
+//         throw Error("Something major is off 2");
+//     }
+//     if (positionAccount.isRedeemed) {
+//         return null;
+//     }
+//
+//     let ix: TransactionInstruction = await solbondProgram.instruction.approveWithdrawAmountSaber(
+//         portfolioBump,
+//         new BN(bumpPosition),
+//         new BN(lpAmount),
+//         new BN(1),
+//         new BN(index),
+//         {
+//             accounts: {
+//                 owner: owner,
+//                 positionPda: positionPDA,
+//                 portfolioPda: portfolioPDA,
+//                 poolMint: state.poolTokenMint,
+//                 tokenProgram: TOKEN_PROGRAM_ID,
+//                 systemProgram: web3.SystemProgram.programId,
+//                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+//             }
+//         }
+//     )
+//     console.log("##approveWithdrawAmountSaber()");
+//     return ix;
+// }
+
+export async function signApproveWithdrawAmountSaber(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    index: number
-): Promise<TransactionInstruction | null> {
-    console.log("#approveWithdrawAmountSaber()");
-    let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    index: number,
+    poolTokenAmount: u64,
+    minRedeemTokenAmount: u64
+) {
+    console.log("#signApproveWithdrawAmountSaber()");
+    let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
-    // Fetch the position
+
     console.log("aaa 3");
     let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
     console.log("aaa 4");
+
+    // FOr some address, this is not needed ...
     let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
-    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
-    let lpAmount = (await connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
 
     // Skip this instruction, if Position has already been redeemed
     console.log("Is Redeemed is: ", positionAccount.isRedeemed);
@@ -104,48 +157,11 @@ export async function approveWithdrawAmountSaber(
         return null;
     }
 
-    let ix: TransactionInstruction = await solbondProgram.instruction.approveWithdrawAmountSaber(
-        portfolioBump,
-        new BN(bumpPosition),
-        new BN(lpAmount),
-        new BN(1),
-        new BN(index),
-        {
-            accounts: {
-                owner: owner,
-                positionPda: positionPDA,
-                portfolioPda: portfolioPDA,
-                poolMint: state.poolTokenMint,
-                tokenProgram: TOKEN_PROGRAM_ID,
-                systemProgram: web3.SystemProgram.programId,
-                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            }
-        }
-    )
-    console.log("##approveWithdrawAmountSaber()");
-    return ix;
-}
-
-export async function signApproveWithdrawAmountSaber(
-    connection: Connection,
-    solbondProgram: Program,
-    owner: PublicKey,
-    poolAddress: PublicKey,
-    index: number,
-    poolTokenAmount: u64,
-    tokenAAmount: u64
-) {
-    console.log("#signApproveWithdrawAmountSaber()");
-    let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
-    const stableSwapState = await getPoolState(connection, poolAddress);
-    const {state} = stableSwapState;
-
     let ix = await solbondProgram.instruction.approveWithdrawAmountSaber(
         portfolioBump,
         new BN(bumpPosition),
         new BN(poolTokenAmount),
-        new BN(tokenAAmount),
+        new BN(minRedeemTokenAmount),
         new BN(index),
         {
             accounts: {

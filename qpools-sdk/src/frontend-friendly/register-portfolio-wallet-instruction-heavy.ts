@@ -271,8 +271,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     // Create Operations
     async createPortfolioSigned(
-        weights: Array<u64>,
-        pool_addresses: Array<PublicKey>
+        weights: BN[],
+        pool_addresses: PublicKey[]
     ): Promise<TransactionInstruction> {
         let ix = await createPortfolioSigned(
             this.connection,
@@ -345,7 +345,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
     // Withdraw
-    async signApproveWithdrawAmountSaber(index: number, tokenAAmount: u64): Promise<TransactionInstruction> {
+    async signApproveWithdrawAmountSaber(index: number, minRedeemTokenAmount: u64): Promise<TransactionInstruction> {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
@@ -370,10 +370,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            poolAddress,
             index,
             new BN(lpAmount),
-            tokenAAmount
+            minRedeemTokenAmount
         );
         return ix;
     }

@@ -48,7 +48,6 @@ describe('qPools!', () => {
 
         weights = [new BN(1000)];
 
-        //
         pool_addresses = [USDC_USDT_pubkey];
 
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);

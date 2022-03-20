@@ -124,77 +124,77 @@ describe('qPools!', () => {
         }
     });
 
-    // it("Creates the first transaction", async () => {
-    //
-    //
-    //     let tx: Transaction = new Transaction();
-    //     let IxCreatePortfolioPda = await portfolioObject.createPortfolioSigned(
-    //         weights,
-    //         poolAddresses
-    //     );
-    //     tx.add(IxCreatePortfolioPda);
-    //
-    //     console.log("Transfer Asset to Portfolio");
-    //     let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
-    //         AmountUsdc, USDC_mint
-    //     );
-    //     tx.add(IxRegisterCurrencyUsdcInput);
-    //     // let IxRegisterCurrencyMSolInput = await qPoolContext.portfolioObject!.registerCurrencyInputInPortfolio(
-    //     //     AmountSol, wrappedSolMint
-    //     // );
-    //     // tx.add(IxRegisterCurrencyMSolInput);
-    //
-    //     // Set of instructions here are hard-coded
-    //
-    //     // Create position approve for marinade, and the saber pool (again, hardcode this part lol).
-    //     // Later these should be fetched from the frontend.
-    //     console.log("Approve Position Saber");
-    //     // I guess we gotta make the case distinction here lol
-    //     // TODO: Copy the case-distinction from below. Then you can continue
-    //     // TODO: figure out tokenA and tokenB ==> Currently hard-coded...
-    //     let IxApproveiPositionWeightSaber = await portfolioObject.approvePositionWeightSaber(
-    //         poolAddresses[0],
-    //         AmountUsdc,
-    //         new BN(0),  // Will be flipped in the backend ..
-    //         new BN(0),
-    //         0,  // Hardcoded
-    //         weights[0]
-    //     )
-    //     tx.add(IxApproveiPositionWeightSaber);
-    //
-    //     console.log("Approve Position Marinade");
-    //     let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
-    //         AmountSol,
-    //         1, // Hardcoded
-    //         weights[1]
-    //     );
-    //     tx.add(IxApprovePositionWeightMarinade);
-    //
-    //     console.log("Sending USDC");
-    //     let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
-    //     tx.add(IxSendUsdcToPortfolio);
-    //
-    //     // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
-    //     console.log("Sending and signing the transaction");
-    //     console.log("Provider is: ");
-    //     console.log(solbondProgram!.provider);
-    //     console.log(solbondProgram!.provider.wallet.publicKey.toString());
-    //     await sendAndConfirmTransaction(
-    //         solbondProgram!.provider,
-    //         connection!,
-    //         tx
-    //     );
-    //
-    // });
-    //
-    // it("run the cranks to fulfill the marinade positions ...", async () => {
-    //     // These are not instruction-chained, because the crankRPC is done through a keypair ...
-    //     // Perhaps it could be useful to make it chained tho, just for the sake of atomicity
-    //     let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0);
-    //     console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
-    //     let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
-    //     console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
-    // });
+    it("Creates the first transaction", async () => {
+
+
+        let tx: Transaction = new Transaction();
+        let IxCreatePortfolioPda = await portfolioObject.createPortfolioSigned(
+            weights,
+            poolAddresses
+        );
+        tx.add(IxCreatePortfolioPda);
+
+        console.log("Transfer Asset to Portfolio");
+        let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
+            AmountUsdc, USDC_mint
+        );
+        tx.add(IxRegisterCurrencyUsdcInput);
+        // let IxRegisterCurrencyMSolInput = await qPoolContext.portfolioObject!.registerCurrencyInputInPortfolio(
+        //     AmountSol, wrappedSolMint
+        // );
+        // tx.add(IxRegisterCurrencyMSolInput);
+
+        // Set of instructions here are hard-coded
+
+        // Create position approve for marinade, and the saber pool (again, hardcode this part lol).
+        // Later these should be fetched from the frontend.
+        console.log("Approve Position Saber");
+        // I guess we gotta make the case distinction here lol
+        // TODO: Copy the case-distinction from below. Then you can continue
+        // TODO: figure out tokenA and tokenB ==> Currently hard-coded...
+        let IxApproveiPositionWeightSaber = await portfolioObject.approvePositionWeightSaber(
+            poolAddresses[0],
+            AmountUsdc,
+            new BN(0),  // Will be flipped in the backend ..
+            new BN(0),
+            0,  // Hardcoded
+            weights[0]
+        )
+        tx.add(IxApproveiPositionWeightSaber);
+
+        console.log("Approve Position Marinade");
+        let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
+            AmountSol,
+            1, // Hardcoded
+            weights[1]
+        );
+        tx.add(IxApprovePositionWeightMarinade);
+
+        console.log("Sending USDC");
+        let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
+        tx.add(IxSendUsdcToPortfolio);
+
+        // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
+        console.log("Sending and signing the transaction");
+        console.log("Provider is: ");
+        console.log(solbondProgram!.provider);
+        console.log(solbondProgram!.provider.wallet.publicKey.toString());
+        await sendAndConfirmTransaction(
+            solbondProgram!.provider,
+            connection!,
+            tx
+        );
+
+    });
+
+    it("run the cranks to fulfill the marinade positions ...", async () => {
+        // These are not instruction-chained, because the crankRPC is done through a keypair ...
+        // Perhaps it could be useful to make it chained tho, just for the sake of atomicity
+        let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0);
+        console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
+        let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
+        console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
+    });
 
     /**
      * Now also redeem the positions ...

@@ -158,7 +158,6 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            poolAddress,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);
@@ -170,7 +169,6 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            poolAddress,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);
@@ -201,7 +199,6 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            poolAddress,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);

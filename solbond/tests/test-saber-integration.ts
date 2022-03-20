@@ -134,7 +134,7 @@ describe('qPools!', () => {
         }
 
         let i = 0
-        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer, pool_addresses[0], i);
+        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer, i);
 
     })
 
@@ -155,12 +155,7 @@ describe('qPools!', () => {
             amountTokenA
         )
 
-        let approve_sig2 = await portfolio.redeem_single_position_only_one(
-            pool_addresses,
-            i,
-            genericPayer,
-        )
-
+        let approve_sig2 = await portfolio.redeem_single_position_only_one(i, genericPayer)
         let sigs_rest = await portfolio.transfer_to_user(provider.wallet, MOCK.DEV.SABER_USDC);
 
     })

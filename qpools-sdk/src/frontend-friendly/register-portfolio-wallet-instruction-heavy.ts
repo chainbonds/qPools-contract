@@ -350,9 +350,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
         // I guess, gotta double-check that Saber redeemable works ...
-        console.log("aaa 3");
+        console.log("aaa 28");
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
-        console.log("aaa 4");
+        console.log("aaa 29");
         let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         const stableSwapState = await getPoolState(this.connection, poolAddress);
         const {state} = stableSwapState;

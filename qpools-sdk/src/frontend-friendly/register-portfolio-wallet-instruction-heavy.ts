@@ -222,6 +222,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA4!");
+        console.log("marinade state is. ", this.marinadeState);
         let mSolOwnerAta = await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, this.owner.publicKey);
         console.log("mSolOwnerAta", mSolOwnerAta.toString());
         if (!(await tokenAccountExists(this.connection, mSolOwnerAta)) && !createdAtaAccounts.has(mSolOwnerAta.toString())) {

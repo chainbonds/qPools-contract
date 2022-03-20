@@ -2,7 +2,8 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct PositionAccountSaber {
-
+    // TODO: Create an enum, which refers to which protocol it is part of
+    // TODO: Or we should just normalize these positions to have the same keys
    
     pub portfolio_pda: Pubkey,
     pub pool_address: Pubkey,

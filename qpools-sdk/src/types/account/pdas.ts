@@ -6,10 +6,10 @@ import assert from "assert";
 import {sol} from "easy-spl";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed577",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition359",
-    USER_CURRENCY_STRING: "UserCurrency1249",
-    USER_MARINADE_SEED: "UserMarinade0039"
+    PORTFOLIO_ACCOUNT: "portFolioSeed581",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition363",
+    USER_CURRENCY_STRING: "UserCurrency1253",
+    USER_MARINADE_SEED: "UserMarinade0043"
 }
 
 /**

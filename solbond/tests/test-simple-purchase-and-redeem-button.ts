@@ -103,7 +103,7 @@ describe('qPools!', () => {
     it("Create Associated Token Accounts", async () => {
         console.log("Creating associated token accounts ...");
         let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]], provider.wallet);
-        if ((txCreateATA.instructions.length > 0)) {
+        if (txCreateATA.instructions.length > 0) {
             await sendAndConfirmTransaction(
                 solbondProgram.provider,
                 connection,
@@ -216,7 +216,7 @@ describe('qPools!', () => {
         tx.add(IxApproveWithdrawMarinade);
 
         console.log("Send some to Crank Wallet");
-        if (!(tx.instructions.length > 0)) {
+        if (tx.instructions.length > 0) {
             await sendAndConfirmTransaction(
                 solbondProgram.provider,
                 connection,
@@ -232,104 +232,15 @@ describe('qPools!', () => {
         // For each initial asset, send it back to the user
         let sgTransferUsdcToUser = await crankRpcTool.transfer_to_user(USDC_mint);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
-        let sgTransferWrappedSolToUser = await crankRpcTool.transfer_to_user(wrappedSolMint);
-        console.log("Signature to send back Wrapped SOL", sgTransferWrappedSolToUser);
-        let sgTransferMarinadeSolToUser = await crankRpcTool.transfer_to_user(mSOL);
-        console.log("Signature to send back Marinade SOL", sgTransferMarinadeSolToUser);
+        // We never transferred wrapped sol ...
+        // let sgTransferWrappedSolToUser = await crankRpcTool.transfer_to_user(wrappedSolMint);
+        // console.log("Signature to send back Wrapped SOL", sgTransferWrappedSolToUser);
+        // As for marinade SOL, it is transferred in the same moment as it is approved. As it is approved, this account is deleted.
+        // So there is no need to (in fact, you cannot), transfer it back
+        // let sgTransferMarinadeSolToUser = await crankRpcTool.transfer_to_user(mSOL);
+        // console.log("Signature to send back Marinade SOL", sgTransferMarinadeSolToUser);
 
         // In reality, you would also swap back the mSOL to SOL ...
     });
-
-
-
-
-
-    // it("Create all the Associated Token Accounts", async () => {
-    //     const marinadeState = await MarinadeState.fetch(marinade);
-    //     await portfolio.createAssociatedTokenAccounts(
-    //         pool_addresses,
-    //         genericPayer,
-    //         provider.wallet,
-    //         marinadeState
-    //     )
-    // })
-    //
-    // it("create a marinade position and deposit", async () => {
-    //     //const weights = [new BN(500), new BN(500), new BN(500)];
-    //     const amount = new BN(1e9);
-    //     // create a portfolio with 1 base currency (sol)
-    //     try {
-    //         const init_sig = await portfolio.createPortfolioSigned(
-    //             weights,
-    //             genericPayer,
-    //             new BN(1),
-    //             pool_addresses
-    //         )
-    //     } catch (e) {
-    //         console.log("ERROR");
-    //         console.log("Portfolio account already exists probably");
-    //     }
-    //
-    //     const wrappedSolAccount = await getAccountForMintAndPDADontCreate(wSOL, genericPayer.publicKey);
-    //     const givemoney = new Transaction().add(await SystemProgram.transfer({
-    //             fromPubkey: genericPayer.publicKey,
-    //             toPubkey: wrappedSolAccount,
-    //             lamports: 1e9,
-    //         }),
-    //     )
-    //     let sendsig = await provider.send(givemoney)
-    //     await provider.connection.confirmTransaction(sendsig);
-    //     console.log("send money from user to portfolio: ", sendsig);
-    //
-    //     try {
-    //         const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL);
-    //     } catch (err) {
-    //
-    //     }
-    //
-    //     const pos_sig = await portfolio.approvePositionWeightMarinade(
-    //         amount,
-    //         0,
-    //         new BN(1000),
-    //         genericPayer
-    //     )
-    //
-    //     // cpi to marinade
-    //     const marinade_state = await MarinadeState.fetch(marinade)
-    //     const marinade_sig = await portfolio.createPositionMarinade(
-    //         genericPayer,
-    //         0,
-    //         marinade_state
-    //     );
-    //     console.log("Create position marinade done", marinade_sig);
-    //
-    //     console.log("Marinade position before is: ");
-    //     let [portfolioPda, portfolioBump] = await getPortfolioPda(genericPayer.publicKey, portfolio.solbondProgram);
-    //     let portfolioAccountMarinadeBefore = (await portfolio.solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
-    //     console.log("Portfolio Account (before) is: ", portfolioAccountMarinadeBefore);
-    //     let [positionPda, positionBump] = await getPositionPda(genericPayer.publicKey, 0, portfolio.solbondProgram);
-    //     let positionAccountMarinadeBefore = (await portfolio.solbondProgram.account.positionAccountMarinade.fetch(positionPda)) as PositionAccountMarinade;
-    //     console.log("Position Account Marinade (before) is: ", positionAccountMarinadeBefore);
-    //
-    //     const withdraw_portfolio_sig = await portfolio.approveWithdrawPortfolio(genericPayer);
-    //     console.log("Withdraw Portfolio Instruction ...", withdraw_portfolio_sig);
-    //
-    //     // easy
-    //     const withdraw_marinade_sig = await portfolio.approveWithdrawToMarinade(
-    //         genericPayer,
-    //         0,
-    //         marinade_state
-    //     );
-    //     console.log("Withdraw done", withdraw_marinade_sig);
-    //
-    //     let portfolioAccountMarinadeAfter = (await portfolio.solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
-    //     console.log("Portfolio Account (after) is: ", portfolioAccountMarinadeAfter);
-    //     // let positionAccountMarinadeAfter = (await portfolio.solbondProgram.account.positionAccountMarinade.fetch(positionPda)) as PositionAccountMarinade;
-    //     // console.log("Position Account Marinade (after) is: ", positionAccountMarinadeAfter);
-    //
-    //     const redeem_portfolio = await portfolio.transfer_to_user(provider.wallet, wSOL);
-    //     console.log("Redeem portfolio done", redeem_portfolio);
-    //
-    // })
 
 })

@@ -22,6 +22,7 @@ import { PositionAccountSaber } from "./types/account/positionAccountSaber";
 import { PositionInfo } from "./types/positionInfo";
 import { CrankRpcCalls } from "./frontend-friendly/crank-rpc-calls";
 import { NETWORK } from "./types/cluster";
+import { ProtocolType } from "./types/positionInfo";
 
 export {
     airdropAdmin,
@@ -47,5 +48,6 @@ export {
     PositionInfo,
     tokenAccountExists,
     accountExists,
-    CrankRpcCalls
+    CrankRpcCalls,
+    ProtocolType
 }

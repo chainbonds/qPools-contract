@@ -35,7 +35,7 @@ import {
     transferUsdcFromUserToPortfolio
 } from "../instructions/modify/portfolio-transfer";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionInfo} from "../types/positionInfo";
+import {PositionInfo, ProtocolType} from "../types/positionInfo";
 import {fetchSinglePositionMarinade, fetchSinglePositionSaber} from "../instructions/fetch/position";
 
 export interface PositionsInput {
@@ -475,6 +475,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // right now, position 0 is saber, position 1 is marinade ....
         console.log("Fetching the portfolio account: ", portfolio);
 
+        // TODO: Also work on removing this hard-coded logic ...
         for (let index = 0; index < portfolio.numPositions; index++) {
 
             if (portfolio.numPositions > 2) {
@@ -482,7 +483,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 throw Error("Don't do number of positions more than 2! stupid monkey finalizing-coding for hackahton!");
             }
 
-            if (index == 0) {
+            if (index === 0) {
                 // Get the single position
                 console.log("Fetching single position Saber");
                 let positionAccount: PositionAccountSaber = await fetchSinglePositionSaber(this.connection, this.solbondProgram, this.owner.publicKey, index);
@@ -506,23 +507,35 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 let tokenBAmount = (await this.connection.getTokenAccountBalance(portfolioAtaB)).value;
                 let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
 
+                // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
+                let usdcValueA = tokenAAmount.uiAmount;
+                let usdcValueB = tokenBAmount.uiAmount;
+                let usdcValueLP = tokenLPAmount.uiAmount;
+
+                // Sum up all the values here to arrive at the Total Position Value?
+                let totalPositionValue = usdcValueA + usdcValueB + usdcValueLP;
+
                 // Add to the portfolio account
                 out.push({
-                    protocolType: "DEX",
+                    protocolType: ProtocolType.DEXLP,
                     index: index,
                     poolAddress: positionAccount.poolAddress,
                     portfolio: this.portfolioPDA,
                     mintA: state.tokenA.mint,
                     ataA: portfolioAtaA,
                     amountA: tokenAAmount,
+                    usdcValueA: usdcValueA,
                     mintB: state.tokenB.mint,
                     ataB: portfolioAtaB,
                     amountB: tokenBAmount,
+                    usdcValueB: usdcValueB,
                     mintLp: state.poolTokenMint,
                     ataLp: portfolioAtaLp,
-                    amountLp: tokenLPAmount
+                    amountLp: tokenLPAmount,
+                    usdcValueLP: usdcValueLP,
+                    totalPositionValue: totalPositionValue
                 })
-            } else {
+            } else if (index === 1) {
                 console.log("Fetching single position Marinade");
                 let positionAccount: PositionAccountSaber = await fetchSinglePositionMarinade(this.connection, this.solbondProgram, this.owner.publicKey, index);
                 console.log("Pool Address is: ", positionAccount);
@@ -533,28 +546,52 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
                 // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
                 let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+                // This is also the LP Mint ...
+                // Gotta store this in the registry
+                // TODO: Make this multi-asset logic more scalable
                 let portfolioAtaMSol = await getAccountForMintAndPDADontCreate(mSOLMint, this.portfolioPDA);
 
                 // Also get the token amounts, I guess lol
                 let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
+                console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
+
+                // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
+                // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
+
+                // Again, convert by the pyth price ...
+                let usdcValueA = mSOLAmount.uiAmount * 93.23;
+                let usdcValueLP = mSOLAmount.uiAmount * 93.23;
+
+                // Sum up all the values here to arrive at the Total Position Value?
+                // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
+                let totalPositionValue = usdcValueLP;
+
+                // Again, perhaps we should remove the MintA token, and instead just keep the LP token ...
 
                 // Add to the portfolio account
+                // TODO: Gotta remove the removePositionItem
                 out.push({
-                    protocolType: "staking",
+                    protocolType: ProtocolType.Staking,
                     index: index,
                     poolAddress: positionAccount.poolAddress,
                     portfolio: this.portfolioPDA,
                     mintA: mSOLMint,
                     ataA: portfolioAtaMSol,
                     amountA: mSOLAmount,
+                    usdcValueA: usdcValueA,
                     mintB: null,
                     ataB: null,
                     amountB: null,
-                    mintLp: null,
-                    ataLp: null,
-                    amountLp: null
+                    usdcValueB: 0.,
+                    mintLp: mSOLMint,
+                    ataLp: portfolioAtaMSol,
+                    amountLp: mSOLAmount,
+                    usdcValueLP: usdcValueLP,
+                    totalPositionValue: totalPositionValue
                 })
 
+            } else {
+                throw Error("Position does not allow for more, unfortunately");
             }
 
         }
@@ -574,8 +611,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("All fetched data is: ", storedPositions);
         await Promise.all(storedPositions.map(async (position: PositionInfo) => {
 
-            if (position.protocolType === "DEX") {
-                console.log("Position is: ", position);
+            if (position.protocolType === ProtocolType.DEXLP) {
+                console.log("Position (DEX) is: ", position);
                 let saberPoolAddress = saberPoolLpToken2poolAddress(position.poolAddress);
                 const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
                 const {state} = stableSwapState;
@@ -650,12 +687,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 storedPositionUsdcAmounts.push(
                     {totalPositionValue: usdValueUserLp}
                 )
-            } else if (position.protocolType === "staking") {
+            } else if (position.protocolType === ProtocolType.Staking) {
+                console.log("Position (Staking) is: ", position);
 
                 let marinadeToken = position.amountA.uiAmount;
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
                 let marinadeUsdcAmount = marinadeToken * 93.23;
+                console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
                 usdAmount += marinadeUsdcAmount
                 // Again, we skip this for now because all tokens we work with are USDC-based
                 // // Also convert here to USD,

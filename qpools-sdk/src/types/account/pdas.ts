@@ -2,14 +2,12 @@ import {PublicKey} from "@solana/web3.js";
 import {BN, Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
-import assert from "assert";
-import {sol} from "easy-spl";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed581",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition363",
-    USER_CURRENCY_STRING: "UserCurrency1253",
-    USER_MARINADE_SEED: "UserMarinade0043"
+    PORTFOLIO_ACCOUNT: "portFolioSeed582",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition364",
+    USER_CURRENCY_STRING: "UserCurrency1254",
+    USER_MARINADE_SEED: "UserMarinade0044"
 }
 
 /**

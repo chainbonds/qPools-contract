@@ -12,7 +12,6 @@ import {
 import {
     getSolbondProgram,
 } from "@qpools/sdk";
-import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 import {delay, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
@@ -25,20 +24,13 @@ describe('qPools!', () => {
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
 
-    const payer = Keypair.generate();
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
-    let stableSwapProgramId: PublicKey;
 
-    let currencyMint: PublicKey = MOCK.DEV.SABER_USDC;
     let weights: BN[];
-    let pool_addresses: Array<PublicKey>;
     let USDC_USDT_pubkey: PublicKey;
     let USDC_CASH_pubkey: PublicKey;
     let USDC_TEST_pubkey: PublicKey;
-    let wSOL: PublicKey;
-    let portfolio: Portfolio;
-    let marinade;
 
     let poolAddresses: PublicKey[];
     let USDC_mint: PublicKey;

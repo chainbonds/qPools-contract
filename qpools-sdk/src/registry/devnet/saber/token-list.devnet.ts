@@ -1,4 +1,8 @@
-export const DEV_TOKEN_LIST = {
+/**
+ * TODO: Instead of this, probably better to call this from the saber website ...
+ * Then we would need to put the Pyth items somewhere else. Probably good to just use the pyth SDK anyways ...
+ */
+export const DEV_TOKEN_LIST_SABER = {
   "logoURI": "https://registry.saber.so/icon.png",
   "name": "Saber Tokens",
   "timestamp": "2022-02-18T18:02:19.572Z",

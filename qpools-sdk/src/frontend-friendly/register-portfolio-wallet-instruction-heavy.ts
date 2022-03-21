@@ -510,10 +510,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
                 let usdcValueA = tokenAAmount.uiAmount;
                 let usdcValueB = tokenBAmount.uiAmount;
+                // TODO: Find a way to calculate the conversion rate here easily ...
                 let usdcValueLP = tokenLPAmount.uiAmount;
 
                 // Sum up all the values here to arrive at the Total Position Value?
-                let totalPositionValue = usdcValueA + usdcValueB + usdcValueLP;
+                //  In the case of DEXLP Pools, we should only look at the LP token.
+                //  There may ofc be some more tokens the portfolio account holds, we should calculate these into it in the total Portfolio value
+                // usdcValueA + usdcValueB +
+                let totalPositionValue = usdcValueLP;
 
                 // Add to the portfolio account
                 out.push({
@@ -558,6 +562,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
                 // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
+
+
                 // Again, convert by the pyth price ...
                 let usdcValueA = mSOLAmount.uiAmount * 93.23;
                 let usdcValueLP = mSOLAmount.uiAmount * 93.23;
@@ -569,7 +575,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Again, perhaps we should remove the MintA token, and instead just keep the LP token ...
 
                 // Add to the portfolio account
-                // TODO: Gotta remove the removePositionItem
                 out.push({
                     protocolType: ProtocolType.Staking,
                     index: index,
@@ -607,6 +612,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let storedPositions = await this.getPortfolioInformation();
         let usdAmount = 0.;
         let storedPositionUsdcAmounts: any = [];
+
+        // TODO: there will be conflicts if we just take the usdc value for each position. we gotta remove redundant Mints
 
         console.log("All fetched data is: ", storedPositions);
         await Promise.all(storedPositions.map(async (position: PositionInfo) => {
@@ -680,6 +687,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                     console.log("Skipping: position.mintLp ", position.mintLp.toString())
                 }
 
+                // Just take all the mint values, and add them if the respective mint has not yet been added
+
                 includedMints.add(position.mintA.toString());
                 includedMints.add(position.mintB.toString());
                 includedMints.add(position.mintLp.toString());
@@ -689,6 +698,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 )
             } else if (position.protocolType === ProtocolType.Staking) {
                 console.log("Position (Staking) is: ", position);
+
+                // Just take the totalPositionUsdcAmount ...
 
                 let marinadeToken = position.amountA.uiAmount;
                 // Multiply this with the marinade token

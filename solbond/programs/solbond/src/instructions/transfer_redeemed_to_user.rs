@@ -131,6 +131,15 @@ pub fn handler(
     // close portfolio account
     let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
     let user_starting_lamports = owner_acc_info.lamports();
+    let user_currency_acc_info = ctx.accounts.user_currency_pda_account.to_account_info();
+    **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(user_currency_acc_info.lamports()).unwrap();
+    **user_currency_acc_info.lamports.borrow_mut() = 0;
+    let mut user_currency_data = user_currency_acc_info.data.borrow_mut();
+    user_currency_data.fill(0);
+
+    // close portfolio account
+    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
+    let user_starting_lamports = owner_acc_info.lamports();
     let portfolio_acc_info = ctx.accounts.portfolio_pda.to_account_info();
     **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(portfolio_acc_info.lamports()).unwrap();
     **portfolio_acc_info.lamports.borrow_mut() = 0;

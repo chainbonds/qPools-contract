@@ -513,6 +513,20 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // TODO: Find a way to calculate the conversion rate here easily ...
                 let usdcValueLP = tokenLPAmount.uiAmount;
 
+
+
+
+
+
+
+                // TODO: Calculate the virtualPrice of the LP tokens
+                // TODO: Need to use whatever protocol has implemented them, depending on the curve and exact pool,
+                //  this will change ...
+
+
+
+
+
                 // Sum up all the values here to arrive at the Total Position Value?
                 //  In the case of DEXLP Pools, we should only look at the LP token.
                 //  There may ofc be some more tokens the portfolio account holds, we should calculate these into it in the total Portfolio value
@@ -561,6 +575,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
                 // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
                 // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
+
+
 
 
 

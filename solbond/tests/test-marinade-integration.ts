@@ -61,7 +61,6 @@ describe('qPools!', () => {
         const marinadeConfig = new MarinadeConfig({
             connection: connection,
             publicKey: provider.wallet.publicKey,
-
         });
         marinade = new Marinade(marinadeConfig);
 
@@ -78,7 +77,6 @@ describe('qPools!', () => {
     })
 
     it("create a marinade position and deposit", async () => {
-        const marinadeState = await MarinadeState.fetch(marinade);
         //const weights = [new BN(500), new BN(500), new BN(500)];
         const amount = new BN(1e9);
         // create a portfolio with 1 base currency (sol)

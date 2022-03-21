@@ -48,7 +48,6 @@ describe('qPools!', () => {
 
         weights = [new BN(1000)];
 
-        //
         pool_addresses = [USDC_USDT_pubkey];
 
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
@@ -135,7 +134,7 @@ describe('qPools!', () => {
         }
 
         let i = 0
-        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer, pool_addresses[0], i);
+        let approve_sig = await portfolio.permissionlessFulfillSaber(genericPayer, i);
 
     })
 
@@ -148,20 +147,15 @@ describe('qPools!', () => {
         let sign_withdraw = await portfolio.approveWithdrawPortfolio(genericPayer);
         var i = 0;
         // TODO: Gotta check the instruction-heavy or frontend implementation to cleanly deal with poolAddresses
+        // TODO: Instead of fetching the pool address, here, fetch it in the underlying function from the devnet sate!
         let approve_sig = await portfolio.signApproveWithdrawAmountSaber(
             genericPayer,
-            pool_addresses[0],
             i,
             minMintAmount,
             amountTokenA
         )
 
-        let approve_sig2 = await portfolio.redeem_single_position_only_one(
-            pool_addresses,
-            i,
-            genericPayer,
-        )
-
+        let approve_sig2 = await portfolio.redeem_single_position_only_one(i, genericPayer)
         let sigs_rest = await portfolio.transfer_to_user(provider.wallet, MOCK.DEV.SABER_USDC);
 
     })

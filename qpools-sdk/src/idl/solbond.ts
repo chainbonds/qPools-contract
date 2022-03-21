@@ -37,10 +37,8 @@ export type Solbond = {
           "type": "u8"
         },
         {
-          "name": "weights",
-          "type": {
-            "vec": "u64"
-          }
+          "name": "sumOfWeights",
+          "type": "u64"
         },
         {
           "name": "numPositions",
@@ -972,6 +970,10 @@ export type Solbond = {
           {
             "name": "fullyCreated",
             "type": "bool"
+          },
+          {
+            "name": "sumOfWeights",
+            "type": "u64"
           },
           {
             "name": "numRedeemed",
@@ -1414,10 +1416,8 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
-          "name": "weights",
-          "type": {
-            "vec": "u64"
-          }
+          "name": "sumOfWeights",
+          "type": "u64"
         },
         {
           "name": "numPositions",
@@ -2349,6 +2349,10 @@ export const IDL: Solbond = {
           {
             "name": "fullyCreated",
             "type": "bool"
+          },
+          {
+            "name": "sumOfWeights",
+            "type": "u64"
           },
           {
             "name": "numRedeemed",

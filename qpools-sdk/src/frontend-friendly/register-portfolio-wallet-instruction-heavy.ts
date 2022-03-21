@@ -222,6 +222,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA4!");
+        console.log("marinade state is. ", this.marinadeState);
         let mSolOwnerAta = await getAssociatedTokenAddressOffCurve(this.marinadeState.mSolMintAddress, this.owner.publicKey);
         console.log("mSolOwnerAta", mSolOwnerAta.toString());
         if (!(await tokenAccountExists(this.connection, mSolOwnerAta)) && !createdAtaAccounts.has(mSolOwnerAta.toString())) {
@@ -271,8 +272,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     // Create Operations
     async createPortfolioSigned(
-        weights: Array<u64>,
-        pool_addresses: Array<PublicKey>
+        weights: BN[],
+        pool_addresses: PublicKey[]
     ): Promise<TransactionInstruction> {
         let ix = await createPortfolioSigned(
             this.connection,
@@ -345,14 +346,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
     // Withdraw
-    async signApproveWithdrawAmountSaber(index: number, tokenAAmount: u64): Promise<TransactionInstruction> {
+    async signApproveWithdrawAmountSaber(index: number, minRedeemTokenAmount: u64): Promise<TransactionInstruction> {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         // Fetch the position
         // I guess, gotta double-check that Saber redeemable works ...
-        console.log("aaa 3");
+        console.log("aaa 28");
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
-        console.log("aaa 4");
+        console.log("aaa 29");
         let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         const stableSwapState = await getPoolState(this.connection, poolAddress);
         const {state} = stableSwapState;
@@ -370,10 +371,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            poolAddress,
             index,
             new BN(lpAmount),
-            tokenAAmount
+            minRedeemTokenAmount
         );
         return ix;
     }

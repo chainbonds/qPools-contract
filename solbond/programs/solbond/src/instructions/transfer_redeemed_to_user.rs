@@ -128,7 +128,6 @@ pub fn handler(
 
         ), ctx.accounts.pda_owned_user_a.amount as u64)?;
 
-
     // close portfolio account
     let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
     let user_starting_lamports = owner_acc_info.lamports();

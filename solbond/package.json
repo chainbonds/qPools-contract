@@ -3,6 +3,7 @@
         "test:all": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-integration.ts tests/test-saber-integration.ts",
         "test:integrate-marinade-and-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-and-saber.ts",
         "test:integrate-marinade": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-integration.ts",
+        "test:integrate-chained": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-simple-purchase-and-redeem-button.ts",
         "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts"
     },
     "dependencies": {

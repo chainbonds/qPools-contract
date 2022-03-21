@@ -8,6 +8,7 @@ export interface PortfolioAccount {
     toBeRedeemed: boolean,
     fullyCreated: boolean,
 
+    sum_of_weights: BN,
     numRedeemed: number,
     numPositions: number,
     numCreated: number,

@@ -58,13 +58,13 @@ pub mod solbond {
     pub fn create_portfolio(
         ctx: Context<SavePortfolio>,
         _bump: u8,
-        _weights: Vec<u64>,
+        _sum_of_weights: u64,
         _num_positions: u32,
     ) -> ProgramResult {
         instructions::approve::approve_portfolio_weights::handler(
             ctx,
-            _bump, 
-            _weights,
+            _bump,
+            _sum_of_weights,
             _num_positions,
         )
     }

@@ -2,12 +2,14 @@ import {PublicKey} from "@solana/web3.js";
 import {BN, Program} from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
+import assert from "assert";
+import {sol} from "easy-spl";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed572",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition354",
-    USER_CURRENCY_STRING: "UserCurrency1244",
-    USER_MARINADE_SEED: "UserMarinade0034"
+    PORTFOLIO_ACCOUNT: "portFolioSeed581",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition363",
+    USER_CURRENCY_STRING: "UserCurrency1253",
+    USER_MARINADE_SEED: "UserMarinade0043"
 }
 
 /**
@@ -29,20 +31,26 @@ export async function getPositionPda(
     solbondProgram: Program
 ): Promise<[PublicKey, number]> {
     let indexAsBuffer = bnTo8(new BN(index));
-    return PublicKey.findProgramAddress(
+    let [positionPda, positionBump] = await PublicKey.findProgramAddress(
         [owner.toBuffer(), indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
         solbondProgram.programId
     );
+    return [positionPda, positionBump];
 }
 
 export async function getPortfolioPda(
     owner: PublicKey,
     solbondProgram: Program
 ): Promise<[PublicKey, number]> {
-    return PublicKey.findProgramAddress(
+    // assert((owner) === PublicKey);
+    console.log("owner: ", typeof owner, owner.toString(), owner);
+    console.log("solbondProgramId: ", typeof solbondProgram.programId, solbondProgram.programId.toString(), solbondProgram.programId);
+    console.log("SEED.PORTFOLIO_ACCOUNT: ", typeof SEED.PORTFOLIO_ACCOUNT, SEED.PORTFOLIO_ACCOUNT);
+    let [portfolioPda, bumpPortfolio] = await PublicKey.findProgramAddress(
         [owner.toBuffer(), Buffer.from(anchor.utils.bytes.utf8.encode(SEED.PORTFOLIO_ACCOUNT))],
         solbondProgram.programId
     )
+    return [portfolioPda, bumpPortfolio];
 }
 
 export async function getUserCurrencyPda(

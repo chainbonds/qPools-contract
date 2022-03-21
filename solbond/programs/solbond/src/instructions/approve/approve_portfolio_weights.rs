@@ -8,7 +8,7 @@ use crate::utils::seeds;
 #[derive(Accounts, Clone)]
 #[instruction(
     _bump:u8, 
-    _weights:Vec<u64>,
+    _sum_of_weight:u64,
     _num_positions:u32,
 )]
 pub struct SavePortfolio<'info> {
@@ -35,7 +35,7 @@ pub struct SavePortfolio<'info> {
 pub fn handler(
     ctx: Context<SavePortfolio>,
     _bump: u8,
-    _weights: Vec<u64>,
+    _sum_of_weights: u64,
     _num_positions: u32,
 ) -> ProgramResult {
     //let sum: u64 = _weights.iter().sum();
@@ -49,7 +49,8 @@ pub fn handler(
     portfolio_account.bump = _bump;
     portfolio_account.fully_created = false;
     portfolio_account.to_be_redeemed = false;
-    
+
+    portfolio_account.sum_of_weights = _sum_of_weights;
     portfolio_account.num_positions = _num_positions;
     portfolio_account.num_redeemed = 0 as u32;
     portfolio_account.num_created = 0 as u32;

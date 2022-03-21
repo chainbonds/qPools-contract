@@ -203,7 +203,12 @@ export class Portfolio {
      * @param num_positions
      * @param pool_addresses
      */
-    async createPortfolioSigned(weights: Array<u64>, owner_keypair: Keypair, num_positions: BN, pool_addresses: Array<PublicKey>) {
+    async createPortfolioSigned(
+        weights: BN[],
+        owner_keypair: Keypair,
+        num_positions: BN,
+        pool_addresses: PublicKey[]
+    ) {
         let ix = await createPortfolioSigned(
             this.connection,
             this.solbondProgram,
@@ -284,12 +289,11 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
+    async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
         let ix = await signApproveWithdrawAmountSaber(
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey,
-            poolAddress,
             index,
             poolTokenAmount,
             tokenAAmount
@@ -297,24 +301,22 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async permissionlessFulfillSaber(owner_keypair: Keypair, poolAddress: PublicKey, index: number) {
+    async permissionlessFulfillSaber(owner_keypair: Keypair, index: number) {
         let ix = await permissionlessFulfillSaber(
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey,
-            poolAddress,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async redeem_single_position(poolAddress: PublicKey, index: number, owner: Keypair) {
+    async redeem_single_position(index: number, owner: Keypair) {
         // TODO: Rename to sth saber, or make module imports ...
         let ix = await redeem_single_position(
             this.connection,
             this.solbondProgram,
             owner.publicKey,
-            poolAddress,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);
@@ -348,15 +350,13 @@ export class Portfolio {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async redeem_single_position_only_one(pool_addresses: PublicKey[], index: number, owner: Keypair) {
+    async redeem_single_position_only_one(index: number, owner: Keypair) {
         // TODO: Rename function to include saber
         // Or make modular imports
-        const pool_address = pool_addresses[index];
         let ix = await redeemSinglePositionOnlyOne(
             this.connection,
             this.solbondProgram,
             owner.publicKey,
-            pool_address,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);

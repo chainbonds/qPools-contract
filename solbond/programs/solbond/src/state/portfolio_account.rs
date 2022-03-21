@@ -16,6 +16,7 @@ pub struct PortfolioAccount {
 
     // pub initial_amount_sol: u64,
     // pub withdraw_amount_sol: u64,
+    pub sum_of_weights: u64,
 
     pub num_redeemed: u32,
     pub num_positions: u32,
@@ -42,7 +43,7 @@ impl PortfolioAccount {
     std::mem::size_of::<Pubkey>() + 
     std::mem::size_of::<u8>() + 
     std::mem::size_of::<bool>()*2 +
-    //std::mem::size_of::<u64>()*2 + 
+    std::mem::size_of::<u64>() +
     std::mem::size_of::<u32>()*3 +
     std::mem::size_of::<i64>()*2;
 }

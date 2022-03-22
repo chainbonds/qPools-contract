@@ -7,3 +7,9 @@
 [submodule "solbond/deps/larix-lending-anchor"]
 	path = solbond/deps/larix-lending-anchor
 	url = git@github.com:ProjectLarix/larix-lending-anchor.git
+[submodule "qpools-sdk/deps/larix-sdk"]
+	path = qpools-sdk/deps/larix-sdk
+	url = git@github.com:ProjectLarix/larix-sdk.git
+[submodule "qpools-sdk/larix-sdk"]
+	path = qpools-sdk/larix-sdk
+	url = git@github.com:ProjectLarix/larix-sdk.git

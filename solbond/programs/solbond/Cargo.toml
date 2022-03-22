@@ -24,3 +24,4 @@ stable-swap-anchor = "1.6.7"
 marinade-finance = {path = "../../deps/liquid-staking-program/programs/marinade-finance/", features = ["no-entrypoint"]}
 marinade-onchain-helper = {path = "../../deps/marinade-onchain-helper/", features = ["no-entrypoint"]}
 larix-lending-anchor = {path = "../../deps/larix-lending-anchor/"}
+larix-lending = { git = "https://github.com/ProjectLarix/larix-lending" ,features = ["no-entrypoint"]}

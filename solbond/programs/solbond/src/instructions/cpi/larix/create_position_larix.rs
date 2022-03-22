@@ -1,10 +1,14 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use crate::instructions::cpi;
 use crate::state::{PositionAccountLarix, PortfolioAccount};
 use crate::utils::seeds;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use larix_lending_anchor::accounts::{DepositReserveLiquidity};
+use larix_lending::id as larix_lending_id;
+use larix_lending::instruction::LendingInstruction;
+use larix_lending::state::obligation::OBLIGATION_LEN;
 use crate::ErrorCode;
 
 
@@ -80,6 +84,7 @@ pub struct LarixPositionInstruction<'info> {
     pub user_transfer_authority: Box<Account<'info, PortfolioAccount>>,
 
     //check larix id
+    #[account(address = larix_lending::ID)]
     pub larix_program: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
@@ -96,45 +101,46 @@ pub fn handler(
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
     
-
-    let deposit_reserve_liquidity_ctx = DepositReserveLiquidity {
-        source_liquidity: ctx.accounts.source_liquidity.to_account_info(),
-        destination_collateral: ctx.accounts.desitnation_collateral.to_account_info(),
-        reserve: ctx.accounts.reserve.to_account_info(),
-        reserve_collateral_mint: ctx.accounts.reserve_collateral_mint.to_account_info(), 
-        reserve_liquidity_supply: ctx.accounts.reserve_liquidity_supply.to_account_info(),
-        lending_market: ctx.accounts.lending_market.to_account_info(),
-        lending_market_authority: ctx.accounts.lending_market_authority.to_account_info(),
-        user_transfer_authority: ctx.accounts.user_transfer_authority.to_account_info(),//pda
-        token_program: ctx.accounts.token_program.to_account_info(),
-
-    };
-    
-    let larix_program = ctx.accounts.larix_program.to_account_info();
-
     let approved_position_details = &mut ctx.accounts.position_pda;
 
-    larix_lending_anchor::deposit_reserve_liquidity(
-        CpiContext::new_with_signer(
-            larix_program,
-            deposit_reserve_liquidity_ctx,
-            &[
-                [
-                    ctx.accounts.owner.key().as_ref(),
-                    seeds::PORTFOLIO_SEED,
-                    &[_bump_portfolio]
-                ].as_ref()
-            ]
-        ),
-        approved_position_details.initial_amount,
 
-    )?;
+    let ix = larix_lending::instruction::deposit_reserve_liquidity(
+        larix_lending_id(),
+        approved_position_details.initial_amount,
+        ctx.accounts.source_liquidity.key(),
+        ctx.accounts.destination_collateral.key(),
+        ctx.accounts.reserve.key(),
+        ctx.accounts.reserve_collateral_mint.key(),
+        ctx.accounts.reserve_liquidity_supply.key(),
+        ctx.accounts.lending_market.key(),
+        ctx.accounts.lending_market_authority.key(),
+        ctx.accounts.user_transfer_authority.key(),
+    );
+
+
+    anchor_lang::solana_program::program::invoke_signed(&ix,    
+        &[
+            ctx.accounts.source_liquidity.to_account_info(),
+            ctx.accounts.destination_collateral.to_account_info(),
+            ctx.accounts.reserve.to_account_info(),
+            ctx.accounts.reserve_collateral_mint.to_account_info(),
+            ctx.accounts.reserve_liquidity_supply.to_account_info(),
+            ctx.accounts.lending_market.to_account_info(),
+            ctx.accounts.user_transfer_authority.to_account_info(),
+        ],
+        &[
+            [
+                ctx.accounts.owner.key().as_ref(),
+                seeds::PORTFOLIO_SEED,
+                &[_bump_portfolio]
+            ].as_ref()
+        ])?;
 
     approved_position_details.is_fulfilled = true;
     
     let clock = Clock::get().unwrap();
     approved_position_details.timestamp = clock.unix_timestamp;
-    let portfolio = &mut ctx.accounts.portfolio_pda;
+    let portfolio = &mut ctx.accounts.user_transfer_authority;
     if approved_position_details.index == portfolio.num_positions {
         portfolio.fully_created = true;
         portfolio.fulfilled_timestamp = clock.unix_timestamp;

@@ -36,9 +36,7 @@ import {PositionInfo, Protocol, ProtocolType} from "../types/positionInfo";
 import {
     fetchAllPositions,
     fetchAllPositionsMarinade,
-    fetchAllPositionsSaber,
-    fetchSinglePositionMarinade,
-    fetchSinglePositionSaber
+    fetchAllPositionsSaber
 } from "../instructions/fetch/position";
 import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
 
@@ -447,9 +445,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     /**
      * Send USDC from the User's Wallet, to the Portfolio Account
      */
-    // TODO: Why the fuck does it take the wrapped SOL account.
-    // This should just take a currency, and transfer it there
-    // Figure this out from the frontend
     async transfer_to_portfolio(currencyMint: PublicKey) {
         // TODO: Fix this function!
 
@@ -579,6 +574,38 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return out;
     }
 
+    async getPortfolioAndPositions(): Promise<{
+        portfolio: PortfolioAccount,
+        positionsSaber: PositionAccountSaber[],
+        positionsMarinade: PositionAccountMarinade[]
+    }> {
+        // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
+        let portfolio: PortfolioAccount = await this.fetchPortfolio();
+        let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.Saber))[0];
+        let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.Marinade))[1];
+        return {
+            portfolio: portfolio,
+            positionsSaber: positionsSaber,
+            positionsMarinade: positionsMarinade
+        }
+    }
+
+    async approveRedeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<TransactionInstruction[]> {
+        // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
+        let out: TransactionInstruction[] = [];
+        await Promise.all(positionsSaber.map(async(x: PositionAccountSaber) => {
+            let minRedeemAmount = new BN(0);  // This is the minimum amount of tokens that should be put out ...
+            let IxApproveWithdrawSaber = await this.signApproveWithdrawAmountSaber(x.index, minRedeemAmount);
+            out.push(IxApproveWithdrawSaber);
+        }));
+        await Promise.all(positionsMarinade.map(async(x: PositionAccountMarinade) => {
+            let IxApproveWithdrawSaber = await this.approveWithdrawToMarinade(x.index);
+            out.push(IxApproveWithdrawSaber);
+        }));
+        console.log("Approving Marinade Withdraw");
+        return out;
+    }
+
     /**
      * Fetch the Portfolio Information from the positions ...
      * Get the saber state, get the pool address, get all the pool accounts, and LP tokens, and normal tokens from the portfolio
@@ -586,12 +613,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      *
      * Perhaps create a dictionary, which maps mint to amount ...
      */
-    // TODO: Also gotta make this cross-protocol
     async getPortfolioInformation(): Promise<PositionInfo[]>{
         console.log("#getPortfolioInformation");
 
         // Get the saber stableswap state for all positions
-
         // return empty array if portfolio ID does not exist
         console.log("Hello");
         console.log("Portfolio PDA is: ", this.portfolioPDA.toString());
@@ -603,13 +628,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
         let portfolio: PortfolioAccount = await this.fetchPortfolio();
         let out: PositionInfo[] = [];
-
         // right now, position 0 is saber, position 1 is marinade ....
         console.log("Fetching the portfolio account: ", portfolio);
-
         // Could actually replace this also with the function i wrote above ...
         // Perhaps it's better to do that first ...
-
         // For all Saber positions. redeem them like this ...
         let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.Saber))[0];
         let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.Marinade))[1];
@@ -619,7 +641,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log(positionsMarinade);
 
         // Now for each one, run their own get-position-info-algorithm
-
         // Could even do an async map here actually
         await Promise.all(positionsSaber.map(async (positionSaber: PositionAccountSaber) => {
             let processedPosition: PositionInfo = await this.parseSaberPositionInfo(positionSaber);
@@ -632,28 +653,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }));
 
         console.log("Existing positions are: ", out);
-
-        // // TODO: Also work on removing this hard-coded logic ...
-        // for (let index = 0; index < portfolio.numPositions; index++) {
-        //
-        //     // if (portfolio.numPositions > 2) {
-        //     //     console.log("Doesn't work");
-        //     //     throw Error("Don't do number of positions more than 2! stupid monkey finalizing-coding for hackahton!");
-        //     // }
-        //
-        //     if (index === 0) {
-        //         // // Get the single position
-        //         // let processedPosition: PositionInfo = this.parseSaberPositionInfo(positionsSaber);
-        //         // out.push();
-        //     } else if (index === 1) {
-        //
-        //
-        //     } else {
-        //         throw Error("Position does not allow for more, unfortunately");
-        //     }
-        //
-        // }
-
         console.log("##getPortfolioInformation");
         return out;
     }
@@ -831,17 +830,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     //
     //     console.log("##registerAtaForLiquidityPortfolio()");
     //     return txs;
-    // }
-    //
-    // async registerLiquidityPoolAssociatedTokenAccountsForPortfolio(state: StableSwapState): Promise<TransactionInstruction[]> {
-    //     return await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
-    //         this.connection,
-    //         this.solbondProgram,
-    //         this.owner.publicKey,
-    //         this.providerWallet,
-    //         state,
-    //         this.createdAtaAccounts
-    //     );
     // }
     //
     // /**

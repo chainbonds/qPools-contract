@@ -8,7 +8,7 @@ import QWallet, {
     IWallet, sendAndSignInstruction
 } from "../utils";
 import {StableSwapState} from "@saberhq/stableswap-sdk";
-import {getSolbondProgram} from "../index";
+import {getSolbondProgram, PortfolioAccount} from "../index";
 import {NETWORK} from "../types/cluster";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import * as registry from "../registry/registry-helper";
@@ -23,6 +23,7 @@ import {sendLamports, transfer_to_user} from "../instructions/modify/portfolio-t
 import {getPoolState} from "../instructions/fetch/saber";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
+import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
 
 export class CrankRpcCalls {
 
@@ -112,7 +113,7 @@ export class CrankRpcCalls {
         // Creating the user-account if it doesn't yet exist
         let ix = await transfer_to_user(
             this.connection,
-            this.solbondProgram,
+            this.crankSolbondProgram,
             this.owner.publicKey,
             currencyMint
         );
@@ -156,18 +157,29 @@ export class CrankRpcCalls {
 
         let ix = await permissionlessFulfillSaber(
             this.connection,
-            this.solbondProgram,
+            this.crankSolbondProgram,
             this.owner.publicKey,
             index
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
 
+    async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
+        // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
+        await Promise.all(positionsSaber.map(async(x: PositionAccountSaber) => {
+            let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
+            console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
+        }));
+        // We don't redeem marinade actively ...
+        console.log("Approving Marinade Withdraw");
+        return
+    }
+
     async redeem_single_position(poolAddress: PublicKey, index: number) {
         // TODO: Rename to sth saber, or make module imports ...
         let ix = await redeem_single_position(
             this.connection,
-            this.solbondProgram,
+            this.crankSolbondProgram,
             this.owner.publicKey,
             index
         );
@@ -197,7 +209,7 @@ export class CrankRpcCalls {
         }
         let ix = await redeemSinglePositionOnlyOne(
             this.connection,
-            this.solbondProgram,
+            this.crankSolbondProgram,
             this.owner.publicKey,
             index
         );
@@ -210,7 +222,7 @@ export class CrankRpcCalls {
     async createPositionMarinade(index: number) {
         let ix = await createPositionMarinade(
             this.connection,
-            this.solbondProgram,
+            this.crankSolbondProgram,
             this.owner.publicKey,
             index,
             this.marinadeState

@@ -7,8 +7,8 @@ export enum ProtocolType {
 }
 
 export enum Protocol {
-    Saber,
-    Marinade
+    saber,
+    marinade
 }
 
 export interface PositionInfo {

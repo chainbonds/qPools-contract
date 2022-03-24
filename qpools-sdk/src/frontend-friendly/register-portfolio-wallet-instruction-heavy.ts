@@ -287,10 +287,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async fetchAllPositionsByProtocol(protocol: Protocol): Promise<[PositionAccountSaber[], PositionAccountMarinade[]]> {
         // For type-safe unpacking ...
         let out: [PositionAccountSaber[], PositionAccountMarinade[]];
-        if (protocol === Protocol.Saber) {
+        if (protocol === Protocol.saber) {
             let tmp: PositionAccountSaber[] = await fetchAllPositionsSaber(this.connection, this.solbondProgram, this.owner.publicKey);
             out = [tmp, []];
-        } else if (protocol === Protocol.Marinade) {
+        } else if (protocol === Protocol.marinade) {
             let tmp: PositionAccountMarinade[] = await fetchAllPositionsMarinade(this.connection, this.solbondProgram, this.owner.publicKey);
             out = [[], tmp]
         } else {
@@ -500,7 +500,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Add to the portfolio account
         let out = {
             protocolType: ProtocolType.DEXLP,
-            protocol: Protocol.Saber,
+            protocol: Protocol.saber,
             index: positionAccount.index,
             poolAddress: positionAccount.poolAddress,
             portfolio: this.portfolioPDA,
@@ -553,7 +553,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Add to the portfolio account
         let out = {
             protocolType: ProtocolType.Staking,
-            protocol: Protocol.Marinade,
+            protocol: Protocol.marinade,
             index: positionAccount.index,
             poolAddress: null,
             portfolio: this.portfolioPDA,
@@ -581,8 +581,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }> {
         // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
         let portfolio: PortfolioAccount = await this.fetchPortfolio();
-        let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.Saber))[0];
-        let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.Marinade))[1];
+        let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
+        let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
         return {
             portfolio: portfolio,
             positionsSaber: positionsSaber,
@@ -633,8 +633,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Could actually replace this also with the function i wrote above ...
         // Perhaps it's better to do that first ...
         // For all Saber positions. redeem them like this ...
-        let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.Saber))[0];
-        let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.Marinade))[1];
+        let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
+        let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
 
         console.log("Positions Saber and Positions Marinade are: ");
         console.log(positionsSaber);

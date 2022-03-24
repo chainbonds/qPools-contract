@@ -3,21 +3,22 @@ import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
-import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
+import {Marinade, MarinadeConfig, MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import {
     accountExists,
-    createAssociatedTokenAccountUnsigned, createAssociatedTokenAccountUnsignedInstruction, delay,
+    createAssociatedTokenAccountUnsignedInstruction,
+    delay,
     getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve,
-    IWallet, sendAndSignInstruction,
+    IWallet,
     tokenAccountExists
 } from "../utils";
 import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
-import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
+import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
-import {portfolioExists, fetchPortfolio} from "../instructions/fetch/portfolio";
+import {fetchPortfolio, portfolioExists} from "../instructions/fetch/portfolio";
 import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
 import {
     approvePortfolioWithdraw,
@@ -30,13 +31,16 @@ import {
     registerLiquidityPoolAssociatedTokenAccountsForPortfolio,
     signApproveWithdrawAmountSaber
 } from "../instructions/modify/saber";
+import {sendLamports, transferUsdcFromUserToPortfolio} from "../instructions/modify/portfolio-transfer";
+import {PositionInfo, Protocol, ProtocolType} from "../types/positionInfo";
 import {
-    sendLamports,
-    transferUsdcFromUserToPortfolio
-} from "../instructions/modify/portfolio-transfer";
-import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionInfo, ProtocolType} from "../types/positionInfo";
-import {fetchSinglePositionMarinade, fetchSinglePositionSaber} from "../instructions/fetch/position";
+    fetchAllPositions,
+    fetchAllPositionsMarinade,
+    fetchAllPositionsSaber,
+    fetchSinglePositionMarinade,
+    fetchSinglePositionSaber
+} from "../instructions/fetch/position";
+import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -278,6 +282,25 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return await fetchPortfolio(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
+    async fetchAllPositions(): Promise<(PositionAccountSaber | PositionAccountMarinade)[]> {
+        return await fetchAllPositions(this.connection, this.solbondProgram, this.owner.publicKey);
+    }
+
+    async fetchAllPositionsByProtocol(protocol: Protocol): Promise<[PositionAccountSaber[], PositionAccountMarinade[]]> {
+        // For type-safe unpacking ...
+        let out: [PositionAccountSaber[], PositionAccountMarinade[]];
+        if (protocol === Protocol.Saber) {
+            let tmp: PositionAccountSaber[] = await fetchAllPositionsSaber(this.connection, this.solbondProgram, this.owner.publicKey);
+            out = [tmp, []];
+        } else if (protocol === Protocol.Marinade) {
+            let tmp: PositionAccountMarinade[] = await fetchAllPositionsMarinade(this.connection, this.solbondProgram, this.owner.publicKey);
+            out = [[], tmp]
+        } else {
+            throw Error("Protocol is neither of Saber, Marinade, " + protocol);
+        }
+        return out;
+    }
+
     // Create Operations
     async createPortfolioSigned(
         weights: BN[],
@@ -441,21 +464,120 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
 
-    /**
-     *
-     *
-     *
-     *
-     * Start of Legacy Items!
-     *
-     *
-     *
-     *
-     *
-     */
 
+    // TODO: Could also port this into a separate instruction-only file
+    async parseSaberPositionInfo(positionAccount: PositionAccountSaber): Promise<PositionInfo>{
+        console.log("Fetching get pool state");
+        console.log("Pool Address is: ", positionAccount);
+        console.log("Pool Address is: ", positionAccount.poolAddress.toString());
 
+        // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
+        let saberPoolAddress = saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
+        const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
+        const {state} = stableSwapState;
 
+        // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
+        let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
+        let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
+        let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+
+        // Also get the token amounts, I guess lol
+        let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
+        let tokenBAmount = (await this.connection.getTokenAccountBalance(portfolioAtaB)).value;
+        let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
+
+        // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
+        let usdcValueA = tokenAAmount.uiAmount;
+        let usdcValueB = tokenBAmount.uiAmount;
+        // TODO: Find a way to calculate the conversion rate here easily ...
+        let usdcValueLP = tokenLPAmount.uiAmount;
+
+        // TODO: Calculate the virtualPrice of the LP tokens
+        // TODO: Need to use whatever protocol has implemented them, depending on the curve and exact pool,
+        //  this will change ...
+        // Sum up all the values here to arrive at the Total Position Value?
+        //  In the case of DEXLP Pools, we should only look at the LP token.
+        //  There may ofc be some more tokens the portfolio account holds, we should calculate these into it in the total Portfolio value
+        // usdcValueA + usdcValueB +
+        let totalPositionValue = usdcValueLP;
+
+        // Add to the portfolio account
+        let out = {
+            protocolType: ProtocolType.DEXLP,
+            protocol: Protocol.Saber,
+            index: positionAccount.index,
+            poolAddress: positionAccount.poolAddress,
+            portfolio: this.portfolioPDA,
+            mintA: state.tokenA.mint,
+            ataA: portfolioAtaA,
+            amountA: tokenAAmount,
+            usdcValueA: usdcValueA,
+            mintB: state.tokenB.mint,
+            ataB: portfolioAtaB,
+            amountB: tokenBAmount,
+            usdcValueB: usdcValueB,
+            mintLp: state.poolTokenMint,
+            ataLp: portfolioAtaLp,
+            amountLp: tokenLPAmount,
+            usdcValueLP: usdcValueLP,
+            totalPositionValue: totalPositionValue
+        };
+
+        return out;
+    }
+
+    async parseMarinadePositionInfo(positionAccount: PositionAccountMarinade): Promise<PositionInfo>{
+        console.log("Pool Address is: ", positionAccount);
+        // You can make the pool address the mSOL mint for now
+        // console.log("Pool Address is: ", positionAccount.poolAddress.toString());
+        // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
+        // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
+        let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+        // This is also the LP Mint ...
+        // Gotta store this in the registry
+        // TODO: Make this multi-asset logic more scalable
+        let portfolioAtaMSol = await getAccountForMintAndPDADontCreate(mSOLMint, this.portfolioPDA);
+
+        // Also get the token amounts, I guess lol
+        let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
+        console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
+
+        // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
+        // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
+
+        // Again, convert by the pyth price ...
+        let usdcValueA = mSOLAmount.uiAmount * 93.23;
+        let usdcValueLP = mSOLAmount.uiAmount * 93.23;
+
+        // Sum up all the values here to arrive at the Total Position Value?
+        // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
+        let totalPositionValue = usdcValueLP;
+
+        // Again, perhaps we should remove the MintA token, and instead just keep the LP token ...
+        // Add to the portfolio account
+        let out = {
+            protocolType: ProtocolType.Staking,
+            protocol: Protocol.Marinade,
+            index: positionAccount.index,
+            poolAddress: null,
+            portfolio: this.portfolioPDA,
+            mintA: mSOLMint,
+            ataA: portfolioAtaMSol,
+            amountA: mSOLAmount,
+            usdcValueA: usdcValueA,
+            mintB: null,
+            ataB: null,
+            amountB: null,
+            usdcValueB: 0.,
+            mintLp: mSOLMint,
+            ataLp: portfolioAtaMSol,
+            amountLp: mSOLAmount,
+            usdcValueLP: usdcValueLP,
+            totalPositionValue: totalPositionValue
+        };
+        return out;
+    }
 
     /**
      * Fetch the Portfolio Information from the positions ...
@@ -477,153 +599,60 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Empty Portfolio");
             return []
         }
+
+        // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
         let portfolio: PortfolioAccount = await this.fetchPortfolio();
         let out: PositionInfo[] = [];
 
         // right now, position 0 is saber, position 1 is marinade ....
         console.log("Fetching the portfolio account: ", portfolio);
 
-        // TODO: Also work on removing this hard-coded logic ...
-        for (let index = 0; index < portfolio.numPositions; index++) {
+        // Could actually replace this also with the function i wrote above ...
+        // Perhaps it's better to do that first ...
 
-            if (portfolio.numPositions > 2) {
-                console.log("Doesn't work");
-                throw Error("Don't do number of positions more than 2! stupid monkey finalizing-coding for hackahton!");
-            }
+        // For all Saber positions. redeem them like this ...
+        let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.Saber))[0];
+        let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.Marinade))[1];
 
-            if (index === 0) {
-                // Get the single position
-                console.log("Fetching single position Saber");
-                let positionAccount: PositionAccountSaber = await fetchSinglePositionSaber(this.connection, this.solbondProgram, this.owner.publicKey, index);
-                console.log("Fetching get pool state");
-                console.log("Pool Address is: ", positionAccount);
-                console.log("Pool Address is: ", positionAccount.poolAddress.toString());
+        console.log("Positions Saber and Positions Marinade are: ");
+        console.log(positionsSaber);
+        console.log(positionsMarinade);
 
-                // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
-                let saberPoolAddress = saberPoolLpToken2poolAddress(positionAccount.poolAddress);
-                console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
-                const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
-                const {state} = stableSwapState;
+        // Now for each one, run their own get-position-info-algorithm
 
-                // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
-                let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-                let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-                let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        // Could even do an async map here actually
+        await Promise.all(positionsSaber.map(async (positionSaber: PositionAccountSaber) => {
+            let processedPosition: PositionInfo = await this.parseSaberPositionInfo(positionSaber);
+            out.push(processedPosition);
+        }));
 
-                // Also get the token amounts, I guess lol
-                let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
-                let tokenBAmount = (await this.connection.getTokenAccountBalance(portfolioAtaB)).value;
-                let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
+        await Promise.all(positionsMarinade.map(async (positionMarinade: PositionAccountMarinade) => {
+            let processedPosition: PositionInfo = await this.parseMarinadePositionInfo(positionMarinade);
+            out.push(processedPosition);
+        }));
 
-                // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
-                let usdcValueA = tokenAAmount.uiAmount;
-                let usdcValueB = tokenBAmount.uiAmount;
-                // TODO: Find a way to calculate the conversion rate here easily ...
-                let usdcValueLP = tokenLPAmount.uiAmount;
+        console.log("Existing positions are: ", out);
 
-
-
-
-
-
-
-                // TODO: Calculate the virtualPrice of the LP tokens
-                // TODO: Need to use whatever protocol has implemented them, depending on the curve and exact pool,
-                //  this will change ...
-
-
-
-
-
-                // Sum up all the values here to arrive at the Total Position Value?
-                //  In the case of DEXLP Pools, we should only look at the LP token.
-                //  There may ofc be some more tokens the portfolio account holds, we should calculate these into it in the total Portfolio value
-                // usdcValueA + usdcValueB +
-                let totalPositionValue = usdcValueLP;
-
-                // Add to the portfolio account
-                out.push({
-                    protocolType: ProtocolType.DEXLP,
-                    index: index,
-                    poolAddress: positionAccount.poolAddress,
-                    portfolio: this.portfolioPDA,
-                    mintA: state.tokenA.mint,
-                    ataA: portfolioAtaA,
-                    amountA: tokenAAmount,
-                    usdcValueA: usdcValueA,
-                    mintB: state.tokenB.mint,
-                    ataB: portfolioAtaB,
-                    amountB: tokenBAmount,
-                    usdcValueB: usdcValueB,
-                    mintLp: state.poolTokenMint,
-                    ataLp: portfolioAtaLp,
-                    amountLp: tokenLPAmount,
-                    usdcValueLP: usdcValueLP,
-                    totalPositionValue: totalPositionValue
-                })
-            } else if (index === 1) {
-                console.log("Fetching single position Marinade");
-                let positionAccount: PositionAccountSaber = await fetchSinglePositionMarinade(this.connection, this.solbondProgram, this.owner.publicKey, index);
-                console.log("Pool Address is: ", positionAccount);
-                // You can make the pool address the mSOL mint for now
-                // console.log("Pool Address is: ", positionAccount.poolAddress.toString());
-
-                // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
-
-                // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
-                let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
-                // This is also the LP Mint ...
-                // Gotta store this in the registry
-                // TODO: Make this multi-asset logic more scalable
-                let portfolioAtaMSol = await getAccountForMintAndPDADontCreate(mSOLMint, this.portfolioPDA);
-
-                // Also get the token amounts, I guess lol
-                let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
-                console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
-
-                // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
-                // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
-
-
-
-
-
-                // Again, convert by the pyth price ...
-                let usdcValueA = mSOLAmount.uiAmount * 93.23;
-                let usdcValueLP = mSOLAmount.uiAmount * 93.23;
-
-                // Sum up all the values here to arrive at the Total Position Value?
-                // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
-                let totalPositionValue = usdcValueLP;
-
-                // Again, perhaps we should remove the MintA token, and instead just keep the LP token ...
-
-                // Add to the portfolio account
-                out.push({
-                    protocolType: ProtocolType.Staking,
-                    index: index,
-                    poolAddress: positionAccount.poolAddress,
-                    portfolio: this.portfolioPDA,
-                    mintA: mSOLMint,
-                    ataA: portfolioAtaMSol,
-                    amountA: mSOLAmount,
-                    usdcValueA: usdcValueA,
-                    mintB: null,
-                    ataB: null,
-                    amountB: null,
-                    usdcValueB: 0.,
-                    mintLp: mSOLMint,
-                    ataLp: portfolioAtaMSol,
-                    amountLp: mSOLAmount,
-                    usdcValueLP: usdcValueLP,
-                    totalPositionValue: totalPositionValue
-                })
-
-            } else {
-                throw Error("Position does not allow for more, unfortunately");
-            }
-
-        }
+        // // TODO: Also work on removing this hard-coded logic ...
+        // for (let index = 0; index < portfolio.numPositions; index++) {
+        //
+        //     // if (portfolio.numPositions > 2) {
+        //     //     console.log("Doesn't work");
+        //     //     throw Error("Don't do number of positions more than 2! stupid monkey finalizing-coding for hackahton!");
+        //     // }
+        //
+        //     if (index === 0) {
+        //         // // Get the single position
+        //         // let processedPosition: PositionInfo = this.parseSaberPositionInfo(positionsSaber);
+        //         // out.push();
+        //     } else if (index === 1) {
+        //
+        //
+        //     } else {
+        //         throw Error("Position does not allow for more, unfortunately");
+        //     }
+        //
+        // }
 
         console.log("##getPortfolioInformation");
         return out;

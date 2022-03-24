@@ -86,6 +86,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     ) {
 
         this.owner = provider.wallet;
+
+        if (!this.owner) {
+
+            throw Error("Owner is empty!");
+        }
+        console.log("Owner is registered as: ", this.owner);
+        console.log("Owner is registered as: ", this.owner.publicKey.toString());
+
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 

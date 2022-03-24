@@ -10,6 +10,7 @@ import {parsePriceData, PriceData} from "@pythnetwork/client";
 import {ProtocolType} from "../types/positionInfo";
 import {DEV_POOLS_INFO_MARINADE} from "./devnet/marinade/pools-info.devnet";
 import {DEV_TOKEN_LIST_MARINADE} from "./devnet/marinade/token-list.devnet";
+import {DEV_WHITELIST_TOKENS} from "./devnet/whitelist-tokens.devnet";
 
 // Create interfaces for all getters here for now
 
@@ -83,6 +84,10 @@ export interface ExplicitSaberPool extends ExplicitPool {
  */
 function getPortfolioToTokenDict(): any {
     return DEV_PORTFOLIOID_TO_TOKEN;
+}
+
+export function getWhitelistTokens(): string[] {
+    return DEV_WHITELIST_TOKENS;
 }
 
 function getAllTokens(): ExplicitToken[] {
@@ -189,11 +194,13 @@ export function getTokenFromSplStringId(splStringId: string): ExplicitToken {
 
 export function getPoolFromSplStringId(splStringId: string): ExplicitPool {
     let out: ExplicitPool | null = null;
+    console.log("All pools are: ", getAllPools());
     getAllPools().map((x: ExplicitPool) => {
         if (x.name === splStringId) {
             out = x;
         }
     });
+    if (!out) {throw Error("Explicit Pool is Zero " + splStringId)}
     return out;
 }
 
@@ -255,7 +262,8 @@ export function getPoolsContainingToken(tokenMint: PublicKey) {
  */
 export function getSerpiusEndpoint() {
     // "https://qpools.serpius.com/weight_status.json";
-    return "https://qpools.serpius.com/weight_status_devnet.json";
+    // return "https://qpools.serpius.com/weight_status_devnet.json";
+    return "https://qpools.serpius.com/weight_status_devnet_v2.json";
 }
 
 // TODO: In fact, we should also prob include the protocol as an exact enum, to see if it's marinade, saber, etc.
@@ -274,14 +282,9 @@ export function getPoolsContainingLpToken(lpTokenMint: PublicKey): ExplicitPool[
 }
 
 export function saberPoolLpToken2poolAddress(poolMint: PublicKey): PublicKey {
-    // let all: ExplicitSaberPool[] = getPoolsContainingLpToken(poolMint);
-    // It's complaining about the type here ...
     let all: any[] = getPoolsContainingLpToken(poolMint);
-    // Pick the first instance
-    console.assert(all.length == 1);
+    console.assert(all.length > 0);
     return new PublicKey(all[0].swap.config.swapAccount);
-    // Take first instance lol
-    // Make a simple lookup
 }
 
 // TODO: Write batch functions for all these

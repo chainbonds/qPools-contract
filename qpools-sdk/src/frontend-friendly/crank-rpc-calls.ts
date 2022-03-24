@@ -34,7 +34,7 @@ export class CrankRpcCalls {
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
-    public poolAddresses: registry.ExplicitSaberPool[];
+    public poolAddresses: registry.ExplicitPool[];
     public portfolioOwner: PublicKey;
 
     public payer: Keypair;

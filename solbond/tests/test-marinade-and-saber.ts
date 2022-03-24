@@ -65,7 +65,8 @@ describe('qPools!', () => {
         await portfolio.createAssociatedTokenAccounts(
             pool_addresses,
             genericPayer,
-            provider.wallet
+            provider.wallet,
+            marinade
         )
     })
 

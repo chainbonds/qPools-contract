@@ -5,6 +5,7 @@ use crate::utils::seeds;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
+use spl_token_lending::state::{ReserveConfig, ReserveFees};
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
@@ -83,7 +84,8 @@ pub struct SaberLiquidityInstruction<'info> {
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
     
-    pub saber_swap_program: Program<'info, StableSwap>,
+    //pub saber_swap_program: Program<'info, StableSwap>,
+    pub saber_swap_program: AccountInfo<'info>,
     
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,

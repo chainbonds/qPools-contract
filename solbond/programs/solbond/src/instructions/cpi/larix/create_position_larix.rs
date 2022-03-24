@@ -6,7 +6,6 @@ use crate::utils::seeds;
 use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use larix_lending_anchor::accounts::{DepositReserveLiquidity};
-use larix_lending::id as larix_lending_id;
 use larix_lending::instruction::LendingInstruction;
 use larix_lending::state::obligation::OBLIGATION_LEN;
 use crate::ErrorCode;
@@ -105,7 +104,7 @@ pub fn handler(
 
 
     let ix = larix_lending::instruction::deposit_reserve_liquidity(
-        larix_lending_id(),
+        larix_lending::ID,
         approved_position_details.initial_amount,
         ctx.accounts.source_liquidity.key(),
         ctx.accounts.destination_collateral.key(),

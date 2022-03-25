@@ -16,6 +16,7 @@ export interface PositionsInput {
     poolAddress: PublicKey,
     amount: u64
 }
+import {SolendMarket, SolendAction} from "@solendprotocol/solend-sdk";
 
 // Probably put into a separate file, so we can outsource the SDK into a separate set of imports ...
 export class Portfolio extends SaberInteractTool {
@@ -283,6 +284,127 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
+    async approvePositionWeightSolend(init_amount: u64, index: number, weight: BN, owner_keypair: Keypair, currencyMint: PublicKey) {
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer,Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        );
+        let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),
+                currencyMint.toBuffer() ,
+                Buffer.from(anchor.utils.bytes.utf8.encode(SEED.USER_CURRENCY_STRING))
+            ],
+            this.solbondProgram.programId
+        );
+        let finaltx = await this.solbondProgram.rpc.approvePositionWeightSolend(
+            this.portfolioBump,
+            bumpPosition,
+            new BN(bumpCurrency),
+            new BN(weight),
+            new BN(init_amount),
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,
+                    userCurrencyPdaAccount: currencyPDA,
+                    currencyMint: currencyMint,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        )
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("approvePositionWeightSolen Transaction Signature is: ", finaltx);
+        return finaltx;
+
+
+    }
+
+    async createPositionSolend(owner_keypair: Keypair, index: number, currencyMint: PublicKey) {
+
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        )
+
+        
+
+
+        const solendAction = await SolendAction.initialize(
+            "mint", 
+            new BN(0),
+            "SOL",
+            owner_keypair.publicKey,
+            this.connection,
+            "devnet",
+        )
+        
+        const pda_udsc = await this.getAccountForMintAndPDA(currencyMint, this.portfolioPDA);
+        const pda_collateral = await this.getAccountForMintAndPDA(new PublicKey(solendAction.reserve.collateralMintAddress), this.portfolioPDA)
+        console.log("owner ", owner_keypair.toString())
+        console.log("positionPDA ", positionPDA.toString())
+        console.log("portfolioPDA, userTransferAuthority ", this.portfolioPDA.toString())
+        console.log("sourceLiquidity ", pda_udsc.toString())
+        console.log("destinationCollateral ", pda_collateral.toString())
+        console.log("reserve ", solendAction.reserve.address)
+        console.log("reserveCollateralMint ", solendAction.reserve.collateralMintAddress)
+        console.log("reserveLiquiditySupply ", solendAction.reserve.liquidityAddress)
+        console.log("lendingMarket ", solendAction.lendingMarket.address)
+        console.log("lending authority ", solendAction.lendingMarket.authorityAddress)
+        console.log("program id ", solendAction.solendInfo.programID.toString())
+        // console.log("state ", marinade_state.marinadeStateAddress.toString())
+        // console.log("msolMInt ", marinade_state.mSolMintAddress.toString())
+        let [lending_market_authority, _] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        )
+
+        let finaltx = await this.solbondProgram.rpc.createPositionSolend(
+            bumpPosition,
+            this.portfolioBump,
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    userTransferAuthority: this.portfolioPDA,//randomOwner.publicKey,
+                    sourceLiquidity: pda_udsc,
+                    destinationCollateral: pda_collateral,
+                    reserve: new PublicKey(solendAction.reserve.address),
+                    reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),
+                    reserveLiquiditySupply: new PublicKey(solendAction.reserve.liquidityAddress),
+                    lendingMarket: new PublicKey(solendAction.lendingMarket.address),
+                    lendingMarketAuthority: new PublicKey(solendAction.lendingMarket.authorityAddress),
+                    solendProgram: new PublicKey(solendAction.solendInfo.programID),
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                },
+            }
+        )
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("create Pos Solend Transaction Signature is: ", finaltx);
+        return finaltx;
+
+
+    }
 
     async createPositionMarinade(owner_keypair: Keypair, index: number, marinade_state: MarinadeState) {
 
@@ -475,6 +597,44 @@ export class Portfolio extends SaberInteractTool {
 
     }
 
+    async approveWithdrawSolend(owner_keypair: Keypair, index:number, amount: number) {
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        console.log("seed ",index.toString() + SEED.POSITION_ACCOUNT_APPENDUM)
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer,Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        );
+        
+
+        let finaltx = await this.solbondProgram.rpc.approveWithdrawSolend(
+            this.portfolioBump,
+            new BN(bumpPosition),
+            new BN(amount),
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    portfolioPda: this.portfolioPDA,//randomOwner.publicKey,      
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    // Create liquidity accounts
+                },
+                signers: [owner_keypair]
+            }
+        )
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("approveWithdrawSOLEND Transaction Signature is: ", finaltx);
+        return finaltx;
+
+
+
+
+    }
+
     async signApproveWithdrawAmountSaber(owner_keypair: Keypair, index: number, poolTokenAmount: u64, tokenAAmount: u64) {
         let indexAsBuffer = this.bnTo8(new BN(index));
 
@@ -655,6 +815,82 @@ export class Portfolio extends SaberInteractTool {
         await this.provider.connection.confirmTransaction(finaltx);
         console.log("SavePortfolio Transaction Signature is: ", finaltx);
         return finaltx;
+    }
+
+
+    async redeemPositionSolend(owner_keypair: Keypair, index: number, currencyMint: PublicKey) {
+
+        let indexAsBuffer = this.bnTo8(new BN(index));
+
+        let [positionPDA, bumpPosition] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        )
+
+        
+
+
+        const solendAction = await SolendAction.initialize(
+            "mint", 
+            new BN(0),
+            "SOL",
+            owner_keypair.publicKey,
+            this.connection,
+            "devnet",
+        )
+        
+        const pda_udsc = await this.getAccountForMintAndPDA(currencyMint, this.portfolioPDA);
+        const pda_collateral = await this.getAccountForMintAndPDA(new PublicKey(solendAction.reserve.collateralMintAddress), this.portfolioPDA)
+        console.log("owner ", owner_keypair.toString())
+        console.log("positionPDA ", positionPDA.toString())
+        console.log("portfolioPDA, userTransferAuthority ", this.portfolioPDA.toString())
+        console.log("sourceLiquidity ", pda_udsc.toString())
+        console.log("destinationCollateral ", pda_collateral.toString())
+        console.log("reserve ", solendAction.reserve.address)
+        console.log("reserveCollateralMint ", solendAction.reserve.collateralMintAddress)
+        console.log("reserveLiquiditySupply ", solendAction.reserve.liquidityAddress)
+        console.log("lendingMarket ", solendAction.lendingMarket.address)
+        console.log("lending authority ", solendAction.lendingMarket.authorityAddress)
+        console.log("program id ", solendAction.solendInfo.programID.toString())
+        // console.log("state ", marinade_state.marinadeStateAddress.toString())
+        // console.log("msolMInt ", marinade_state.mSolMintAddress.toString())
+        let [lending_market_authority, _] = await PublicKey.findProgramAddress(
+            [owner_keypair.publicKey.toBuffer(),indexAsBuffer, Buffer.from(anchor.utils.bytes.utf8.encode(SEED.POSITION_ACCOUNT_APPENDUM))],
+            this.solbondProgram.programId
+        )
+
+        let finaltx = await this.solbondProgram.rpc.redeemPositionSolend(
+            bumpPosition,
+            this.portfolioBump,
+            new BN(index),
+            {
+                accounts: {
+                    owner: owner_keypair.publicKey,
+                    positionPda: positionPDA,
+                    userTransferAuthority: this.portfolioPDA,//randomOwner.publicKey,
+                    destinationLiquidity: pda_udsc,
+                    sourceCollateral: pda_collateral,
+                    reserve: new PublicKey(solendAction.reserve.address),
+                    reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),
+                    reserveLiquiditySupply: new PublicKey(solendAction.reserve.liquidityAddress),
+                    lendingMarket: new PublicKey(solendAction.lendingMarket.address),
+                    lendingMarketAuthority: new PublicKey(solendAction.lendingMarket.authorityAddress),
+                    solendProgram: new PublicKey(solendAction.solendInfo.programID),
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: web3.SystemProgram.programId,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
+                },
+            }
+        )
+        console.log("Signing separately")
+        console.log("Done RPC Call!");
+
+        await this.provider.connection.confirmTransaction(finaltx);
+        console.log("create Pos Solend Transaction Signature is: ", finaltx);
+        return finaltx;
+
+
     }
 
     async signRedeemPortfolio( pool_addresses: Array<PublicKey>, owner_keypair: Keypair) {

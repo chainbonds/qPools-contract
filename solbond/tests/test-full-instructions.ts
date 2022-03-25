@@ -30,6 +30,7 @@ const {
     createSyncNativeInstruction,
 
 } = require("@solana/spl-token");
+import {SolendMarket, SolendAction} from "@solendprotocol/solend-sdk";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -58,6 +59,7 @@ describe('qPools!', () => {
     let wSOL: PublicKey;
     let portfolio: Portfolio;
     let marinade;
+    let solendmarket;
 
     
 
@@ -73,7 +75,7 @@ describe('qPools!', () => {
         USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
         wSOL = new PublicKey("So11111111111111111111111111111111111111112");
 
-        weights = [new BN(500), new BN(500), new BN(500)];
+        weights = [new BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
         
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
@@ -85,23 +87,34 @@ describe('qPools!', () => {
         });
         marinade = new Marinade(marinadeConfig);
 
+        solendmarket = await SolendMarket.initialize(connection, "devnet")
+
+
 
     })
 
     
     it("create a marinade position and deposit", async () => {
         const marinadeState = await MarinadeState.fetch(marinade);
+        await solendmarket.loadReserves();
+
+        const usdcReserve = solendmarket.reserves.find(res => res.config.symbol === 'SOL');
+        //console.log(usdcReserve)
+        const usdcMint = new PublicKey(usdcReserve.config.mintAddress)//solendmarket.assets.find(asset => asset.config.symbol == 'USDC').mintAddress;
+
         //const weights = [new BN(500), new BN(500), new BN(500)];
-        const amount = new BN(2e9);
+        const amount = new BN(2000);
         // create a portfolio with 1 base currency (sol)
         try {
         const init_sig = await portfolio.createPortfolioSigned(
             weights, 
             genericPayer,
-            new BN(2), 
+            new BN(1), 
             pool_addresses
-        )
-        } catch (e) {}
+        ) } catch (e) {}
+
+        //SolendAction.buildDepositTxns
+
         // create a wrapped SOL account
         // if ((await connection.getBalance(genericPayer.publicKey)) <= 3e9) {
         //     let tx1 = await connection.requestAirdrop(genericPayer.publicKey, 3e9);
@@ -128,7 +141,7 @@ describe('qPools!', () => {
         //),
         //SystemProgram.transfer({
         //    fromPubkey: payer.publicKey,
-        //    toPubkey: associatedToken,
+        //    toPubkey: associatedToken,å
         //    lamports: 2e9,
         //}),
         
@@ -152,12 +165,22 @@ describe('qPools!', () => {
         // )
         // let sendsig = await provider.send(givemoney)
         // await provider.connection.confirmTransaction(sendsig);
-        // console.log("send money from user to portfolio: ", sendsig);
-        try {
+        // console.log("send money from user to portfolio: ", sendsig);        
+        //console.log("usdc mint ", usdcMint)
+        //try {
+        //const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, usdcMint); 
+        //} catch (err) {}
+        //try {
+        //const aprv_sig = await portfolio.approvePositionWeightSolend(amount, 0, new BN(500), genericPayer, usdcMint)
+        //} catch (e) {}
+        //let userUSDCaccount = await portfolio.getAccountForMintAndPDA(usdcMint, genericPayer.publicKey);
+        //try {
+        //const send_sig = await portfolio.transfer_to_portfolio(genericPayer,usdcMint, userUSDCaccount)
+        //} catch (e) {}
         
-        const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL); 
-        
-        } catch (err) {}
+        const withdraw_sig = await portfolio.approveWithdrawSolend(genericPayer, 0, 20)
+        const give_money_back = await portfolio.redeemPositionSolend(genericPayer, 0, usdcMint)
+        //const makesolendwork = await portfolio.createPositionSolend(genericPayer, 0, usdcMint)
         // try {
         // const send_sig = await portfolio.transfer_to_portfolio(genericPayer,wSOL, wrappedSolAccount)
         // } catch (err) {}
@@ -203,7 +226,7 @@ describe('qPools!', () => {
     //     genericPayer,
     // )
 
-    let sigs_rest = await portfolio.transfer_to_user(provider.wallet, wSOL);
+    // let sigs_rest = await portfolio.transfer_to_user(provider.wallet, wSOL);
 
 
         // easy

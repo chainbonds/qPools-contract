@@ -185,6 +185,77 @@ export type Solbond = {
       ]
     },
     {
+      "name": "approvePositionWeightSolend",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userCurrencyPdaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
+        },
+        {
+          "name": "inputAmount",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "transferToPortfolio",
       "accounts": [
         {
@@ -394,6 +465,59 @@ export type Solbond = {
         {
           "name": "bumpPosition",
           "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "approveWithdrawSolend",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "withdrawAmount",
+          "type": "u64"
         },
         {
           "name": "index",
@@ -688,6 +812,100 @@ export type Solbond = {
       ]
     },
     {
+      "name": "createPositionSolend",
+      "accounts": [
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sourceLiquidity",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destinationCollateral",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserve",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveCollateralMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveLiquiditySupply",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solendProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userTransferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "redeemPositionSaber",
       "accounts": [
         {
@@ -891,6 +1109,100 @@ export type Solbond = {
       ]
     },
     {
+      "name": "redeemPositionSolend",
+      "accounts": [
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sourceCollateral",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destinationLiquidity",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserve",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveCollateralMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveLiquiditySupply",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solendProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userTransferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "transferRedeemedToUser",
       "accounts": [
         {
@@ -991,6 +1303,58 @@ export type Solbond = {
           },
           {
             "name": "fulfilledTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionAccountLarix",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "portfolioPda",
+            "type": "publicKey"
+          },
+          {
+            "name": "currencyMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawAmount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
             "type": "i64"
           }
         ]
@@ -1099,6 +1463,58 @@ export type Solbond = {
           },
           {
             "name": "minimumTokenAmountOut",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionAccountSolend",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "portfolioPda",
+            "type": "publicKey"
+          },
+          {
+            "name": "currencyMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawAmount",
             "type": "u64"
           },
           {
@@ -1562,6 +1978,77 @@ export const IDL: Solbond = {
       ]
     },
     {
+      "name": "approvePositionWeightSolend",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userCurrencyPdaAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
+        },
+        {
+          "name": "inputAmount",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "transferToPortfolio",
       "accounts": [
         {
@@ -1771,6 +2258,59 @@ export const IDL: Solbond = {
         {
           "name": "bumpPosition",
           "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "approveWithdrawSolend",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "portfolioPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "withdrawAmount",
+          "type": "u64"
         },
         {
           "name": "index",
@@ -2065,6 +2605,100 @@ export const IDL: Solbond = {
       ]
     },
     {
+      "name": "createPositionSolend",
+      "accounts": [
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sourceLiquidity",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destinationCollateral",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserve",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveCollateralMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveLiquiditySupply",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solendProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userTransferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "redeemPositionSaber",
       "accounts": [
         {
@@ -2268,6 +2902,100 @@ export const IDL: Solbond = {
       ]
     },
     {
+      "name": "redeemPositionSolend",
+      "accounts": [
+        {
+          "name": "positionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sourceCollateral",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destinationLiquidity",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserve",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveCollateralMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveLiquiditySupply",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarket",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lendingMarketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solendProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userTransferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "transferRedeemedToUser",
       "accounts": [
         {
@@ -2368,6 +3096,58 @@ export const IDL: Solbond = {
           },
           {
             "name": "fulfilledTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionAccountLarix",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "portfolioPda",
+            "type": "publicKey"
+          },
+          {
+            "name": "currencyMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawAmount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
             "type": "i64"
           }
         ]
@@ -2476,6 +3256,58 @@ export const IDL: Solbond = {
           },
           {
             "name": "minimumTokenAmountOut",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionAccountSolend",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "portfolioPda",
+            "type": "publicKey"
+          },
+          {
+            "name": "currencyMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "isFulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isRedeemed",
+            "type": "bool"
+          },
+          {
+            "name": "redeemApproved",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u64"
+          },
+          {
+            "name": "initialAmount",
+            "type": "u64"
+          },
+          {
+            "name": "withdrawAmount",
             "type": "u64"
           },
           {

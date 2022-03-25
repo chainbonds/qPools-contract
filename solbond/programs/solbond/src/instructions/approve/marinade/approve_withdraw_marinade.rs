@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{PortfolioAccount, PositionAccountMarinade};
 use crate::utils::seeds;
+use crate::ErrorCode;
 
 #[derive(Accounts, Clone)]
 #[instruction(
@@ -58,6 +59,9 @@ pub fn handler(
         ctx.accounts.position_pda.is_fulfilled,
         "position not fulfilled yet!"
     );
+    if !ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
 
     let portfolio = & mut ctx.accounts.portfolio_pda;
     portfolio.num_redeemed += 1;

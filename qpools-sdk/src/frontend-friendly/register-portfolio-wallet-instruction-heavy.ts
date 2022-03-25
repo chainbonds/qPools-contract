@@ -160,18 +160,21 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
             console.log("Getting portfolio PDA");
             // Hmm, portfolio PDA is not
+            if (!createdAtaAccounts.has(usdcPortfolioAta.toString())) {
+                const stableSwapState = await getPoolState(this.connection, poolAddress);
+                const {state} = stableSwapState;
+                let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
+                    this.connection,
+                    this.solbondProgram,
+                    this.owner.publicKey,
+                    wallet,
+                    state,
+                    createdAtaAccounts
+                );
+                ixs.map((x: TransactionInstruction) => {tx.add(x)})
+            }
+            createdAtaAccounts.add(usdcPortfolioAta.toString());
 
-            const stableSwapState = await getPoolState(this.connection, poolAddress);
-            const {state} = stableSwapState;
-            let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
-                this.connection,
-                this.solbondProgram,
-                this.owner.publicKey,
-                wallet,
-                state,
-                createdAtaAccounts
-            );
-            ixs.map((x: TransactionInstruction) => {tx.add(x)})
         }));
         // Sign this transaction
 
@@ -609,7 +612,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     async flushAllAccountsToConsole(): Promise<any> {
-
+        console.log("#flushAllAccountsToConsole()");
+        console.log("Flushing ...");
         // Get portfolio
         let portfolio = await this.fetchPortfolio();
 
@@ -628,7 +632,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log(allCurrencyAccounts)
 
         //
-
+        console.log("##flushAllAccountsToConsole()");
     }
 
     async fetchAllCurrencyAccounts(): Promise<UserCurrencyAccount[]> {

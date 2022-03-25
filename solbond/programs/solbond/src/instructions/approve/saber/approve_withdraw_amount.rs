@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint};
 use crate::state::{PortfolioAccount, PositionAccountSaber};
 use crate::utils::seeds;
+use crate::ErrorCode;
 
 #[derive(Accounts, Clone)]
 #[instruction(
@@ -58,7 +59,9 @@ pub fn handler(
         ctx.accounts.pool_mint.key() == ctx.accounts.position_pda.pool_address,
         "The mint address provided in the context doesn't match the approved mint!"
     );
-
+    if !ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
 
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;

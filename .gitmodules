@@ -10,6 +10,3 @@
 [submodule "qpools-sdk/deps/larix-sdk"]
 	path = qpools-sdk/deps/larix-sdk
 	url = git@github.com:ProjectLarix/larix-sdk.git
-[submodule "solbond/deps/--force"]
-	path = solbond/deps/--force
-	url = git@github.com:chainbonds/stable-swap.git

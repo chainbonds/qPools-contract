@@ -44,11 +44,10 @@ export async function getTotalInputAmount(
     // })
 
     // Filter out unique accounts, by taking the owner, the currency mint (from above), and the seed!
-    let allMints: Set<PublicKey> = new Set(Array.from(allUserCurrencyAccounts.values()).map((x) => x.mint));
+    // let allMints: Set<PublicKey> = new Set(Array.from(allUserCurrencyAccounts.values()).map((x) => x.mint));
+
     // for all the mints, re-create the accounts, and pick the accounts that were initially done.
-
     // Also, perhaps you wanna write some function that just get's all accounts form scratch, at the beginning of loading the program
-
 
     // allUserCurrencyAccounts.entries(([key: PublicKey, value: UserCurrencyAccount]) => {
     //     let [pda, _] = await getUserCurrencyPda(solbondProgram, owner, value.mint);
@@ -56,13 +55,25 @@ export async function getTotalInputAmount(
     //         out.push(pda);
     //     }
     // })
-    let out: UserCurrencyAccount[] = await Promise.all(allUserCurrencyAccounts.filter(async ([key, value]) => {
-        let [pda, _] = await getUserCurrencyPda(solbondProgram, owner, value.mint);
-        if (key.equals(pda)) {
-            return value;
-        }
-    })).values();
+    // let out: UserCurrencyAccount[] = await Promise.all(allUserCurrencyAccounts.forEach(async ([key, value]) => {
+    //     let [pda, _] = await getUserCurrencyPda(solbondProgram, owner, value.mint);
+    //     if (key.equals(pda)) {
+    //         return value;
+    //     }
+    // })).values();
+    // let out: UserCurrencyAccount[] = [];
+    // allUserCurrencyAccounts.forEach((value: UserCurrencyAccount, key: PublicKey) => {
+    //     getUserCurrencyPda(solbondProgram, owner, value.mint).then(([pda, bump]) => {
+    //         console.log("Key and PDA are: ", key.toString(), pda.toString());
+    //         console.log("Initial amount and mint are: ", value.mint.toString());
+    //         console.log("Owner here and saved is: ", owner.toString(), value.owner.toString());
+    //         if (key.equals(pda)) {
+    //             out.push(value);
+    //         }
+    //     });
+    // });
 
+    let out: UserCurrencyAccount[] = Array.from(allUserCurrencyAccounts.values());
     console.log("All currency accounts are: ", allUserCurrencyAccounts);
     // Now filter out only those addresses that have the right seed as well ...
     console.log("##portfolioExists");

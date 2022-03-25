@@ -40,6 +40,7 @@ import {
 } from "../instructions/fetch/position";
 import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
 import {getTotalInputAmount} from "../instructions/fetch/currency";
+import {UserCurrencyAccount} from "../types/account/userCurrencyAccount";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -607,11 +608,47 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return out;
     }
 
+    async flushAllAccountsToConsole(): Promise<any> {
+
+        // Get portfolio
+        let portfolio = await this.fetchPortfolio();
+
+        // Get all positions
+        let allSaberPositions = await this.fetchAllPositionsByProtocol(Protocol.saber);
+        let allMarinadePositions = await this.fetchAllPositionsByProtocol(Protocol.marinade);
+
+        // // Get all Usdc
+        let allCurrencyAccounts = await this.fetchAllCurrencyAccounts();
+        // let allCurrencyPositions = await this.
+
+        console.log("Printing the state of our world ...");
+        console.log(portfolio);
+        console.log(allSaberPositions);
+        console.log(allMarinadePositions);
+        console.log(allCurrencyAccounts)
+
+        //
+
+    }
+
+    async fetchAllCurrencyAccounts(): Promise<UserCurrencyAccount[]> {
+        let out: UserCurrencyAccount[] = await getTotalInputAmount(this.connection, this.solbondProgram, this.owner.publicKey);
+        return out;
+    }
+
     async getInitialDepositInAllCurrencies(): Promise<any> {
-
-        let out = await getTotalInputAmount(this.connection, this.solbondProgram, this.owner.publicKey);
+        let out = await this.fetchAllCurrencyAccounts();
         console.log("Out is: ", out);
+        // Sign up all these, and translate the mint's through pyth before putting out
+        // let totalUsdc = 0.;
+        // out.map((x) => {
+        //     totalUsdc += x.initial_amount;
+        // });
+        let totalUsdc = 0.;
 
+        // Todo do a "new TokenAccount" from a mint, which takes into account decimals
+
+        return totalUsdc;
     }
 
     /**

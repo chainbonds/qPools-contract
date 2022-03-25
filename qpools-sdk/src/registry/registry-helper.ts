@@ -90,6 +90,10 @@ export function getWhitelistTokens(): string[] {
     return DEV_WHITELIST_TOKENS;
 }
 
+export function getWrappedSolMint(): PublicKey {
+    return new PublicKey("So11111111111111111111111111111111111111112");
+}
+
 function getAllTokens(): ExplicitToken[] {
     let saberTokenList: ExplicitToken[] = DEV_TOKEN_LIST_SABER["tokens"];
     let marinadeTokenList: ExplicitToken[] = DEV_TOKEN_LIST_MARINADE["tokens"];

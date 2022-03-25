@@ -39,6 +39,7 @@ import {
     fetchAllPositionsSaber
 } from "../instructions/fetch/position";
 import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
+import {getTotalInputAmount} from "../instructions/fetch/currency";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -604,6 +605,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }));
         console.log("Approving Marinade Withdraw");
         return out;
+    }
+
+    async getInitialDepositInAllCurrencies(): Promise<any> {
+
+        let out = await getTotalInputAmount(this.connection, this.solbondProgram, this.owner.publicKey);
+        console.log("Out is: ", out);
+
     }
 
     /**

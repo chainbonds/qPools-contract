@@ -26,11 +26,7 @@ import {
     registerCurrencyInputInPortfolio
 } from "../instructions/modify/portfolio";
 import {approvePositionWeightMarinade, approveWithdrawToMarinade} from "../instructions/modify/marinade";
-import {
-    approvePositionWeightSaber,
-    registerLiquidityPoolAssociatedTokenAccountsForPortfolio,
-    signApproveWithdrawAmountSaber
-} from "../instructions/modify/saber";
+import {approvePositionWeightSaber, signApproveWithdrawAmountSaber} from "../instructions/modify/saber";
 import {sendLamports, transferUsdcFromUserToPortfolio} from "../instructions/modify/portfolio-transfer";
 import {PositionInfo, Protocol, ProtocolType} from "../types/positionInfo";
 import {

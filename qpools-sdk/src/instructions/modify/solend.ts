@@ -121,7 +121,7 @@ export async function permissionlessFulfillSolend(
         new BN(0),
         tokenSymbol,
         owner,
-        this.connection,
+        connection,
         environment,
     )
 

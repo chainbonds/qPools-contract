@@ -5,6 +5,9 @@ import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {
+    SystemProgram,
+} from '@solana/web3.js';
+import {
     accountExists,
     createAssociatedTokenAccountUnsigned, createAssociatedTokenAccountUnsignedInstruction, delay,
     getAccountForMintAndPDADontCreate,
@@ -276,6 +279,17 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             // let sg6 = await this.provider.send(tx6);
             // await this.provider.connection.confirmTransaction(sg6, "confirmed");
         }
+
+        const givemoney = new Transaction().add(await SystemProgram.transfer({
+            fromPubkey: this.owner.publicKey,
+            toPubkey: wSolOwnerAta,
+            lamports: 1e9,
+        }),
+        // createSyncNativeInstruction(wrappedSolAccount)
+        )
+        let sendsig = await this.provider.send(givemoney)
+        await this.provider.connection.confirmTransaction(sendsig);
+        console.log("send money from user to portfolio: ", sendsig);
 
         let wSolPortfolioAta = await getAssociatedTokenAddressOffCurve(solendMint, portfolioPDA);
         console.log("mSolPortfolioAta", wSolPortfolioAta.toString());

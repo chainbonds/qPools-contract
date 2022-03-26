@@ -204,7 +204,7 @@ describe('qPools!', () => {
 
     });
 
-    it("run the cranks to fulfill the marinade positions ...", async () => {
+    it("run the cranks to fulfill the Saber, Marinade and solend Positions ...", async () => {
         // These are not instruction-chained, because the crankRPC is done through a keypair ...
         // Perhaps it could be useful to make it chained tho, just for the sake of atomicity
         let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0);
@@ -237,7 +237,7 @@ describe('qPools!', () => {
 
 
         let minRedeemAmount2 = new BN(0);  // This is the minimum amount of tokens that should be put out ...
-        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(0, minRedeemAmount2);
+        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2, minRedeemAmount2);
         tx.add(IxApproveWithdrawSolend);
 
         console.log("Send some to Crank Wallet");

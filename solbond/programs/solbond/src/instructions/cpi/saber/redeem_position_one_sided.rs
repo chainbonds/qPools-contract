@@ -21,9 +21,8 @@ pub struct RedeemOneSaberPosition<'info> {
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
-    //#[account(mut)]
+    #[account(mut)]
     pub portfolio_owner: AccountInfo<'info>,
-
 
     pub swap_authority: AccountInfo<'info>,
     #[account(

@@ -347,10 +347,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async fetchAllPositionsByProtocol(protocol: Protocol): Promise<[PositionAccountSaber[], PositionAccountMarinade[]]> {
         // For type-safe unpacking ...
         let out: [PositionAccountSaber[], PositionAccountMarinade[]];
-        if (protocol === Protocol.saber) {
+        if (protocol.valueOf() === Protocol.saber.valueOf()) {
             let tmp: PositionAccountSaber[] = await fetchAllPositionsSaber(this.connection, this.solbondProgram, this.owner.publicKey);
             out = [tmp, []];
-        } else if (protocol === Protocol.marinade) {
+        } else if (protocol.valueOf() === Protocol.marinade.valueOf()) {
             let tmp: PositionAccountMarinade[] = await fetchAllPositionsMarinade(this.connection, this.solbondProgram, this.owner.publicKey);
             out = [[], tmp]
         } else {

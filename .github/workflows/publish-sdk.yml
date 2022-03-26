@@ -6,24 +6,15 @@ name: qpools-sdk npm continuous integration
 on:
   push:
     branches: 
-      - npm
       - dev
       - stage
       - main
-      - david1
-      - new_main
-      - instruction/chained
-      - marinade-multicoin
+
   pull_request:
     branches: 
-      - npm
       - dev
       - stage
       - main
-      - david1
-      - new_main
-      - instruction/chained
-      - marinade-multicoin
 
 env:
   solana_verion: 1.8.12

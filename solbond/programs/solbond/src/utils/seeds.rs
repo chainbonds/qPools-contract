@@ -1,8 +1,5 @@
 
-pub const BOND_POOL_ACCOUNT: &[u8; 16] = b"bondPoolAccount6";
-pub const TWO_WAY_LP_POOL: &[u8; 11] = b"twoWayPool7";
-pub const TVL_INFO_ACCOUNT: &[u8; 15] = b"tvlInfoAccount6";
-pub const USER_POSITION_ACCOUNT: &[u8; 16] = b"PositionAccount7";
-pub const PORTFOLIO_SEED: &[u8; 14] = b"PortFolioSeed9";
-
-pub const USER_POSITION_STRING: &str = "PositionAccount7";
+pub const PORTFOLIO_SEED: &[u8; 16] = b"portFolioSeed591";
+pub const USER_POSITION_STRING: &[u8; 16] = b"UsingPosition373";
+pub const USER_CURRENCY_STRING: &[u8; 16] = b"UserCurrency1263";
+pub const USER_MARINADE_SEED: &[u8; 16] = b"UserMarinade0053";

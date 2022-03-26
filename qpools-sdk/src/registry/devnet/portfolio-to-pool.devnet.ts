@@ -19,6 +19,9 @@
 //     ]
 // }
 
+// Gotta add some new stuff for devnet,
+// to match to whatever Miller is returning from the API
+// Perhaps we can also always assign it to a random underlying asset. Actually, it has to be persistent ..
 export const DEV_PORTFOLIOID_TO_TOKEN = {
     "pairs": [
         {

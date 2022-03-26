@@ -1,12 +1,80 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
+import {Wallet} from "@project-serum/anchor/src/provider";
+import {Buffer} from "buffer";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
+
+export default class QWallet implements Wallet {
+
+    constructor(readonly payer: Keypair) {
+        this.payer = payer
+    }
+
+    async signTransaction(tx: Transaction): Promise<Transaction> {
+        tx.partialSign(this.payer);
+        return tx;
+    }
+
+    async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+        return txs.map((t) => {
+            t.partialSign(this.payer);
+            return t;
+        });
+    }
+
+    get publicKey(): PublicKey {
+        return this.payer.publicKey;
+    }
+}
+
+export async function sendAndSignInstruction(provider: Provider, ix: TransactionInstruction) {
+    let tx = new Transaction();
+    tx.add(ix);
+    let sg = await provider.send(tx);
+    await provider.connection.confirmTransaction(sg, "confirmed");
+    console.log("Transaction Signature is: ", sg);
+    return sg;
+}
+
+export const sendAndConfirmTransaction = async (
+    programProvider: Provider,
+    connection: Connection,
+    tx: Transaction,
+    // feePayer: PublicKey
+) => {
+    // Get blockhash
+    // const blockhash = await connection.getRecentBlockhash();
+    // tx.recentBlockhash = blockhash.blockhash!;
+    // tx.feePayer = feePayer;
+    // Assign feePayer
+
+    // Send and Confirm
+    console.log("Signing transaction...");
+    console.log("About to send the following transactions: ", tx);
+    console.log("Program provider is: ", programProvider, typeof programProvider);
+    console.log("Sending wallet is: ", programProvider.wallet.publicKey, programProvider.wallet.publicKey.toString());
+    let sg = await programProvider.send(tx);
+    console.log("sg1 is: ", sg);
+    await connection.confirmTransaction(sg, 'confirmed');
+}
+
+/**
+ * Big Number to u32 (32 bit integer)
+ * @param bn
+ */
+export function bnTo8(bn: BN): Uint8Array {
+    return Buffer.from([...bn.toArray("le", 4)])
+}
+
+export function bnTo1(bn: BN): Uint8Array {
+    return Buffer.from([...bn.toArray("le", 1)])
+}
 
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -16,23 +84,24 @@ export const tokenAccountExists = async (
     conn: web3.Connection,
     account: web3.PublicKey,
 ): Promise<boolean> => {
+    if (!account) {
+        return false;
+    }
     const info = await conn.getParsedAccountInfo(account)
     return info.value !== null
 }
 
-// export const createTokenAccount = async (
-//     mint: PublicKey,
-//     address: PublicKey | null
-// ): Promise<TransactionInstruction> => {
-//     return Token.createAssociatedTokenAccountInstruction(
-//         ASSOCIATED_TOKEN_PROGRAM_ID,
-//         TOKEN_PROGRAM_ID,
-//         mint,
-//         address,
-//         owner,
-//         wallet.publicKey
-//     )
-// }
+export const accountExists = async (
+    conn: web3.Connection,
+    account: web3.PublicKey
+): Promise<boolean> => {
+    // Return false, if account is null!
+    if (!account) {
+        return false;
+    }
+    const info = await conn.getParsedAccountInfo(account)
+    return info.value !== null
+}
 
 export async function createMint2(provider: any) {
     let authority = provider.wallet.publicKey;
@@ -143,6 +212,35 @@ export const createAssociatedTokenAccountSendUnsigned = async (
     return address
 }
 
+export const getAccountForMintAndPDADontCreate = async (mintKey: PublicKey, pda: PublicKey) => {
+    return await getAssociatedTokenAddressOffCurve(mintKey, pda);
+}
+
+export const getAccountForMintAndPDA = async (connection: Connection, wallet: WalletI, payer: Keypair, mintKey: PublicKey, pda: PublicKey) => {
+    try {
+        // console.log("this wallet ", this.wallet.publicKey.toString())
+        // console.log("this provider wallet  ", this.provider.wallet.publicKey.toString())
+        // console.log("this qpoolacc ", this.qPoolAccount.toString())
+
+        let tx = await createAssociatedTokenAccountUnsigned(
+            connection,
+            mintKey,
+            null,
+            pda,
+            wallet,
+        );
+        const sg = await connection.sendTransaction(tx, [payer]);
+        await connection.confirmTransaction(sg);
+        //console.log("Signature for token A is: ", sg);
+    } catch (e) {
+        //console.log("Error is: ");
+        //console.log(e);
+    }
+
+    const userAccount = await getAssociatedTokenAddressOffCurve(mintKey, pda);
+    return userAccount;
+}
+
 export const getAssociatedTokenAddressOffCurve = async (
     mint: web3.PublicKey,
     user: web3.PublicKey
@@ -160,16 +258,6 @@ export const createAssociatedTokenAccountUnsignedInstruction = async (
     if (!address) {
         address = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, owner, true);
     }
-    console.log("ASSOCIATED_TOKEN_PROGRAM_ID", ASSOCIATED_TOKEN_PROGRAM_ID.toString(), TOKEN_PROGRAM_ID.toString());
-    console.log("Stuff is not working. let's check accounts: ");
-    console.log({
-        "ASSOCIATED_TOKEN_PROGRAM_ID": ASSOCIATED_TOKEN_PROGRAM_ID.toString(),
-        "TOKEN_PROGRAM_ID": TOKEN_PROGRAM_ID.toString(),
-        "mint": mint.toString(),
-        "address": address.toString(),
-        "owner": owner.toString(),
-        "wallet": wallet.publicKey.toString()
-    })
     let instructions = [
         Token.createAssociatedTokenAccountInstruction(
             ASSOCIATED_TOKEN_PROGRAM_ID,

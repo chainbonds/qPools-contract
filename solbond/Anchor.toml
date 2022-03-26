@@ -1,12 +1,12 @@
 [provider]
-cluster = "devnet"
+cluster = "https://api.google.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-solbond = "HdWi7ZAt1tmWaMJgH37DMqAMqBwjzt56CtiKELBZotrc"
+solbond = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8"
 
 [programs.devnet]
-solbond = "HdWi7ZAt1tmWaMJgH37DMqAMqBwjzt56CtiKELBZotrc"
+solbond = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8"
 
 [registry]
 url = "https://anchor.projectserum.com"

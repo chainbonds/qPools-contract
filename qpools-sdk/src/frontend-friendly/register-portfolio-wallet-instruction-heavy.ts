@@ -14,6 +14,7 @@ import {
 } from "../utils";
 import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
+
 import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
@@ -30,6 +31,13 @@ import {
     registerLiquidityPoolAssociatedTokenAccountsForPortfolio,
     signApproveWithdrawAmountSaber
 } from "../instructions/modify/saber";
+
+import {
+    approvePositionWeightSolend,
+    permissionlessFulfillSolend,
+    signApproveWithdrawAmountSolend,
+    redeemSinglePositionSolend
+} from "../instructions/modify/solend";
 import {
     sendLamports,
     transferUsdcFromUserToPortfolio
@@ -137,6 +145,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      */
     async createAssociatedTokenAccounts(
         saber_pool_addresses: PublicKey[],
+        solendMint: PublicKey,
         wallet: IWallet
     ): Promise<Transaction> {
 
@@ -247,6 +256,43 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Adding mSolOwnerAta 2");
             // let sg6 = await this.provider.send(tx6);
             // await this.provider.connection.confirmTransaction(sg6, "confirmed");
+        }
+
+
+        let wSolOwnerAta = await getAssociatedTokenAddressOffCurve(solendMint, this.owner.publicKey);
+        console.log("mSolOwnerAta", wSolOwnerAta.toString());
+        if (!(await tokenAccountExists(this.connection, wSolOwnerAta)) && !createdAtaAccounts.has(wSolOwnerAta.toString())) {
+            console.log("Adding wSolOwnerAta 1");
+            let tx5 = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                solendMint,
+                null,
+                this.owner.publicKey,
+                wallet,
+            );
+            createdAtaAccounts.add(wSolOwnerAta.toString());
+            tx.add(tx5);
+            console.log("Adding wSolOwnerAta 2");
+            // let sg6 = await this.provider.send(tx6);
+            // await this.provider.connection.confirmTransaction(sg6, "confirmed");
+        }
+
+        let wSolPortfolioAta = await getAssociatedTokenAddressOffCurve(solendMint, portfolioPDA);
+        console.log("mSolPortfolioAta", wSolPortfolioAta.toString());
+        if (!(await tokenAccountExists(this.connection, wSolPortfolioAta)) && !createdAtaAccounts.has(wSolPortfolioAta.toString())) {
+            console.log("Adding mSolPortfolioAta 1");
+            let tx6 = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                solendMint,
+                null,
+                portfolioPDA,
+                wallet,
+            );
+            createdAtaAccounts.add(wSolPortfolioAta.toString());
+            tx.add(tx6);
+            console.log("Adding mSolPortfolioAta 2");
+            // let sg5 = await this.provider.send(tx5);
+            // await this.provider.connection.confirmTransaction(sg5, "confirmed");
         }
         // let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
         // For MSOL, create associated token addresses
@@ -382,6 +428,31 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             index,
             new BN(lpAmount),
             minRedeemTokenAmount
+        );
+        return ix;
+    }
+
+
+    async approvePositionWeightSolend(currencyMint: PublicKey, input_amount: u64, index: number, weight: BN) {
+        let ix = await approvePositionWeightSolend(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            currencyMint,
+            input_amount,
+            index,
+            weight
+        );
+        return ix
+    }
+
+    async approveWithdrawSolend(index: number, redeem_amount: u64) {
+        let ix = await signApproveWithdrawAmountSolend(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            index, 
+            redeem_amount,
         );
         return ix;
     }

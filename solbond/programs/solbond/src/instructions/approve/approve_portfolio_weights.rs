@@ -13,7 +13,7 @@ use crate::utils::seeds;
 )]
 pub struct SavePortfolio<'info> {
 
-    #[account(mut)]
+    //#[account(mut)]
     pub owner: Signer<'info>,
 
     #[account(
@@ -23,7 +23,6 @@ pub struct SavePortfolio<'info> {
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
-    
     
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -40,7 +39,6 @@ pub fn handler(
 ) -> ProgramResult {
     //let sum: u64 = _weights.iter().sum();
     //assert!(sum/1000 == 1, "weights do not sum to 1!");
-
 
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
   

@@ -12,6 +12,7 @@ export async function createPortfolioSigned(
     poolAddresses: PublicKey[]
 ): Promise<TransactionInstruction> {
     console.log("#createPortfolioSigned()");
+    console.log("owner thing ", owner.toString())
     console.assert(weights.length === poolAddresses.length);
     if (weights.length != poolAddresses.length) {
         throw Error("Does not match in length!");

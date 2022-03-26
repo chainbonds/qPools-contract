@@ -6,7 +6,7 @@ mod state;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
-declare_id!("GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8");
+declare_id!("EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H");
 
 
 
@@ -119,6 +119,26 @@ pub mod solbond {
             _index
         )
     }
+
+    pub fn approve_position_weight_solend(
+        ctx: Context<ApprovePositionWeightSolend>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _bump_currency: u8,
+        _weight: u64,
+        _input_amount: u64,
+        _index: u32,
+    ) -> ProgramResult {
+        instructions::approve::solend::approve_position_solend::handler(
+            ctx,
+            _bump_portfolio,
+            _bump_position,
+            _bump_currency,
+            _weight,
+            _input_amount,
+            _index
+        )
+    }
     /**
      * Permissioned. Transfer the agreed to amount to the portfolio owned token account
     */
@@ -195,6 +215,22 @@ pub mod solbond {
         )
     }
 
+    pub fn approve_withdraw_solend(
+        ctx: Context<ApproveWithdrawAmountSolend>,
+        _bump_portfolio: u8,
+        _bump_position: u8,
+        _withdraw_amount: u64,
+        _index: u32,
+    ) -> ProgramResult {
+        instructions::approve::solend::approve_withdraw_solend::handler(
+            ctx, 
+            _bump_portfolio,
+            _bump_position,
+            _withdraw_amount,
+            _index
+        )
+    }
+
     pub fn approve_initial_currency_amount(
         ctx: Context<ApproveInitialCurrencyAmount>,
         _bump_user_currency: u8,
@@ -253,6 +289,20 @@ pub mod solbond {
         )
     }
 
+    pub fn create_position_solend(
+        ctx: Context<SolendPositionInstruction>,
+        _bump_position: u8,
+        _bump_portfolio: u8,
+        _index:u32,
+    ) -> ProgramResult {
+        instructions::cpi::solend::create_position_solend::handler(
+            ctx, 
+            _bump_position,
+            _bump_portfolio,
+            _index, 
+        )
+    }
+
     pub fn redeem_position_saber(
         ctx: Context<RedeemSaberPosition>,
         _bump_portfolio: u8,
@@ -286,6 +336,20 @@ pub mod solbond {
         //_bump_pool, 
         _index
     )
+    }
+
+    pub fn redeem_position_solend(
+        ctx: Context<RedeemPositionSolend>, 
+        _bump_position: u8,
+        _bump_portfolio: u8,
+        _index: u32,
+    ) -> ProgramResult {
+        instructions::cpi::solend::redeem_position_solend::handler(
+            ctx, 
+            _bump_position,
+            _bump_portfolio,
+            _index
+        )
     }
     
     

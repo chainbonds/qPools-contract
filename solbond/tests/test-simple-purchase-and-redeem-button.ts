@@ -13,6 +13,7 @@ import {
     getSolbondProgram,
 } from "@qpools/sdk";
 import {delay, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
+import {SolendMarket, SolendAction} from "@solendprotocol/solend-sdk";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -45,7 +46,9 @@ describe('qPools!', () => {
     let valueInSol: number;
     // I guess mSOL has 9 decimal points
     let AmountSol: BN;
-
+    let solendmarket;
+    const tokenSymbolSolend = 'SOL'
+    let solSolendMint;
     // Do some airdrop before we start the tests ...
     before(async () => {
 
@@ -65,20 +68,26 @@ describe('qPools!', () => {
         // Delay a bit so the async call works ...
         await delay(5000);
 
-        weights = [new BN(500), new BN(500)];
+        weights = [new BN(500), new BN(500), new BN(500)];
 
         USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");  // This is the pool address, not the LP token ...
         mSOLLpToken = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");  // Assume the LP token to be the denominator for what underlying asset we target ...
-        poolAddresses = [USDC_USDT_pubkey, mSOLLpToken];
+        
+        
         // let USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
 
         wrappedSolMint = new PublicKey("So11111111111111111111111111111111111111112");
+
+        solendmarket = await SolendMarket.initialize(connection, "devnet")
+        const solReserve = solendmarket.reserves.find(res => res.config.symbol === tokenSymbolSolend);
+        solSolendMint = new PublicKey(solReserve.config.mintAddress)
         // We need the mSOL, because in the end, this is what we will be sendin back to the user ...
         // We will probably need to apply a hack, where we replace the mSOL with SOL, bcs devnet.
         // Probably easiest to do so is by swapping on the frontend, once we are mainnet ready
         mSOL = portfolioObject.marinadeState.mSolMintAddress;
         console.log("mSOL mint is: ", mSOL.toString());
+        poolAddresses = [USDC_USDT_pubkey, mSOLLpToken, solSolendMint];
 
         // If poolAddresses or weights are empty, don't proceed!
         if (weights.length === 0 || poolAddresses.length === 0) {
@@ -94,7 +103,7 @@ describe('qPools!', () => {
 
     it("Create Associated Token Accounts", async () => {
         console.log("Creating associated token accounts ...");
-        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]], provider.wallet);
+        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]], solSolendMint,provider.wallet);
         if (txCreateATA.instructions.length > 0) {
             await sendAndConfirmTransaction(
                 solbondProgram.provider,
@@ -107,7 +116,7 @@ describe('qPools!', () => {
     it("Prepare the amount of SOL and USDC to pay in ", async () => {
         valueInUsdc = 2;
         AmountUsdc = new BN(valueInUsdc).mul(new BN(10**MOCK.DEV.SABER_USDC_DECIMALS));
-        valueInSol = 1;
+        valueInSol = 2;
         // I guess mSOL has 9 decimal points
         AmountSol = new BN(valueInSol).mul(new BN(10**9));
         console.log("Total amount in Usdc is: ", valueInUsdc);
@@ -131,6 +140,11 @@ describe('qPools!', () => {
             AmountUsdc, USDC_mint
         );
         tx.add(IxRegisterCurrencyUsdcInput);
+
+        let IxRegisterCurrencywSOLInput = await portfolioObject.registerCurrencyInputInPortfolio(
+            new BN(1).mul(new BN(10**9)), solSolendMint
+        );
+        tx.add(IxRegisterCurrencywSOLInput);
         // let IxRegisterCurrencyMSolInput = await qPoolContext.portfolioObject!.registerCurrencyInputInPortfolio(
         //     AmountSol, wrappedSolMint
         // );
@@ -156,15 +170,26 @@ describe('qPools!', () => {
 
         console.log("Approve Position Marinade");
         let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
-            AmountSol,
+            new BN(1).mul(new BN(10**9)),
             1, // Hardcoded
             weights[1]
         );
         tx.add(IxApprovePositionWeightMarinade);
 
+        console.log("Approve Position Solend");
+        let IxApprovePositionWeightSolend = await portfolioObject.approvePositionWeightSolend(
+            solSolendMint,
+            new BN(1).mul(new BN(10**9)),
+            2, // Hardcoded
+            weights[2]
+        );
+        tx.add(IxApprovePositionWeightSolend);
+
         console.log("Sending USDC");
         let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
+        let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
         tx.add(IxSendUsdcToPortfolio);
+        tx.add(IxSendSolendSoltoPortfolio);
 
         // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
         console.log("Sending and signing the transaction");
@@ -186,6 +211,9 @@ describe('qPools!', () => {
         console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
         let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
         console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
+
     });
 
     /**
@@ -207,6 +235,11 @@ describe('qPools!', () => {
         let IxApproveWithdrawMarinade = await portfolioObject.approveWithdrawToMarinade(1);
         tx.add(IxApproveWithdrawMarinade);
 
+
+        let minRedeemAmount2 = new BN(0);  // This is the minimum amount of tokens that should be put out ...
+        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(0, minRedeemAmount2);
+        tx.add(IxApproveWithdrawSolend);
+
         console.log("Send some to Crank Wallet");
         if (tx.instructions.length > 0) {
             await sendAndConfirmTransaction(
@@ -224,6 +257,9 @@ describe('qPools!', () => {
         // For each initial asset, send it back to the user
         let sgTransferUsdcToUser = await crankRpcTool.transfer_to_user(USDC_mint);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
+
+        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend);
         // We never transferred wrapped sol ...
         // let sgTransferWrappedSolToUser = await crankRpcTool.transfer_to_user(wrappedSolMint);
         // console.log("Signature to send back Wrapped SOL", sgTransferWrappedSolToUser);

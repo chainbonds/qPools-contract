@@ -19,6 +19,11 @@ import {
     redeem_single_position,
     redeemSinglePositionOnlyOne
 } from "../instructions/modify/saber";
+import {
+    permissionlessFulfillSolend,
+    redeemSinglePositionSolend
+} from "../instructions/modify/solend";
+
 import {sendLamports, transfer_to_user} from "../instructions/modify/portfolio-transfer";
 import {getPoolState} from "../instructions/fetch/saber";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
@@ -216,6 +221,36 @@ export class CrankRpcCalls {
             this.marinadeState
         );
         return await sendAndSignInstruction(this.provider, ix);
+    }
+
+
+    async createPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+        let ix = await permissionlessFulfillSolend(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            currencyMint,
+            index,
+            tokenSymbol,
+            environment
+
+        );
+        return ix;
+    }
+
+    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+
+        let ix = await redeemSinglePositionSolend(
+            this.connection,
+            this.solbondProgram,
+            this.owner.publicKey,
+            currencyMint,
+            index,
+            tokenSymbol,
+            environment
+        );
+        return ix;
+
     }
 
 

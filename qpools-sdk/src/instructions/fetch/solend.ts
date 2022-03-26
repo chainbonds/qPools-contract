@@ -1,8 +1,8 @@
 import {Connection, PublicKey} from "@solana/web3.js";
 import {Program} from "@project-serum/anchor";
-import {PositionAccountSolend} from "../../types/account/PositionAccountSolend";
 import {getPositionPda} from "../../types/account/pdas";
 import {accountExists} from "../../utils";
+import {PositionAccountSolend} from "../../types/account/PositionAccountSolend";
 
 export async function fetchSinglePositionSolend(
     connection: Connection,

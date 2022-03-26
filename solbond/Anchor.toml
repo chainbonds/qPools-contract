@@ -3,10 +3,10 @@ cluster = "https://api.google.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-solbond = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8"
+solbond = "EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H"
 
 [programs.devnet]
-solbond = "GLYoxwQaBhubP6xGU17aKHvxfUT4eoN3AGXNQCoeD5U8"
+solbond = "EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H"
 
 [registry]
 url = "https://anchor.projectserum.com"

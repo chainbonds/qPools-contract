@@ -139,6 +139,7 @@ export class CrankRpcCalls {
         // TODO: Skip, if the isFullfilled boolean is correct
         if (currentPosition.isFulfilled) {
             console.log("Already fulfilled!");
+            console.log("Current position: ", currentPosition);
             return;
         }
 
@@ -150,18 +151,14 @@ export class CrankRpcCalls {
         // if (await accountExists(this.connection, positionPDA)) {
         // let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
         // Return if the current position was already fulfilled
-        if (currentPosition.isFulfilled) {
-            console.log("Orders were already fulfilled!");
-            return "";
-        }
-
         let ix = await permissionlessFulfillSaber(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
             index
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        console.log("Sending saber instruciton ....", ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
@@ -183,7 +180,7 @@ export class CrankRpcCalls {
             this.owner.publicKey,
             index
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
     async redeem_single_position_only_one(index: number) {
@@ -213,7 +210,7 @@ export class CrankRpcCalls {
             this.owner.publicKey,
             index
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
     /**
@@ -227,7 +224,7 @@ export class CrankRpcCalls {
             index,
             this.marinadeState
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
 

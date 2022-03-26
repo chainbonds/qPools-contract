@@ -437,5 +437,7 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
     }
     console.log("Checkpoint (2.3)");
     console.log("##registerLiquidityPoolAssociatedTokenAccountsForPortfolio()");
+
+    // Next to exporting the tx, also export the associated token accounts that will be created ..
     return txs;
 }

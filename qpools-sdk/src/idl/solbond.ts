@@ -799,7 +799,7 @@ export type Solbond = {
         },
         {
           "name": "portfolioOwner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2178,7 +2178,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "portfolioOwner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

@@ -80,6 +80,8 @@ describe('qPools!', () => {
         wrappedSolMint = new PublicKey("So11111111111111111111111111111111111111112");
 
         solendmarket = await SolendMarket.initialize(connection, "devnet")
+        await solendmarket.loadReserves();
+
         const solReserve = solendmarket.reserves.find(res => res.config.symbol === tokenSymbolSolend);
         solSolendMint = new PublicKey(solReserve.config.mintAddress)
         // We need the mSOL, because in the end, this is what we will be sendin back to the user ...
@@ -236,7 +238,7 @@ describe('qPools!', () => {
         tx.add(IxApproveWithdrawMarinade);
 
 
-        let minRedeemAmount2 = new BN(0);  // This is the minimum amount of tokens that should be put out ...
+        let minRedeemAmount2 = new BN(1).mul(new BN(10**8));  // This is the minimum amount of tokens that should be put out ...
         let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2, minRedeemAmount2);
         tx.add(IxApproveWithdrawSolend);
 
@@ -254,12 +256,18 @@ describe('qPools!', () => {
         // Run the saber redeem cranks ..
         let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
+
+        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend)
+
         // For each initial asset, send it back to the user
         let sgTransferUsdcToUser = await crankRpcTool.transfer_to_user(USDC_mint);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
 
-        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
-        console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend);
+        let sgTransferUsdcTosolendSol = await crankRpcTool.transfer_to_user(solSolendMint);
+        console.log("Signature to send back wSOL", sgTransferUsdcTosolendSol);
+
+        
         // We never transferred wrapped sol ...
         // let sgTransferWrappedSolToUser = await crankRpcTool.transfer_to_user(wrappedSolMint);
         // console.log("Signature to send back Wrapped SOL", sgTransferWrappedSolToUser);

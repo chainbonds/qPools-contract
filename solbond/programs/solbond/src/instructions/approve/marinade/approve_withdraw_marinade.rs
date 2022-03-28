@@ -81,7 +81,11 @@ pub fn handler(
                                         ].as_ref()
                                     ],
         ), ctx.accounts.pda_msol_account.amount)?;
-
+    
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.num_redeemed += 1;
+    let position = &mut ctx.accounts.position_pda;
+    position.is_redeemed = true;
     //position_account.msol_out_amount = _msol_out_amount;
     let owner_acc_info = ctx.accounts.owner.to_account_info();
     let user_starting_lamports = owner_acc_info.lamports();

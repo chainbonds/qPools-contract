@@ -7,6 +7,8 @@ import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {
     SystemProgram,
 } from '@solana/web3.js';
+import {SolendAction} from "@solendprotocol/solend-sdk";
+
 import {
     accountExists,
     createAssociatedTokenAccountUnsigned, createAssociatedTokenAccountUnsignedInstruction, delay,
@@ -308,6 +310,40 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             // let sg5 = await this.provider.send(tx5);
             // await this.provider.connection.confirmTransaction(sg5, "confirmed");
         }
+
+        //hardcoded 
+        const solendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            "SOL",
+            this.owner.publicKey,
+            this.connection,
+            "devnet",
+        )
+
+        let reserveCollateralMint = new PublicKey(solendAction.reserve.collateralMintAddress)
+
+
+        let pdaOwnedCollateralSolend = await getAssociatedTokenAddressOffCurve(reserveCollateralMint, portfolioPDA);
+        console.log("pdaOwnedCollateralSolend", pdaOwnedCollateralSolend.toString());
+        if (!(await tokenAccountExists(this.connection, pdaOwnedCollateralSolend)) && !createdAtaAccounts.has(pdaOwnedCollateralSolend.toString())) {
+            console.log("Adding mSolPortfolioAta 1");
+            let tx7 = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                reserveCollateralMint,
+                null,
+                portfolioPDA,
+                wallet,
+            );
+            createdAtaAccounts.add(pdaOwnedCollateralSolend.toString());
+            tx.add(tx7);
+            console.log("Adding pdaOwnedCollateralSolend 2");
+            // let sg5 = await this.provider.send(tx5);
+            // await this.provider.connection.confirmTransaction(sg5, "confirmed");
+        }
+
+
+
         // let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
         // For MSOL, create associated token addresses
         // TODO:; What MSOL Token was used ...?

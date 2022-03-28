@@ -40,7 +40,7 @@ pub struct SolendPositionInstruction<'info> {
     pub reserve: AccountInfo<'info>,
 
     #[account(mut)]
-    pub reserve_collateral_mint: Account<'info, Mint>,
+    pub reserve_collateral_mint: AccountInfo<'info>,
     
     #[account(mut)]
     pub reserve_liquidity_supply: AccountInfo<'info>,

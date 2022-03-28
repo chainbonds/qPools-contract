@@ -79,7 +79,7 @@ pub fn handler(
     msg!("Creating a single solend position!");
     msg!("getting portfolio details!");
     
-    let approved_position_details = &mut ctx.accounts.position_pda;
+    let position = &mut ctx.accounts.position_pda;
 
     //let (lending_market_authority_pubkey, _bump_seed) = Pubkey::find_program_address(
     //    &[&ctx.accounts.lending_market.key().to_bytes()[..PUBKEY_BYTES]],
@@ -91,7 +91,7 @@ pub fn handler(
 
     let ix = spl_token_lending::instruction::redeem_reserve_collateral(
         ctx.accounts.solend_program.key(),
-         approved_position_details.withdraw_amount, 
+         position.withdraw_amount, 
          ctx.accounts.source_collateral.key(), 
          ctx.accounts.destination_liquidity.key(), 
          ctx.accounts.reserve.key(), 
@@ -126,6 +126,17 @@ pub fn handler(
     
     // add this stuff in later 
     //approved_position_details.is_fulfilled = true;
+    let portfolio = &mut ctx.accounts.user_transfer_authority;
+    portfolio.num_redeemed += 1;
+    position.is_redeemed = true;
+
+    let owner_acc_info = ctx.accounts.owner.to_account_info();
+    let user_starting_lamports = owner_acc_info.lamports();
+    let position_acc_info = ctx.accounts.position_pda.to_account_info();
+    **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(position_acc_info.lamports()).unwrap();
+    **position_acc_info.lamports.borrow_mut() = 0;
+    let mut position_data = position_acc_info.data.borrow_mut();
+    position_data.fill(0);
     
     // let clock = Clock::get().unwrap();
     //approved_position_details.timestamp = clock.unix_timestamp;

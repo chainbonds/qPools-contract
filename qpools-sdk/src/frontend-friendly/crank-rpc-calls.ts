@@ -235,7 +235,7 @@ export class CrankRpcCalls {
             environment
 
         );
-        return ix;
+        return await sendAndSignInstruction(this.provider, ix)
     }
 
     async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
@@ -249,7 +249,7 @@ export class CrankRpcCalls {
             tokenSymbol,
             environment
         );
-        return ix;
+        return await sendAndSignInstruction(this.provider, ix);
 
     }
 

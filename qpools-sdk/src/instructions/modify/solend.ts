@@ -119,10 +119,10 @@ export async function permissionlessFulfillSolend(
     const solendAction = await SolendAction.initialize(
         "mint",
         new BN(0),
-        tokenSymbol,
+        "SOL",
         owner,
         connection,
-        environment,
+        "devnet",
     )
 
 
@@ -136,7 +136,19 @@ export async function permissionlessFulfillSolend(
     const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
     const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
     console.log("aaa 21");
+    
 
+    console.log("owner ", owner.toString())
+    console.log("positionPDA ", positionPDA.toString())
+    console.log("portfolioPDA, userTransferAuthority ", portfolioPDA.toString())
+    console.log("sourceLiquidity ", pdaOwnedATA.toString())
+    console.log("destinationCollateral ", pdaOwnedCollateral.toString())
+    console.log("reserve ", solendAction.reserve.address)
+    console.log("reserveCollateralMint ", solendAction.reserve.collateralMintAddress)
+    console.log("reserveLiquiditySupply ", solendAction.reserve.liquidityAddress)
+    console.log("lendingMarket ", solendAction.lendingMarket.address)
+    console.log("lending authority ", solendAction.lendingMarket.authorityAddress)
+    console.log("program id ", solendAction.solendInfo.programID.toString())    
 
     let ix = await solbondProgram.instruction.createPositionSolend(
         bumpPosition,
@@ -195,7 +207,7 @@ export async function redeemSinglePositionSolend(
         new BN(0),
         tokenSymbol,
         owner,
-        this.connection,
+        connection,
         environment,
     )
     const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)

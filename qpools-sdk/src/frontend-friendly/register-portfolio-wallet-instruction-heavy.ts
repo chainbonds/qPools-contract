@@ -377,14 +377,16 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     // Create Operations
     async createPortfolioSigned(
         weights: BN[],
-        pool_addresses: PublicKey[]
+        pool_addresses: PublicKey[],
+        numCurrencies: BN,
     ): Promise<TransactionInstruction> {
         let ix = await createPortfolioSigned(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
             weights,
-            pool_addresses
+            pool_addresses,
+            numCurrencies,
         );
         return ix;
     }

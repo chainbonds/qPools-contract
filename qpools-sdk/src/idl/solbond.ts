@@ -43,6 +43,10 @@ export type Solbond = {
         {
           "name": "numPositions",
           "type": "u32"
+        },
+        {
+          "name": "numCurrencies",
+          "type": "u32"
         }
       ]
     },
@@ -1297,6 +1301,14 @@ export type Solbond = {
           },
           {
             "name": "numCreated",
+            "type": "u32"
+          },
+          {
+            "name": "numCurrencies",
+            "type": "u32"
+          },
+          {
+            "name": "numCurrenciesSentBack",
             "type": "u32"
           },
           {
@@ -1786,6 +1798,10 @@ export const IDL: Solbond = {
         {
           "name": "numPositions",
           "type": "u32"
+        },
+        {
+          "name": "numCurrencies",
+          "type": "u32"
         }
       ]
     },
@@ -3040,6 +3056,14 @@ export const IDL: Solbond = {
           },
           {
             "name": "numCreated",
+            "type": "u32"
+          },
+          {
+            "name": "numCurrencies",
+            "type": "u32"
+          },
+          {
+            "name": "numCurrenciesSentBack",
             "type": "u32"
           },
           {

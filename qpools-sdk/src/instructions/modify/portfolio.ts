@@ -9,7 +9,8 @@ export async function createPortfolioSigned(
     solbondProgram: Program,
     owner: PublicKey,
     weights: BN[],
-    poolAddresses: PublicKey[]
+    poolAddresses: PublicKey[],
+    numCurrencies: BN,
 ): Promise<TransactionInstruction> {
     console.log("#createPortfolioSigned()");
     console.log("owner thing ", owner.toString())
@@ -25,6 +26,7 @@ export async function createPortfolioSigned(
         portfolioBump,
         sumOfWeights,
         numPositions,
+        numCurrencies,
         {
             accounts: {
                 owner: owner,

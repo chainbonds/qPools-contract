@@ -64,8 +64,7 @@ pub fn handler(
 ) -> ProgramResult {
 
     //let amount_after_fee;
-    let portfolio = &mut ctx.accounts.portfolio_pda;
-    if portfolio.num_redeemed < portfolio.num_positions {
+    if ctx.accounts.portfolio_pda.num_redeemed < ctx.accounts.portfolio_pda.num_positions {
         return Err(ErrorCode::NotReadyForTransferBack.into());
     }
     // no fees for now 
@@ -128,7 +127,7 @@ pub fn handler(
 
         ), ctx.accounts.pda_owned_user_a.amount as u64)?;
 
-    // close portfolio account
+    // close currency account
     let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
     let user_starting_lamports = owner_acc_info.lamports();
     let user_currency_acc_info = ctx.accounts.user_currency_pda_account.to_account_info();
@@ -137,14 +136,21 @@ pub fn handler(
     let mut user_currency_data = user_currency_acc_info.data.borrow_mut();
     user_currency_data.fill(0);
 
-    // close portfolio account
-    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
-    let user_starting_lamports = owner_acc_info.lamports();
-    let portfolio_acc_info = ctx.accounts.portfolio_pda.to_account_info();
-    **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(portfolio_acc_info.lamports()).unwrap();
-    **portfolio_acc_info.lamports.borrow_mut() = 0;
-    let mut portfolio_data = portfolio_acc_info.data.borrow_mut();
-    portfolio_data.fill(0);
+    
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.num_currencies_sent_back += 1;
+    if portfolio.num_currencies_sent_back >= portfolio.num_currencies {
+        // close portfolio account
+        // only if all positions have been sent back to user
+        let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
+        let user_starting_lamports = owner_acc_info.lamports();
+        let portfolio_acc_info = ctx.accounts.portfolio_pda.to_account_info();
+        **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(portfolio_acc_info.lamports()).unwrap();
+        **portfolio_acc_info.lamports.borrow_mut() = 0;
+        let mut portfolio_data = portfolio_acc_info.data.borrow_mut();
+        portfolio_data.fill(0);
+    }
+    
 
     Ok(())
 }

@@ -60,12 +60,16 @@ pub mod solbond {
         _bump: u8,
         _sum_of_weights: u64,
         _num_positions: u32,
+        _num_currencies: u32,
+
     ) -> ProgramResult {
         instructions::approve::approve_portfolio_weights::handler(
             ctx,
             _bump,
             _sum_of_weights,
             _num_positions,
+            _num_currencies,
+
         )
     }
 

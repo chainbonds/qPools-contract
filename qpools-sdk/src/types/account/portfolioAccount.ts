@@ -13,6 +13,9 @@ export interface PortfolioAccount {
     numPositions: number,
     numCreated: number,
 
+    numCurrencies: number,
+    numCurrenciesSentBack: number,
+
     // time when portfolio signed
     startTimestamp: BN,
 

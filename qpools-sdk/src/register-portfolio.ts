@@ -207,14 +207,16 @@ export class Portfolio {
         weights: BN[],
         owner_keypair: Keypair,
         num_positions: BN,
-        pool_addresses: PublicKey[]
+        pool_addresses: PublicKey[],
+        numCurrencies: BN
     ) {
         let ix = await createPortfolioSigned(
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey,
             weights,
-            pool_addresses
+            pool_addresses, 
+            numCurrencies
         );
         return await sendAndSignInstruction(this.provider, ix);
     }

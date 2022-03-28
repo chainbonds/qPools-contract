@@ -11,6 +11,8 @@ pub struct UserCurrencyAccount {
     pub withdraw_amount: u64,
     pub mint: Pubkey,
 
+    // pub index: u32, add this in if useful
+
 }
 
 

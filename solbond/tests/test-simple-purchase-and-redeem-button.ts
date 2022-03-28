@@ -131,9 +131,11 @@ describe('qPools!', () => {
 
 
         let tx: Transaction = new Transaction();
+        // hardcode this for now lol
         let IxCreatePortfolioPda = await portfolioObject.createPortfolioSigned(
             weights,
-            poolAddresses
+            poolAddresses,
+            new BN(2)
         );
         tx.add(IxCreatePortfolioPda);
 
@@ -172,7 +174,7 @@ describe('qPools!', () => {
 
         console.log("Approve Position Marinade");
         let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
-            new BN(1).mul(new BN(10**9)),
+            new BN(1).mul(new BN(10**6)),
             1, // Hardcoded
             weights[1]
         );
@@ -181,7 +183,7 @@ describe('qPools!', () => {
         console.log("Approve Position Solend");
         let IxApprovePositionWeightSolend = await portfolioObject.approvePositionWeightSolend(
             solSolendMint,
-            new BN(1).mul(new BN(10**9)),
+            new BN(1).mul(new BN(10**5)),
             2, // Hardcoded
             weights[2]
         );
@@ -238,7 +240,7 @@ describe('qPools!', () => {
         tx.add(IxApproveWithdrawMarinade);
 
 
-        let minRedeemAmount2 = new BN(1).mul(new BN(10**8));  // This is the minimum amount of tokens that should be put out ...
+        let minRedeemAmount2 = new BN(1).mul(new BN(10**4));  // This is the minimum amount of tokens that should be put out ...
         let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2, minRedeemAmount2);
         tx.add(IxApproveWithdrawSolend);
 

@@ -74,7 +74,11 @@ export async function transfer_to_user(
     let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA);
     let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(solbondProgram, owner, currencyMint);
     let userOwnedUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, owner);
-
+    console.log("portfolioPDA ", portfolioPDA.toString());
+    console.log("currencyPDA ", currencyPDA.toString());
+    console.log("userOwnedUSDCAccount ", userOwnedUSDCAccount.toString());
+    console.log("currencyMint ", currencyMint.toString());
+    console.log("owner ", owner.toString());
     let ix = await solbondProgram.instruction.transferRedeemedToUser(
         new BN(portfolioBump),
         new BN(bumpCurrency),

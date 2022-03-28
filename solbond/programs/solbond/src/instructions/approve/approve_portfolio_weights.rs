@@ -10,6 +10,8 @@ use crate::utils::seeds;
     _bump:u8, 
     _sum_of_weight:u64,
     _num_positions:u32,
+    _num_currencies: u32,
+
 )]
 pub struct SavePortfolio<'info> {
 
@@ -36,6 +38,7 @@ pub fn handler(
     _bump: u8,
     _sum_of_weights: u64,
     _num_positions: u32,
+    _num_currencies: u32,
 ) -> ProgramResult {
     //let sum: u64 = _weights.iter().sum();
     //assert!(sum/1000 == 1, "weights do not sum to 1!");
@@ -52,6 +55,9 @@ pub fn handler(
     portfolio_account.num_positions = _num_positions;
     portfolio_account.num_redeemed = 0 as u32;
     portfolio_account.num_created = 0 as u32;
+
+    portfolio_account.num_currencies = _num_currencies;
+    portfolio_account.num_currencies_sent_back = 0 as u32;
 
     let clock = Clock::get().unwrap();
     portfolio_account.start_timestamp = clock.unix_timestamp;

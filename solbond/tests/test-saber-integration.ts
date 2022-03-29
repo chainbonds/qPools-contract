@@ -75,7 +75,7 @@ describe('qPools!', () => {
         let total_amount_USDC = new u64(340000);
         let num_positions = new BN(1);
         try {
-            let sig_create = await portfolio.createPortfolioSigned(weights, genericPayer, num_positions, pool_addresses)
+            let sig_create = await portfolio.createPortfolioSigned(weights, genericPayer, num_positions, pool_addresses, new BN(2))
         } catch (e) {
             console.log(e);
             console.log("Error: Portfolio exists already");

@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{PortfolioAccount, PositionAccountMarinade};
 use crate::utils::seeds;
+use crate::ErrorCode;
 
 #[derive(Accounts, Clone)]
 #[instruction(
@@ -50,14 +51,19 @@ pub fn handler(
     _index: u32,
 ) -> ProgramResult {
 
-    assert!(
-        ctx.accounts.portfolio_pda.key() == ctx.accounts.position_pda.portfolio_pda,
-        "The provided portfolio_pda doesn't match the approved!"
-    );
-    assert!(
-        ctx.accounts.position_pda.is_fulfilled,
-        "position not fulfilled yet!"
-    );
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
+    if !ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
+    if ctx.accounts.position_pda.redeem_approved {
+        return Err(ErrorCode::RedeemAlreadyApproved.into());
+    }
+    if ! ctx.accounts.portfolio_pda.fully_created {
+        return Err(ErrorCode::PortfolioNotFullyCreated.into());
+    }
+    
 
     let portfolio = & mut ctx.accounts.portfolio_pda;
     portfolio.num_redeemed += 1;

@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint};
 use crate::state::{PortfolioAccount, PositionAccountMarinade};
 use crate::utils::seeds;
+use crate::ErrorCode;
 use anchor_lang::solana_program::{program::invoke, system_instruction, system_program};
 
 
@@ -70,6 +71,13 @@ pub fn handler(
     // let msg = format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING);
     // msg!("Seed string is: ");
     // msg!(&msg);
+    if _initial_sol_amount < 1000000000 {
+        return Err(ErrorCode::MarinadeNeedsMoreThanOneSol.into());
+    }
+
+    if _index > ctx.accounts.portfolio_pda.num_positions {
+        return Err(ErrorCode::IndexHigherThanNumPos.into());
+    }
 
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;
@@ -103,20 +111,6 @@ pub fn handler(
         ]
     );
 
-    //invoke(
-    //    &system_instruction::transfer(
-    //        ctx.accounts.owner.key,
-    //        ctx.accounts.position_pda.to_account_info().key,
-    //        _initial_sol_amount,
-    //    ),
-    //    &[
-    //        ctx.accounts.owner.to_account_info().clone(),
-    //        ctx.accounts.position_pda.to_account_info().clone(),
-    //        ctx.accounts.system_program.to_account_info().clone()
-    //    ]
-    //);
-
-    //position_account.marinade_position_sol_account = ctx.accounts.marinade_position_sol_account.key().clone();
 
 
 

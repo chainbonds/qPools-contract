@@ -2,7 +2,7 @@
 mod instructions;
 mod utils;
 mod state;
-
+    
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
@@ -22,7 +22,6 @@ pub mod solbond {
             accounts.len(),
             instruction_data
         );
-        msg!("ekak");
         Ok(())
     }
 
@@ -368,7 +367,6 @@ pub mod solbond {
             _bump_user_currency,
         )
     }
-
 
 }
 #[cfg(test)]

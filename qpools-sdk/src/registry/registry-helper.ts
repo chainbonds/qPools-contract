@@ -91,6 +91,30 @@ export function getWhitelistTokens(): string[] {
     return DEV_WHITELIST_TOKENS;
 }
 
+// Write a function here which applies the pyth oracle ...
+// TODO: Replace this by a proper Pyth Provider, or pyth function ...
+export const multiplyAmountByPythprice = (x: number, mint: PublicKey)  => {
+    let out: number;
+    console.log("Mint is: ", mint.toString());
+    console.log("Number in: ", x);
+    if (mint.equals(new PublicKey("NativeSo11111111111111111111111111111111111"))) {
+        console.log("Assuming SOL...");
+        out = x * 120.00;
+    } else if (mint.equals(new PublicKey("So11111111111111111111111111111111111111112"))) {
+        console.log("Assuming wrapped SOL...");
+        out = x * 115.49;
+    } else if (mint.equals(new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"))) {
+        console.log("Assuming mSOL...");
+        out = x * 115.49;
+    } else {
+        console.log("Assuming USDC...");
+        out = x;
+    }
+    console.log("Number out is: ", out);
+    return out
+}
+
+
 /**
  * An artificial Address created by us, which maps to native SOL
  * Whenever you come across this address as a mint, you must create a case-distinction, and send actual SOL
@@ -99,6 +123,10 @@ export function getWhitelistTokens(): string[] {
  */
 export function getNativeSolMint(): PublicKey {
     return new PublicKey("NativeSo11111111111111111111111111111111111");
+}
+
+export function getMarinadeSolMint(): PublicKey {
+    return new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
 }
 
 export function getWrappedSolMint(): PublicKey {
@@ -209,15 +237,37 @@ export function getTokenFromSplStringId(splStringId: string): ExplicitToken {
     return out;
 }
 
+// export function getNameIdFromLpMint(lpMint: PublicKey): ExplicitPool {
+//
+// }
+
+export function getPoolFromLpMint(lpMint: PublicKey): ExplicitPool {
+    let out: ExplicitPool | null = null;
+    console.log("All pools are: ", getAllPools(), lpMint.toString());
+    getAllPools().map((x: ExplicitPool) => {
+        console.log("x.lpToken.address is: ", x.lpToken.address, lpMint);
+        if (x.lpToken.address === lpMint.toString()) {
+            out = x;
+        }
+    });
+    if (!out) {
+        throw Error("Explicit Pool is Zero " + lpMint)
+    }
+    return out;
+}
+
 export function getPoolFromSplStringId(splStringId: string): ExplicitPool {
     let out: ExplicitPool | null = null;
-    console.log("All pools are: ", getAllPools());
+    console.log("All pools are: ", getAllPools(), splStringId);
     getAllPools().map((x: ExplicitPool) => {
+        console.log("x.name is: ", x.name, splStringId);
         if (x.name === splStringId) {
             out = x;
         }
     });
-    if (!out) {throw Error("Explicit Pool is Zero " + splStringId)}
+    if (!out) {
+        throw Error("Explicit Pool is Zero " + splStringId)
+    }
     return out;
 }
 

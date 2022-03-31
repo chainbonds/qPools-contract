@@ -16,7 +16,7 @@ import {
 import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 import * as registry from "../registry/registry-helper";
-import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
+import {ExplicitSaberPool, multiplyAmountByPythprice, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {fetchPortfolio, portfolioExists} from "../instructions/fetch/portfolio";
 import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
@@ -588,6 +588,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // console.log("Pool Address is: ", positionAccount.poolAddress.toString());
         // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
+        // Also again maybe don't hard code this (not sure if possible tho, in the end, this is also a protocol...?)
         let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
         // This is also the LP Mint ...
         // Gotta store this in the registry
@@ -602,8 +603,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
         // Again, convert by the pyth price ...
-        let usdcValueA = mSOLAmount.uiAmount * 93.23;
-        let usdcValueLP = mSOLAmount.uiAmount * 93.23;
+        let usdcValueA = multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
+        let usdcValueLP = multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
 
         // Sum up all the values here to arrive at the Total Position Value?
         // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
@@ -766,7 +767,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async getPortfolioUsdcValue() {
         console.log("#getPortfolioUsdcValue");
         let includedMints: Set<string> = new Set();
-        let storedPositions = await this.getPortfolioInformation();
+        let storedPositions: PositionInfo[] = await this.getPortfolioInformation();
         let usdAmount = 0.;
         let storedPositionUsdcAmounts: any = [];
 
@@ -825,18 +826,18 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
                 // Modify with the Pyth price
                 // Treat the LP tokens as 1-to-1 (?)
-                if (!includedMints.has(position.mintA.toString())) {
-                    console.log("Adding: position.mintA ", position.mintA.toString())
-                    usdAmount += amountUserA;
-                } else {
-                    console.log("Skipping: position.mintA ", position.mintA.toString())
-                }
-                if (!includedMints.has(position.mintB.toString())) {
-                    console.log("Adding: position.mintB ", position.mintB.toString())
-                    usdAmount += amountUserB;
-                } else {
-                    console.log("Skipping: position.mintB ", position.mintB.toString())
-                }
+                // if (!includedMints.has(position.mintA.toString())) {
+                //     console.log("Adding: position.mintA ", position.mintA.toString())
+                //     usdAmount += amountUserA;
+                // } else {
+                //     console.log("Skipping: position.mintA ", position.mintA.toString())
+                // }
+                // if (!includedMints.has(position.mintB.toString())) {
+                //     console.log("Adding: position.mintB ", position.mintB.toString())
+                //     usdAmount += amountUserB;
+                // } else {
+                //     console.log("Skipping: position.mintB ", position.mintB.toString())
+                // }
                 if (!includedMints.has(position.mintLp.toString())) {
                     console.log("Adding: position.mintLp ", position.mintLp.toString())
                     usdAmount += usdValueUserLp;
@@ -858,10 +859,12 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
                 // Just take the totalPositionUsdcAmount ...
 
-                let marinadeToken = position.amountA.uiAmount;
+                // let marinadeToken = position.amountA.uiAmount;
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
-                let marinadeUsdcAmount = marinadeToken * 93.23;
+
+                let marinadeUsdcAmount = multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
+                // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
                 usdAmount += marinadeUsdcAmount
                 // Again, we skip this for now because all tokens we work with are USDC-based
@@ -871,8 +874,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 //
                 // // We can skip this step, bcs again, we only use stablecoins for now
                 // let userPositionValue = usdValueUserA + usdValueUserB + usdValueUserLp;
-
-                includedMints.add(position.mintA.toString());
+                includedMints.add(position.mintLp.toString());
 
                 storedPositionUsdcAmounts.push(
                     {totalPositionValue: marinadeUsdcAmount}

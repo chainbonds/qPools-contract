@@ -117,7 +117,7 @@ export class CrankRpcCalls {
             this.owner.publicKey,
             currencyMint
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
     async sendToUsersWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
@@ -142,10 +142,6 @@ export class CrankRpcCalls {
             console.log("Current position: ", currentPosition);
             return;
         }
-
-        let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
-        const stableSwapState = await getPoolState(this.connection, poolAddress);
-        const {state} = stableSwapState;
 
         // Fetch this position PDA
         // if (await accountExists(this.connection, positionPDA)) {
@@ -192,7 +188,6 @@ export class CrankRpcCalls {
         console.log("aaa 14");
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 15");
-        let poolAddress = registry.saberPoolLpToken2poolAddress(currentPosition.poolAddress);
 
         if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {
             console.log("Crank Orders were already redeemed!");

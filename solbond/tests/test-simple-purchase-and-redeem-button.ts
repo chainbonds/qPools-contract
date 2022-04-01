@@ -1,21 +1,43 @@
 import {BN, Provider} from '@project-serum/anchor';
-import {Keypair, PublicKey} from "@solana/web3.js";
+import {Keypair, PublicKey, SystemProgram, TransactionInstruction} from "@solana/web3.js";
 import {
     CrankRpcCalls,
     MOCK,
     NETWORK,
-    PortfolioFrontendFriendlyChainedInstructions
+    PortfolioFrontendFriendlyChainedInstructions,
+    getSolbondProgram
 } from "@qpools/sdk";
 import {
     Transaction,
 } from '@solana/web3.js';
 import {
-    getSolbondProgram,
-} from "@qpools/sdk";
-import {delay, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
-import {SolendMarket, SolendAction} from "@solendprotocol/solend-sdk";
+    createAssociatedTokenAccountUnsignedInstruction,
+    delay,
+    getAccountForMintAndPDA,
+    sendAndConfirmTransaction
+} from "@qpools/sdk/lib/utils";
+import {SolendMarket, SolendAction, syncNative} from "@solendprotocol/solend-sdk";
+// import {ASSOCIATED_TOKEN_PROGRAM_ID} from "@saberhq/token-utils";
+import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
+import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import {struct, u8} from "@solana/buffer-layout";
+// import {TokenInstruction} from "@solendprotocol/solend-sdk/dist/instructions/instruction";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
+
+// interface SyncNativeInstructionData {
+//     instruction: TokenInstruction.SyncNative;
+// }
+// export const syncNativeInstructionData = struct<SyncNativeInstructionData>([u8('instruction')]);
+//
+// function createSyncNativeInstruction(account: PublicKey, programId = TOKEN_PROGRAM_ID): TransactionInstruction {
+//     const keys = [{ pubkey: account, isSigner: false, isWritable: true }];
+//
+//     const data = Buffer.alloc(syncNativeInstructionData.span);
+//     syncNativeInstructionData.encode({ instruction: TokenInstruction.SyncNative }, data);
+//
+//     return new TransactionInstruction({ keys, programId, data });
+// }
 
 describe('qPools!', () => {
 
@@ -73,7 +95,8 @@ describe('qPools!', () => {
         USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
         USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");  // This is the pool address, not the LP token ...
         mSOLLpToken = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");  // Assume the LP token to be the denominator for what underlying asset we target ...
-        
+
+        // Todo, wrap some SOL and send this to the account ...
         
         // let USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
 
@@ -83,7 +106,8 @@ describe('qPools!', () => {
         await solendmarket.loadReserves();
 
         const solReserve = solendmarket.reserves.find(res => res.config.symbol === tokenSymbolSolend);
-        solSolendMint = new PublicKey(solReserve.config.mintAddress)
+        solSolendMint = new PublicKey(solReserve.config.mintAddress);
+        console.log("Solend Sol Mint Address is: ", solSolendMint.toString());
         // We need the mSOL, because in the end, this is what we will be sendin back to the user ...
         // We will probably need to apply a hack, where we replace the mSOL with SOL, bcs devnet.
         // Probably easiest to do so is by swapping on the frontend, once we are mainnet ready
@@ -113,6 +137,53 @@ describe('qPools!', () => {
                 txCreateATA
             );
         }
+
+        console.log("Airdropping some wrapped SOL");
+
+        // create a wrapped SOL account
+        if ((await connection.getBalance(genericPayer.publicKey)) <= 3e9) {
+            let tx1 = await connection.requestAirdrop(genericPayer.publicKey, 3e9);
+            await connection.confirmTransaction(tx1, 'finalized');
+            console.log("Airdropped 1!");
+        }
+
+        const associatedTokenAccountWrappedSol = await getAssociatedTokenAddress(
+            wrappedSolMint,
+           genericPayer.publicKey
+        );
+        // const transaction = new Transaction();
+        // let wrappedSolAta = await createAssociatedTokenAccountUnsignedInstruction(connection, wrappedSolMint, null, genericPayer.publicKey, provider.wallet);
+        // transaction.add(wrappedSolAta);
+        // transaction.add(
+        //     SystemProgram.transfer({
+        //        fromPubkey: genericPayer.publicKey,
+        //        toPubkey: associatedTokenAccount,
+        //        lamports: 2e9,
+        //     }),
+        //     // createSyncNativeInstruction(associatedToken, TOKEN_PROGRAM_ID)
+        // );
+        // //await sendAndConfirmTransaction(connection, transaction, [payer], );
+
+
+        //await sendAndConfirmTransaction(connection, transaction, [payer], confirmOptions);
+
+        // const wrappedSolAccount = await portfolio.getAccountForMintAndPDA(wSOL, genericPayer.publicKey);
+        // const wsolkeypair = Keypair.generate();
+        // await createAccount(connection, genericPayer, NATIVE_MINT, genericPayer, wsolkeypair, TOKEN_PROGRAM_ID);
+        const givemoney = new Transaction().add(
+            SystemProgram.transfer({
+                     fromPubkey: genericPayer.publicKey,
+                     toPubkey: associatedTokenAccountWrappedSol,
+                     lamports: 2e9,
+            }),
+            // createSyncNativeInstruction(associatedTokenAccountWrappedSol)
+            syncNative(associatedTokenAccountWrappedSol)
+        )
+        let sendsig = await provider.send(givemoney)
+        await provider.connection.confirmTransaction(sendsig);
+        console.log("send money from user to portfolio: ", sendsig);
+
+
     });
 
     it("Prepare the amount of SOL and USDC to pay in ", async () => {

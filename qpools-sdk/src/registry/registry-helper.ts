@@ -7,7 +7,7 @@ import {DEV_TOKEN_LIST_SABER} from "./devnet/saber/token-list.devnet";
 import {DEV_PORTFOLIOID_TO_TOKEN} from "./devnet/portfolio-to-pool.devnet";
 import {StableSwap} from "@saberhq/stableswap-sdk";
 import {parsePriceData, PriceData} from "@pythnetwork/client";
-import {ProtocolType} from "../types/positionInfo";
+import {Protocol, ProtocolType} from "../types/positionInfo";
 import {DEV_POOLS_INFO_MARINADE} from "./devnet/marinade/pools-info.devnet";
 import {DEV_TOKEN_LIST_MARINADE} from "./devnet/marinade/token-list.devnet";
 import {DEV_WHITELIST_TOKENS} from "./devnet/whitelist-tokens.devnet";
@@ -38,6 +38,7 @@ export interface ExplicitToken {
 export interface ExplicitPool {
     id: string,
     name: string,
+    protocol: Protocol,
     poolType: ProtocolType,
     lpToken: ExplicitToken,
     tokens: ExplicitToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
@@ -90,6 +91,48 @@ export function getWhitelistTokens(): string[] {
     return DEV_WHITELIST_TOKENS;
 }
 
+// Write a function here which applies the pyth oracle ...
+// TODO: Replace this by a proper Pyth Provider, or pyth function ...
+export const multiplyAmountByPythprice = (x: number, mint: PublicKey)  => {
+    let out: number;
+    console.log("Mint is: ", mint.toString());
+    console.log("Number in: ", x);
+    if (mint.equals(new PublicKey("NativeSo11111111111111111111111111111111111"))) {
+        console.log("Assuming SOL...");
+        out = x * 120.00;
+    } else if (mint.equals(new PublicKey("So11111111111111111111111111111111111111112"))) {
+        console.log("Assuming wrapped SOL...");
+        out = x * 115.49;
+    } else if (mint.equals(new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"))) {
+        console.log("Assuming mSOL...");
+        out = x * 115.49;
+    } else {
+        console.log("Assuming USDC...");
+        out = x;
+    }
+    console.log("Number out is: ", out);
+    return out
+}
+
+
+/**
+ * An artificial Address created by us, which maps to native SOL
+ * Whenever you come across this address as a mint, you must create a case-distinction, and send actual SOL
+ *
+ * This address is identical in devnet, as well as mainnet
+ */
+export function getNativeSolMint(): PublicKey {
+    return new PublicKey("NativeSo11111111111111111111111111111111111");
+}
+
+export function getMarinadeSolMint(): PublicKey {
+    return new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+}
+
+export function getWrappedSolMint(): PublicKey {
+    return new PublicKey("So11111111111111111111111111111111111111112");
+}
+
 function getAllTokens(): ExplicitToken[] {
     let saberTokenList: ExplicitToken[] = DEV_TOKEN_LIST_SABER["tokens"];
     let marinadeTokenList: ExplicitToken[] = DEV_TOKEN_LIST_MARINADE["tokens"];
@@ -99,10 +142,12 @@ function getAllTokens(): ExplicitToken[] {
 function getAllPools(): any {
     let saberPoolList: ExplicitPool[] = DEV_POOLS_INFO_SABER.map((x: any) => {
         x.poolType = ProtocolType.DEXLP;
+        x.protocol = Protocol.saber;
         return x;
     });
     let mariandePoolList: ExplicitPool[] = DEV_POOLS_INFO_MARINADE.map((x: any) => {
         x.poolType = ProtocolType.Staking;
+        x.protocol = Protocol.marinade;
         return x;
     });
     return saberPoolList.concat(mariandePoolList);
@@ -192,15 +237,37 @@ export function getTokenFromSplStringId(splStringId: string): ExplicitToken {
     return out;
 }
 
+// export function getNameIdFromLpMint(lpMint: PublicKey): ExplicitPool {
+//
+// }
+
+export function getPoolFromLpMint(lpMint: PublicKey): ExplicitPool {
+    let out: ExplicitPool | null = null;
+    console.log("All pools are: ", getAllPools(), lpMint.toString());
+    getAllPools().map((x: ExplicitPool) => {
+        console.log("x.lpToken.address is: ", x.lpToken.address, lpMint);
+        if (x.lpToken.address === lpMint.toString()) {
+            out = x;
+        }
+    });
+    if (!out) {
+        throw Error("Explicit Pool is Zero " + lpMint)
+    }
+    return out;
+}
+
 export function getPoolFromSplStringId(splStringId: string): ExplicitPool {
     let out: ExplicitPool | null = null;
-    console.log("All pools are: ", getAllPools());
+    console.log("All pools are: ", getAllPools(), splStringId);
     getAllPools().map((x: ExplicitPool) => {
+        console.log("x.name is: ", x.name, splStringId);
         if (x.name === splStringId) {
             out = x;
         }
     });
-    if (!out) {throw Error("Explicit Pool is Zero " + splStringId)}
+    if (!out) {
+        throw Error("Explicit Pool is Zero " + splStringId)
+    }
     return out;
 }
 
@@ -266,14 +333,13 @@ export function getSerpiusEndpoint() {
     return "https://qpools.serpius.com/weight_status_devnet_v2.json";
 }
 
-// TODO: In fact, we should also prob include the protocol as an exact enum, to see if it's marinade, saber, etc.
-export function getPoolsContainingLpToken(lpTokenMint: PublicKey): ExplicitPool[] {
+export function getSaberPoolsContainingLpToken(lpTokenMint: PublicKey): ExplicitPool[] {
     let allPools: ExplicitPool[] = [];
     getAllPools().map((x: ExplicitPool) => {
         // These are not explicit token types, these are saber token types
         if (
             lpTokenMint.toString() === x.lpToken.address.toString() &&
-            x.poolType === ProtocolType.DEXLP
+            x.protocol === Protocol.saber
         ) {
             allPools.push(x);
         }
@@ -282,7 +348,7 @@ export function getPoolsContainingLpToken(lpTokenMint: PublicKey): ExplicitPool[
 }
 
 export function saberPoolLpToken2poolAddress(poolMint: PublicKey): PublicKey {
-    let all: any[] = getPoolsContainingLpToken(poolMint);
+    let all: any[] = getSaberPoolsContainingLpToken(poolMint);
     console.assert(all.length > 0);
     return new PublicKey(all[0].swap.config.swapAccount);
 }

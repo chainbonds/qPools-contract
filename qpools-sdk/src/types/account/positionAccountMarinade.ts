@@ -10,6 +10,7 @@ export async function getPositionAccountMarinade(
     throw Error("getPositionAccountMarinade not Implemented Yet!");
 }
 
+// TODO: Perhaps we should think about unifying these as well (?) at least add an ENUM in the beginning of the struct, defining which protocol this belongs to
 export interface PositionAccountMarinade {
     portfolio_pda: PublicKey,
     is_fulfilled: boolean,

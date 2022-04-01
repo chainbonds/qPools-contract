@@ -15,7 +15,6 @@ use crate::utils::seeds;
 )]
 pub struct SavePortfolio<'info> {
 
-    //#[account(mut)]
     pub owner: Signer<'info>,
 
     #[account(

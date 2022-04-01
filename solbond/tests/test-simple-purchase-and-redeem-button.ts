@@ -129,7 +129,12 @@ describe('qPools!', () => {
 
     it("Create Associated Token Accounts", async () => {
         console.log("Creating associated token accounts ...");
-        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]], solSolendMint,provider.wallet);
+        // solSolendMint
+
+        // Fetch solend, and the other currencies that we are using ...
+
+
+        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]],provider.wallet);
         if (txCreateATA.instructions.length > 0) {
             await sendAndConfirmTransaction(
                 solbondProgram.provider,

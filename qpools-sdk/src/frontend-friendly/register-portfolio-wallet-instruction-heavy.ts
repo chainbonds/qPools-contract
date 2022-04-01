@@ -3,7 +3,7 @@ import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
-import {Marinade, MarinadeConfig, MarinadeState} from '@marinade.finance/marinade-ts-sdk';
+import {Marinade, MarinadeConfig} from '@marinade.finance/marinade-ts-sdk';
 import {
     SystemProgram,
 } from '@solana/web3.js';
@@ -21,9 +21,8 @@ import {
 import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 
-import {ExplicitSaberPool, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import * as registry from "../registry/registry-helper";
-import {ExplicitSaberPool, multiplyAmountByPythprice, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
+import {multiplyAmountByPythprice, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {fetchPortfolio, portfolioExists} from "../instructions/fetch/portfolio";
 import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
@@ -33,9 +32,7 @@ import {
     registerCurrencyInputInPortfolio
 } from "../instructions/modify/portfolio";
 import {approvePositionWeightMarinade, approveWithdrawToMarinade} from "../instructions/modify/marinade";
-import {approvePositionWeightSaber, signApproveWithdrawAmountSaber} from "../instructions/modify/saber";
-import {sendLamports, transferUsdcFromUserToPortfolio} from "../instructions/modify/portfolio-transfer";
-import {PositionInfo, Protocol, ProtocolType} from "../types/positionInfo";
+import {Protocol} from "../types/positionInfo";
 import {
     approvePositionWeightSaber,
     registerLiquidityPoolAssociatedTokenAccountsForPortfolio,
@@ -54,7 +51,14 @@ import {
 } from "../instructions/modify/portfolio-transfer";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import {PositionInfo, ProtocolType} from "../types/positionInfo";
-import {fetchSinglePositionMarinade, fetchSinglePositionSaber} from "../instructions/fetch/position";
+import {
+    fetchAllPositionsMarinade,
+    fetchAllPositionsSaber,
+    fetchAllPositions
+} from "../instructions/fetch/position";
+import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
+import {UserCurrencyAccount} from "../types/account/userCurrencyAccount";
+import {getTotalInputAmount} from "../instructions/fetch/currency";
 
 
 export interface PositionsInput {
@@ -87,7 +91,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
-    public poolAddresses: ExplicitSaberPool[];
 
     public payer: Keypair;
     public owner: WalletI;
@@ -142,6 +145,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             this.marinadeState = marinadeState;
         });
 
+        // Also include the solend config here ...
+
+
         // Perhaps initialize this with the mints ....
         getPortfolioPda(this.owner.publicKey, solbondProgram).then(([portfolioPDA, bumpPortfolio]) => {
             this.portfolioPDA = portfolioPDA
@@ -155,6 +161,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      * Any overhead operations, such as creating associated token accuonts
      */
     async createAssociatedTokenAccounts(
+        mints: PublicKey[],
         wallet: IWallet
     ): Promise<Transaction> {
 

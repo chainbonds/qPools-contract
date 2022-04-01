@@ -18,7 +18,7 @@ test-bpf = []
 [dependencies]
 anchor-lang = "0.20.1"
 anchor-spl = "0.20.1"
-solana-program = "1.8.12"
+solana-program = "1.9"
 spl-token = { version = "3.1.4", features = ["no-entrypoint"] }
 stable-swap-anchor = {path = "../../deps/stable-swap/stable-swap-anchor/"}
 
@@ -30,3 +30,4 @@ spl-token-lending = { path = "../../deps/solana-program-library/token-lending/pr
 assert_matches = "1.4.0"
 solana-program-test = "=1.9.9"
 solana-sdk = "1.9.9"
+solana-test-utils = "0.1.19"

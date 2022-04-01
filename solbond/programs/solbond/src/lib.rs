@@ -234,12 +234,12 @@ pub mod solbond {
     pub fn approve_initial_currency_amount(
         ctx: Context<ApproveInitialCurrencyAmount>,
         _bump_user_currency: u8,
-        _withdraw_amount_currency: u64,
+        _input_amount_currency: u64,
     ) -> ProgramResult {
         instructions::approve::approve_initial_currency_amount::handler(
             ctx,
             _bump_user_currency,
-            _withdraw_amount_currency,
+            _input_amount_currency,
         )
     }
 

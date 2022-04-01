@@ -16,8 +16,7 @@ use crate::entry;
 use crate::utils::seeds;
 use anchor_spl::token::{Token};
 use anchor_lang::InstructionData;
-
-
+use super::instruction_builder::*;
 
 
 #[tokio::test]
@@ -29,33 +28,8 @@ async fn test_create_portfolio() {
         processor!(entry),
     );
     let (mut banks_client, payer, recent_blockhash) = test.start().await;
-    let owner = Pubkey::new_unique();
-    let seeds: &[&[u8]] = &[&payer.pubkey().to_bytes(), seeds::PORTFOLIO_SEED];
-    let (portfolio_acc_pbk, portfolio_bump) = Pubkey::find_program_address(seeds, &program_id);
 
-    let anc_acc = crate::accounts::SavePortfolio{
-        owner: payer.pubkey(),
-        portfolio_pda: portfolio_acc_pbk,
-        system_program: solana_sdk::system_program::id(),
-        token_program: Token::id(),
-        rent: solana_program::sysvar::rent::id(),
-    }.to_account_metas(None);
-
-    let sumofweights = 1 as u64;
-    let numpos = 2 as u32;
-    let numcurre = 2 as u32;
-    let data = crate::instruction::CreatePortfolio { 
-        _bump: portfolio_bump,
-        _sum_of_weights: sumofweights,
-        _num_positions: numpos,
-        _num_currencies: numcurre
-    }.data();
-    let ix = Instruction {
-        program_id: program_id,
-        accounts: anc_acc,
-        data: data
-    };
-
+    let ix = create_portfolio_ix(payer.pubkey(), 1 as u64, 2 as u32, 2 as u32).unwrap();
 
    let mut transaction = Transaction::new_with_payer(
         &[ix],
@@ -63,7 +37,28 @@ async fn test_create_portfolio() {
     );
     transaction.sign(&[&payer], recent_blockhash);
     assert_matches!(banks_client.process_transaction(transaction).await, Ok(()));
-
-
-
 }
+
+
+
+#[tokio::test]
+async fn test_create_currency_pda() {
+    let program_id = crate::id();//crate::solbond::ID;//Pubkey::new_unique();
+    let mut test = ProgramTest::new(
+        "solbond",
+        program_id,
+        processor!(entry),
+    );
+    let (mut banks_client, payer, recent_blockhash) = test.start().await;
+    let some_amount: u64 = 2; // arbitrary 
+
+
+        
+    let ix = approve_initial_currency_ix(payer.pubkey(), some_mint_key, some_amount).unwrap();
+    let mut transaction = Transaction::new_with_payer(
+        &[ix],
+        Some(&payer.pubkey()),
+    );
+    transaction.sign(&[&payer], recent_blockhash);
+    assert_matches!(banks_client.process_transaction(transaction).await, Ok(()));
+    }

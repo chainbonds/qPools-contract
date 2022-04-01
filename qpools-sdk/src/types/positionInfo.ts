@@ -8,7 +8,8 @@ export enum ProtocolType {
 
 export enum Protocol {
     saber,
-    marinade
+    marinade,
+    solend
 }
 
 export interface PositionInfo {

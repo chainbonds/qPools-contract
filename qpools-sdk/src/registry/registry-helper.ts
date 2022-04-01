@@ -11,6 +11,7 @@ import {Protocol, ProtocolType} from "../types/positionInfo";
 import {DEV_POOLS_INFO_MARINADE} from "./devnet/marinade/pools-info.devnet";
 import {DEV_TOKEN_LIST_MARINADE} from "./devnet/marinade/token-list.devnet";
 import {DEV_WHITELIST_TOKENS} from "./devnet/whitelist-tokens.devnet";
+import {DEV_POOLS_INFO_SOLEND} from "./devnet/solend/pools-info.devnet";
 
 // Create interfaces for all getters here for now
 
@@ -26,9 +27,7 @@ export interface PythStruct {
 
 export interface ExplicitToken {
     address: string,
-    chainId: number
     decimals: number
-    extensions: any,
     logoURI: string
     name: string,
     symbol: string,
@@ -39,7 +38,7 @@ export interface ExplicitPool {
     id: string,
     name: string,
     protocol: Protocol,
-    poolType: ProtocolType,
+    protocolType: ProtocolType,
     lpToken: ExplicitToken,
     tokens: ExplicitToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
 }
@@ -93,7 +92,7 @@ export function getWhitelistTokens(): string[] {
 
 // Write a function here which applies the pyth oracle ...
 // TODO: Replace this by a proper Pyth Provider, or pyth function ...
-export const multiplyAmountByPythprice = (x: number, mint: PublicKey)  => {
+export const multiplyAmountByPythprice = (x: number, mint: PublicKey) => {
     let out: number;
     console.log("Mint is: ", mint.toString());
     console.log("Number in: ", x);
@@ -145,12 +144,42 @@ function getAllPools(): any {
         x.protocol = Protocol.saber;
         return x;
     });
-    let mariandePoolList: ExplicitPool[] = DEV_POOLS_INFO_MARINADE.map((x: any) => {
+    let marinadePoolList: ExplicitPool[] = DEV_POOLS_INFO_MARINADE.map((x: any) => {
         x.poolType = ProtocolType.Staking;
         x.protocol = Protocol.marinade;
         return x;
     });
-    return saberPoolList.concat(mariandePoolList);
+    let solendPoolList: ExplicitPool[] = DEV_POOLS_INFO_SOLEND.map((x: any) => {
+        // I guess I need to
+        // TODO: Maybe remove ID from there as well
+        // TODO: First, fetch the token from solend, or from
+        let lpToken: ExplicitToken = {
+            address: x.lpToken,
+            decimals: 0,
+            logoURI: "",
+            name: "",
+            pyth: undefined,
+            symbol: ""
+        };
+        let inputToken: ExplicitToken = {
+            address: "",
+            decimals: 0,
+            logoURI: "",
+            name: "",
+            pyth: undefined,
+            symbol: ""
+        };
+        let out: ExplicitPool = {
+            id: x.name,
+            lpToken: lpToken,
+            name: x.name,
+            protocolType: ProtocolType.Lending,
+            protocol: Protocol.solend,
+            tokens: [inputToken]
+        };
+        return out;
+    });
+    return saberPoolList.concat(marinadePoolList);
 }
 
 
@@ -270,24 +299,6 @@ export function getPoolFromSplStringId(splStringId: string): ExplicitPool {
     }
     return out;
 }
-
-/**
- * From a public key representing the pool (i.e. liquidity pool, or lending pool),
- * retrieve the Token Object
- * @param poolAddress
- */
-// We should make it a habit to get this by the LP Token, not by the pool address.
-// The LP token is quite universal, and we should really use that!
-// Luckily, it looks like we don't use this shit anywhere !
-// export function getPool(poolAddress: PublicKey): ExplicitPool | null {
-//     let out: ExplicitPool | null = null;
-//     getAllPools().map((x: ExplicitSaberPool) => {
-//         if (new PublicKey(x.swap.config.swapAccount).equals(poolAddress)) {
-//             out = x;
-//         }
-//     })
-//     return out;
-// }
 
 /**
  * Get the Pyth USDC price, given a Token Object (which includes the Pyth price address)

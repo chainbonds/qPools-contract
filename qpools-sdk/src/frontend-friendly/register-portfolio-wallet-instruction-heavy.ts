@@ -99,11 +99,11 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     constructor(
         connection: Connection,
         provider: Provider,
-        solbondProgram: Program
+        solbondProgram: Program,
+        registry: Registry
     ) {
 
-        this.registry = new Registry();
-        this.registry.initializeRegistry();
+        this.registry = registry;
 
         this.owner = provider.wallet;
 

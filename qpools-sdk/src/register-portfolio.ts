@@ -63,7 +63,6 @@ export class Portfolio {
         this.provider = provider;
         this.solbondProgram = solbondProgram
         this.registry = new Registry();
-        this.registry.initializeRegistry();
 
         this.wallet = wallet;
         this.providerWallet = this.provider.wallet;

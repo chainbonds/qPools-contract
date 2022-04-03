@@ -57,14 +57,14 @@ export class CrankRpcCalls {
         connection: Connection,
         tmpKeypair: Keypair,
         provider: Provider,
-        solbondProgram: Program
+        solbondProgram: Program,
+        registry: Registry
     ) {
 
         this.connection = connection;
         this.provider = provider;
         this.solbondProgram = solbondProgram;
-        this.registry = new Registry();
-        this.registry.initializeRegistry();
+        this.registry = registry;
 
         // Create a new provider
         // The crank covers the keypair within the provider

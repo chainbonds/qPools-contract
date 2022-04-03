@@ -20,7 +20,8 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     // console.log(market);
     // console.log("Config is: ", market.config);
     console.log("Reserves are: ", market.reserves);
-    let out: ExplicitToken[] = await Promise.all(market.reserves.filter((x) => {return (new Set(["SOL"])).has(x.config.symbol)}).map(async (x: SolendReserve) => {
+    let out: ExplicitToken[] = [];
+    await Promise.all(market.reserves.filter((x) => {return (new Set(["SOL"])).has(x.config.symbol)}).map(async (x: SolendReserve) => {
         // Do a simple if-statement for the token, match it by the mint
         // if (x.)
         let logoUri = "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png";
@@ -32,7 +33,18 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
             name: x.config.name,
             symbol: x.config.symbol
         }
-        return tmp;
+        out.push(tmp);
+
+        // Get the collateral Mint Address
+        // TODO: Also add the LP-tokens to this ...
+        let tmpLp: ExplicitToken = {
+            address: x.config.collateralMintAddress,
+            decimals: x.config.decimals,
+            logoURI: "https://spl-token-icons.static-assets.ship.capital/icons/101/5h6ssFpeDeRbzsEHDbTQNH7nVGgsKrZydxdSTnLm6QdV.png",
+            name: "c" + x.config.symbol,
+            symbol: x.config.symbol
+        }
+        out.push(tmpLp);
     }));
     return out;
 }
@@ -65,9 +77,9 @@ export const getSolendPools = async (): Promise<ExplicitPool[]> => {
             symbol: "c" + x.config.symbol
         }
         let tmp: ExplicitPool = {
-            id: "",
-            lpToken: lpToken,
+            id: "c" + x.config.symbol,
             name: x.config.name,
+            lpToken: lpToken,
             protocol: Protocol.solend,
             protocolType: ProtocolType.Lending,
             tokens: [underlyingToken]

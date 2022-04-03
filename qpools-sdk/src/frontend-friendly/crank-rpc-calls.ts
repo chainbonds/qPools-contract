@@ -40,7 +40,6 @@ export class CrankRpcCalls {
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
-    public poolAddresses: registry.ExplicitPool[];
     public portfolioOwner: PublicKey;
 
     public payer: Keypair;
@@ -81,12 +80,6 @@ export class CrankRpcCalls {
 
         // @ts-expect-error
         this.wallet = this.provider.wallet.payer as Keypair;
-
-        // Also save all the pool here
-        // TODO: Again, these are also duplicates. Make sure that you merge all these items!
-        registry.getActivePools().then((poolAddresses: registry.ExplicitPool[]) => {
-            this.poolAddresses = poolAddresses;
-        });
 
         this.owner = provider.wallet;
         // @ts-expect-error

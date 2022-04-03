@@ -1,13 +1,8 @@
 import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
-import {MOCK} from "../const";
 import {WalletI} from "easy-spl";
 import {Marinade, MarinadeConfig} from '@marinade.finance/marinade-ts-sdk';
-import {
-    SystemProgram,
-} from '@solana/web3.js';
-import {SolendAction} from "@solendprotocol/solend-sdk";
 
 import {
     accountExists,
@@ -22,7 +17,6 @@ import {PortfolioAccount} from "../types/account/portfolioAccount";
 import {PositionAccountSaber} from "../types/account/positionAccountSaber";
 
 import * as registry from "../registry/registry-helper";
-import {multiplyAmountByPythprice, saberPoolLpToken2poolAddress} from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {fetchPortfolio, portfolioExists} from "../instructions/fetch/portfolio";
 import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
@@ -35,15 +29,12 @@ import {approvePositionWeightMarinade, approveWithdrawToMarinade} from "../instr
 import {Protocol} from "../types/positionInfo";
 import {
     approvePositionWeightSaber,
-    registerLiquidityPoolAssociatedTokenAccountsForPortfolio,
     signApproveWithdrawAmountSaber
 } from "../instructions/modify/saber";
 
 import {
     approvePositionWeightSolend,
-    permissionlessFulfillSolend,
     signApproveWithdrawAmountSolend,
-    redeemSinglePositionSolend
 } from "../instructions/modify/solend";
 import {
     sendLamports,
@@ -59,6 +50,7 @@ import {
 import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
 import {UserCurrencyAccount} from "../types/account/userCurrencyAccount";
 import {getTotalInputAmount} from "../instructions/fetch/currency";
+import {Registry} from "./registry";
 
 
 export interface PositionsInput {
@@ -96,16 +88,21 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     public owner: WalletI;
 
     public marinadeState: MarinadeState;
+    public registry: Registry;
 
     // There are a lot of accounts that need would be created twice
     // (assuming we use the same pool, but that pool has not been instantiated yet)
     private createdAtaAccounts: Set<string> = new Set();
 
+    // TODO: Should also include an async constructor probably ...
     constructor(
         connection: Connection,
         provider: Provider,
         solbondProgram: Program
     ) {
+
+        this.registry = new Registry();
+        this.registry.initializeRegistry();
 
         this.owner = provider.wallet;
 

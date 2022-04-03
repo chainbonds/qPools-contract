@@ -16,7 +16,7 @@ import {
     getAccountForMintAndPDA,
     sendAndConfirmTransaction
 } from "@qpools/sdk/lib/utils";
-import {SolendMarket, SolendAction, syncNative} from "@solendprotocol/solend-sdk";
+import {SolendMarket, syncNative} from "@solendprotocol/solend-sdk";
 // import {ASSOCIATED_TOKEN_PROGRAM_ID} from "@saberhq/token-utils";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
@@ -154,27 +154,8 @@ describe('qPools!', () => {
 
         const associatedTokenAccountWrappedSol = await getAssociatedTokenAddress(
             wrappedSolMint,
-           genericPayer.publicKey
+            genericPayer.publicKey
         );
-        // const transaction = new Transaction();
-        // let wrappedSolAta = await createAssociatedTokenAccountUnsignedInstruction(connection, wrappedSolMint, null, genericPayer.publicKey, provider.wallet);
-        // transaction.add(wrappedSolAta);
-        // transaction.add(
-        //     SystemProgram.transfer({
-        //        fromPubkey: genericPayer.publicKey,
-        //        toPubkey: associatedTokenAccount,
-        //        lamports: 2e9,
-        //     }),
-        //     // createSyncNativeInstruction(associatedToken, TOKEN_PROGRAM_ID)
-        // );
-        // //await sendAndConfirmTransaction(connection, transaction, [payer], );
-
-
-        //await sendAndConfirmTransaction(connection, transaction, [payer], confirmOptions);
-
-        // const wrappedSolAccount = await portfolio.getAccountForMintAndPDA(wSOL, genericPayer.publicKey);
-        // const wsolkeypair = Keypair.generate();
-        // await createAccount(connection, genericPayer, NATIVE_MINT, genericPayer, wsolkeypair, TOKEN_PROGRAM_ID);
         const givemoney = new Transaction().add(
             SystemProgram.transfer({
                      fromPubkey: genericPayer.publicKey,

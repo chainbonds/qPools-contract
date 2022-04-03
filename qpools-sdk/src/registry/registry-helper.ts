@@ -4,68 +4,19 @@
 /**
  * This should probably be a class, for the sake of lazy-loading ...
  */
-import {Connection, PublicKey} from "@solana/web3.js";
-import {DEV_POOLS_INFO_SABER} from "./devnet/saber/pools-info.devnet";
+import {PublicKey} from "@solana/web3.js";
 import {DEV_PORTFOLIOID_TO_TOKEN} from "./devnet/portfolio-to-pool.devnet";
-import {StableSwap} from "@saberhq/stableswap-sdk";
-import {parsePriceData, PriceData} from "@pythnetwork/client";
-import {Protocol, ProtocolType} from "../types/positionInfo";
-import {DEV_POOLS_INFO_MARINADE} from "./devnet/marinade/pools-info.devnet";
+import {Protocol} from "../types/positionInfo";
 import {DEV_WHITELIST_TOKENS} from "./devnet/whitelist-tokens.devnet";
 import {getSaberPools, getSaberTokens} from "../instructions/api/saber";
 import {getMarinadePools, getMarinadeTokens} from "../instructions/api/marinade";
 import {getSolendPools, getSolendTokens} from "../instructions/api/solend";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
+import {ExplicitToken} from "../types/ExplicitToken";
+import {ExplicitPool} from "../types/ExplicitPool";
 
 // Create interfaces for all getters here for now
 
-export interface PortfolioPair {
-    portfolioApiId: string,
-    poolAddress: string
-}
-
-export interface PythStruct {
-    price?: string,
-    product?: string
-}
-
-export interface ExplicitToken {
-    address: string,
-    decimals: number
-    logoURI: string
-    name: string,
-    symbol: string,
-    pyth?: PythStruct
-}
-
-export interface ExplicitPool {
-    id: string,
-    name: string,
-    protocol: Protocol,
-    protocolType: ProtocolType,
-    lpToken: ExplicitToken,
-    tokens: ExplicitToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
-}
-
-// export interface ExplicitSaberPool extends ExplicitPool {
-//     tokens: ExplicitToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
-//     currency: string,
-//     plotKey: string,
-//     swap: StableSwap,
-//     quarry: string,
-// }
-
-export interface ExplicitSaberPool extends ExplicitPool {
-    // tokens: ExplicitToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
-    // currency: string,  // TODO: Gotta implement this somehow
-    swap: StableSwap,
-}
-
-// export interface ExplicitMarinadePool extends ExplicitPool {
-//     tokens: ExplicitToken[],  // Should only be used to get the addresses, nothing more // Or we should update it on-the-fly
-//     // currency: string,  // TODO: Gotta implement this somehow
-//     // swap: StableSwap,
-// }
 
 /**
  * Fetches everything from the local files. Does not fetch anything from GET requests / online
@@ -138,14 +89,17 @@ export function getNativeSolMint(): PublicKey {
     return new PublicKey("NativeSo11111111111111111111111111111111111");
 }
 
+// TODO: Replace by Registry Class
 export function getMarinadeSolMint(): PublicKey {
     return new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
 }
 
+// TODO: Replace by Registry Class
 export function getWrappedSolMint(): PublicKey {
     return new PublicKey("So11111111111111111111111111111111111111112");
 }
 
+// TODO: Replace by registry class
 async function getAllTokens(): Promise<ExplicitToken[]> {
     let saberTokenList: ExplicitToken[] = await getSaberTokens();
     let marinadeTokenList: ExplicitToken[] = await getMarinadeTokens();
@@ -157,6 +111,7 @@ async function getAllTokens(): Promise<ExplicitToken[]> {
     ]
 }
 
+// TODO: Replace by registry class
 async function getAllPools(): Promise<any> {
     let saberPoolList: ExplicitPool[] = await getSaberPools();
     let marinadePoolList: ExplicitPool[] = await getMarinadePools();
@@ -176,41 +131,11 @@ export function getSaberStableSwapProgramId(): PublicKey {
     return new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
 }
 
-// TODO: What is this (?) Ah, prob USDC value ... To calculate total net value
-export function getReferenceCurrencyMint(): PublicKey {
-    return new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
-}
-
-
-/**
- * Get all the pools that are using the USDC pool, as specified below.
- */
-export async function getActivePools(): Promise<ExplicitPool[]> {
-    // Return the pool accounts, that correspond to these tokesn ...
-    // Get all pools that have as one component USDC
-    let referenceCurrency = getReferenceCurrencyMint();
-    // let usdcToken = getToken(new PublicKey(mintUsdc));
-    return await getPoolsContainingToken(new PublicKey(referenceCurrency));
-}
-
-/**
- * Translate the pre-set PortfolioId to the Token Public Key
- * @param portfolioId
- */
-export async function getTokenFromPortfolioId(portfolioId: String): Promise<PublicKey | null> {
-    let out: PublicKey | null = null;
-    (await getPortfolioToTokenDict())["pairs"].map((x: PortfolioPair) => {
-        if (portfolioId === x.portfolioApiId) {
-            out = new PublicKey(x.poolAddress);
-        }
-    });
-    return out;
-}
-
 /**
  * From a public key representing the Token's Mint, retrieve the Token Object
  * @param tokenMint
  */
+// Replaced by registry function
 export async function getToken(tokenMint: PublicKey): Promise<ExplicitToken | null> {
     let out: ExplicitToken | null = null;
     (await getAllTokens()).map((x: ExplicitToken) => {
@@ -221,41 +146,7 @@ export async function getToken(tokenMint: PublicKey): Promise<ExplicitToken | nu
     return out;
 }
 
-export async function getPoolsFromSplStringIds(splStringId: string[]): Promise<Array<ExplicitPool>> {
-    let out: ExplicitPool[] = [];
-    (await getAllPools()).map((x: ExplicitPool) => {
-        // TODO: Include case that this is not already in the list, and if it is done, then this is probably because of an error
-        if (splStringId.includes(x.name)) {
-            out.push(x);
-        }
-    });
-    return out;
-}
-
-export async function getTokensFromSplStringIds(splStringId: string[]): Promise<Array<ExplicitToken>> {
-    let out: Array<ExplicitToken> = new Array<ExplicitToken>();
-    (await getAllTokens()).map((x: ExplicitToken) => {
-        if (splStringId.includes(x.name)) {
-            out.push(x);
-        }
-    });
-    return out
-}
-
-export async function getTokenFromSplStringId(splStringId: string): Promise<ExplicitToken> {
-    let out: ExplicitToken | null = null;
-    (await getAllTokens())["tokens"].map((x: ExplicitToken) => {
-        if (x.name === splStringId) {
-            out = x;
-        }
-    });
-    return out;
-}
-
-// export function getNameIdFromLpMint(lpMint: PublicKey): ExplicitPool {
-//
-// }
-
+// Already replaced as well ... getPoolByLpToken
 export async function getPoolFromLpMint(lpMint: PublicKey): Promise<ExplicitPool> {
     let out: ExplicitPool | null = null;
     console.log("All pools are: ", getAllPools(), lpMint.toString());
@@ -271,9 +162,10 @@ export async function getPoolFromLpMint(lpMint: PublicKey): Promise<ExplicitPool
     return out;
 }
 
+// TODO: Replace this file by a function that translates serpius id's to pools in this registry ...
 export async function getPoolFromSplStringId(splStringId: string): Promise<ExplicitPool> {
     let out: ExplicitPool | null = null;
-    console.log("All pools are: ", getAllPools(), splStringId);
+    console.log("All pools are: ", await getAllPools(), splStringId);
     (await getAllPools()).map((x: ExplicitPool) => {
         console.log("x.name is: ", x.name, splStringId);
         if (x.name === splStringId) {
@@ -287,27 +179,10 @@ export async function getPoolFromSplStringId(splStringId: string): Promise<Expli
 }
 
 /**
- * Get the Pyth USDC price, given a Token Object (which includes the Pyth price address)
- * @param connection
- * @param token
- */
-export async function getTokenPythToUsdcPrice(
-    connection: Connection,
-    token: ExplicitToken
-): Promise<number> {
-    // Can do this by making a get request to a pyth object
-    // get_account_info then parse that data as a PythPriceAccount
-    let priceAccount = new PublicKey(token.pyth.price);
-    console.log("price account is: ", typeof priceAccount)
-    let priceData: PriceData = parsePriceData((await connection.getAccountInfo(priceAccount)).data);
-    console.log("Price data is: ", priceData.price);
-    return priceData.price;
-}
-
-/**
  * Get a list of all pools that is working with a mint of the provided token
  * @param tokenMint
  */
+// TODO: Should be replaced by getPoolByInputTokens in the Registry ...
 export async function getPoolsContainingToken(tokenMint: PublicKey) {
     let allPools: ExplicitPool[] = [];
     (await getAllPools()).map((pool: ExplicitPool) => {
@@ -320,16 +195,16 @@ export async function getPoolsContainingToken(tokenMint: PublicKey) {
     return allPools;
 }
 
-/**
- * Get the serpius API endpoint. Depending on whether we are on mainnet or devnet,
- * Return the respective variable
- */
+
+// TODO: Replace this by the Registry class
 export function getSerpiusEndpoint(): string {
     // "https://qpools.serpius.com/weight_status.json";
     // return "https://qpools.serpius.com/weight_status_devnet.json";
-    return "https://qpools.serpius.com/weight_status_devnet_v2.json";
+    // return "https://qpools.serpius.com/weight_status_devnet_v2.json";
+    return "https://qpools.serpius.com/weight_status_devnet_solend_v2.json";
 }
 
+// TODO: Replace this by the Registry class
 export async function getSaberPoolsContainingLpToken(lpTokenMint: PublicKey): Promise<ExplicitPool[]> {
     let allPools: ExplicitPool[] = [];
     (await getAllPools()).map((x: ExplicitPool) => {
@@ -344,6 +219,7 @@ export async function getSaberPoolsContainingLpToken(lpTokenMint: PublicKey): Pr
     return allPools;
 }
 
+// TODO: Replace this by the Registry class
 export async function saberPoolLpToken2poolAddress(poolMint: PublicKey): Promise<PublicKey> {
     let all: any[] = await getSaberPoolsContainingLpToken(poolMint);
     console.assert(all.length > 0);
@@ -351,9 +227,11 @@ export async function saberPoolLpToken2poolAddress(poolMint: PublicKey): Promise
 }
 
 // TODO: Write batch functions for all these
+// TODO: Replace this by the Registry class
 export async function getIconFromToken(tokenMint: PublicKey) {
 
     let out: string = "";
+    console.log("All tokens: ", await getAllTokens(), tokenMint.toString());
     (await getAllTokens()).map((x: ExplicitToken) => {
         if (x.address === tokenMint.toString()) {
             out = x.logoURI

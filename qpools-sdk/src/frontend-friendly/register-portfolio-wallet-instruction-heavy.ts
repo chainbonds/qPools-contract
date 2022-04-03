@@ -220,7 +220,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             // );
             // ixs.map((x: TransactionInstruction) => {tx.add(x)})
 
-            if (mint.equals(registry.getNativeSolMint())) {
+            if (mint.equals(await registry.getNativeSolMint())) {
                 return null;
             }
 
@@ -358,7 +358,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     ): Promise<TransactionInstruction> {
         // From the LP Mint, retrieve the saber pool address
         // TODO: Also change this LP-based logic in the test...
-        let poolAddressFromLp = registry.saberPoolLpToken2poolAddress(new PublicKey(lpTokenMint));
+        let poolAddressFromLp = await registry.saberPoolLpToken2poolAddress(new PublicKey(lpTokenMint));
         let ix = await approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
@@ -381,7 +381,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("aaa 28");
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 29");
-        let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         const stableSwapState = await getPoolState(this.connection, poolAddress);
         const {state} = stableSwapState;
         let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
@@ -491,7 +491,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("Pool Address is: ", positionAccount.poolAddress.toString());
 
         // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
-        let saberPoolAddress = saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        let saberPoolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
         const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
         const {state} = stableSwapState;
@@ -567,8 +567,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
         // Again, convert by the pyth price ...
-        let usdcValueA = multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
-        let usdcValueLP = multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
+        let usdcValueA = await registry.multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
+        let usdcValueLP = await registry.multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
 
         // Sum up all the values here to arrive at the Total Position Value?
         // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
@@ -742,7 +742,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
             if (position.protocol === Protocol.saber) {
                 console.log("Position (DEX) is: ", position);
-                let saberPoolAddress = saberPoolLpToken2poolAddress(position.poolAddress);
+                let saberPoolAddress = await registry.saberPoolLpToken2poolAddress(position.poolAddress);
                 const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
                 const {state} = stableSwapState;
 
@@ -827,7 +827,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
 
-                let marinadeUsdcAmount = multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
+                let marinadeUsdcAmount = await registry.multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
                 // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
                 usdAmount += marinadeUsdcAmount

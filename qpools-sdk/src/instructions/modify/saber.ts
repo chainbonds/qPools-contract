@@ -93,7 +93,7 @@ export async function signApproveWithdrawAmountSaber(
     console.log("aaa 27");
 
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
@@ -144,7 +144,7 @@ export async function permissionlessFulfillSaber(
     let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
     console.log("aaa 21");
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
@@ -205,7 +205,7 @@ export async function redeemSinglePositionOnlyOne(
     console.log("aaa 25");
 
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
     console.log("got state ", state);
@@ -312,7 +312,7 @@ export async function redeem_single_position(
     console.log("aaa 23");
 
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
     console.log("got state ", state);

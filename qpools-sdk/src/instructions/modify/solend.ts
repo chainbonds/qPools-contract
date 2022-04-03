@@ -4,7 +4,6 @@ import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {PositionAccountSaber} from "../../types/account/positionAccountSaber";
-import * as registry from "../../registry/registry-helper";
 import {
     createAssociatedTokenAccountUnsignedInstruction,
     getAccountForMintAndPDADontCreate, IWallet,

@@ -84,7 +84,9 @@ export class CrankRpcCalls {
 
         // Also save all the pool here
         // TODO: Again, these are also duplicates. Make sure that you merge all these items!
-        this.poolAddresses = registry.getActivePools();
+        registry.getActivePools().then((poolAddresses: registry.ExplicitPool[]) => {
+            this.poolAddresses = poolAddresses;
+        });
 
         this.owner = provider.wallet;
         // @ts-expect-error

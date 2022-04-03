@@ -15,14 +15,20 @@ import {
 import { Portfolio } from "./register-portfolio";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 import { PortfolioFrontendFriendlyChainedInstructions } from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
+import { Registry } from "./frontend-friendly/registry";
 import { IDL as SolbondIdl } from "./idl/solbond";
-import * as registry from "./registry/registry-helper";
-import { PortfolioAccount } from "./types/account/portfolioAccount";
-import { PositionAccountSaber } from "./types/account/positionAccountSaber";
-import { PositionInfo } from "./types/positionInfo";
+import { PortfolioAccount } from "./types/account/PortfolioAccount";
+import { PositionAccountSaber } from "./types/account/PositionAccountSaber";
 import { CrankRpcCalls } from "./frontend-friendly/crank-rpc-calls";
 import { NETWORK } from "./types/cluster";
-import { Protocol, ProtocolType } from "./types/positionInfo";
+import { Protocol, ProtocolType } from "./types/PositionInfo";
+
+import {multiplyAmountByPythprice} from "./instructions/pyth/multiplyAmountByPythPrice";
+import {getWhitelistTokens} from "./const";
+
+import {ExplicitToken} from "./types/ExplicitToken";
+import {ExplicitPool} from "./types/ExplicitPool";
+import {PositionInfo} from "./types/PositionInfo";
 
 export {
     airdropAdmin,
@@ -40,15 +46,22 @@ export {
     DisplayPortfolios,
     PortfolioFrontendFriendlyChainedInstructions,
     SolbondIdl,
-    registry,
     MOCK,
     NETWORK,
     PortfolioAccount,
     PositionAccountSaber,
-    PositionInfo,
     tokenAccountExists,
     accountExists,
     CrankRpcCalls,
     ProtocolType,
-    Protocol
+    Protocol,
+    Registry,
+
+    ExplicitToken,
+    ExplicitPool,
+    PositionInfo,
+
+    multiplyAmountByPythprice,
+
+    getWhitelistTokens
 }

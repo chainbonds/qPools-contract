@@ -32,6 +32,7 @@ import {
 import {getPortfolioPda} from "./types/account/pdas";
 import {getPoolState} from "./instructions/fetch/saber";
 import {MOCK} from "./const";
+import {Registry} from "./frontend-friendly/registry";
 
 // TODO: Replace all these functions by the functional functions
 // And make sure that the tests are passing
@@ -50,6 +51,7 @@ export class Portfolio {
     public provider: Provider;
     public wallet: Keypair;
     public providerWallet: IWallet;
+    public registry: Registry;
 
     constructor(
         connection: Connection,
@@ -60,6 +62,8 @@ export class Portfolio {
         this.connection = connection;
         this.provider = provider;
         this.solbondProgram = solbondProgram
+        this.registry = new Registry();
+        this.registry.initializeRegistry();
 
         this.wallet = wallet;
         this.providerWallet = this.provider.wallet;
@@ -298,7 +302,8 @@ export class Portfolio {
             owner_keypair.publicKey,
             index,
             poolTokenAmount,
-            tokenAAmount
+            tokenAAmount,
+            this.registry
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
@@ -308,7 +313,8 @@ export class Portfolio {
             this.connection,
             this.solbondProgram,
             owner_keypair.publicKey,
-            index
+            index,
+            this.registry
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
@@ -319,7 +325,8 @@ export class Portfolio {
             this.connection,
             this.solbondProgram,
             owner.publicKey,
-            index
+            index,
+            this.registry
         );
         return await sendAndSignInstruction(this.provider, ix);
     }
@@ -359,7 +366,8 @@ export class Portfolio {
             this.connection,
             this.solbondProgram,
             owner.publicKey,
-            index
+            index,
+            this.registry
         );
         return await sendAndSignInstruction(this.provider, ix);
     }

@@ -1,7 +1,8 @@
 import {DEV_TOKEN_LIST_MARINADE} from "../../registry/devnet/marinade/token-list.devnet";
-import {ExplicitPool, ExplicitToken} from "../../registry/registry-helper";
 import {DEV_POOLS_INFO_MARINADE} from "../../registry/devnet/marinade/pools-info.devnet";
-import {Protocol, ProtocolType} from "../../types/positionInfo";
+import {Protocol, ProtocolType} from "../../types/PositionInfo";
+import {ExplicitPool} from "../../types/ExplicitPool";
+import {ExplicitToken} from "../../types/ExplicitToken";
 
 export const getMarinadeTokens = async (): Promise<ExplicitToken[]> => {
     let saberTokenList: ExplicitToken[] = DEV_TOKEN_LIST_MARINADE["tokens"];

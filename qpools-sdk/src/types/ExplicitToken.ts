@@ -1,4 +1,4 @@
-import {PythStruct} from "../registry/registry-helper";
+import {PythStruct} from "./PythStruct";
 
 export interface ExplicitToken {
     address: string,

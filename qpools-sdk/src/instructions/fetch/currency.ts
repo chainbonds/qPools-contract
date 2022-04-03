@@ -1,7 +1,6 @@
 import {Connection, GetProgramAccountsFilter, PublicKey} from "@solana/web3.js";
-import {Program, ProgramAccount} from "@project-serum/anchor";
-import {UserCurrencyAccount} from "../../types/account/userCurrencyAccount";
-import {getUserCurrencyPda} from "../../types/account/pdas";
+import {Program} from "@project-serum/anchor";
+import {UserCurrencyAccount} from "../../types/account/UserCurrencyAccount";
 
 /**
  * Check if the portfolio exists

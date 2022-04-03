@@ -1,4 +1,4 @@
-import {Protocol, ProtocolType} from "./positionInfo";
+import {Protocol, ProtocolType} from "./PositionInfo";
 import {ExplicitToken} from "./ExplicitToken";
 
 export interface ExplicitPool {

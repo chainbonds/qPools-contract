@@ -10,8 +10,7 @@ import QWallet, {
 import {StableSwapState} from "@saberhq/stableswap-sdk";
 import {getSolbondProgram, PortfolioAccount} from "../index";
 import {NETWORK} from "../types/cluster";
-import {PositionAccountSaber} from "../types/account/positionAccountSaber";
-import * as registry from "../registry/registry-helper";
+import {PositionAccountSaber} from "../types/account/PositionAccountSaber";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {createPositionMarinade} from "../instructions/modify/marinade";
 import {
@@ -28,7 +27,8 @@ import {sendLamports, transfer_to_user} from "../instructions/modify/portfolio-t
 import {getPoolState} from "../instructions/fetch/saber";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
+import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import {Registry} from "./registry";
 
 export class CrankRpcCalls {
 
@@ -49,6 +49,7 @@ export class CrankRpcCalls {
     public crankWallet;
     public crankProvider;
     public crankSolbondProgram;
+    public registry;
 
     public marinadeState: MarinadeState;
 
@@ -62,6 +63,8 @@ export class CrankRpcCalls {
         this.connection = connection;
         this.provider = provider;
         this.solbondProgram = solbondProgram;
+        this.registry = new Registry();
+        this.registry.initializeRegistry();
 
         // Create a new provider
         // The crank covers the keypair within the provider
@@ -151,7 +154,8 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
-            index
+            index,
+            this.registry
         );
         console.log("Sending saber instruciton ....", ix);
         return await sendAndSignInstruction(this.crankProvider, ix);
@@ -174,7 +178,8 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
-            index
+            index,
+            this.registry
         );
         return await sendAndSignInstruction(this.crankProvider, ix);
     }
@@ -203,7 +208,8 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
-            index
+            index,
+            this.registry
         );
         return await sendAndSignInstruction(this.crankProvider, ix);
     }

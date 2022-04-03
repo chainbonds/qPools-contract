@@ -1,13 +1,11 @@
 import {Connection, PublicKey} from "@solana/web3.js";
 import {Program} from "@project-serum/anchor";
-import {PositionAccountSaber} from "../../types/account/positionAccountSaber";
-import {getPortfolioPda, getPositionPda} from "../../types/account/pdas";
+import {PositionAccountSaber} from "../../types/account/PositionAccountSaber";
+import {getPositionPda} from "../../types/account/pdas";
 import {accountExists} from "../../utils";
-import {PositionAccountMarinade} from "../../types/account/positionAccountMarinade";
-import {sol} from "easy-spl";
+import {PositionAccountMarinade} from "../../types/account/PositionAccountMarinade";
 import {fetchPortfolio} from "./portfolio";
-import {PortfolioAccount} from "../../types/account/portfolioAccount";
-import {Protocol} from "../../types/positionInfo";
+import {PortfolioAccount} from "../../types/account/PortfolioAccount";
 
 // TODO: This position can either be a Marinade Position, or a Saber Position. Make sure to distinguish between the two!
 /**

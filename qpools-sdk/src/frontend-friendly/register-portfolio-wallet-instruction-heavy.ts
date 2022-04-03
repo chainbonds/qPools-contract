@@ -13,10 +13,9 @@ import {
     IWallet,
     tokenAccountExists
 } from "../utils";
-import {PortfolioAccount} from "../types/account/portfolioAccount";
-import {PositionAccountSaber} from "../types/account/positionAccountSaber";
+import {PortfolioAccount} from "../types/account/PortfolioAccount";
+import {PositionAccountSaber} from "../types/account/PositionAccountSaber";
 
-import * as registry from "../registry/registry-helper";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {fetchPortfolio, portfolioExists} from "../instructions/fetch/portfolio";
 import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
@@ -26,7 +25,7 @@ import {
     registerCurrencyInputInPortfolio
 } from "../instructions/modify/portfolio";
 import {approvePositionWeightMarinade, approveWithdrawToMarinade} from "../instructions/modify/marinade";
-import {Protocol} from "../types/positionInfo";
+import {Protocol} from "../types/PositionInfo";
 import {
     approvePositionWeightSaber,
     signApproveWithdrawAmountSaber
@@ -41,16 +40,18 @@ import {
     transferUsdcFromUserToPortfolio
 } from "../instructions/modify/portfolio-transfer";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionInfo, ProtocolType} from "../types/positionInfo";
+import {PositionInfo, ProtocolType} from "../types/PositionInfo";
 import {
     fetchAllPositionsMarinade,
     fetchAllPositionsSaber,
     fetchAllPositions
 } from "../instructions/fetch/position";
-import {PositionAccountMarinade} from "../types/account/positionAccountMarinade";
-import {UserCurrencyAccount} from "../types/account/userCurrencyAccount";
+import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import {UserCurrencyAccount} from "../types/account/UserCurrencyAccount";
 import {getTotalInputAmount} from "../instructions/fetch/currency";
 import {Registry} from "./registry";
+import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
+import {getNativeSolMint} from "../const";
 
 
 export interface PositionsInput {
@@ -217,7 +218,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             // );
             // ixs.map((x: TransactionInstruction) => {tx.add(x)})
 
-            if (mint.equals(await registry.getNativeSolMint())) {
+            if (mint.equals(await getNativeSolMint())) {
                 return null;
             }
 
@@ -355,7 +356,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     ): Promise<TransactionInstruction> {
         // From the LP Mint, retrieve the saber pool address
         // TODO: Also change this LP-based logic in the test...
-        let poolAddressFromLp = await registry.saberPoolLpToken2poolAddress(new PublicKey(lpTokenMint));
+        let poolAddressFromLp = await this.registry.saberPoolLpToken2poolAddress(new PublicKey(lpTokenMint));
         let ix = await approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
@@ -378,7 +379,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("aaa 28");
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 29");
-        let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        let poolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         const stableSwapState = await getPoolState(this.connection, poolAddress);
         const {state} = stableSwapState;
         let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
@@ -398,7 +399,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             this.owner.publicKey,
             index,
             new BN(lpAmount),
-            minRedeemTokenAmount
+            minRedeemTokenAmount,
+            this.registry
         );
         return ix;
     }
@@ -488,7 +490,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("Pool Address is: ", positionAccount.poolAddress.toString());
 
         // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
-        let saberPoolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        let saberPoolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
         const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
         const {state} = stableSwapState;
@@ -564,8 +566,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
         // Again, convert by the pyth price ...
-        let usdcValueA = await registry.multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
-        let usdcValueLP = await registry.multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
+        let usdcValueA = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
+        let usdcValueLP = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
 
         // Sum up all the values here to arrive at the Total Position Value?
         // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
@@ -739,7 +741,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
             if (position.protocol === Protocol.saber) {
                 console.log("Position (DEX) is: ", position);
-                let saberPoolAddress = await registry.saberPoolLpToken2poolAddress(position.poolAddress);
+                let saberPoolAddress = await this.registry.saberPoolLpToken2poolAddress(position.poolAddress);
                 const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
                 const {state} = stableSwapState;
 
@@ -824,7 +826,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
 
-                let marinadeUsdcAmount = await registry.multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
+                let marinadeUsdcAmount = await multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
                 // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
                 usdAmount += marinadeUsdcAmount

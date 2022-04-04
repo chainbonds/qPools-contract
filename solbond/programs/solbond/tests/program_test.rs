@@ -23,9 +23,38 @@ use solana_sdk::{
     instruction::InstructionError,
 };
 use solana_sdk::{transaction::Transaction};
-
+use solana_program_test::*;
 use solana_program_test::{ProgramTestContext};
+use solana_program::{program_option::COption,program_pack::Pack};
+use spl_token::{state::*, *};
+#[path = "./mints.rs"]
+mod mints;
+use mints::*;
 
+// copied from mango
+trait AddPacked {
+    fn add_packable_account<T: Pack>(
+        &mut self,
+        pubkey: Pubkey,
+        amount: u64,
+        data: &T,
+        owner: &Pubkey,
+    );
+}
+
+impl AddPacked for ProgramTest {
+    fn add_packable_account<T: Pack>(
+        &mut self,
+        pubkey: Pubkey,
+        amount: u64,
+        data: &T,
+        owner: &Pubkey,
+    ) {
+        let mut account = solana_sdk::account::Account::new(amount, T::get_packed_len(), owner);
+        data.pack_into_slice(&mut account.data);
+        self.add_account(pubkey, account);
+    }
+}
 pub struct qPoolsTest {
     pub program_id: Pubkey,
     pub context: ProgramTestContext, 
@@ -35,10 +64,24 @@ pub struct qPoolsTest {
 }
 
 impl qPoolsTest {
-    pub async fn start_new(program_test: solana_program_test::ProgramTest, program_id: Pubkey) -> Self {
+    pub async fn start_new(mut program_test: solana_program_test::ProgramTest, program_id: Pubkey) -> Self {
+        program_test.add_packable_account(
+            usdc_token::ID,
+            u32::MAX as u64,
+            &Mint {
+                is_initialized: true,
+                mint_authority: COption::Some(Pubkey::new_unique()),
+                decimals: 6,
+                ..Mint::default()
+            },
+            &spl_token::id(),
+        );
         let mut context = program_test.start_with_context().await;
         let rent = context.banks_client.get_rent().await.unwrap();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // add usdc mint account 
+        
     
         Self {
           program_id,

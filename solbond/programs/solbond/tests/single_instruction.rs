@@ -27,29 +27,7 @@ use mints::*;
 mod state;
 //use state::*;
 
-trait AddPacked {
-    fn add_packable_account<T: Pack>(
-        &mut self,
-        pubkey: Pubkey,
-        amount: u64,
-        data: &T,
-        owner: &Pubkey,
-    );
-}
 
-impl AddPacked for ProgramTest {
-    fn add_packable_account<T: Pack>(
-        &mut self,
-        pubkey: Pubkey,
-        amount: u64,
-        data: &T,
-        owner: &Pubkey,
-    ) {
-        let mut account = solana_sdk::account::Account::new(amount, T::get_packed_len(), owner);
-        data.pack_into_slice(&mut account.data);
-        self.add_account(pubkey, account);
-    }
-}
   
   
 
@@ -57,7 +35,7 @@ impl AddPacked for ProgramTest {
 async fn create_portfolio_instructions_test() {
     let program_id = ::solbond::id();
     let user = Keypair::new();
-    let program_test = ProgramTest::new("solbond", ::solbond::id(), None);
+    let mut program_test = ProgramTest::new("solbond", ::solbond::id(), None);
     let mut program_test_obj = program_test::qPoolsTest::start_new(program_test, program_id).await;
 
     let (ix, portfolio_acc_pubkey, portfolio_bump) = program_test_obj.create_portfolio_ix(
@@ -88,21 +66,10 @@ async fn create_currency_pda_test() {
     let program_id = ::solbond::id();
     let user = Keypair::new();
     let mut program_test = ProgramTest::new("solbond", program_id, None);
-    program_test.add_packable_account(
-        usdc_token::ID,
-        u32::MAX as u64,
-        &Mint {
-            is_initialized: true,
-            mint_authority: COption::Some(Pubkey::new_unique()),
-            decimals: 6,
-            ..Mint::default()
-        },
-        &spl_token::id(),
-    );
+    
     let mut program_test_obj = program_test::qPoolsTest::start_new(program_test, program_id).await;
     let test_amount: u64 = 21;
     let mint_key: Pubkey;
-
     let (ix, currency_acc_pubkey, currency_bump) = program_test_obj.initial_currency_ix(
         usdc_token::ID, test_amount
     );

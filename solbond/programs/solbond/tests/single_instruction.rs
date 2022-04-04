@@ -14,6 +14,9 @@ use solana_sdk::{
     borsh::{try_from_slice_unchecked},
 };
 
+#[path = "./program_test.rs"]
+mod program_test;
+
 #[path = "./seeds.rs"]
 mod seeds;
 
@@ -42,13 +45,14 @@ pub async fn get_account<T>(mut test_context: ProgramTestContext, account: Pubke
 async fn create_and_init() {
     let program_id = ::solbond::id();
     let program_test = ProgramTest::new("solbond", ::solbond::id(), None);
-    let mut test_context = program_test.start_with_context().await;
+    let mut program_test_obj = program_test::qPoolsTest::start_new(program_test).await;
+    //let mut test_context = program_test.start_with_context().await;
     //let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
-    let my_account_key = Keypair::new();
-    let seeds: &[&[u8]] = &[&test_context.payer.pubkey().to_bytes(), PORTFOLIO_SEED];
+    //let my_account_key = Keypair::new();
+    let seeds: &[&[u8]] = &[&program_test_obj.payer.pubkey().to_bytes(), PORTFOLIO_SEED];
     let (portfolio_acc_pubkey, portfolio_bump) = Pubkey::find_program_address(seeds, &program_id);
     let ix_accounts = ::solbond::accounts::SavePortfolio {
-        owner:test_context.payer.pubkey(),
+        owner:program_test_obj.payer.pubkey(),
         portfolio_pda:portfolio_acc_pubkey, 
         rent: solana_program::sysvar::rent::id(),
         token_program:Token::id(), 
@@ -62,25 +66,27 @@ async fn create_and_init() {
         _num_currencies: 1 as u32,
     };
 
-    let ix = Instruction {
+    let mut ix = Instruction {
         program_id: program_id,
         accounts: ix_accounts.to_account_metas(Some(true)),
         data: ix_arg.data()
     };
-    let tx = Transaction::new_signed_with_payer(
-        &[ix],
-        Some(&test_context.payer.pubkey()),
-        &[&test_context.payer], 
-        test_context.last_blockhash,
-    );
+    // let mut tx = Transaction::new_signed_with_payer(
+    //     &[ix],
+    //     Some(&program_test_obj.payer.pubkey()),
+    //     &[&program_test_obj.payer], 
+    //     program_test_obj.context.last_blockhash,
+    // );
 
-    test_context
-        .banks_client
-        .process_transaction(tx)
-        .await
-        .unwrap();
+    program_test_obj.process_transaction(&[ix], None).await;
 
-    let portfolio_account = get_account::<PortfolioAccount>(test_context, portfolio_acc_pubkey).await;
+    //program_test_obj.context
+    //    .banks_client
+    //    .process_transaction(tx)
+    //    .await
+    //    .unwrap();
+
+    let portfolio_account = program_test_obj.get_account::<PortfolioAccount>(portfolio_acc_pubkey).await;
     assert_eq!(portfolio_account.num_currencies, 1);
     assert_eq!(portfolio_account.bump, portfolio_bump);
     assert_eq!(portfolio_account.fully_created, false);
@@ -114,8 +120,6 @@ async fn create_and_init() {
     //                 ::accounts
     //                 ::SavePortfolio
     //                 ::try_deserialize(&mut acc_info.data.as_slice()).unwrap();
-    
-    println!("kir");
     //assert_eq!(my_account.data, 1234);
 
 

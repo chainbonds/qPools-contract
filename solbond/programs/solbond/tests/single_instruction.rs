@@ -13,42 +13,55 @@ use solana_sdk::{
     pubkey::Pubkey,
     borsh::{try_from_slice_unchecked},
 };
+use spl_token::{state::*, *};
+use solana_program::{program_option::COption,program_pack::Pack};
 
 #[path = "./program_test.rs"]
 mod program_test;
 
-#[path = "./seeds.rs"]
-mod seeds;
+#[path = "./mints.rs"]
+mod mints;
+use mints::*;
 
 #[path = "./state.rs"]
 mod state;
-use seeds::*;
-use state::*;
+//use state::*;
 
+trait AddPacked {
+    fn add_packable_account<T: Pack>(
+        &mut self,
+        pubkey: Pubkey,
+        amount: u64,
+        data: &T,
+        owner: &Pubkey,
+    );
+}
 
-pub async fn get_account<T>(mut test_context: ProgramTestContext, account: Pubkey) -> T
-  where T: borsh::de::BorshDeserialize
-  {
-    let mut account = test_context.banks_client.get_account(account).await.unwrap().unwrap();
-    // Note! the first 8 bytes represent the Anchor account discriminator so we need to get rid of it first
-    account.data.drain(0..8);
-    
-    try_from_slice_unchecked::<T>(&account.data).unwrap()
-  }
-
-
-
+impl AddPacked for ProgramTest {
+    fn add_packable_account<T: Pack>(
+        &mut self,
+        pubkey: Pubkey,
+        amount: u64,
+        data: &T,
+        owner: &Pubkey,
+    ) {
+        let mut account = solana_sdk::account::Account::new(amount, T::get_packed_len(), owner);
+        data.pack_into_slice(&mut account.data);
+        self.add_account(pubkey, account);
+    }
+}
   
   
 
 #[tokio::test]
 async fn create_portfolio_instructions_test() {
     let program_id = ::solbond::id();
+    let user = Keypair::new();
     let program_test = ProgramTest::new("solbond", ::solbond::id(), None);
-    let mut program_test_obj = program_test::qPoolsTest::start_new(program_test).await;
+    let mut program_test_obj = program_test::qPoolsTest::start_new(program_test, program_id).await;
 
     let (ix, portfolio_acc_pubkey, portfolio_bump) = program_test_obj.create_portfolio_ix(
-        program_id,
+        None,//Some(user.pubkey()),
         1 as u64,
         1 as u32, 
         1 as u32,
@@ -56,8 +69,7 @@ async fn create_portfolio_instructions_test() {
 
     program_test_obj.process_transaction(&[ix], None).await;
 
-
-    let portfolio_account = program_test_obj.get_account::<PortfolioAccount>(portfolio_acc_pubkey).await;
+    let portfolio_account = program_test_obj.get_account::<state::PortfolioAccount>(portfolio_acc_pubkey).await;
     assert_eq!(portfolio_account.num_currencies, 1);
     assert_eq!(portfolio_account.bump, portfolio_bump);
     assert_eq!(portfolio_account.fully_created, false);
@@ -69,4 +81,36 @@ async fn create_portfolio_instructions_test() {
     assert_eq!(portfolio_account.num_positions, 1);
 
 
+}
+
+#[tokio::test]
+async fn create_currency_pda_test() {
+    let program_id = ::solbond::id();
+    let user = Keypair::new();
+    let mut program_test = ProgramTest::new("solbond", program_id, None);
+    program_test.add_packable_account(
+        usdc_token::ID,
+        u32::MAX as u64,
+        &Mint {
+            is_initialized: true,
+            mint_authority: COption::Some(Pubkey::new_unique()),
+            decimals: 6,
+            ..Mint::default()
+        },
+        &spl_token::id(),
+    );
+    let mut program_test_obj = program_test::qPoolsTest::start_new(program_test, program_id).await;
+    let test_amount: u64 = 21;
+    let mint_key: Pubkey;
+
+    let (ix, currency_acc_pubkey, currency_bump) = program_test_obj.initial_currency_ix(
+        usdc_token::ID, test_amount
+    );
+
+    program_test_obj.process_transaction(&[ix], None).await;
+    let currency_account = program_test_obj.get_account::<state::UserCurrencyAccount>(currency_acc_pubkey).await;
+
+    assert_eq!(currency_account.withdraw_amount, 0);
+    assert_eq!(currency_account.initial_amount, test_amount);
+    assert_eq!(currency_account.bump, currency_bump);
 }

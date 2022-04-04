@@ -27,6 +27,7 @@ use solana_sdk::{transaction::Transaction};
 use solana_program_test::{ProgramTestContext};
 
 pub struct qPoolsTest {
+    pub program_id: Pubkey,
     pub context: ProgramTestContext, 
     pub rent: Rent,
     pub payer: Keypair,
@@ -34,12 +35,13 @@ pub struct qPoolsTest {
 }
 
 impl qPoolsTest {
-    pub async fn start_new(program_test: solana_program_test::ProgramTest) -> Self {
+    pub async fn start_new(program_test: solana_program_test::ProgramTest, program_id: Pubkey) -> Self {
         let mut context = program_test.start_with_context().await;
         let rent = context.banks_client.get_rent().await.unwrap();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
     
         Self {
+          program_id,
           context,
           rent,
           payer,
@@ -88,12 +90,37 @@ impl qPoolsTest {
   }
 
 
-  pub fn create_portfolio_ix(&self, program_id: Pubkey, _sum_of_weights: u64, _num_positions: u32, _num_currencies: u32) -> (Instruction,Pubkey, u8) {
+  pub async fn create_account(&mut self, space: u64, owner: &Pubkey) -> Keypair {
+    let account = Keypair::new();
+    let create_ix = system_instruction::create_account(
+      &self.payer.pubkey(),
+      &account.pubkey(),
+      100_000_000_000_000,
+      space,
+      owner,
+    );
 
-    let seeds: &[&[u8]] = &[&self.payer.pubkey().to_bytes(), PORTFOLIO_SEED];
-    let (portfolio_acc_pubkey, portfolio_bump) = Pubkey::find_program_address(seeds, &program_id);
+    self.process_transaction(&[create_ix], Some(&[&account]))
+      .await
+      .unwrap();
+
+    account
+  }
+
+  pub fn create_portfolio_ix(&self, owner: Option<Pubkey>, _sum_of_weights: u64, _num_positions: u32, _num_currencies: u32) -> (Instruction,Pubkey, u8) {
+    let owner_key: Pubkey;
+    if owner.is_none() {
+        owner_key = self.payer.pubkey();
+    } else {
+        owner_key = owner.unwrap();
+    }
+    let seeds: &[&[u8]] = &[&owner_key.to_bytes(), PORTFOLIO_SEED];
+    let (portfolio_acc_pubkey, portfolio_bump) = Pubkey::find_program_address(seeds, &self.program_id);
+    println!("owner key {}", owner_key.to_string());
+    println!("portfolio key {}", portfolio_acc_pubkey.to_string());
+    
     let ix_accounts = ::solbond::accounts::SavePortfolio {
-        owner:self.payer.pubkey(),
+        owner:owner_key,
         portfolio_pda:portfolio_acc_pubkey, 
         rent: solana_program::sysvar::rent::id(),
         token_program:Token::id(), 
@@ -109,13 +136,46 @@ impl qPoolsTest {
 
     (
         Instruction {
-        program_id: program_id,
+        program_id: self.program_id,
         accounts: ix_accounts.to_account_metas(Some(true)),
         data: ix_arg.data()
         },
         portfolio_acc_pubkey,
         portfolio_bump
     )
+
+  }
+
+
+  pub fn initial_currency_ix(&self, mint_pubkey: Pubkey, amount: u64) -> (Instruction, Pubkey, u8) {
+
+    let seeds: &[&[u8]] = &[&self.payer.pubkey().to_bytes(), &mint_pubkey.to_bytes(),USER_CURRENCY_STRING];
+    let (currency_acc_pubkey, currency_bump) = Pubkey::find_program_address(seeds, &self.program_id);
+
+    let ix_accounts = ::solbond::accounts::ApproveInitialCurrencyAmount {
+        owner: self.payer.pubkey(),
+        user_currency_pda_account: currency_acc_pubkey,
+        currency_mint: mint_pubkey, 
+        system_program: solana_sdk::system_program::id(),
+        rent: solana_program::sysvar::rent::id(),
+    };
+
+    let ix_arg = ::solbond::instruction::ApproveInitialCurrencyAmount {
+        _bump_user_currency: currency_bump,
+        _input_amount_currency: amount,
+
+    };
+
+    (
+        Instruction {
+            program_id: self.program_id,
+            accounts: ix_accounts.to_account_metas(Some(true)),
+            data: ix_arg.data(),
+        },
+        currency_acc_pubkey,
+        currency_bump,
+    )
+
 
   }
 

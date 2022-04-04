@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 
 declare_id!("EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H");
-
 #[account]
 pub struct PortfolioAccount {
     // pubkey of user who owns the position 

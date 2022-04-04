@@ -1165,7 +1165,7 @@ export type Solbond = {
         },
         {
           "name": "userTransferAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2920,7 +2920,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "userTransferAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

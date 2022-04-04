@@ -85,7 +85,8 @@ describe('qPools!', () => {
                 weights,
                 genericPayer,
                 new BN(1),
-                pool_addresses
+                pool_addresses,
+                new BN(2)
             )
         } catch (e) {
             console.log("ERROR");

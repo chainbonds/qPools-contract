@@ -342,8 +342,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             // await this.provider.connection.confirmTransaction(sg5, "confirmed");
         }
 
-
-
         // let userMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, owner_keypair.publicKey);
         // For MSOL, create associated token addresses
         // TODO:; What MSOL Token was used ...?

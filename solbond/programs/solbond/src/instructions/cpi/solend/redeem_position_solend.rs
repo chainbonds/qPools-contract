@@ -59,7 +59,7 @@ pub struct RedeemPositionSolend<'info> {
     pub solend_program: AccountInfo<'info>,
 
     #[account(
-        //mut, 
+        mut,
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub user_transfer_authority: Box<Account<'info, PortfolioAccount>>,
@@ -127,7 +127,14 @@ pub fn handler(
     // add this stuff in later 
     //approved_position_details.is_fulfilled = true;
     let portfolio = &mut ctx.accounts.user_transfer_authority;
+
+    msg!(&format!("Redeeming Number of redeemed is ---------------------------------- {}", portfolio.num_redeemed));
+    msg!(&format!("portfolio pda ---------------------------------- {}", portfolio.to_account_info().key()));
+
+
     portfolio.num_redeemed += 1;
+
+    msg!(&format!("Redeeming Number of redeemed is ---------------------------------- {}", portfolio.num_redeemed));
     position.is_redeemed = true;
 
     let owner_acc_info = ctx.accounts.owner.to_account_info();

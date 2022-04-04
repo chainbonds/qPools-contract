@@ -4,7 +4,9 @@
         "test:integrate-marinade-and-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-and-saber.ts",
         "test:integrate-marinade": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-integration.ts",
         "test:integrate-chained": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-simple-purchase-and-redeem-button.ts",
-        "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts"
+        "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts",
+        "test:integrate-solend": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-solend-integration.ts",
+        "test:redeem-solend": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/redeem-solend.ts"
     },
     "dependencies": {
         "@marinade.finance/marinade-ts-sdk": "^2.0.9",
@@ -13,6 +15,7 @@
         "@saberhq/stableswap-sdk": "^1.12.34",
         "@solana/buffer-layout": "^4.0.0",
         "@solana/spl-token": "^0.1.8",
+        "@solendprotocol/solend-sdk": "^0.5.5",
         "easy-spl": "^0.5.0"
     },
     "devDependencies": {

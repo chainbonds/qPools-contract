@@ -64,6 +64,9 @@ pub fn handler(
 ) -> ProgramResult {
 
     //let amount_after_fee;
+    msg!(&format!("Number of redeemed is ---------------------------------- {}", ctx.accounts.portfolio_pda.to_account_info().key()));
+    msg!(&format!("Number of redeemed is ---------------------------------- {}", ctx.accounts.portfolio_pda.num_redeemed));
+    msg!(&format!("Number of positions is ---------------------------------- {}", ctx.accounts.portfolio_pda.num_positions));
     if ctx.accounts.portfolio_pda.num_redeemed < ctx.accounts.portfolio_pda.num_positions {
         return Err(ErrorCode::NotReadyForTransferBack.into());
     }

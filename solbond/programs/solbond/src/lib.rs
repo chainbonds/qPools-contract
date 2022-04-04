@@ -62,7 +62,12 @@ pub mod solbond {
         _num_positions: u32,
         _num_currencies: u32,
 
-    ) -> ProgramResult {
+    ) ->
+
+
+    ProgramResult {
+
+        msg!("Zamazingoooooooooooooooooooooooooooooooooooooooooooooooooooo");
         instructions::approve::approve_portfolio_weights::handler(
             ctx,
             _bump,

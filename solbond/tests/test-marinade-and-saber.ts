@@ -61,12 +61,14 @@ describe('qPools!', () => {
 
     })
 
+
     it("Create all the Associated Token Accounts", async () => {
+        const marinadeState = await MarinadeState.fetch(marinade);
         await portfolio.createAssociatedTokenAccounts(
             pool_addresses,
             genericPayer,
             provider.wallet,
-            marinade
+            marinadeState
         )
     })
 
@@ -80,7 +82,8 @@ describe('qPools!', () => {
                 weights,
                 genericPayer,
                 new BN(2),
-                pool_addresses
+                pool_addresses,
+                new BN(2)
             )
         } catch (e) {
         }
@@ -92,7 +95,7 @@ describe('qPools!', () => {
         } catch (err) {
         }
 
-        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, wSOL);
+        //let sigs_rest = await portfolio.transfer_to_user(provider.wallet, wSOL);
     })
 
     /*

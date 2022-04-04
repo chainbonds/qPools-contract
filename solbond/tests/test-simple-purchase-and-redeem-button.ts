@@ -129,7 +129,6 @@ describe('qPools!', () => {
 
     it("Creates the first transaction", async () => {
 
-
         let tx: Transaction = new Transaction();
         // hardcode this for now lol
         let IxCreatePortfolioPda = await portfolioObject.createPortfolioSigned(
@@ -138,17 +137,21 @@ describe('qPools!', () => {
             new BN(2)
         );
         tx.add(IxCreatePortfolioPda);
-
+        console.log("11111111111111111111111111111111111111111111111111111111111111")
         console.log("Transfer Asset to Portfolio");
         let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
             AmountUsdc, USDC_mint
         );
         tx.add(IxRegisterCurrencyUsdcInput);
+        console.log("222222222222222222222222222222222222222222222222222222222222222")
 
         let IxRegisterCurrencywSOLInput = await portfolioObject.registerCurrencyInputInPortfolio(
-            new BN(1).mul(new BN(10**9)), solSolendMint
+            new BN(1).mul(new BN(10 ** 9)), solSolendMint
         );
         tx.add(IxRegisterCurrencywSOLInput);
+
+        console.log("33333333333333333333333333333333333333333333333333333333333333")
+
         // let IxRegisterCurrencyMSolInput = await qPoolContext.portfolioObject!.registerCurrencyInputInPortfolio(
         //     AmountSol, wrappedSolMint
         // );
@@ -172,28 +175,39 @@ describe('qPools!', () => {
         )
         tx.add(IxApproveiPositionWeightSaber);
 
+        console.log("4444444444444444444444444444444444444444444444444444444444444444444444")
+
+
         console.log("Approve Position Marinade");
         let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
-            new BN(1).mul(new BN(10**6)),
+            new BN(1).mul(new BN(10 ** 6)),
             1, // Hardcoded
             weights[1]
         );
         tx.add(IxApprovePositionWeightMarinade);
 
+        console.log("55555555555555555555555555555555555555555555555555555555555555555")
+
         console.log("Approve Position Solend");
         let IxApprovePositionWeightSolend = await portfolioObject.approvePositionWeightSolend(
             solSolendMint,
-            new BN(1).mul(new BN(10**5)),
+            new BN(1).mul(new BN(10 ** 5)),
             2, // Hardcoded
             weights[2]
         );
         tx.add(IxApprovePositionWeightSolend);
+
+        console.log("666666666666666666666666666666666666666666666666666666666666666666666")
+
 
         console.log("Sending USDC");
         let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
         let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
         tx.add(IxSendUsdcToPortfolio);
         tx.add(IxSendSolendSoltoPortfolio);
+
+        console.log("777777777777777777777777777777777777777777777777777777777777777777")
+
 
         // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
         console.log("Sending and signing the transaction");
@@ -206,6 +220,14 @@ describe('qPools!', () => {
             tx
         );
 
+        console.log("888888888888888888888888888888888888888888888888888888888888888888")
+
+        let portfolio = await portfolioObject.fetchPortfolio();
+        if (portfolio != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio.numPositions)
+        }
+
     });
 
     it("run the cranks to fulfill the Saber, Marinade and solend Positions ...", async () => {
@@ -217,6 +239,12 @@ describe('qPools!', () => {
         console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
         let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
+
+        let portfolio = await portfolioObject.fetchPortfolio();
+        if (portfolio != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio.numPositions)
+        }
 
     });
 
@@ -252,6 +280,11 @@ describe('qPools!', () => {
                 tx
             );
         }
+        let portfolio = await portfolioObject.fetchPortfolio();
+        if (portfolio != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio.numPositions)
+        }
     })
 
     it("run the cranks to send the assets back to the user", async () => {
@@ -259,16 +292,39 @@ describe('qPools!', () => {
         let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
 
+        let portfolio4 = await portfolioObject.fetchPortfolio();
+        if (portfolio4 != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio4.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio4.numPositions)
+        }
+
         let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
         console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend)
+
+        let portfolio3 = await portfolioObject.fetchPortfolio();
+        if (portfolio3 != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio3.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio3.numPositions)
+        }
 
         // For each initial asset, send it back to the user
         let sgTransferUsdcToUser = await crankRpcTool.transfer_to_user(USDC_mint);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
 
+        let portfolio2 = await portfolioObject.fetchPortfolio();
+        if (portfolio2 != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio2.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio2.numPositions)
+        }
+
         let sgTransferUsdcTosolendSol = await crankRpcTool.transfer_to_user(solSolendMint);
         console.log("Signature to send back wSOL", sgTransferUsdcTosolendSol);
 
+        let portfolio = await portfolioObject.fetchPortfolio();
+        if (portfolio != null) {
+            console.log("Number of Redeemed : -----------------------", portfolio.numRedeemed)
+            console.log("Number of positions : -----------------------", portfolio.numPositions)
+        }
         
         // We never transferred wrapped sol ...
         // let sgTransferWrappedSolToUser = await crankRpcTool.transfer_to_user(wrappedSolMint);

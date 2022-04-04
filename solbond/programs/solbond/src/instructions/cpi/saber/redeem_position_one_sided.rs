@@ -149,7 +149,10 @@ pub fn handler(
     )?;
 
     let portfolio = &mut ctx.accounts.portfolio_pda;
+    msg!(&format!("portfolio_pda is {}", portfolio.to_account_info().key()));
+    msg!(&format!("portfolionum redeemed is  {}", portfolio.num_redeemed));
     portfolio.num_redeemed += 1;
+    msg!(&format!("portfolio num redeemed is {}", portfolio.num_redeemed));
     let position = &mut ctx.accounts.position_pda;
     position.is_redeemed = true;
 

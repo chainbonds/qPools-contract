@@ -369,8 +369,8 @@ pub mod solbond {
     }
 
 }
-#[cfg(test)]
-mod tests;
+//#[cfg(test)]
+//mod tests;
 
 /**
  * Error definitions

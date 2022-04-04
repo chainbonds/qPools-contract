@@ -42,49 +42,20 @@ pub async fn get_account<T>(mut test_context: ProgramTestContext, account: Pubke
   
 
 #[tokio::test]
-async fn create_and_init() {
+async fn create_portfolio_instructions_test() {
     let program_id = ::solbond::id();
     let program_test = ProgramTest::new("solbond", ::solbond::id(), None);
     let mut program_test_obj = program_test::qPoolsTest::start_new(program_test).await;
-    //let mut test_context = program_test.start_with_context().await;
-    //let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
-    //let my_account_key = Keypair::new();
-    let seeds: &[&[u8]] = &[&program_test_obj.payer.pubkey().to_bytes(), PORTFOLIO_SEED];
-    let (portfolio_acc_pubkey, portfolio_bump) = Pubkey::find_program_address(seeds, &program_id);
-    let ix_accounts = ::solbond::accounts::SavePortfolio {
-        owner:program_test_obj.payer.pubkey(),
-        portfolio_pda:portfolio_acc_pubkey, 
-        rent: solana_program::sysvar::rent::id(),
-        token_program:Token::id(), 
-        system_program: solana_sdk::system_program::id(),
-    };
 
-    let ix_arg = ::solbond::instruction::CreatePortfolio {
-        _bump: portfolio_bump,
-        _sum_of_weights: 1 as u64,
-        _num_positions: 1 as u32,
-        _num_currencies: 1 as u32,
-    };
-
-    let mut ix = Instruction {
-        program_id: program_id,
-        accounts: ix_accounts.to_account_metas(Some(true)),
-        data: ix_arg.data()
-    };
-    // let mut tx = Transaction::new_signed_with_payer(
-    //     &[ix],
-    //     Some(&program_test_obj.payer.pubkey()),
-    //     &[&program_test_obj.payer], 
-    //     program_test_obj.context.last_blockhash,
-    // );
+    let (ix, portfolio_acc_pubkey, portfolio_bump) = program_test_obj.create_portfolio_ix(
+        program_id,
+        1 as u64,
+        1 as u32, 
+        1 as u32,
+    );
 
     program_test_obj.process_transaction(&[ix], None).await;
 
-    //program_test_obj.context
-    //    .banks_client
-    //    .process_transaction(tx)
-    //    .await
-    //    .unwrap();
 
     let portfolio_account = program_test_obj.get_account::<PortfolioAccount>(portfolio_acc_pubkey).await;
     assert_eq!(portfolio_account.num_currencies, 1);
@@ -96,31 +67,6 @@ async fn create_and_init() {
     assert_eq!(portfolio_account.num_created, 0);
     assert_eq!(portfolio_account.num_currencies_sent_back, 0);
     assert_eq!(portfolio_account.num_positions, 1);
-
-
-
-    //let my_account_ai = test_context
-    //    .banks_client
-    //    .get_account(my_account_key.pubkey())
-    //    .await
-    //    .unwrap();
-    //    //.unwrap();
-    //let mut acc = test_context.banks_client.get_account(portfolio_acc_pubkey).await.unwrap().unwrap();
-    ////let acc_info: AccountInfo = (&portfolio_acc_pubkey, &mut acc).into();
-    //acc.data.drain(0..8);
-    //try_from_slice_unchecked::<T>(&account.data).unwrap()
-
-    //let acc_data = *::solbond
-    //                ::accounts
-    //                ::SavePortfolio::load(&acc_info).unwrap();
-    //let acc_data = acc_info.data;
-    //let data_slice = &mut my_account_ai.unwrap().data.as_slice();
-    //println!("{}",my_account_ai);
-    //let my_account = ::solbond
-    //                 ::accounts
-    //                 ::SavePortfolio
-    //                 ::try_deserialize(&mut acc_info.data.as_slice()).unwrap();
-    //assert_eq!(my_account.data, 1234);
 
 
 }

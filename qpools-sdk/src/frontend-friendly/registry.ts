@@ -7,6 +7,7 @@ import {getMarinadePools, getMarinadeTokens} from "../instructions/api/marinade"
 import {getSolendPools, getSolendTokens} from "../instructions/api/solend";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
 import {ExplicitPool, ExplicitSaberPool, ExplicitToken, Protocol} from "../types/interfacing";
+import {getWrappedSolMint} from "../const";
 
 export class Registry {
 
@@ -30,7 +31,19 @@ export class Registry {
     // wrappedSolMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
     serpiusEndpoint: string = "https://qpools.serpius.com/weight_status_devnet_solend_v2.json";
 
-    constructor() {
+    userPubkey: PublicKey = getWrappedSolMint();
+
+    constructor() {}
+
+    async setNewPubkey(userPubkey: PublicKey) {
+        // Delete all pool indecies and objects, and re-create them on-load ...
+        // Right now, only solend has some public key in the constructor
+        this.protocolPoolList = [];
+        this.poolListIndexedByInputTokenMint = new Map<string, ExplicitPool[]>();
+        this.poolListIndexedByLpTokenMint = new Map<string, ExplicitPool>();
+        this.poolListIndexedByIdString = new Map<string, ExplicitPool>();
+
+        this.userPubkey = userPubkey;
     }
 
     /**
@@ -67,7 +80,7 @@ export class Registry {
             console.log("Creating protocolPoolList");
             let saberPoolList: ExplicitPool[] = await getSaberPools();
             let marinadePoolList: ExplicitPool[] = await getMarinadePools();
-            let solendPoolList: ExplicitPool[] = await getSolendPools();
+            let solendPoolList: ExplicitPool[] = await getSolendPools(this.userPubkey);
             this.protocolPoolList = [
                 ...saberPoolList,
                 ...marinadePoolList,
@@ -183,7 +196,8 @@ export class Registry {
         }
         console.log("Creating poolListIndexedByIdString");
         let out: Map<string, ExplicitPool> = new Map<string, ExplicitPool>();
-        let pools = await this.getAllPools();
+        let pools: ExplicitPool[] = await this.getAllPools();
+        console.log("Elloo!");
         pools.map((x: ExplicitPool) => {
             let key = x.id;
             let value = x;
@@ -265,13 +279,17 @@ export class Registry {
     }
 
     async getPoolFromSplStringId(idString: string): Promise<ExplicitPool | null> {
+        console.log("#getPoolFromSplStringId()");
         let map = await this.getPoolListIndexedByIdString();
+        let out: ExplicitPool | null;
         if (map.has(idString)) {
-            return map.get(idString);
+            out = map.get(idString);
         } else {
             console.log("WARNING: idString not found!", idString, map);
-            return null;
+            out = null;
         }
+        console.log("#getPoolFromSplStringId()");
+        return out
     }
 
     // async function getLogoFromMint(mint: PublicKey): Promise<string> {

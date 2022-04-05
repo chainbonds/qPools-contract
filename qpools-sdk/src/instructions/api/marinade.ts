@@ -8,10 +8,12 @@ export const getMarinadeTokens = async (): Promise<ExplicitToken[]> => {
 }
 
 export const getMarinadePools = async  (): Promise<ExplicitPool[]> => {
+    console.log("#getMarinadePools()");
     let marinadePoolList: ExplicitPool[] = DEV_POOLS_INFO_MARINADE.map((x: any) => {
         x.poolType = ProtocolType.Staking;
         x.protocol = Protocol.marinade;
         return x;
     });
+    console.log("##getMarinadePools()");
     return marinadePoolList;
 }

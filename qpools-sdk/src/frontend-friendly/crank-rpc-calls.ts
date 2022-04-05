@@ -6,7 +6,7 @@ import {Registry} from "./registry";
 import {getSolbondProgram} from "../index";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {sendLamports} from "../instructions/modify/portfolio-transfer";
-import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import {PositionAccountMarinade} from "../types/account";
 import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
 import {SolendAction} from "@solendprotocol/solend-sdk";
 import {permissionlessFulfillSolend} from "../instructions/modify/solend";

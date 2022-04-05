@@ -12,11 +12,13 @@ export const getSaberTokens = async (): Promise<ExplicitToken[]> => {
 }
 
 export const getSaberPools = async  (): Promise<ExplicitPool[]> => {
+    console.log("#getSaberPools()");
     // Perhaps here, return the SaberTypes ... which include some more detail on this ...
     let saberPoolList: ExplicitSaberPool[] = DEV_POOLS_INFO_SABER.map((x: any) => {
         x.poolType = ProtocolType.DEXLP;
         x.protocol = Protocol.saber;
         return x;
     });
+    console.log("##getSaberPools()");
     return saberPoolList;
 }

@@ -144,7 +144,7 @@ describe('qPools!', () => {
 
         let IxSendToCrankWallet = await instructionHeavyPortfolio.sendToCrankWallet(
             genericPayer.publicKey,
-            100_000_000
+            new BN(100_000_000)
         );
         tx.add(IxSendToCrankWallet);
 
@@ -179,7 +179,7 @@ describe('qPools!', () => {
 
         let IxSendToCrankWallet = await instructionHeavyPortfolio.sendToCrankWallet(
             genericPayer.publicKey,
-            100_000_000
+            new BN(100_000_000)
         );
         tx.add(IxSendToCrankWallet);
 

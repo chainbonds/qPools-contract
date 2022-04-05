@@ -76,6 +76,18 @@ impl qPoolsTest {
             },
             &spl_token::id(),
         );
+
+        program_test.add_packable_account(
+          saber_usdc_lp_token::ID,
+          u32::MAX as u64,
+          &Mint {
+              is_initialized: true,
+              mint_authority: COption::Some(Pubkey::new_unique()),
+              decimals: 6,
+              ..Mint::default()
+          },
+          &spl_token::id(),
+      );
         let mut context = program_test.start_with_context().await;
         let rent = context.banks_client.get_rent().await.unwrap();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -221,6 +233,107 @@ impl qPoolsTest {
 
 
   }
+
+  pub fn approve_saber_buy_tx(&self,
+     owner: Option<Pubkey>,
+     index: u32, 
+     pool_mint: Pubkey,
+     weight: u64, 
+     amount_a: u64, amount_b: u64, min_mint_amount: u64) -> (Instruction, Pubkey, u8) {
+    let owner_key: Pubkey;
+    if owner.is_none() {
+        owner_key = self.payer.pubkey();
+    } else {
+        owner_key = owner.unwrap();
+    }
+    let seeds_portfolio: &[&[u8]] = &[&owner_key.to_bytes(), PORTFOLIO_SEED];
+    let (portfolio_acc_pubkey, portfolio_bump) = Pubkey::find_program_address(seeds_portfolio, &self.program_id);
+
+    let seeds_position: &[&[u8]] = &[&owner_key.to_bytes(),&index.to_le_bytes(), USER_POSITION_STRING];
+    let (position_acc_pubkey, position_bump) = Pubkey::find_program_address(seeds_position, &self.program_id);
+
+    let ix_accounts = ::solbond::accounts::ApprovePositionWeightSaber {
+      owner: self.payer.pubkey(),
+      position_pda: position_acc_pubkey,
+      portfolio_pda: portfolio_acc_pubkey, 
+      pool_mint: pool_mint,
+      system_program: solana_sdk::system_program::id(),
+      token_program: Token::id(),
+      rent: solana_program::sysvar::rent::id(),
+    };
+
+    let ix_arg = ::solbond::instruction::ApprovePositionWeightSaber {
+      _bump_portfolio: portfolio_bump,
+      _bump_position: position_bump,
+      _weight: weight, 
+      _max_initial_token_a_amount: amount_a,
+      _max_initial_token_b_amount: amount_b,
+      _min_mint_amount: min_mint_amount,
+      _index: index,
+
+
+    };
+
+    (
+      Instruction {
+          program_id: self.program_id,
+          accounts: ix_accounts.to_account_metas(Some(true)),
+          data: ix_arg.data(),
+      },
+      position_acc_pubkey,
+      position_bump,
+    )
+
+    
+  }
+
+  pub fn approve_marinade_buy_tx(&self, owner: Option<Pubkey>,index: u32,weight: u64,init_lamports: u64,) -> (Instruction, Pubkey, u8, Pubkey, u8) {
+    let owner_key: Pubkey;
+    if owner.is_none() {
+        owner_key = self.payer.pubkey();
+    } else {
+        owner_key = owner.unwrap();
+    }
+    let seeds_portfolio: &[&[u8]] = &[&owner_key.to_bytes(), PORTFOLIO_SEED];
+    let (portfolio_acc_pubkey, portfolio_bump) = Pubkey::find_program_address(seeds_portfolio, &self.program_id);
+
+    let seeds_position: &[&[u8]] = &[&owner_key.to_bytes(),&index.to_le_bytes(), USER_POSITION_STRING];
+    let (position_acc_pubkey, position_bump) = Pubkey::find_program_address(seeds_position, &self.program_id);
+
+    let seeds_marinade: &[&[u8]] = &[&owner_key.to_bytes(), USER_MARINADE_SEED];
+    let (user_mar_pubkey, mar_bump) = Pubkey::find_program_address(seeds_marinade,&self.program_id);
+
+    let ix_accounts = ::solbond::accounts::ApprovePositionWeightMarinade {
+      owner: self.payer.pubkey(),
+      position_pda: position_acc_pubkey,
+      portfolio_pda: portfolio_acc_pubkey,
+      owner_sol_pda: user_mar_pubkey,
+      system_program: solana_sdk::system_program::id(),
+      token_program: Token::id(),
+      rent: solana_program::sysvar::rent::id(),
+    };
+
+    let ix_arg = ::solbond::instruction::ApprovePositionWeightMarinade {
+      _bump_portfolio: portfolio_bump,
+      _bump_position: position_bump,
+      _bump_marinade: mar_bump,
+      _weight: weight, 
+      _initial_sol_amount: init_lamports,
+      _index: index,
+    };
+    (
+      Instruction {
+          program_id: self.program_id,
+          accounts: ix_accounts.to_account_metas(Some(true)),
+          data: ix_arg.data(),
+      },
+      position_acc_pubkey,
+      position_bump,
+      user_mar_pubkey,
+      mar_bump,
+    )
+  }
+
 
     
 }

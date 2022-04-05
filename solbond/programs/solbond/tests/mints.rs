@@ -6,12 +6,12 @@ pub mod srm_token {
     declare_id!("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt");
 }
 
-pub mod msrm_token {
+pub mod saber_usdc_lp_token {
     use solana_program::declare_id;
     #[cfg(feature = "devnet")]
-    declare_id!("8DJBo4bF4mHNxobjdax3BL9RMh5o71Jf8UiKsf5C5eVH");
+    declare_id!("YakofBo4X3zMxa823THQJwZ8QeoU8pxPdFdxJs7JW57");
     #[cfg(not(feature = "devnet"))]
-    declare_id!("MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L");
+    declare_id!("YakofBo4X3zMxa823THQJwZ8QeoU8pxPdFdxJs7JW57");
 }
 
 pub mod usdc_token {

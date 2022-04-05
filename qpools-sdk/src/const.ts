@@ -2,7 +2,6 @@ import {PublicKey} from "@solana/web3.js";
 import {BN} from "@project-serum/anchor";
 import {DEV_WHITELIST_TOKENS} from "./registry/devnet/whitelist-tokens.devnet";
 
-
 /**
  * An artificial Address created by us, which maps to native SOL
  * Whenever you come across this address as a mint, you must create a case-distinction, and send actual SOL
@@ -68,11 +67,11 @@ export const MOCK = {
 }
 
 export const PYTH_PRODUCTS = {
-    "SOL/USD" : {
+    "SOL/USD": {
         product: "ALP8SdU9oARYVLgLR7LrqMNCYBnhtnQz1cj6bwgwQmgj",
         price: "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
     },
-    "mSOL/USD" : {
+    "mSOL/USD": {
         product: "BS2iAqT67j8hA9Jji4B8UpL3Nfw9kwPfU5s4qeaf1e7r",
         price: "E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9"
     },

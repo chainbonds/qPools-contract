@@ -5,12 +5,10 @@
  *  Replace the LogoFromSymbol with LogoFromMint for Mainnet ...
  */
 
-import {SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
+import {SolendAction, SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
 import {Connection} from "@solana/web3.js";
-import {Protocol, ProtocolType} from "../../index";
-import {ExplicitToken} from "../../types/ExplicitToken";
-import {ExplicitPool} from "../../types/ExplicitPool";
-import {Registry} from "../../frontend-friendly/registry";
+import {BN} from "@project-serum/anchor";
+import {ExplicitPool, ExplicitSolendPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
 
 
 export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
@@ -45,7 +43,8 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
             decimals: x.config.decimals,
             logoURI: "https://spl-token-icons.static-assets.ship.capital/icons/101/5h6ssFpeDeRbzsEHDbTQNH7nVGgsKrZydxdSTnLm6QdV.png",
             name: "c" + x.config.symbol,
-            symbol: x.config.symbol
+            // symbol: x.config.symbol
+            symbol: "c" + x.config.symbol
         }
         out.push(tmpLp);
     }));
@@ -66,11 +65,13 @@ export const getSolendPools = async (): Promise<ExplicitPool[]> => {
         // TODO: Figure out a different way to get the logo for this symbol ...
         // let logoUriUnderlyingToken = await registry.getLogoFromSymbol(x.config.symbol);
         // logoUriUnderlyingToken
+        // TODO: Remove these hardcoded items ...
+        // Add another type, ExplicitPoolSolend, which also includes the SolendAction with this  ....
         let logoUriLpToken = "https://spl-token-icons.static-assets.ship.capital/icons/101/3JFC4cB56Er45nWVe29Bhnn5GnwQzSmHVf6eUq9ac91h.png";
         let underlyingToken: ExplicitToken = {
             address: x.config.mintAddress,
             decimals: x.config.decimals,
-            logoURI: "",
+            logoURI: "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png",
             name: x.config.name,
             symbol: x.config.symbol
         }
@@ -81,13 +82,22 @@ export const getSolendPools = async (): Promise<ExplicitPool[]> => {
             name: "Solend" + x.config.name,
             symbol: "c" + x.config.symbol
         }
-        let tmp: ExplicitPool = {
+        const solendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            x.config.symbol,
+            null,
+            connection,
+            "devnet"
+        );
+        let tmp: ExplicitSolendPool = {
             id: "c" + x.config.symbol,
             name: x.config.name,
             lpToken: lpToken,
             protocol: Protocol.solend,
             protocolType: ProtocolType.Lending,
-            tokens: [underlyingToken]
+            tokens: [underlyingToken],
+            solendAction: solendAction
         }
         return tmp;
     }));

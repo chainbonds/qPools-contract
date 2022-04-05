@@ -1,6 +1,6 @@
 import {Connection, GetProgramAccountsFilter, PublicKey} from "@solana/web3.js";
 import {Program} from "@project-serum/anchor";
-import {UserCurrencyAccount} from "../../types/account/UserCurrencyAccount";
+import {UserCurrencyAccount} from "../../types/account";
 
 /**
  * Check if the portfolio exists

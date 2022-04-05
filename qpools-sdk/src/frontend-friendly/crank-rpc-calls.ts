@@ -1,34 +1,18 @@
 import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
-import {WalletI} from "easy-spl";
-import {BN, Program, Provider, web3} from "@project-serum/anchor";
-import * as anchor from "@project-serum/anchor";
-import QWallet, {
-     createAssociatedTokenAccountSendUnsigned,
-    delay,
-    IWallet, sendAndSignInstruction
-} from "../utils";
-import {StableSwapState} from "@saberhq/stableswap-sdk";
-import {getSolbondProgram, PortfolioAccount} from "../index";
-import {NETWORK} from "../types/cluster";
-import {PositionAccountSaber} from "../types/account/PositionAccountSaber";
-import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
-import {createPositionMarinade} from "../instructions/modify/marinade";
-import {
-    permissionlessFulfillSaber,
-    redeem_single_position,
-    redeemSinglePositionOnlyOne
-} from "../instructions/modify/saber";
-import {
-    permissionlessFulfillSolend,
-    redeemSinglePositionSolend
-} from "../instructions/modify/solend";
-
-import {sendLamports, transfer_to_user} from "../instructions/modify/portfolio-transfer";
-import {getPoolState} from "../instructions/fetch/saber";
-import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
-import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import {BN, Program, Provider} from "@project-serum/anchor";
+import {delay, IWallet, QWallet, sendAndSignInstruction} from "../utils";
+import {Marinade, MarinadeConfig, MarinadeState} from "@marinade.finance/marinade-ts-sdk";
 import {Registry} from "./registry";
+import {getSolbondProgram} from "../index";
+import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
+import {sendLamports} from "../instructions/modify/portfolio-transfer";
+import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
+import {SolendAction} from "@solendprotocol/solend-sdk";
+import {permissionlessFulfillSolend} from "../instructions/modify/solend";
+import * as instructions from "../instructions";
+import {NETWORK} from "../types";
+import {PortfolioAccount, PositionAccountSaber} from "../types/account";
 
 export class CrankRpcCalls {
 
@@ -43,7 +27,7 @@ export class CrankRpcCalls {
     public portfolioOwner: PublicKey;
 
     public payer: Keypair;
-    public owner: WalletI;
+    public owner: IWallet;
 
     // Gotta make sure that the crank-wallet sends the signatures
     public crankWallet;
@@ -72,9 +56,7 @@ export class CrankRpcCalls {
         // Clean the different types of providers ...
 
         this.crankWallet = new QWallet(tmpKeypair);
-        this.crankProvider = new anchor.Provider(this.connection, this.crankWallet, {
-            preflightCommitment: "confirmed"
-        });
+        this.crankProvider = new Provider(this.connection, this.crankWallet, {preflightCommitment: "confirmed"});
         this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, NETWORK.DEVNET);
 
         this.providerWallet = this.provider.wallet;
@@ -114,7 +96,7 @@ export class CrankRpcCalls {
      */
     async transfer_to_user(currencyMint: PublicKey) {
         // Creating the user-account if it doesn't yet exist
-        let ix = await transfer_to_user(
+        let ix = await instructions.modify.portfolioTransfer.transfer_to_user(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -123,7 +105,7 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
-    async sendToUsersWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
+    async sendToUsersWallet(tmpKeypair: PublicKey, lamports: BN): Promise<TransactionInstruction> {
         return sendLamports(tmpKeypair, this.owner.publicKey, lamports);
     }
 
@@ -150,7 +132,7 @@ export class CrankRpcCalls {
         // if (await accountExists(this.connection, positionPDA)) {
         // let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
         // Return if the current position was already fulfilled
-        let ix = await permissionlessFulfillSaber(
+        let ix = await instructions.modify.saber.permissionlessFulfillSaber(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -163,7 +145,7 @@ export class CrankRpcCalls {
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
         // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
-        await Promise.all(positionsSaber.map(async(x: PositionAccountSaber) => {
+        await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
         }));
@@ -174,7 +156,7 @@ export class CrankRpcCalls {
 
     async redeem_single_position(poolAddress: PublicKey, index: number) {
         // TODO: Rename to sth saber, or make module imports ...
-        let ix = await redeem_single_position(
+        let ix = await instructions.modify.saber.redeem_single_position(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -218,7 +200,7 @@ export class CrankRpcCalls {
      * Marinade
      */
     async createPositionMarinade(index: number) {
-        let ix = await createPositionMarinade(
+        let ix = await instructions.modify.marinade.createPositionMarinade(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -229,23 +211,26 @@ export class CrankRpcCalls {
     }
 
 
-    async createPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+    async createPositionSolend(index: number, solendAction: SolendAction) {
+        // TODO: From the currency-mint, fetch the solend symbol ...
+        // tokenSymbol: string
+        // TODO: Remove the harcoded tokenSymbol variable ...
+
+        // Initialize a solend market using the mint ...
+
         let ix = await permissionlessFulfillSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            currencyMint,
             index,
-            tokenSymbol,
-            environment
-
+            solendAction
         );
         return await sendAndSignInstruction(this.provider, ix)
     }
 
     async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
 
-        let ix = await redeemSinglePositionSolend(
+        let ix = await instructions.modify.solend.redeemSinglePositionSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -257,16 +242,6 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.provider, ix);
 
     }
-
-
-
-
-
-
-
-
-
-
 
 
     // async fullfillAllPermissionless(): Promise<boolean> {

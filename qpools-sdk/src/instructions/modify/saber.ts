@@ -3,7 +3,7 @@ import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
-import {PositionAccountSaber} from "../../types/account/PositionAccountSaber";
+import {PositionAccountSaber} from "../../types/account";
 import {
     createAssociatedTokenAccountUnsignedInstruction,
     getAccountForMintAndPDADontCreate, IWallet,
@@ -12,9 +12,8 @@ import {
 import {getPoolState} from "../fetch/saber";
 import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
-import {WalletI} from "easy-spl";
 import {MOCK} from "../../const";
-import {Registry} from "../../frontend-friendly/registry";
+import {Registry} from "../../frontend-friendly";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSaber(

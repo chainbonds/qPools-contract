@@ -1,4 +1,4 @@
-import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {WalletI} from "easy-spl";
@@ -13,45 +13,22 @@ import {
     IWallet,
     tokenAccountExists
 } from "../utils";
-import {PortfolioAccount} from "../types/account/PortfolioAccount";
-import {PositionAccountSaber} from "../types/account/PositionAccountSaber";
+import {PortfolioAccount} from "../types/account";
+import {PositionAccountSaber} from "../types/account";
 
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
-import {fetchPortfolio, portfolioExists} from "../instructions/fetch/portfolio";
-import {getLpTokenExchangeRateItems, getPoolState} from "../instructions/fetch/saber";
-import {
-    approvePortfolioWithdraw,
-    createPortfolioSigned,
-    registerCurrencyInputInPortfolio
-} from "../instructions/modify/portfolio";
-import {approvePositionWeightMarinade, approveWithdrawToMarinade} from "../instructions/modify/marinade";
-import {Protocol} from "../types/PositionInfo";
-import {
-    approvePositionWeightSaber,
-    signApproveWithdrawAmountSaber
-} from "../instructions/modify/saber";
-
-import {
-    approvePositionWeightSolend,
-    signApproveWithdrawAmountSolend,
-} from "../instructions/modify/solend";
-import {
-    sendLamports,
-    transferUsdcFromUserToPortfolio
-} from "../instructions/modify/portfolio-transfer";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionInfo, ProtocolType} from "../types/PositionInfo";
-import {
-    fetchAllPositionsMarinade,
-    fetchAllPositionsSaber,
-    fetchAllPositions
-} from "../instructions/fetch/position";
-import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
-import {UserCurrencyAccount} from "../types/account/UserCurrencyAccount";
-import {getTotalInputAmount} from "../instructions/fetch/currency";
+import {PositionAccountMarinade} from "../types/account";
+import {UserCurrencyAccount} from "../types/account";
 import {Registry} from "./registry";
 import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
-import {getNativeSolMint} from "../const";
+import {getNativeSolMint, getWrappedSolMint} from "../const";
+import {PositionAccountSolend} from "../types/account";
+import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
+import {syncNative} from "@solendprotocol/solend-sdk";
+import {closeAccount} from "easy-spl/dist/tx/token-instructions";
+import * as instructions from "../instructions";
+import {PositionInfo, Protocol, ProtocolType} from "../types/interfacing";
 
 
 export interface PositionsInput {
@@ -153,6 +130,42 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         });
         // Wait until portfolio PDA is loaded
         delay(1000);
+    }
+
+    async wrapSolTransaction(lamports: BN): Promise<Transaction> {
+        let out: Transaction = new Transaction();
+        let wrappedSolAta = await getAssociatedTokenAddress(
+            getWrappedSolMint(),
+            this.providerWallet.publicKey!
+        );
+        out.add(
+            SystemProgram.transfer({
+                fromPubkey: this.providerWallet.publicKey!,
+                toPubkey: wrappedSolAta,
+                lamports: lamports.toNumber(),
+            })
+        );
+        out.add(
+            syncNative(wrappedSolAta)
+        )
+        return out;
+    }
+
+    async unwrapSolTransaction(): Promise<Transaction> {
+        let out: Transaction = new Transaction();
+        let wrappedSolAta = await getAssociatedTokenAddress(
+            getWrappedSolMint(),
+            this.providerWallet.publicKey!
+        );
+        // Add a token transfer to the guy, and then unwrap the SOL
+        out.add(
+            closeAccount({
+                source: wrappedSolAta,
+                destination: this.providerWallet.publicKey!,
+                owner: this.providerWallet.publicKey!
+            })
+        );
+        return out;
     }
 
     /**
@@ -264,26 +277,29 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      */
     // Fetch Operations
     async portfolioExists(): Promise<boolean> {
-        return await portfolioExists(this.connection, this.solbondProgram, this.owner.publicKey);
+        return await instructions.fetch.portfolio.portfolioExists(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
     async fetchPortfolio(): Promise<PortfolioAccount | null> {
-        return await fetchPortfolio(this.connection, this.solbondProgram, this.owner.publicKey);
+        return await instructions.fetch.portfolio.fetchPortfolio(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
     async fetchAllPositions(): Promise<(PositionAccountSaber | PositionAccountMarinade)[]> {
-        return await fetchAllPositions(this.connection, this.solbondProgram, this.owner.publicKey);
+        return await instructions.fetch.position.fetchAllPositions(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 
-    async fetchAllPositionsByProtocol(protocol: Protocol): Promise<[PositionAccountSaber[], PositionAccountMarinade[]]> {
+    async fetchAllPositionsByProtocol(protocol: Protocol): Promise<[PositionAccountSaber[], PositionAccountMarinade[], PositionAccountSolend[]]> {
         // For type-safe unpacking ...
-        let out: [PositionAccountSaber[], PositionAccountMarinade[]];
+        let out: [PositionAccountSaber[], PositionAccountMarinade[], PositionAccountSolend[]];
         if (protocol.valueOf() === Protocol.saber.valueOf()) {
-            let tmp: PositionAccountSaber[] = await fetchAllPositionsSaber(this.connection, this.solbondProgram, this.owner.publicKey);
-            out = [tmp, []];
+            let tmp: PositionAccountSaber[] = await instructions.fetch.position.fetchAllPositionsSaber(this.connection, this.solbondProgram, this.owner.publicKey);
+            out = [tmp, [], []];
         } else if (protocol.valueOf() === Protocol.marinade.valueOf()) {
-            let tmp: PositionAccountMarinade[] = await fetchAllPositionsMarinade(this.connection, this.solbondProgram, this.owner.publicKey);
-            out = [[], tmp]
+            let tmp: PositionAccountMarinade[] = await instructions.fetch.position.fetchAllPositionsMarinade(this.connection, this.solbondProgram, this.owner.publicKey);
+            out = [[], tmp, []]
+        } else if (protocol.valueOf() === Protocol.solend.valueOf()) {
+            let tmp: PositionAccountSolend[] = await instructions.fetch.position.fetchAllPositionsSolend(this.connection, this.solbondProgram, this.owner.publicKey);
+            out = [[], [], tmp]
         } else {
             throw Error("Protocol is neither of Saber, Marinade, " + protocol);
         }
@@ -296,7 +312,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         pool_addresses: PublicKey[],
         numCurrencies: BN,
     ): Promise<TransactionInstruction> {
-        let ix = await createPortfolioSigned(
+        let ix = await instructions.modify.portfolio.createPortfolioSigned(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -308,7 +324,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     async registerCurrencyInputInPortfolio(amount: u64, currencyMint: PublicKey): Promise<TransactionInstruction> {
-        let ix = await registerCurrencyInputInPortfolio(
+        let ix = await instructions.modify.portfolio.registerCurrencyInputInPortfolio(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -320,7 +336,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     // Redeem Operations
     async approveWithdrawPortfolio(): Promise<TransactionInstruction> {
-        let ix = await approvePortfolioWithdraw(
+        let ix = await instructions.modify.portfolio.approvePortfolioWithdraw(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey
@@ -357,7 +373,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // From the LP Mint, retrieve the saber pool address
         // TODO: Also change this LP-based logic in the test...
         let poolAddressFromLp = await this.registry.saberPoolLpToken2poolAddress(new PublicKey(lpTokenMint));
-        let ix = await approvePositionWeightSaber(
+        let ix = await instructions.modify.saber.approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -380,7 +396,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 29");
         let poolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
-        const stableSwapState = await getPoolState(this.connection, poolAddress);
+        const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
         const {state} = stableSwapState;
         let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
@@ -393,7 +409,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         if (positionAccount.isRedeemed) {
             return null;
         }
-        let ix = await signApproveWithdrawAmountSaber(
+        let ix = await instructions.modify.saber.signApproveWithdrawAmountSaber(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -405,9 +421,11 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
 
-
+    /**
+     * POSITION: Solend Operations (Fetch Approve);
+     */
     async approvePositionWeightSolend(currencyMint: PublicKey, input_amount: u64, index: number, weight: BN) {
-        let ix = await approvePositionWeightSolend(
+        let ix = await instructions.modify.solend.approvePositionWeightSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -419,13 +437,18 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix
     }
 
-    async approveWithdrawSolend(index: number, redeem_amount: u64) {
-        let ix = await signApproveWithdrawAmountSolend(
+    async approveWithdrawSolend(index: number) {
+        // Make redeem-amount the full amount
+
+        // TODO: How do I get the balance from the solend account ...?
+        // let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
+        throw Error("Not implemented yet!");
+
+        let ix = await instructions.modify.solend.signApproveWithdrawAmountSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            index, 
-            redeem_amount,
+            index,
         );
         return ix;
     }
@@ -435,7 +458,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      */
     // Deposit
     async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
-        let ix = await approvePositionWeightMarinade(
+        let ix = await instructions.modify.marinade.approvePositionWeightMarinade(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -448,7 +471,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     // Withdraw
     async approveWithdrawToMarinade(index: number): Promise<TransactionInstruction> {
-        let ix = await approveWithdrawToMarinade(
+        let ix = await instructions.modify.marinade.approveWithdrawToMarinade(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -461,8 +484,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     /**
      * Some other boilerplate code to send from and to the local tmp crank wallet
      */
-    async sendToCrankWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
-        return sendLamports(this.owner.publicKey, tmpKeypair, lamports);
+    async sendToCrankWallet(tmpKeypair: PublicKey, lamports: BN): Promise<TransactionInstruction> {
+        return instructions.modify.portfolioTransfer.sendLamports(this.owner.publicKey, tmpKeypair, lamports);
     }
 
     /**
@@ -471,7 +494,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async transfer_to_portfolio(currencyMint: PublicKey) {
         // TODO: Fix this function!
 
-        let ix = await transferUsdcFromUserToPortfolio(
+        // TODO: Please o god, rename this function and remove unnecessary input signatures
+        let ix = await instructions.modify.portfolioTransfer.transferUsdcFromUserToPortfolio(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -492,7 +516,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
         let saberPoolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
-        const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
+        const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, saberPoolAddress);
         const {state} = stableSwapState;
 
         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
@@ -601,20 +625,28 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async getPortfolioAndPositions(): Promise<{
         portfolio: PortfolioAccount,
         positionsSaber: PositionAccountSaber[],
-        positionsMarinade: PositionAccountMarinade[]
+        positionsMarinade: PositionAccountMarinade[],
+        positionsSolend: PositionAccountSolend[]
     }> {
         // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
         let portfolio: PortfolioAccount = await this.fetchPortfolio();
         let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
         let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
+        let positionsSolend: PositionAccountSolend[] = (await this.fetchAllPositionsByProtocol(Protocol.solend))[2];
         return {
             portfolio: portfolio,
             positionsSaber: positionsSaber,
-            positionsMarinade: positionsMarinade
+            positionsMarinade: positionsMarinade,
+            positionsSolend: positionsSolend
         }
     }
 
-    async approveRedeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<TransactionInstruction[]> {
+    async approveRedeemAllPositions(
+        portfolio: PortfolioAccount,
+        positionsSaber: PositionAccountSaber[],
+        positionsMarinade: PositionAccountMarinade[],
+        positionsSolend: PositionAccountSolend[]
+    ): Promise<TransactionInstruction[]> {
         // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
         let out: TransactionInstruction[] = [];
         await Promise.all(positionsSaber.map(async(x: PositionAccountSaber) => {
@@ -623,8 +655,12 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             out.push(IxApproveWithdrawSaber);
         }));
         await Promise.all(positionsMarinade.map(async(x: PositionAccountMarinade) => {
-            let IxApproveWithdrawSaber = await this.approveWithdrawToMarinade(x.index);
-            out.push(IxApproveWithdrawSaber);
+            let IxApproveWithdrawMarinade = await this.approveWithdrawToMarinade(x.index);
+            out.push(IxApproveWithdrawMarinade);
+        }));
+        await Promise.all(positionsSolend.map(async(x: PositionAccountSolend) => {
+            let IxApproveWithdrawSolend = await this.approveWithdrawSolend(x.index);
+            out.push(IxApproveWithdrawSolend);
         }));
         console.log("Approving Marinade Withdraw");
         return out;
@@ -656,7 +692,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     async fetchAllCurrencyAccounts(): Promise<UserCurrencyAccount[]> {
-        let out: UserCurrencyAccount[] = await getTotalInputAmount(this.connection, this.solbondProgram, this.owner.publicKey);
+        let out: UserCurrencyAccount[] = await instructions.fetch.currency.getTotalInputAmount(this.connection, this.solbondProgram, this.owner.publicKey);
         return out;
     }
 
@@ -742,10 +778,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             if (position.protocol === Protocol.saber) {
                 console.log("Position (DEX) is: ", position);
                 let saberPoolAddress = await this.registry.saberPoolLpToken2poolAddress(position.poolAddress);
-                const stableSwapState = await getPoolState(this.connection, saberPoolAddress);
+                const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, saberPoolAddress);
                 const {state} = stableSwapState;
 
-                let {supplyLpToken, poolContentsInUsdc} = await getLpTokenExchangeRateItems(
+                let {supplyLpToken, poolContentsInUsdc} = await instructions.fetch.saber.getLpTokenExchangeRateItems(
                     this.connection,
                     this.solbondProgram,
                     this.owner.publicKey,

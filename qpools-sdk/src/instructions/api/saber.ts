@@ -1,8 +1,6 @@
 import {DEV_TOKEN_LIST_SABER} from "../../registry/devnet/saber/token-list.devnet";
 import {DEV_POOLS_INFO_SABER} from "../../registry/devnet/saber/pools-info.devnet";
-import {Protocol, ProtocolType} from "../../types/PositionInfo";
-import {ExplicitToken} from "../../types/ExplicitToken";
-import {ExplicitPool} from "../../types/ExplicitPool";
+import {ExplicitPool, ExplicitSaberPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
 
 /**
  * Gotta just copy it from the registry ....
@@ -14,7 +12,8 @@ export const getSaberTokens = async (): Promise<ExplicitToken[]> => {
 }
 
 export const getSaberPools = async  (): Promise<ExplicitPool[]> => {
-    let saberPoolList: ExplicitPool[] = DEV_POOLS_INFO_SABER.map((x: any) => {
+    // Perhaps here, return the SaberTypes ... which include some more detail on this ...
+    let saberPoolList: ExplicitSaberPool[] = DEV_POOLS_INFO_SABER.map((x: any) => {
         x.poolType = ProtocolType.DEXLP;
         x.protocol = Protocol.saber;
         return x;

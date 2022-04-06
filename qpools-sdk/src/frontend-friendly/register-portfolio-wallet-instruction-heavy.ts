@@ -138,6 +138,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             getWrappedSolMint(),
             this.providerWallet.publicKey!
         );
+        // TODO: Can only close account if it exists already ...
+        // Throw error if this account is not yet created ...?
         out.add(
             SystemProgram.transfer({
                 fromPubkey: this.providerWallet.publicKey!,
@@ -158,13 +160,16 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             this.providerWallet.publicKey!
         );
         // Add a token transfer to the guy, and then unwrap the SOL
-        out.add(
-            closeAccount({
-                source: wrappedSolAta,
-                destination: this.providerWallet.publicKey!,
-                owner: this.providerWallet.publicKey!
-            })
-        );
+        // TODO: Can only close account if it exists already ...
+        if ((await tokenAccountExists(this.connection, wrappedSolAta))) {
+            out.add(
+                closeAccount({
+                    source: wrappedSolAta,
+                    destination: this.providerWallet.publicKey!,
+                    owner: this.providerWallet.publicKey!
+                })
+            );
+        }
         return out;
     }
 
@@ -217,23 +222,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // }).filter((x: PublicKey | null): x is PublicKey => (x !== null));
 
         await Promise.all(mints.map(async (mint: PublicKey) => {
-
-            console.log("Getting portfolio PDA");
-            // Hmm, portfolio PDA is not
-            // if (!(await tokenAccountExists(this.connection, usdcPortfolioAta)) && !createdAtaAccounts.has(usdcPortfolioAta.toString())) {
-            // let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
-            //     this.connection,
-            //     this.solbondProgram,
-            //     this.owner.publicKey,
-            //     wallet,
-            //     state,
-            //     createdAtaAccounts
-            // );
-            // ixs.map((x: TransactionInstruction) => {tx.add(x)})
-
-            if (mint.equals(await getNativeSolMint())) {
-                return null;
-            }
 
             let portfolioAta = await getAssociatedTokenAddressOffCurve(mint, portfolioPDA);
             if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta.toString())) {

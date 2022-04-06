@@ -1,6 +1,6 @@
 import {Connection, PublicKey} from "@solana/web3.js";
 import {Program} from "@project-serum/anchor";
-import {PortfolioAccount} from "../../types/account/portfolioAccount";
+import {PortfolioAccount} from "../../types/account";
 import {accountExists} from "../../utils";
 import {getPortfolioPda} from "../../types/account/pdas";
 

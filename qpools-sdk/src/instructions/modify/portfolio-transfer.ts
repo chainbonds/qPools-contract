@@ -8,12 +8,12 @@ import * as anchor from "@project-serum/anchor";
 export async function sendLamports(
     from: PublicKey,
     to: PublicKey,
-    lamports: number
+    lamports: BN
 ): Promise<TransactionInstruction> {
     return web3.SystemProgram.transfer({
         fromPubkey: from,
         toPubkey: to,
-        lamports: lamports,
+        lamports: lamports.toNumber(),
     })
 }
 

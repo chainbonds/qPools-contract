@@ -80,8 +80,6 @@ pub fn handler(
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
 
-    //let portfolio = &mut ctx.accounts.portfolio_pda;
-
     token::transfer(
         CpiContext::new_with_signer(cpi_program, cpi_accounts,
             &[

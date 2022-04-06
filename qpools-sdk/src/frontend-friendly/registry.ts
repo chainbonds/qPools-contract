@@ -44,6 +44,15 @@ export class Registry {
         this.poolListIndexedByIdString = new Map<string, ExplicitPool>();
 
         this.userPubkey = userPubkey;
+
+        // Don't do lazy-loading, fucks up with the UI
+        this.getAllTokens();
+        this.getAllPools();
+        this.getPoolListIndexedByInputTokenMint();
+        this.getPoolListIndexedByIdString();
+        this.getPoolListIndexedByLpTokenMint();
+        this.getTokenIndexedBySymbol();
+        this.getTokenIndexedByTokenMint();
     }
 
     /**

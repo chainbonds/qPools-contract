@@ -83,7 +83,6 @@ export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPoo
             name: "Solend" + x.config.name,
             symbol: "c" + x.config.symbol
         }
-        console.log("Got this far ....!");
         // I guess we can start the pubkey with something stupid
         // TODO: Basically, once the user connects, we have to rebuild the reserves using the guys' key!
         const solendAction = await SolendAction.initialize(
@@ -94,7 +93,6 @@ export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPoo
             connection,
             "devnet"
         );
-        console.log("But not further ....!");
         let tmp: ExplicitSolendPool = {
             id: "c" + x.config.symbol,
             name: x.config.name,
@@ -106,7 +104,6 @@ export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPoo
         }
         return tmp;
     }));
-    console.log("Out is: ", out);
     console.log("##getSolendPools()");
     return out;
 }

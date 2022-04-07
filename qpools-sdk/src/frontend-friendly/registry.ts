@@ -59,7 +59,7 @@ export class Registry {
                 ...marinadeTokenList,
                 ...solendTokenList
             ]
-            console.log("This protocolTokenList is: ", this.protocolPoolList);
+            //console.log("This protocolTokenList is: ", this.protocolPoolList);
         }
         return this.protocolTokenList;
     }
@@ -196,6 +196,18 @@ export class Registry {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Get symbol of the token in uppercase, given the mint of the token.
+     * @param tokenMint
+     */
+    async getTokenSymbolFromMint(tokenMint: PublicKey): Promise<string | null> {
+        let token = await this.getToken(tokenMint.toString());
+        if(token){
+            return token.symbol.toUpperCase();
+        }
+        else return null;
     }
 
     /**

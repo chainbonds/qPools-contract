@@ -20,7 +20,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     // console.log("market reserves are: ");
     // console.log(market);
     // console.log("Config is: ", market.config);
-    console.log("Reserves are: ", market.reserves);
+    //console.log("Reserves are: ", market.reserves);
     let out: ExplicitToken[] = [];
     await Promise.all(market.reserves.filter((x) => {return (new Set(["SOL"])).has(x.config.symbol)}).map(async (x: SolendReserve) => {
         // Do a simple if-statement for the token, match it by the mint

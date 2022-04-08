@@ -199,9 +199,9 @@ describe('qPools!', () => {
         let sgTransferUsdcToUser = await crankRPC.transfer_to_user(currencyMint);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
 
-        let tmpWalletBalance: number = await connection.getBalance(genericPayer.publicKey);
-        let lamportsBack = Math.min(tmpWalletBalance - 7_001, 0.0);
-        if (lamportsBack > 0) {
+        let tmpWalletBalance: BN = new BN(await connection.getBalance(genericPayer.publicKey));
+        let lamportsBack = BN.min(tmpWalletBalance.subn(7_001), new BN(0));
+        if (lamportsBack.gtn(0)) {
             let ix = await crankRPC.sendToUsersWallet(
                 genericPayer.publicKey,
                 lamportsBack

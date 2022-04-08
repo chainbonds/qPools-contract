@@ -22,7 +22,7 @@ export const DEV_TOKEN_LIST_MARINADE = {
       "chainId": 101,
       "decimals": 9,
       "logoURI": "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png",
-      "name": "Wrapped SOL",
+      "name": "Solana",
       "symbol": "SOL",
       "tags": ["saber-mkt-sol"],
       "pyth": {

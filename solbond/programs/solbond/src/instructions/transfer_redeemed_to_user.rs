@@ -10,6 +10,8 @@ use crate::ErrorCode;
 #[instruction(
     _bump_portfolio: u8,
     _bump_user_currency: u8,
+    _bump_ata: u8,
+
 )]
 pub struct TransferRedeemedToUser<'info> {
     #[account(mut,
@@ -39,6 +41,8 @@ pub struct TransferRedeemedToUser<'info> {
     pub user_owned_user_a: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
+        seeds = [portfolio_owner.key().as_ref(),currency_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata,
         constraint = &pda_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
@@ -61,6 +65,7 @@ pub fn handler(
     ctx: Context<TransferRedeemedToUser>,
     _bump_portfolio: u8,
     _bump_user_currency: u8,
+    _bump_ata: u8,
 ) -> ProgramResult {
 
     //let amount_after_fee;

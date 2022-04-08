@@ -11,6 +11,8 @@ use crate::ErrorCode;
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_ata_a: u8,
+    _bump_ata_lp: u8,
     _index: u32,
 )]
 pub struct RedeemOneSaberPosition<'info> {
@@ -41,15 +43,20 @@ pub struct RedeemOneSaberPosition<'info> {
 
     #[account(
         mut,
+        seeds = [pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_lp,
         constraint = &input_lp.owner == &portfolio_pda.key(),
     )]
     pub input_lp:  Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    
+    //#[account(mut)]
     pub pool_mint: Account<'info, Mint>,
 
 
     #[account(
         mut,
+        seeds = [mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_a,
         constraint = &user_a.owner == &portfolio_pda.key(),
     )]
     pub user_a: Box<Account<'info, TokenAccount>>,
@@ -80,6 +87,8 @@ pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_ata_a: u8,
+    _bump_ata_lp: u8,
     _index: u32,
 
 ) -> ProgramResult {

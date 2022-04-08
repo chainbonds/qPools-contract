@@ -12,6 +12,8 @@ use crate::ErrorCode;
 #[instruction(
     _bump_position: u8,
     _bump_portfolio: u8,
+    _bump_ata_liq: u8,
+    _bump_ata_col: u8,
     _index: u32,
 )]
 pub struct SolendPositionInstruction<'info> {
@@ -30,11 +32,23 @@ pub struct SolendPositionInstruction<'info> {
     //#[account(mut)]
     pub owner: AccountInfo<'info>,
 
-    #[account(mut)]
-    pub source_liquidity: AccountInfo<'info>,
+    pub liquidity_mint: Account<'info, Mint>,
+    #[account(
+        mut,
+        seeds = [owner.key().as_ref(),liquidity_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_liq
+    )]
+    pub source_liquidity: Account<'info,TokenAccount>,
 
-    #[account(mut)]
-    pub destination_collateral: AccountInfo<'info>,
+    #[account(
+        init, 
+        payer = owner,
+        token::mint = reserve_collateral_mint,
+        token::authority = user_transfer_authority,
+        seeds = [owner.key().as_ref(),reserve_collateral_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_col
+    )]
+    pub destination_collateral: Account<'info,TokenAccount>,
 
     #[account(mut)]
     pub reserve: AccountInfo<'info>,
@@ -73,6 +87,8 @@ pub fn handler(
     ctx: Context<SolendPositionInstruction>,
     _bump_position: u8,
     _bump_portfolio: u8,
+    _bump_ata_liq: u8,
+    _bump_ata_col: u8,
     _index: u32,
 ) -> ProgramResult {
     msg!("Creating a single solend position!");

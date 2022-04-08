@@ -18,6 +18,8 @@ use solana_program::{
 #[instruction(
     _bump_position: u8,
     _bump_portfolio: u8,
+    _bump_ata_liq: u8,
+    _bump_ata_col: u8,
     _index: u32,
 )]
 pub struct RedeemPositionSolend<'info> {
@@ -36,10 +38,20 @@ pub struct RedeemPositionSolend<'info> {
     //#[account(mut)]
     pub owner: AccountInfo<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [owner.key().as_ref(),reserve_collateral_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_col,
+    )]
     pub source_collateral: AccountInfo<'info>,
+    
+    pub liquidity_mint: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [owner.key().as_ref(),liquidity_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_liq
+    )]
     pub destination_liquidity: AccountInfo<'info>,
 
     #[account(mut)]
@@ -74,6 +86,8 @@ pub fn handler(
     ctx: Context<RedeemPositionSolend>,
     _bump_position: u8,
     _bump_portfolio: u8,
+    _bump_ata_liq: u8,
+    _bump_ata_col: u8,
     _index: u32,
 ) -> ProgramResult {
     msg!("Creating a single solend position!");

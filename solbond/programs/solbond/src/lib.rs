@@ -6,7 +6,7 @@ mod state;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
-declare_id!("EUBBaxNut3Z79MxGFTa4DsfUdAkdrwEP7b7Zc1W9Hj2H");
+declare_id!("CNYbaeQEV1s3TwDXLYyEWCBxp1rC9u1To48WWKDBQzph");
 
 
 
@@ -147,11 +147,14 @@ pub mod solbond {
         ctx: Context<TransferToPortfolio>,
         _bump_portfolio: u8,
         _bump_user_currency: u8,
+        _bump_ata: u8,
     ) -> ProgramResult {
             instructions::transfer_to_portfolio::handler(
                 ctx,
                 _bump_portfolio,
                 _bump_user_currency,
+                _bump_ata,
+
             )
     }
 
@@ -205,12 +208,14 @@ pub mod solbond {
         ctx: Context<ApproveWithdrawMarinade>,
         _bump_portfolio: u8,
         _bump_position: u8,
+        _bump_msol_ata: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::approve::marinade::approve_withdraw_marinade::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
+            _bump_msol_ata,
             _index,
         )
     }
@@ -264,6 +269,7 @@ pub mod solbond {
         _bump_portfolio: u8,
         _bump_position: u8,
         _bump_marinade: u8,
+        _bump_msol_ata: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::cpi::marinade::create_position_marinade::handler(
@@ -271,6 +277,7 @@ pub mod solbond {
             _bump_portfolio, 
             _bump_position,
             _bump_marinade,
+            _bump_msol_ata,
             _index
         )
     }
@@ -279,12 +286,18 @@ pub mod solbond {
         ctx: Context<SaberLiquidityInstruction>,
         _bump_position: u8,
         _bump_portfolio: u8,
+        _bump_ata_a: u8,
+        _bump_ata_b: u8,
+        _bump_ata_lp: u8,
         _index:u32,
     ) -> ProgramResult {
         instructions::cpi::saber::create_position::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
+            _bump_ata_a,
+            _bump_ata_b,
+            _bump_ata_lp,
             _index, 
         )
     }
@@ -293,12 +306,16 @@ pub mod solbond {
         ctx: Context<SolendPositionInstruction>,
         _bump_position: u8,
         _bump_portfolio: u8,
+        _bump_ata_liq: u8,
+        _bump_ata_col: u8,
         _index:u32,
     ) -> ProgramResult {
         instructions::cpi::solend::create_position_solend::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
+            _bump_ata_liq,
+            _bump_ata_col,
             _index, 
         )
     }
@@ -326,28 +343,34 @@ pub mod solbond {
         ctx: Context<RedeemOneSaberPosition>,
         _bump_portfolio: u8,
         _bump_position: u8,
-        //_bump_pool: u8,
+        _bump_ata_a: u8,
+        _bump_ata_lp: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::cpi::saber::redeem_position_one_sided::handler(
             ctx, 
             _bump_portfolio,
         _bump_position,
-        //_bump_pool, 
-        _index
-    )
+        _bump_ata_a,
+        _bump_ata_lp,
+        _index,
+        )
     }
 
     pub fn redeem_position_solend(
         ctx: Context<RedeemPositionSolend>, 
         _bump_position: u8,
         _bump_portfolio: u8,
+        _bump_ata_liq: u8,
+        _bump_ata_col: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::cpi::solend::redeem_position_solend::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
+            _bump_ata_liq,
+            _bump_ata_col,
             _index
         )
     }
@@ -359,12 +382,15 @@ pub mod solbond {
         ctx: Context<TransferRedeemedToUser>,
         _bump_portfolio: u8,
         _bump_user_currency: u8,
+        _bump_ata: u8,
+
     ) -> ProgramResult {
 
         instructions::transfer_redeemed_to_user::handler(
             ctx,
             _bump_portfolio,
             _bump_user_currency,
+            _bump_ata,
         )
     }
 

@@ -71,9 +71,9 @@ pub fn handler(
     // let msg = format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING);
     // msg!("Seed string is: ");
     // msg!(&msg);
-    if _initial_sol_amount < 1000000000 {
-        return Err(ErrorCode::MarinadeNeedsMoreThanOneSol.into());
-    }
+    // if _initial_sol_amount < 1000000000 {
+    //     return Err(ErrorCode::MarinadeNeedsMoreThanOneSol.into());
+    // }
 
     if _index > ctx.accounts.portfolio_pda.num_positions {
         return Err(ErrorCode::IndexHigherThanNumPos.into());

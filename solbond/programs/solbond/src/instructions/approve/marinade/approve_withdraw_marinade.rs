@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint};
 use crate::state::{PortfolioAccount, PositionAccountMarinade};
 use crate::utils::seeds;
 use crate::ErrorCode;
@@ -8,6 +8,7 @@ use crate::ErrorCode;
 #[instruction(
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_msol_ata: u8,
     _index: u32,
 )]
 pub struct ApproveWithdrawMarinade<'info> {
@@ -31,10 +32,13 @@ pub struct ApproveWithdrawMarinade<'info> {
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+    
+    pub msol_mint: Account<'info,Mint>,
 
     #[account(mut)]
     pub user_msol_account: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut,seeds = [owner.key().as_ref(),msol_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+    bump = _bump_msol_ata)]
     pub pda_msol_account: Account<'info, TokenAccount>,
     
     pub system_program: Program<'info, System>,
@@ -48,6 +52,7 @@ pub fn handler(
     ctx: Context<ApproveWithdrawMarinade>,
     _bump_portfolio: u8,
     _bump_position: u8,
+    _bump_msol_ata: u8,
     _index: u32,
 ) -> ProgramResult {
 

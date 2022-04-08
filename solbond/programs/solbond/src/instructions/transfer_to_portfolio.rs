@@ -7,6 +7,7 @@ use crate::utils::seeds;
 #[instruction(
     _bump_portfolio:u8, 
     _bump_user_currency: u8,
+    _bump_ata: u8,
 )]
 
     pub struct TransferToPortfolio<'info> {
@@ -24,7 +25,13 @@ use crate::utils::seeds;
     #[account(mut)]
     pub user_owned_token_account: Box<Account<'info, TokenAccount>>,
     
-    #[account(mut,         
+    #[account(
+        init,         
+        payer = owner,
+        token::mint = token_mint,
+        token::authority = portfolio_pda,
+        seeds = [owner.key().as_ref(),token_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata,
         constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_token_account: Box<Account<'info,TokenAccount>>,
@@ -56,6 +63,7 @@ pub fn handler(
     ctx: Context<TransferToPortfolio>,
     _bump_portfolio: u8,
     _bump_user_currency: u8,
+    _bump_ata: u8,
 ) -> ProgramResult {
     msg!("transfer initial funds from user to portfolio");
     msg!("how much a dollar cost {}", ctx.accounts.user_currency_pda_account.initial_amount);

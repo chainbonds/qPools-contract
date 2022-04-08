@@ -265,6 +265,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      */
     // Fetch Operations
     async portfolioExists(): Promise<boolean> {
+        if (!this.owner) {
+            console.log("Warning: Owner not found!");
+            return false;
+        }
         return await instructions.fetch.portfolio.portfolioExists(this.connection, this.solbondProgram, this.owner.publicKey);
     }
 

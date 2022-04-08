@@ -9,6 +9,7 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true,
     "rootDir": "src"
   },
   "include": [

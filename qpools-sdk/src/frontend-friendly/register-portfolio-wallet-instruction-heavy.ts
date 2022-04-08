@@ -138,6 +138,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             getWrappedSolMint(),
             this.providerWallet.publicKey!
         );
+        console.log("wrappedSolAta ", wrappedSolAta.toString());
+        console.log("provider wallet ", this.providerWallet.publicKey.toString());
         // TODO: Can only close account if it exists already ...
         // Throw error if this account is not yet created ...?
         out.add(
@@ -172,7 +174,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }
         return out;
     }
-
+    onlyUnique(value, index, self) {
+        return self.indexOf(value) === index;
+    }
     /**
      * Any overhead operations, such as creating associated token accuonts
      */
@@ -186,7 +190,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         console.log("Getting portfolio PDA");
         let [portfolioPDA, portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
-        let createdAtaAccounts: Set<string> = new Set();
+        let createdAtaAccounts: Set<PublicKey> = new Set();
         // For the Portfolio!
         // For all saber pool addresses (tokenA, tokenB, LPToken), create associated token address
         // For MSOL, create associated token addresses
@@ -220,11 +224,23 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         //     //     return mint;
         //     // }
         // }).filter((x: PublicKey | null): x is PublicKey => (x !== null));
+        // const mint_set = new Set(mints);
+        // mint_set.forEach(kir => {console.log("kir ", kir.toString());});
+        //let mint_unique: PublicKey[];
+        
+        //const mint_unique = mints.filter(this.onlyUnique); //[...new Set(mints)]; 
+        //mint_unique.forEach(kir => {console.log("kirekhar ", kir.toString());});
+        console.log("kel kele shelvare zahra jan")
+        const obj = [...new Map(mints.map(item => [item.toString(), item])).values()];
 
-        await Promise.all(mints.map(async (mint: PublicKey) => {
+        obj.forEach(kir => {console.log("kirekhar ", kir.toString());});
+        await Promise.all(obj.map(async (mint: PublicKey) => {
 
             let portfolioAta = await getAssociatedTokenAddressOffCurve(mint, portfolioPDA);
-            if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta.toString())) {
+            console.log("Token account exists ", (await tokenAccountExists(this.connection, portfolioAta)).toString());
+            console.log("in set thing 00 ", createdAtaAccounts.has(portfolioAta).toString());
+
+            if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta)) {
                 console.log("Creating ATA: ", portfolioAta.toString());
                 let tx1 = await createAssociatedTokenAccountUnsignedInstruction(
                     this.connection,
@@ -233,13 +249,17 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                     portfolioPDA,
                     wallet,
                 );
-                createdAtaAccounts.add(portfolioAta.toString());
+                createdAtaAccounts.add(portfolioAta);
                 tx.add(tx1);
             } else {console.log("Skipping Creation of ATA: ", portfolioAta.toString());}
-
             let userAta = await getAssociatedTokenAddressOffCurve(mint, this.owner.publicKey);
-            if (!(await tokenAccountExists(this.connection, userAta)) && !createdAtaAccounts.has(userAta.toString())) {
+            console.log("Token account exists ", (await tokenAccountExists(this.connection, userAta)).toString());
+            console.log("in set thing 11 ", createdAtaAccounts.has(userAta).toString());
+
+            if (!(await tokenAccountExists(this.connection, userAta))&& !createdAtaAccounts.has(userAta) ) {
+                
                 console.log("Creating ATA: ", userAta.toString());
+
                 let tx2 = await createAssociatedTokenAccountUnsignedInstruction(
                     this.connection,
                     mint,
@@ -247,9 +267,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                     this.owner.publicKey,
                     wallet,
                 );
-                createdAtaAccounts.add(userAta.toString());
+                createdAtaAccounts.add(userAta);
                 tx.add(tx2);
-            } else {console.log("Skipping Creation of ATA: ", userAta.toString());}
+            } else { console.log("Skipping Creation of ATA: ", userAta.toString()); }
 
         }));
         

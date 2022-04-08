@@ -12,7 +12,7 @@ export async function portfolioExists(
     solbondProgram: Program,
     owner: PublicKey
 ): Promise<boolean> {
-    console.log("#portfolioExists");
+    console.log("#FUNCTIONCALLportfolioExists");
     let out: boolean
     let [portfolioPda, _] = await getPortfolioPda(owner, solbondProgram);
     if (connection) {
@@ -21,7 +21,8 @@ export async function portfolioExists(
         // Maybe let it rerun after a second again ...
         out = false;
     }
-    console.log("##portfolioExists");
+    console.log("##FUNCTIONCALLportfolioExists");
+    console.log("did it exist? ", out.toString());
     return out;
 }
 

@@ -1,22 +1,26 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {Keypair, PublicKey, SystemProgram, TransactionInstruction} from "@solana/web3.js";
-import {
-    CrankRpcCalls,
-    MOCK,
-    NETWORK,
-    PortfolioFrontendFriendlyChainedInstructions,
-    getSolbondProgram
-} from "@qpools/sdk";
+//import {
+//    CrankRpcCalls,
+//    MOCK,
+//    NETWORK,
+//    PortfolioFrontendFriendlyChainedInstructions,
+//    getSolbondProgram
+//} from "@qpools/sdk";
+import * as qpools from "@qpools/sdk";
+
 import {
     Transaction,
 } from '@solana/web3.js';
-import {
-    createAssociatedTokenAccountUnsignedInstruction,
-    delay,
-    getAccountForMintAndPDA,
-    sendAndConfirmTransaction
-} from "@qpools/sdk/lib/utils";
+//import {
+//    createAssociatedTokenAccountUnsignedInstruction,
+//    delay,
+//    getAccountForMintAndPDA,
+//    sendAndConfirmTransaction
+//} from "@qpools/sdk/lib/utils";
 import {SolendMarket, syncNative} from "@solendprotocol/solend-sdk";
+import { SolendAction } from "@solendprotocol/solend-sdk";
+
 // import {ASSOCIATED_TOKEN_PROGRAM_ID} from "@saberhq/token-utils";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
@@ -45,7 +49,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = qpools.getSolbondProgram(connection, provider, qpools.typeDefinitions.NETWORK.DEVNET);
 
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
@@ -60,9 +64,9 @@ describe('qPools!', () => {
     let mSOLLpToken: PublicKey;
     let wrappedSolMint: PublicKey;
     let mSOL: PublicKey;
-
-    let portfolioObject: PortfolioFrontendFriendlyChainedInstructions;
-    let crankRpcTool: CrankRpcCalls;
+    
+    let portfolioObject: qpools.helperClasses.PortfolioFrontendFriendlyChainedInstructions;
+    let crankRpcTool: qpools.helperClasses.CrankRpcCalls;
     let valueInUsdc: number;
     let AmountUsdc: BN;
     let valueInSol: number;
@@ -71,24 +75,29 @@ describe('qPools!', () => {
     let solendmarket;
     const tokenSymbolSolend = 'SOL'
     let solSolendMint;
+    const registry = new qpools.helperClasses.Registry();
+    let solendAction;
     // Do some airdrop before we start the tests ...
     before(async () => {
-
-        portfolioObject = new PortfolioFrontendFriendlyChainedInstructions(
+        console.log("connecnit ", connection)
+        portfolioObject = new qpools.helperClasses.PortfolioFrontendFriendlyChainedInstructions(
             connection,
             provider,
-            solbondProgram
+            solbondProgram,
+            registry
         );
-
-        crankRpcTool = new CrankRpcCalls(
+        console.log("protoofol ", portfolioObject.solbondProgram.programId.toString());
+        crankRpcTool = new qpools.helperClasses.CrankRpcCalls(
             connection,
             genericPayer,
             provider,
-            solbondProgram
+            solbondProgram,
+            registry
         );
-
+        console.log("crankrpcdingi ", crankRpcTool.solbondProgram.programId.toString());
+        console.log("crankrpcdingi ", crankRpcTool.crankSolbondProgram.programId.toString());
         // Delay a bit so the async call works ...
-        await delay(5000);
+        await qpools.utils.delay(5000);
 
         weights = [new BN(500), new BN(500), new BN(500)];
 
@@ -125,6 +134,15 @@ describe('qPools!', () => {
         if (!(weights.length > 0)) {
             throw Error("All weights are zero! Doesn't make sense to create a portfolio");
         }
+
+        solendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            "SOL",
+            genericPayer.publicKey,
+            connection,
+            "devnet",
+        )
     })
 
     it("Create Associated Token Accounts", async () => {
@@ -132,11 +150,11 @@ describe('qPools!', () => {
         // solSolendMint
 
         // Fetch solend, and the other currencies that we are using ...
-
+        console.log("program id ", solbondProgram.programId.toString());
 
         let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]],provider.wallet);
         if (txCreateATA.instructions.length > 0) {
-            await sendAndConfirmTransaction(
+            await qpools.utils.sendAndConfirmTransaction(
                 solbondProgram.provider,
                 connection,
                 txCreateATA
@@ -174,7 +192,7 @@ describe('qPools!', () => {
 
     it("Prepare the amount of SOL and USDC to pay in ", async () => {
         valueInUsdc = 2;
-        AmountUsdc = new BN(valueInUsdc).mul(new BN(10**MOCK.DEV.SABER_USDC_DECIMALS));
+        AmountUsdc = new BN(valueInUsdc).mul(new BN(10**qpools.constDefinitions.MOCK.DEV.SABER_USDC_DECIMALS));
         valueInSol = 2;
         // I guess mSOL has 9 decimal points
         AmountSol = new BN(valueInSol).mul(new BN(10**9));
@@ -257,7 +275,7 @@ describe('qPools!', () => {
         console.log("Provider is: ");
         console.log(solbondProgram!.provider);
         console.log(solbondProgram!.provider.wallet.publicKey.toString());
-        await sendAndConfirmTransaction(
+        await qpools.utils.sendAndConfirmTransaction(
             solbondProgram!.provider,
             connection!,
             tx
@@ -272,7 +290,8 @@ describe('qPools!', () => {
         console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
         let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
         console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,solendAction)
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });
@@ -298,12 +317,12 @@ describe('qPools!', () => {
 
 
         let minRedeemAmount2 = new BN(1).mul(new BN(10**4));  // This is the minimum amount of tokens that should be put out ...
-        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2, minRedeemAmount2);
+        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2);
         tx.add(IxApproveWithdrawSolend);
 
         console.log("Send some to Crank Wallet");
         if (tx.instructions.length > 0) {
-            await sendAndConfirmTransaction(
+            await qpools.utils.sendAndConfirmTransaction(
                 solbondProgram.provider,
                 connection,
                 tx

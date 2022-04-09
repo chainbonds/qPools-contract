@@ -29,6 +29,7 @@ export class Registry {
 
     // nativeSolMint: PublicKey = new PublicKey("NativeSo11111111111111111111111111111111111");
     // wrappedSolMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
+    // TODO: Replace based on mainnet vs devnet ...
     serpiusEndpoint: string = "https://qpools.serpius.com/weight_status_devnet_solend_v2.json";
 
     userPubkey: PublicKey = getWrappedSolMint();

@@ -21,6 +21,7 @@ import {SolendMarket, syncNative} from "@solendprotocol/solend-sdk";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {struct, u8} from "@solana/buffer-layout";
+import {Cluster} from "@qpools/sdk/lib/network";
 // import {TokenInstruction} from "@solendprotocol/solend-sdk/dist/instructions/instruction";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
@@ -45,7 +46,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;

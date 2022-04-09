@@ -7,6 +7,7 @@ import {getAccountForMintAndPDADontCreate} from "../../utils";
 
 import {PositionAccountSolend} from "../../types/account";
 import {SolendAction} from "@solendprotocol/solend-sdk";
+import {Cluster, getNetworkCluster} from "../../network";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSolend(
@@ -167,8 +168,7 @@ export async function redeemSinglePositionSolend(
     owner: PublicKey,
     currencyMint: PublicKey,
     index: number,
-    tokenSymbol : string,
-    environment : "devnet"
+    tokenSymbol : string
 ) {
     console.log("#redeemSinglePositionOnlyOne()");
     // TODO: Do a translation from index to state first ...
@@ -185,14 +185,20 @@ export async function redeemSinglePositionSolend(
  
     // const stableSwapState = await getPoolState(connection, pool_address);
     // const {state} = stableSwapState;
-    const solendAction = await SolendAction.initialize(
-        "mint",
-        new BN(0),
-        tokenSymbol,
-        owner,
-        connection,
-        environment,
-    )
+    let solendAction: SolendAction;
+    if (getNetworkCluster() === Cluster.DEVNET) {
+        solendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            tokenSymbol,
+            owner,
+            connection,
+            "devnet",
+        )
+    } else {
+        throw Error("Cluster not implemented! getMarinadeTokens");
+    }
+
     const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
     const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
   

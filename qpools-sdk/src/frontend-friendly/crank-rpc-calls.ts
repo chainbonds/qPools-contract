@@ -6,13 +6,12 @@ import {Registry} from "./registry";
 import {getSolbondProgram} from "../index";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {sendLamports} from "../instructions/modify/portfolio-transfer";
-import {PositionAccountMarinade} from "../types/account";
+import {PortfolioAccount, PositionAccountMarinade, PositionAccountSaber} from "../types/account";
 import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
 import {SolendAction} from "@solendprotocol/solend-sdk";
 import {permissionlessFulfillSolend} from "../instructions/modify/solend";
 import * as instructions from "../instructions";
-import {NETWORK} from "../types";
-import {PortfolioAccount, PositionAccountSaber} from "../types/account";
+import {Cluster, getNetworkCluster} from "../network";
 
 export class CrankRpcCalls {
 
@@ -57,7 +56,13 @@ export class CrankRpcCalls {
 
         this.crankWallet = new QWallet(tmpKeypair);
         this.crankProvider = new Provider(this.connection, this.crankWallet, {preflightCommitment: "confirmed"});
-        this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, NETWORK.DEVNET);
+        let cluster: Cluster;
+        if (getNetworkCluster() === Cluster.DEVNET) {
+            cluster = Cluster.DEVNET;
+        }  else {
+            throw Error("Cluster not implemented! crankRpcCalls Helper class");
+        }
+        this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, cluster);
 
         this.providerWallet = this.provider.wallet;
         console.log("PPP Pubkey is: ", this.providerWallet.publicKey);
@@ -228,7 +233,7 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.provider, ix)
     }
 
-    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string) {
 
         let ix = await instructions.modify.solend.redeemSinglePositionSolend(
             this.connection,
@@ -236,8 +241,7 @@ export class CrankRpcCalls {
             this.owner.publicKey,
             currencyMint,
             index,
-            tokenSymbol,
-            environment
+            tokenSymbol
         );
         return await sendAndSignInstruction(this.provider, ix);
 

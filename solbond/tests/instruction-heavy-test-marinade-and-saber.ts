@@ -10,6 +10,7 @@ import {getAccountForMintAndPDADontCreate, sendAndConfirmTransaction, sendAndSig
 import {
     transfer_to_user
 } from "../../qpools-sdk/src/instructions/modify/portfolio-transfer";
+import {Cluster} from "@qpools/sdk/lib/network";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -19,7 +20,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     const payer = Keypair.generate();
     // @ts-expect-error

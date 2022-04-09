@@ -9,23 +9,38 @@ import {SolendAction, SolendMarket, SolendReserve} from "@solendprotocol/solend-
 import {Connection, PublicKey} from "@solana/web3.js";
 import {BN} from "@project-serum/anchor";
 import {ExplicitPool, ExplicitSolendPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
+import {Cluster, getNetworkCluster} from "../../network";
 
 
 export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
-    let connection = new Connection("https://api.google.devnet.solana.com");
-    const market = await SolendMarket.initialize(connection, "devnet");
+    let connection: Connection;
+    let market: SolendMarket;
+    if (getNetworkCluster() === Cluster.DEVNET) {
+        connection = new Connection("https://api.google.devnet.solana.com");
+        market = await SolendMarket.initialize(connection, "devnet");
+    } else {
+        throw Error("Cluster not implemented! getSolendTokens");
+    }
     // console.log(market.reserves.map(reserve => reserve.config.loanToValueRatio);
     // console.log("market reserves are: ");
     // console.log(market);
     // console.log("Config is: ", market.config);
     console.log("Reserves are: ", market.reserves);
     let out: ExplicitToken[] = [];
-    await Promise.all(market.reserves.filter((x) => {return (new Set(["SOL"])).has(x.config.symbol)}).map(async (x: SolendReserve) => {
+    // Only apply this on devnet
+    let filter;
+    if (getNetworkCluster() === Cluster.DEVNET) {
+        filter = (x) => {return (new Set(["SOL"])).has(x.config.symbol)};
+    } else {
+        throw Error("Cluster not implemented! getSolendTokens");
+    }
+    await Promise.all(market.reserves.filter(filter).map(async (x: SolendReserve) => {
         // Do a simple if-statement for the token, match it by the mint
         // if (x.)
         // TODO: Make a lookup later on ...
         // TODO: Figure out how to include logoURIs ... perhaps I should make this in the registry function ...
         // Or as sven said, have a separate object that does this .. but this will introduce circular dependencies
+        // TODO: Remove these hard-coded tokenUris ... find a way to get the logoUri for solend !
         let logoUri = "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png";
         let tmp: ExplicitToken = {
             address: x.config.mintAddress,
@@ -44,7 +59,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
             logoURI: "https://spl-token-icons.static-assets.ship.capital/icons/101/5h6ssFpeDeRbzsEHDbTQNH7nVGgsKrZydxdSTnLm6QdV.png",
             name: "c" + x.config.symbol,
             // symbol: x.config.symbol
-            symbol: "c" + x.config.symbol
+            symbol: x.config.symbol
         }
         out.push(tmpLp);
     }));
@@ -53,14 +68,27 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
 
 export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPool[]> => {
     console.log("#getSolendPools()");
-    let connection = new Connection("https://api.google.devnet.solana.com");
-    const market = await SolendMarket.initialize(connection, "devnet");
+    let connection: Connection;
+    let market: SolendMarket;
+    if (getNetworkCluster() === Cluster.DEVNET) {
+        connection = new Connection("https://api.google.devnet.solana.com");
+        market = await SolendMarket.initialize(connection, "devnet");
+    } else {
+        throw Error("Cluster not implemented! getSolendPools");
+    }
     // console.log(market.reserves.map(reserve => reserve.config.loanToValueRatio);
     // console.log("market reserves are: ");
     // console.log(market);
     // console.log("Config is: ", market.config);
     // console.log("Reserves are: ", market.reserves);
-    let out: ExplicitPool[] = await Promise.all(market.reserves.filter((x) => {return (new Set(["SOL"])).has(x.config.symbol)}).map(async (x: SolendReserve) => {
+    // The filter is depending on mainnet or devnet !
+    let filter: any;
+    if (getNetworkCluster() === Cluster.DEVNET) {
+        filter = (x) => {return (new Set(["SOL"])).has(x.config.symbol)};
+    } else {
+        throw Error("Cluster not implemented! getSolendTokens");
+    }
+    let out: ExplicitPool[] = await Promise.all(market.reserves.filter(filter).map(async (x: SolendReserve) => {
         // let logoUri = "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png";
 
         // TODO: Figure out a different way to get the logo for this symbol ...
@@ -81,20 +109,26 @@ export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPoo
             decimals: x.config.decimals,
             logoURI: logoUriLpToken,
             name: "Solend" + x.config.name,
-            symbol: "c" + x.config.symbol
+            symbol: x.config.symbol
         }
         // I guess we can start the pubkey with something stupid
         // TODO: Basically, once the user connects, we have to rebuild the reserves using the guys' key!
-        const solendAction = await SolendAction.initialize(
-            "mint",
-            new BN(0),
-            x.config.symbol,
-            userPubkey,
-            connection,
-            "devnet"
-        );
+        let solendAction: SolendAction;
+        if (getNetworkCluster() === Cluster.DEVNET) {
+            solendAction = await SolendAction.initialize(
+                "mint",
+                new BN(0),
+                x.config.symbol,
+                userPubkey,
+                connection,
+                "devnet"
+            );
+        } else {
+            throw Error("Cluster not implemented! getSolendPools");
+        }
+        // Saber uses the symbol as a sort of ID for all their operations ...
         let tmp: ExplicitSolendPool = {
-            id: "c" + x.config.symbol,
+            id: x.config.symbol,
             name: x.config.name,
             lpToken: lpToken,
             protocol: Protocol.solend,

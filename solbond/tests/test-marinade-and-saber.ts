@@ -8,6 +8,7 @@ import {
     getSolbondProgram,
 } from "@qpools/sdk";
 import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
+import {Cluster} from "@qpools/sdk/lib/network";
 
 describe('qPools!', () => {
 
@@ -15,7 +16,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     const payer = Keypair.generate();
     // @ts-expect-error

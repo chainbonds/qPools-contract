@@ -1,17 +1,18 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {
-    CrankRpcCalls,
-    MOCK,
-    NETWORK,
-    PortfolioFrontendFriendlyChainedInstructions
-} from "@qpools/sdk";
+//import {
+//    CrankRpcCalls,
+//    MOCK,
+//    NETWORK,
+//    PortfolioFrontendFriendlyChainedInstructions
+//} from "@qpools/sdk";
+import * as qpools from "@qpools/sdk";
 import {
     Transaction,
 } from '@solana/web3.js';
-import {
-    getSolbondProgram,
-} from "@qpools/sdk";
+//import {
+//    getSolbondProgram,
+//} from "@qpools/sdk";
 import {delay, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
 import {SolendMarket, SolendAction} from "@solendprotocol/solend-sdk";
 
@@ -23,7 +24,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = qpools.getSolbondProgram(connection, provider, qpools.NETWORK.DEVNET);
 
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
@@ -39,8 +40,8 @@ describe('qPools!', () => {
     let wrappedSolMint: PublicKey;
     let mSOL: PublicKey;
 
-    let portfolioObject: PortfolioFrontendFriendlyChainedInstructions;
-    let crankRpcTool: CrankRpcCalls;
+    let portfolioObject: qpools.PortfolioFrontendFriendlyChainedInstructions;
+    let crankRpcTool: qpools.CrankRpcCalls;
     let valueInUsdc: number;
     let AmountUsdc: BN;
     let valueInSol: number;
@@ -52,13 +53,13 @@ describe('qPools!', () => {
     // Do some airdrop before we start the tests ...
     before(async () => {
 
-        portfolioObject = new PortfolioFrontendFriendlyChainedInstructions(
+        portfolioObject = new qpools.PortfolioFrontendFriendlyChainedInstructions(
             connection,
             provider,
             solbondProgram
         );
 
-        crankRpcTool = new CrankRpcCalls(
+        crankRpcTool = new qpools.CrankRpcCalls(
             connection,
             genericPayer,
             provider,
@@ -67,7 +68,7 @@ describe('qPools!', () => {
 
         // Delay a bit so the async call works ...
         await delay(5000);
-
+        
         weights = [new BN(500), new BN(500), new BN(500)];
 
         USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
@@ -117,7 +118,7 @@ describe('qPools!', () => {
 
     it("Prepare the amount of SOL and USDC to pay in ", async () => {
         valueInUsdc = 2;
-        AmountUsdc = new BN(valueInUsdc).mul(new BN(10**MOCK.DEV.SABER_USDC_DECIMALS));
+        AmountUsdc = new BN(valueInUsdc).mul(new BN(10**qpools.MOCK.DEV.SABER_USDC_DECIMALS));
         valueInSol = 2;
         // I guess mSOL has 9 decimal points
         AmountSol = new BN(valueInSol).mul(new BN(10**9));

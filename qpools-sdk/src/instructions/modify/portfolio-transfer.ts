@@ -1,6 +1,6 @@
 import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
-import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
+import {getPortfolioPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import {getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve} from "../../utils";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
@@ -27,7 +27,9 @@ export async function transferUsdcFromUserToPortfolio(
     console.log("#transferUsdcFromUserToPortfolio()");
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(solbondProgram, owner, currencyMint);
-    let pdaCurrencyAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPda);
+    let [ataPDA, bumpATA] = await getATAPda(owner, currencyMint, solbondProgram);
+    
+    //let pdaCurrencyAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPda);
     let userCurrencyAccount = await getAccountForMintAndPDADontCreate(currencyMint, owner);
 
     console.log("Input Accounts are: ");
@@ -36,7 +38,7 @@ export async function transferUsdcFromUserToPortfolio(
             owner: owner.toString(),
             portfolioPda: portfolioPda.toString(),
             userOwnedTokenAccount: userCurrencyAccount.toString(),
-            pdaOwnedTokenAccount: pdaCurrencyAccount.toString(),
+            pdaOwnedTokenAccount: ataPDA.toString(),
             userCurrencyPdaAccount: currencyPDA.toString(),
             tokenMint: currencyMint.toString(),
         }
@@ -45,12 +47,13 @@ export async function transferUsdcFromUserToPortfolio(
     let ix = await solbondProgram.instruction.transferToPortfolio(
         new BN(portfolioBump),
         new BN(bumpCurrency),
+        new BN(bumpATA),
         {
             accounts: {
                 owner: owner,
                 portfolioPda: portfolioPda,
                 userOwnedTokenAccount: userCurrencyAccount,
-                pdaOwnedTokenAccount: pdaCurrencyAccount,
+                pdaOwnedTokenAccount: ataPDA,
                 userCurrencyPdaAccount: currencyPDA,
                 tokenMint: currencyMint,
                 tokenProgram: TOKEN_PROGRAM_ID,
@@ -71,7 +74,8 @@ export async function transfer_to_user(
 ): Promise<TransactionInstruction> {
     console.log("#transfer_to_user()");
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA);
+    let [ataPDA, bumpATA] = await getATAPda(owner, currencyMint,solbondProgram);
+    //let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA);
     let [currencyPDA, bumpCurrency] = await getUserCurrencyPda(solbondProgram, owner, currencyMint);
     let userOwnedUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, owner);
     console.log("portfolioPDA ", portfolioPDA.toString());
@@ -82,6 +86,7 @@ export async function transfer_to_user(
     let ix = await solbondProgram.instruction.transferRedeemedToUser(
         new BN(portfolioBump),
         new BN(bumpCurrency),
+        new BN(bumpATA),
         {
             accounts: {
                 portfolioPda: portfolioPDA,
@@ -89,7 +94,7 @@ export async function transfer_to_user(
                 userCurrencyPdaAccount: currencyPDA,
                 userOwnedUserA: userOwnedUSDCAccount,
                 currencyMint: currencyMint,
-                pdaOwnedUserA: pdaUSDCAccount,
+                pdaOwnedUserA: ataPDA,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 systemProgram: web3.SystemProgram.programId,
                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,

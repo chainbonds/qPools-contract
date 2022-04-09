@@ -314,6 +314,10 @@ export type Solbond = {
         {
           "name": "bumpUserCurrency",
           "type": "u8"
+        },
+        {
+          "name": "bumpAta",
+          "type": "u8"
         }
       ]
     },
@@ -434,6 +438,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "msolMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "userMsolAccount",
           "isMut": true,
           "isSigner": false
@@ -466,6 +475,10 @@ export type Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMsolAta",
           "type": "u8"
         },
         {
@@ -714,6 +727,10 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpMsolAta",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -734,7 +751,7 @@ export type Solbond = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -758,6 +775,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "mintA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "qpoolsA",
           "isMut": true,
           "isSigner": false
@@ -770,6 +792,11 @@ export type Solbond = {
         {
           "name": "poolTokenAccountB",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintB",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -808,6 +835,18 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpAtaA",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaB",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaLp",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -823,6 +862,11 @@ export type Solbond = {
         },
         {
           "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityMint",
           "isMut": false,
           "isSigner": false
         },
@@ -899,6 +943,14 @@ export type Solbond = {
         },
         {
           "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaLiq",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaCol",
           "type": "u8"
         },
         {
@@ -1046,7 +1098,7 @@ export type Solbond = {
         },
         {
           "name": "poolMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1105,6 +1157,14 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpAtaA",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaLp",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -1126,6 +1186,11 @@ export type Solbond = {
         {
           "name": "sourceCollateral",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1199,6 +1264,14 @@ export type Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpAtaLiq",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaCol",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -1260,6 +1333,10 @@ export type Solbond = {
         },
         {
           "name": "bumpUserCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAta",
           "type": "u8"
         }
       ]
@@ -2089,6 +2166,10 @@ export const IDL: Solbond = {
         {
           "name": "bumpUserCurrency",
           "type": "u8"
+        },
+        {
+          "name": "bumpAta",
+          "type": "u8"
         }
       ]
     },
@@ -2209,6 +2290,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "msolMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "userMsolAccount",
           "isMut": true,
           "isSigner": false
@@ -2241,6 +2327,10 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bumpMsolAta",
           "type": "u8"
         },
         {
@@ -2489,6 +2579,10 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpMsolAta",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -2509,7 +2603,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2533,6 +2627,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "mintA",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "qpoolsA",
           "isMut": true,
           "isSigner": false
@@ -2545,6 +2644,11 @@ export const IDL: Solbond = {
         {
           "name": "poolTokenAccountB",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintB",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2583,6 +2687,18 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpAtaA",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaB",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaLp",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -2598,6 +2714,11 @@ export const IDL: Solbond = {
         },
         {
           "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityMint",
           "isMut": false,
           "isSigner": false
         },
@@ -2674,6 +2795,14 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpPortfolio",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaLiq",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaCol",
           "type": "u8"
         },
         {
@@ -2821,7 +2950,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "poolMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2880,6 +3009,14 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpAtaA",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaLp",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -2901,6 +3038,11 @@ export const IDL: Solbond = {
         {
           "name": "sourceCollateral",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2974,6 +3116,14 @@ export const IDL: Solbond = {
           "type": "u8"
         },
         {
+          "name": "bumpAtaLiq",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAtaCol",
+          "type": "u8"
+        },
+        {
           "name": "index",
           "type": "u32"
         }
@@ -3035,6 +3185,10 @@ export const IDL: Solbond = {
         },
         {
           "name": "bumpUserCurrency",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAta",
           "type": "u8"
         }
       ]

@@ -1,4 +1,4 @@
-export const DEV_TOKEN_LIST_SABER = {
+export const MAINNET_TOKEN_LIST_SABER = {
     "logoURI": "https://registry.saber.so/icon.png",
     "name": "Saber Tokens",
     "timestamp": "2022-02-18T18:02:18.111Z",

@@ -9,6 +9,7 @@ import * as instructions from "./instructions";
 import * as typeDefinitions from "./types";
 import * as helperClasses from "./frontend-friendly";
 import * as constDefinitions from "./const";
+import * as network from "./network";
 
 export {
     airdropAdmin,
@@ -16,6 +17,7 @@ export {
     Portfolio,
     SolbondIdl,
 
+    network,
     utils,
     constDefinitions,
     instructions,

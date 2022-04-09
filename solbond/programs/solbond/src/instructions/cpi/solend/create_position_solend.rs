@@ -67,7 +67,7 @@ pub struct SolendPositionInstruction<'info> {
     pub solend_program: AccountInfo<'info>,
 
     #[account(
-        //mut, 
+        mut, 
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub user_transfer_authority: Box<Account<'info, PortfolioAccount>>,
@@ -144,7 +144,8 @@ pub fn handler(
     let clock = Clock::get().unwrap();
     approved_position_details.timestamp = clock.unix_timestamp;
     let portfolio = &mut ctx.accounts.user_transfer_authority;
-    if approved_position_details.index == portfolio.num_positions {
+    portfolio.num_created += 1;
+    if portfolio.num_created == portfolio.num_positions {
         portfolio.fully_created = true;
         portfolio.fulfilled_timestamp = clock.unix_timestamp;
     }

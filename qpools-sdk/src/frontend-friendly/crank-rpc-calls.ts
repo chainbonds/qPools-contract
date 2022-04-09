@@ -206,6 +206,7 @@ export class CrankRpcCalls {
             this.owner.publicKey,
             index
         );
+        console.log("i promise")
         return await sendAndSignInstruction(this.provider, ix);
     }
 

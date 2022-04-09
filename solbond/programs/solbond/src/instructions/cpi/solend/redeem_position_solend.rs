@@ -71,7 +71,7 @@ pub struct RedeemPositionSolend<'info> {
     pub solend_program: AccountInfo<'info>,
 
     #[account(
-        //mut, 
+        mut, 
         seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub user_transfer_authority: Box<Account<'info, PortfolioAccount>>,

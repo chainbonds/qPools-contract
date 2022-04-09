@@ -201,7 +201,7 @@ export async function redeemSinglePositionSolend(
 
     const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
     const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
-  
+
     
     // console.log("👀 positionPda ", positionPDA.toString())
     // console.log("😸 portfolioPda", portfolioPDA.toString());

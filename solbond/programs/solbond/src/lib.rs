@@ -6,9 +6,8 @@ mod state;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
+
 declare_id!("CNYbaeQEV1s3TwDXLYyEWCBxp1rC9u1To48WWKDBQzph");
-
-
 
 #[program]
 pub mod solbond {

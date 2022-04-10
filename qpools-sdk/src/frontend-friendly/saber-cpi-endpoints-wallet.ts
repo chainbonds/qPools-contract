@@ -1,11 +1,9 @@
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {Program, Provider} from "@project-serum/anchor";
-import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {assert} from "chai";
+import {Token} from "@solana/spl-token";
 import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
 import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "../utils";
 import {sendAndConfirm} from "easy-spl/dist/util";
-import * as registry from "../registry/registry-helper";
 
 /*
     doing a deposit:
@@ -21,23 +19,12 @@ export class SaberInteractToolFrontendFriendly {
     public providerWallet: IWallet;
     public wallet: Keypair;
 
-    // All tokens owned by the protocol
-    public qPoolAccount: PublicKey;
-    public bumpQPoolAccount: number;
-
-    public stableSwapProgramId: PublicKey | undefined;
-
     public currencyTokenMint: PublicKey | undefined;
 
     public mintA: Token | undefined;
     public mintB: Token | undefined;
     public poolMint: Token | undefined;
 
-    public userAccountA: PublicKey | undefined;
-    public userAccountB: PublicKey | undefined;
-    public userAccountPoolToken: PublicKey | undefined;
-
-    public fetchedStableSwapPool: StableSwap | undefined;
     public stableSwapState: StableSwapState | undefined;
 
     constructor(
@@ -53,7 +40,6 @@ export class SaberInteractToolFrontendFriendly {
         // Get the keypair from the provider wallet
         // @ts-expect-error
         this.wallet = this.provider.wallet.payer as Keypair;
-        this.stableSwapProgramId = registry.getSaberStableSwapProgramId();
     }
 
     /**

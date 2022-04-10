@@ -10,6 +10,7 @@ import {getAccountForMintAndPDADontCreate, sendAndConfirmTransaction, sendAndSig
 import {
     transfer_to_user
 } from "../../qpools-sdk/src/instructions/modify/portfolio-transfer";
+import {Cluster} from "@qpools/sdk/lib/network";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -19,7 +20,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     const payer = Keypair.generate();
     // @ts-expect-error
@@ -144,7 +145,7 @@ describe('qPools!', () => {
 
         let IxSendToCrankWallet = await instructionHeavyPortfolio.sendToCrankWallet(
             genericPayer.publicKey,
-            100_000_000
+            new BN(100_000_000)
         );
         tx.add(IxSendToCrankWallet);
 
@@ -179,7 +180,7 @@ describe('qPools!', () => {
 
         let IxSendToCrankWallet = await instructionHeavyPortfolio.sendToCrankWallet(
             genericPayer.publicKey,
-            100_000_000
+            new BN(100_000_000)
         );
         tx.add(IxSendToCrankWallet);
 
@@ -199,9 +200,9 @@ describe('qPools!', () => {
         let sgTransferUsdcToUser = await crankRPC.transfer_to_user(currencyMint);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
 
-        let tmpWalletBalance: number = await connection.getBalance(genericPayer.publicKey);
-        let lamportsBack = Math.min(tmpWalletBalance - 7_001, 0.0);
-        if (lamportsBack > 0) {
+        let tmpWalletBalance: BN = new BN(await connection.getBalance(genericPayer.publicKey));
+        let lamportsBack = BN.min(tmpWalletBalance.subn(7_001), new BN(0));
+        if (lamportsBack.gtn(0)) {
             let ix = await crankRPC.sendToUsersWallet(
                 genericPayer.publicKey,
                 lamportsBack

@@ -10,7 +10,7 @@ const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
 
-export default class QWallet implements Wallet {
+export class QWallet implements Wallet {
 
     constructor(readonly payer: Keypair) {
         this.payer = payer

@@ -69,7 +69,6 @@ pub fn handler(
         return Err(ErrorCode::PortfolioNotFullyCreated.into());
     }
     
-
     let portfolio = & mut ctx.accounts.portfolio_pda;
     portfolio.num_redeemed += 1;
     let position_account = &mut ctx.accounts.position_pda;

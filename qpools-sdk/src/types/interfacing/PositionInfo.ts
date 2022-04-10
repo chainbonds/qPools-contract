@@ -6,8 +6,15 @@ export enum ProtocolType {
     Lending
 }
 
+export enum Protocol {
+    saber,
+    marinade,
+    solend
+}
+
 export interface PositionInfo {
     protocolType: ProtocolType,
+    protocol: Protocol,
     index: number,
     poolAddress: PublicKey,
     portfolio: PublicKey,

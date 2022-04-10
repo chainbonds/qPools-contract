@@ -1,7 +1,1 @@
-
-export enum NETWORK {
-    LOCALNET,
-    DEVNET,
-    TESTNET,
-    MAINNET
-}
+import {Cluster} from "../network";

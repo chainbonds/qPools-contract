@@ -1,6 +1,5 @@
 import {Program, Provider} from "@project-serum/anchor";
-import {Connection, PublicKey} from "@solana/web3.js";
-import {WalletI} from "easy-spl";
+import {Connection} from "@solana/web3.js";
 
 /**
  * Includes all fetch operations for all file ...

@@ -64,7 +64,6 @@ pub fn handler(
         return Err(ErrorCode::PortfolioNotFullyCreated.into());
     }
 
-
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;
     position_account.redeem_approved = true;

@@ -4,11 +4,11 @@ import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed375",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition775",
-    USER_CURRENCY_STRING: "UserCurrency3265",
-    USER_MARINADE_SEED: "UserMarinade2159",
-    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc1012",
+    PORTFOLIO_ACCOUNT: "portFolioSeed381",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition781",
+    USER_CURRENCY_STRING: "UserCurrency3271",
+    USER_MARINADE_SEED: "UserMarinade2165",
+    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc1018",
 }
 
 /**
@@ -70,7 +70,6 @@ export async function getUserCurrencyPda(
     owner: PublicKey,
     currencyMint: PublicKey
 ): Promise<[PublicKey, number]> {
-    // throw Error("getUserCurrencyAccount not Implemented Yet!");
     let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
         [owner.toBuffer(),
             currencyMint.toBuffer() ,

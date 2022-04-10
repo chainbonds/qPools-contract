@@ -6,7 +6,7 @@
         "test:integrate-marinade": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-integration.ts",
 
         "test:integrate-chained": "ANCHOR_WALLET=~/.config/solana/id.json anchor build && cp target/types/solbond.ts ../qpools-sdk/src/idl/ &&  NEXT_PUBLIC_CLUSTER_NAME=devnet anchor test --skip-build  tests/test-simple-purchase-and-redeem-button.ts",
-        "test:integrate-chained-skip-deploy": "NEXT_PUBLIC_CLUSTER_NAME=devnet anchor test --skip-build --skip-deploy  tests/test-simple-purchase-and-redeem-button.ts",
+        "test:integrate-chained-skip-deploy": "NEXT_PUBLIC_CLUSTER_NAME=devnet anchor test --skip-build --skip-deploy tests/test-simple-purchase-and-redeem-button.ts",
 
         "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts"
     },

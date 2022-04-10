@@ -52,7 +52,7 @@ pub struct SaberLiquidityInstruction<'info> {
     /// The output account for LP tokens.
     /// 
     #[account(
-        init,
+        init_if_needed,
         payer = owner,
         token::mint = pool_mint,
         token::authority = portfolio_pda,

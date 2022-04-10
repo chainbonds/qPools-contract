@@ -236,20 +236,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         await Promise.all(mints.map(async (mint: PublicKey) => {
 
-            // let portfolioAta = await getAssociatedTokenAddressOffCurve(mint, portfolioPDA);
-            // if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta.toString())) {
-            //     console.log("Creating ATA: ", portfolioAta.toString());
-            //     let tx1 = await createAssociatedTokenAccountUnsignedInstruction(
-            //         this.connection,
-            //         mint,
-            //         null,
-            //         portfolioPDA,
-            //         wallet,
-            //     );
-            //     createdAtaAccounts.add(portfolioAta.toString());
-            //     tx.add(tx1);
-            // } else {console.log("Skipping Creation of ATA: ", portfolioAta.toString());}
-
             let userAta = await getAssociatedTokenAddressOffCurve(mint, this.owner.publicKey);
             if (!(await tokenAccountExists(this.connection, userAta)) && !createdAtaAccounts.has(userAta.toString())) {
                 console.log("Creating ATA: ", userAta.toString());
@@ -452,7 +438,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         // TODO: How do I get the balance from the solend account ...?
         // let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
-        throw Error("Not implemented yet!");
+        // throw Error("Not implemented yet!");
 
         let ix = await instructions.modify.solend.signApproveWithdrawAmountSolend(
             this.connection,

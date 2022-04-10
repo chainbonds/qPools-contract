@@ -41,7 +41,7 @@ pub struct SolendPositionInstruction<'info> {
     pub source_liquidity: Account<'info,TokenAccount>,
 
     #[account(
-        init, 
+        init_if_needed,
         payer = owner,
         token::mint = reserve_collateral_mint,
         token::authority = user_transfer_authority,

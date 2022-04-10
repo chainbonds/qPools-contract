@@ -231,7 +231,7 @@ export async function redeemSinglePositionOnlyOne(
     // let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
     // let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
     // console.log("userA ", userAccountA.toString())
-    let [userAccountpoolToken, _] = await getATAPda(this.owner.publicKey, state.poolTokenMint, solbondProgram);
+    let [userAccountpoolToken, _] = await getATAPda(owner, state.poolTokenMint, solbondProgram);
     // let totalLPTokens = (await connection.getTokenAccountBalance(userAccountpoolToken)).value;
 
     // TODO: Hardcode to check for IF-ELSE statement on USDC ...

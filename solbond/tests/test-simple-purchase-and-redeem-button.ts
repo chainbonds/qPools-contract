@@ -135,12 +135,11 @@ describe('qPools!', () => {
         // solSolendMint
 
         // Fetch solend, and the other currencies that we are using ...
-        console.log("Creating associated token addresses for: ", [poolAddresses[0]].map((x) => x.toString()));
+        console.log("Creating associated token addresses for: ", [poolAddresses].map((x) => x.toString()));
         // get the mint addresses
 
         // This is the token mint for the USDC-USDT pool
-        let mints = [new PublicKey("YakofBo4X3zMxa823THQJwZ8QeoU8pxPdFdxJs7JW57")]
-        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts(mints, provider.wallet);
+        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts(poolAddresses, provider.wallet);
         if (txCreateATA.instructions.length > 0) {
             console.log("Transaction is: ", txCreateATA);
             await sendAndConfirmTransaction(
@@ -168,7 +167,7 @@ describe('qPools!', () => {
             SystemProgram.transfer({
                      fromPubkey: genericPayer.publicKey,
                      toPubkey: associatedTokenAccountWrappedSol,
-                     lamports: 2e9,
+                     lamports: 4e8,
             }),
             // createSyncNativeInstruction(associatedTokenAccountWrappedSol)
             syncNative(associatedTokenAccountWrappedSol)

@@ -75,7 +75,7 @@ export class CrankRpcCalls {
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
-        this.loadPortfolioPdas();
+        this.initializeState();
 
         const marinadeConfig = new MarinadeConfig({
             connection: connection,
@@ -90,10 +90,15 @@ export class CrankRpcCalls {
         delay(1000);
     }
 
-    async loadPortfolioPdas() {
-        let [portfolioPDA, bumpPortfolio] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
-        this.portfolioPDA = portfolioPDA
-        this.portfolioBump = bumpPortfolio
+    async initializeState() {
+        [this.portfolioPDA, this.portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+        const marinadeConfig = new MarinadeConfig({
+            connection: this.connection,
+            publicKey: this.provider.wallet.publicKey,
+
+        });
+        let marinade = new Marinade(marinadeConfig);
+        this.marinadeState = await MarinadeState.fetch(marinade);
     }
 
     /**

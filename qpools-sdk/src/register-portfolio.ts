@@ -32,7 +32,7 @@ import {
 import {getPortfolioPda} from "./types/account/pdas";
 import {getPoolState} from "./instructions/fetch/saber";
 import {MOCK} from "./const";
-import {Registry} from "./frontend-friendly/registry";
+import {Registry} from "./frontend-friendly";
 
 // TODO: Replace all these functions by the functional functions
 // And make sure that the tests are passing

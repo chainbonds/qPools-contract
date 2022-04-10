@@ -113,7 +113,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         const marinadeConfig = new MarinadeConfig({
             connection: connection,
             publicKey: provider.wallet.publicKey,
-
         });
         let marinade = new Marinade(marinadeConfig);
         MarinadeState.fetch(marinade).then((marinadeState: MarinadeState) => {
@@ -130,6 +129,20 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         });
         // Wait until portfolio PDA is loaded
         delay(1000);
+    }
+
+    async initializeState() {
+        const marinadeConfig = new MarinadeConfig({
+            connection: this.connection,
+            publicKey: this.provider.wallet.publicKey,
+        });
+        let marinade = new Marinade(marinadeConfig);
+        this.marinadeState = await MarinadeState.fetch(marinade);
+
+        // Also include the solend config here ...
+
+        // Perhaps initialize this with the mints ....
+        [this.portfolioPDA, this.portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
     }
 
     async wrapSolTransaction(lamports: BN): Promise<Transaction> {
@@ -223,19 +236,19 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         await Promise.all(mints.map(async (mint: PublicKey) => {
 
-            let portfolioAta = await getAssociatedTokenAddressOffCurve(mint, portfolioPDA);
-            if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta.toString())) {
-                console.log("Creating ATA: ", portfolioAta.toString());
-                let tx1 = await createAssociatedTokenAccountUnsignedInstruction(
-                    this.connection,
-                    mint,
-                    null,
-                    portfolioPDA,
-                    wallet,
-                );
-                createdAtaAccounts.add(portfolioAta.toString());
-                tx.add(tx1);
-            } else {console.log("Skipping Creation of ATA: ", portfolioAta.toString());}
+            // let portfolioAta = await getAssociatedTokenAddressOffCurve(mint, portfolioPDA);
+            // if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta.toString())) {
+            //     console.log("Creating ATA: ", portfolioAta.toString());
+            //     let tx1 = await createAssociatedTokenAccountUnsignedInstruction(
+            //         this.connection,
+            //         mint,
+            //         null,
+            //         portfolioPDA,
+            //         wallet,
+            //     );
+            //     createdAtaAccounts.add(portfolioAta.toString());
+            //     tx.add(tx1);
+            // } else {console.log("Skipping Creation of ATA: ", portfolioAta.toString());}
 
             let userAta = await getAssociatedTokenAddressOffCurve(mint, this.owner.publicKey);
             if (!(await tokenAccountExists(this.connection, userAta)) && !createdAtaAccounts.has(userAta.toString())) {

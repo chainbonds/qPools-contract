@@ -75,7 +75,7 @@ export async function signApproveWithdrawAmountSolend(
     }
     // Take out as many c-tokens as there are ...
     // TODO: How to get the amount of c-tokens from here ...
-    throw Error("Not implemented yet!");
+    // throw Error("Not implemented yet!");
 
     let ix = await solbondProgram.instruction.approveWithdrawSolend(
         portfolioBump,
@@ -118,7 +118,7 @@ export async function permissionlessFulfillSolend(
     //const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
     console.log("aaa 21");
     
-    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, currencyMint, solbondProgram)
+    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, positionAccount.currencyMint, solbondProgram)
     let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     console.log("owner ", owner.toString())
@@ -144,7 +144,7 @@ export async function permissionlessFulfillSolend(
                 owner: owner,
                 positionPda: positionPDA,
                 sourceLiquidity: pdaOwnedATA,
-                liquidityMint: currencyMint,
+                liquidityMint: positionAccount.currencyMint,
                 destinationCollateral: pdaOwnedCollateral,
                 reserve: new PublicKey(solendAction.reserve.address),
                 reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),

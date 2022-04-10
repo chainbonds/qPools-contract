@@ -3,6 +3,7 @@ import {Program} from "@project-serum/anchor";
 import {PortfolioAccount} from "../../types/account";
 import {accountExists} from "../../utils";
 import {getPortfolioPda} from "../../types/account/pdas";
+import {sol} from "easy-spl";
 
 /**
  * Check if the portfolio exists
@@ -16,7 +17,14 @@ export async function portfolioExists(
     let out: boolean
     let [portfolioPda, _] = await getPortfolioPda(owner, solbondProgram);
     if (connection) {
-        out = await accountExists(connection, portfolioPda);
+        let exists = await accountExists(connection, portfolioPda);
+        if (exists) {
+            // Also check if it was fulfilled so far. If not, display the original view
+            let portfolio = await fetchPortfolio(connection, solbondProgram, owner);
+            out = portfolio.fullyCreated;
+        } else {
+            out = false;
+        }
     } else {
         // Maybe let it rerun after a second again ...
         out = false;

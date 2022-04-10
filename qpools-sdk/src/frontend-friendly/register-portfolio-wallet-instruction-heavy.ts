@@ -211,36 +211,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             return index === self.indexOf(elem);
         }).map((x: string) => new PublicKey(x));
 
-
-
         let tx: Transaction = new Transaction();
-        // await Promise.all(saber_pool_addresses.map(async (poolAddress: PublicKey) => {
-        //
-        //     console.log("Getting portfolio PDA");
-        //     // Hmm, portfolio PDA is not
-        //     const stableSwapState = await getPoolState(this.connection, poolAddress);
-        //     const {state} = stableSwapState;
-        //     let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
-        //         this.connection,
-        //         this.solbondProgram,
-        //         this.owner.publicKey,
-        //         wallet,
-        //         state,
-        //         createdAtaAccounts  // TODO: Is this shit pass-by-reference
-        //     );
-        //     ixs.map((x: TransactionInstruction) => {tx.add(x)})
-        //
-        // }));
-        // Sign this transaction
-
-        // let mints: PublicKey[] = mints.map(([pool, token]: [registry.ExplicitPool, registry.ExplicitToken]) => {
-        //     let mint = new PublicKey(token.address);
-        //     // if (mint != registry.getNativeSolMint()) {
-        //     //     return null;
-        //     // } else {
-        //     //     return mint;
-        //     // }
-        // }).filter((x: PublicKey | null): x is PublicKey => (x !== null));
 
         // I think in an async-environment, the set logic is wrong !!!
         await Promise.all(mints.map(async (mint: PublicKey) => {
@@ -509,6 +480,37 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
 
+    async parseSolendPositionInfo(positionAccount: PositionAccountSolend): Promise<PositionInfo>{
+        console.log("#parseSolendPositionInfo()");
+
+        // Add to the portfolio account
+        // TODO: Implement members, gotta understand Solend for this
+        throw Error("Not yet implemented solend parseSolendPositionInfo!");
+        // @ts-ignore
+        let out: PositionInfo = {
+            // protocolType: ProtocolType.DEXLP,
+            // protocol: Protocol.saber,
+            // index: positionAccount.index,
+            // poolAddress: positionAccount.poolAddress,
+            // portfolio: this.portfolioPDA,
+            // mintA: state.tokenA.mint,
+            // ataA: portfolioAtaA,
+            // amountA: tokenAAmount,
+            // usdcValueA: usdcValueA,
+            // mintB: state.tokenB.mint,
+            // ataB: portfolioAtaB,
+            // amountB: tokenBAmount,
+            // usdcValueB: usdcValueB,
+            // mintLp: state.poolTokenMint,
+            // ataLp: portfolioAtaLp,
+            // amountLp: tokenLPAmount,
+            // usdcValueLP: usdcValueLP,
+            // totalPositionValue: totalPositionValue
+        };
+        console.log("##parseSolendPositionInfo()");
+        return out;
+    }
+
 
 
     // TODO: Could also port this into a separate instruction-only file
@@ -581,20 +583,26 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
         // Also again maybe don't hard code this (not sure if possible tho, in the end, this is also a protocol...?)
         let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+        let wrappedSolMint = getWrappedSolMint();
         // This is also the LP Mint ...
         // Gotta store this in the registry
         // TODO: Make this multi-asset logic more scalable
-        let [portfolioAtaMSol, _] = await getATAPda(this.owner.publicKey, mSOLMint, this.solbondProgram);
+        let [portfolioAtaMSol, portfolioAtaMSolBump] = await getATAPda(this.owner.publicKey, mSOLMint, this.solbondProgram);
+        let [portfolioAtaWrappedMSol, portfolioAtaWrappedMSolBump] = await getATAPda(this.owner.publicKey, wrappedSolMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
         let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
+        let wrappedSolAmount = (await this.connection.getTokenAccountBalance(portfolioAtaWrappedMSol)).value;
         console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
+        console.log("mSOL amount in the portfolio is...: ", wrappedSolAmount);
 
         // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
+        // Here, the usdcValueA should be normal SOL!!! (it is the input token afterall
+
         // Again, convert by the pyth price ...
-        let usdcValueA = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
+        let usdcValueA = await multiplyAmountByPythprice(wrappedSolAmount.uiAmount, wrappedSolMint); //  * 93.23;
         let usdcValueLP = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
 
         // Sum up all the values here to arrive at the Total Position Value?
@@ -744,10 +752,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // For all Saber positions. redeem them like this ...
         let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
         let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
+        let positionsSolend: PositionAccountSolend[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[2];
 
         console.log("Positions Saber and Positions Marinade are: ");
         console.log(positionsSaber);
         console.log(positionsMarinade);
+        console.log(positionsSolend);
+        console.log("Processing all positions ...");
 
         // Now for each one, run their own get-position-info-algorithm
         // Could even do an async map here actually
@@ -755,11 +766,19 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             let processedPosition: PositionInfo = await this.parseSaberPositionInfo(positionSaber);
             out.push(processedPosition);
         }));
+        console.log("Done processing Saber");
 
         await Promise.all(positionsMarinade.map(async (positionMarinade: PositionAccountMarinade) => {
             let processedPosition: PositionInfo = await this.parseMarinadePositionInfo(positionMarinade);
             out.push(processedPosition);
         }));
+        console.log("Done processing Marinade");
+
+        await Promise.all(positionsSolend.map(async (positionSolend: PositionAccountSolend) => {
+            let processedPosition: PositionInfo = await this.parseSolendPositionInfo(positionSolend);
+            out.push(processedPosition);
+        }));
+        console.log("Done processing Solend");
 
         console.log("Existing positions are: ", out);
         console.log("##getPortfolioInformation");

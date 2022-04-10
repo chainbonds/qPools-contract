@@ -1,7 +1,7 @@
 import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
-import {getPortfolioPda, getPositionPda} from "../../types/account/pdas";
+import {getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {PositionAccountSaber} from "../../types/account";
 import {
@@ -152,29 +152,38 @@ export async function permissionlessFulfillSaber(
     const [authority] = await findSwapAuthorityKey(state.adminAccount, stableSwapProgramId);
     console.log("authority ", authority.toString())
     // TODO: Gotta replace the this. functionality
-    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
-    console.log("userA ", userAccountA.toString());
-    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
-    console.log("userB ", userAccountA.toString());
-    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+    //let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
+    //console.log("userA ", userAccountA.toString());
+    //let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
+    //console.log("userB ", userAccountA.toString());
+    //let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+
+    let [ataA, bumpATAa] = await getATAPda(owner,state.tokenA.mint, solbondProgram)
+    let [ataB, bumpATAb] = await getATAPda(owner,state.tokenB.mint, solbondProgram)
+    let [ataLP, bumpATAlp] = await getATAPda(owner,state.poolTokenMint, solbondProgram)
 
     let ix = await solbondProgram.instruction.createPositionSaber(
         bumpPosition,
         portfolioBump,
+        new BN(bumpATAa),
+        new BN(bumpATAb),
+        new BN(bumpATAlp),
         new BN(index),
         {
             accounts: {
                 owner: owner,
                 positionPda: positionPDA,
                 portfolioPda: portfolioPDA,
-                outputLp: userAccountpoolToken,
+                outputLp: ataLP,
                 poolMint: state.poolTokenMint,
+                mintA: state.tokenA.mint,
+                mintB: state.tokenB.mint,
                 swapAuthority: stableSwapState.config.authority,
                 swap: stableSwapState.config.swapAccount,
-                qpoolsA: userAccountA,
+                qpoolsA: ataA,
                 poolTokenAccountA: state.tokenA.reserve,
                 poolTokenAccountB: state.tokenB.reserve,
-                qpoolsB: userAccountB,
+                qpoolsB: ataB,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 saberSwapProgram: stableSwapProgramId,
                 systemProgram: web3.SystemProgram.programId,
@@ -255,6 +264,9 @@ export async function redeemSinglePositionOnlyOne(
         )
     }
 
+    let [ataPDA_a, bumpATAa] = await getATAPda(owner,mintA, solbondProgram)
+    let [ataPDA_lp, bumpATAlp] = await getATAPda(owner,state.poolTokenMint, solbondProgram)
+
     console.log("👀 positionPda ", positionPDA.toString())
     console.log("😸 portfolioPda", portfolioPDA.toString());
     console.log("👾 owner.publicKey", owner.toString());
@@ -272,6 +284,8 @@ export async function redeemSinglePositionOnlyOne(
     let ix = await solbondProgram.instruction.redeemPositionOneSaber(
         new BN(portfolioBump),
         new BN(bumpPosition),
+        new BN(bumpATAa),
+        new BN(bumpATAlp),
         new BN(index),
         {
             accounts: {
@@ -279,10 +293,10 @@ export async function redeemSinglePositionOnlyOne(
                 portfolioPda: portfolioPDA,
                 portfolioOwner: owner,
                 poolMint: state.poolTokenMint,
-                inputLp: userAccountpoolToken,
+                inputLp: ataPDA_lp,
                 swapAuthority: stableSwapState.config.authority,
                 swap: stableSwapState.config.swapAccount,
-                userA: userAccount,
+                userA: ataPDA_a,
                 reserveA: reserveA,
                 mintA: mintA,
                 reserveB: reserveB,

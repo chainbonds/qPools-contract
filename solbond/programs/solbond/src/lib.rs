@@ -2,32 +2,27 @@
 mod instructions;
 mod utils;
 mod state;
-
+    
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
-declare_id!("EXmu4yEYAs3LtLEGYYdB6Jr19sKhW57HWEaEHgrWmstP");
 
-
-
-#[derive(Accounts)]
-#[instruction(
-_bump_bond_pool_account: u8,
-_bump_bond_pool_solana_account: u8
-)]
-pub struct BalancePools<'info> {
-
-    // The standards accounts
-    pub rent: Sysvar<'info, Rent>,
-    pub clock: Sysvar<'info, Clock>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-}
+declare_id!("CNYbaeQEV1s3TwDXLYyEWCBxp1rC9u1To48WWKDBQzph");
 
 #[program]
 pub mod solbond {
     use super::*;
 
+
+    pub fn solana_test_healthcheck(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
+        msg!(
+            "process_instruction: {}: {} accounts, data={:?}",
+            program_id,
+            accounts.len(),
+            instruction_data
+        );
+        Ok(())
+    }
 
     /**
      * This model creates a portfolio where the base currency is USDC i.e the user only pays in USDC.
@@ -151,11 +146,14 @@ pub mod solbond {
         ctx: Context<TransferToPortfolio>,
         _bump_portfolio: u8,
         _bump_user_currency: u8,
+        _bump_ata: u8,
     ) -> ProgramResult {
             instructions::transfer_to_portfolio::handler(
                 ctx,
                 _bump_portfolio,
                 _bump_user_currency,
+                _bump_ata,
+
             )
     }
 
@@ -209,12 +207,14 @@ pub mod solbond {
         ctx: Context<ApproveWithdrawMarinade>,
         _bump_portfolio: u8,
         _bump_position: u8,
+        _bump_msol_ata: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::approve::marinade::approve_withdraw_marinade::handler(
             ctx,
             _bump_portfolio,
             _bump_position,
+            _bump_msol_ata,
             _index,
         )
     }
@@ -238,12 +238,12 @@ pub mod solbond {
     pub fn approve_initial_currency_amount(
         ctx: Context<ApproveInitialCurrencyAmount>,
         _bump_user_currency: u8,
-        _withdraw_amount_currency: u64,
+        _input_amount_currency: u64,
     ) -> ProgramResult {
         instructions::approve::approve_initial_currency_amount::handler(
             ctx,
             _bump_user_currency,
-            _withdraw_amount_currency,
+            _input_amount_currency,
         )
     }
 
@@ -268,6 +268,7 @@ pub mod solbond {
         _bump_portfolio: u8,
         _bump_position: u8,
         _bump_marinade: u8,
+        _bump_msol_ata: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::cpi::marinade::create_position_marinade::handler(
@@ -275,6 +276,7 @@ pub mod solbond {
             _bump_portfolio, 
             _bump_position,
             _bump_marinade,
+            _bump_msol_ata,
             _index
         )
     }
@@ -283,12 +285,18 @@ pub mod solbond {
         ctx: Context<SaberLiquidityInstruction>,
         _bump_position: u8,
         _bump_portfolio: u8,
+        _bump_ata_a: u8,
+        _bump_ata_b: u8,
+        _bump_ata_lp: u8,
         _index:u32,
     ) -> ProgramResult {
         instructions::cpi::saber::create_position::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
+            _bump_ata_a,
+            _bump_ata_b,
+            _bump_ata_lp,
             _index, 
         )
     }
@@ -297,12 +305,16 @@ pub mod solbond {
         ctx: Context<SolendPositionInstruction>,
         _bump_position: u8,
         _bump_portfolio: u8,
+        _bump_ata_liq: u8,
+        _bump_ata_col: u8,
         _index:u32,
     ) -> ProgramResult {
         instructions::cpi::solend::create_position_solend::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
+            _bump_ata_liq,
+            _bump_ata_col,
             _index, 
         )
     }
@@ -330,28 +342,34 @@ pub mod solbond {
         ctx: Context<RedeemOneSaberPosition>,
         _bump_portfolio: u8,
         _bump_position: u8,
-        //_bump_pool: u8,
+        _bump_ata_a: u8,
+        _bump_ata_lp: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::cpi::saber::redeem_position_one_sided::handler(
             ctx, 
             _bump_portfolio,
         _bump_position,
-        //_bump_pool, 
-        _index
-    )
+        _bump_ata_a,
+        _bump_ata_lp,
+        _index,
+        )
     }
 
     pub fn redeem_position_solend(
         ctx: Context<RedeemPositionSolend>, 
         _bump_position: u8,
         _bump_portfolio: u8,
+        _bump_ata_liq: u8,
+        _bump_ata_col: u8,
         _index: u32,
     ) -> ProgramResult {
         instructions::cpi::solend::redeem_position_solend::handler(
             ctx, 
             _bump_position,
             _bump_portfolio,
+            _bump_ata_liq,
+            _bump_ata_col,
             _index
         )
     }
@@ -363,28 +381,39 @@ pub mod solbond {
         ctx: Context<TransferRedeemedToUser>,
         _bump_portfolio: u8,
         _bump_user_currency: u8,
+        _bump_ata: u8,
+
     ) -> ProgramResult {
 
         instructions::transfer_redeemed_to_user::handler(
             ctx,
             _bump_portfolio,
             _bump_user_currency,
+            _bump_ata,
         )
     }
 
-
 }
-
+//#[cfg(test)]
+//mod tests;
 
 /**
  * Error definitions
  */
 #[error]
 pub enum ErrorCode {
+    #[msg("Position can't be set for redeem before portfolio completion")]
+    PortfolioNotFullyCreated,
+    #[msg("Index of position surpasses approved number of positions")]
+    IndexHigherThanNumPos,
+    #[msg("Marinade needs more than 1 SOL")]
+    MarinadeNeedsMoreThanOneSol,
     #[msg("Redeem has not been approved yet!")]
     RedeemNotApproved,
     #[msg("Position has already been redeemed!")]
     PositionAlreadyRedeemed,
+    #[msg("Redeem already approved")]
+    RedeemAlreadyApproved,
     #[msg("Position can't be redeemed before fulfillment")]
     PositionNotFulfilledYet,
     #[msg("All positions have already been redeemed! You can transfer the funds back")]

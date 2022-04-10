@@ -13,14 +13,21 @@ no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
 default = []
+test-bpf = []
 
 [dependencies]
 anchor-lang = "0.20.1"
 anchor-spl = "0.20.1"
-solana-program = "1.8.12"
+solana-program = "1.9"
 spl-token = { version = "3.1.4", features = ["no-entrypoint"] }
 stable-swap-anchor = {path = "../../deps/stable-swap/stable-swap-anchor/"}
 
 marinade-finance = {path = "../../deps/liquid-staking-program/programs/marinade-finance/", features = ["no-entrypoint"]}
 marinade-onchain-helper = {path = "../../deps/marinade-onchain-helper/", features = ["no-entrypoint"]}
 spl-token-lending = { path = "../../deps/solana-program-library/token-lending/program/", features= ["no-entrypoint"] }
+
+[dev-dependencies]
+assert_matches = "1.4.0"
+solana-program-test = "=1.9.9"
+solana-sdk = "1.9.9"
+solana-test-utils = "0.1.19"

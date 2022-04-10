@@ -41,7 +41,7 @@ pub fn handler(
 ) -> ProgramResult {
     //let sum: u64 = _weights.iter().sum();
     //assert!(sum/1000 == 1, "weights do not sum to 1!");
-
+    msg!("owner of the lonely heart");
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
   
     portfolio_account.owner = ctx.accounts.owner.clone().key();

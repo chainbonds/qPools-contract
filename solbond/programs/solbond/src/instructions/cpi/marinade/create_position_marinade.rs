@@ -30,6 +30,7 @@ use marinade_onchain_helper::{
     _bump_portfolio: u8,
     _bump_position: u8,
     _bump_marinade: u8,
+    _bump_msol_ata: u8,
     _index: u32,
 )]
 pub struct MarinadePositionInstruction<'info> {
@@ -68,7 +69,14 @@ pub struct MarinadePositionInstruction<'info> {
     #[account(mut)]
     pub reserve_pda: AccountInfo<'info>, // marinadeState.reserveAddress(),
 
-    #[account(mut)]
+    #[account(
+        init,
+        payer = owner,
+        token::mint = msol_mint,
+        token::authority = portfolio_pda,
+        seeds = [owner.key().as_ref(),msol_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_msol_ata
+    )]
     pub mint_to: Account<'info,TokenAccount>, // associatedMSolTokenAccountAddress, need to create this
 
     pub msol_mint_authority: AccountInfo<'info>, // await marinadeState.mSolMintAuthority(),
@@ -95,6 +103,7 @@ pub fn handler(
     _bump_portfolio: u8,
     _bump_position: u8,
     _bump_marinade: u8,
+    _bump_msol_ata: u8,
     _index: u32,
 ) -> ProgramResult {
 

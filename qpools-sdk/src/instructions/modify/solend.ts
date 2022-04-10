@@ -1,7 +1,7 @@
 import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
-import {getPortfolioPda, getPositionPda, getUserCurrencyPda} from "../../types/account/pdas";
+import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {getAccountForMintAndPDADontCreate} from "../../utils";
 
@@ -114,13 +114,12 @@ export async function permissionlessFulfillSolend(
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("aaa 20");
     let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
-    const pdaOwnedATA = await getAccountForMintAndPDADontCreate(positionAccount.currencyMint, portfolioPDA)
-
-    // TODO: Get the Collateral Mint Address through the currency Mint
-    // I can do a lookup, from poolAddress (mintAddress) to symbol, as this was the same across the registry.
-    // TODO: Oh boy, we should really write some tests around this. I'm using something from 5 files aways
-    const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA);
+    //const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
+    //const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
     console.log("aaa 21");
+    
+    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, currencyMint, solbondProgram)
+    let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     console.log("owner ", owner.toString())
     console.log("positionPDA ", positionPDA.toString())
@@ -137,12 +136,15 @@ export async function permissionlessFulfillSolend(
     let ix = await solbondProgram.instruction.createPositionSolend(
         bumpPosition,
         portfolioBump,
+        new BN(bumpAtaLiq),
+        new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {
                 owner: owner,
                 positionPda: positionPDA,
                 sourceLiquidity: pdaOwnedATA,
+                liquidityMint: currencyMint,
                 destinationCollateral: pdaOwnedCollateral,
                 reserve: new PublicKey(solendAction.reserve.address),
                 reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),
@@ -198,10 +200,6 @@ export async function redeemSinglePositionSolend(
     } else {
         throw Error("Cluster not implemented! getMarinadeTokens");
     }
-
-    const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
-    const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
-
     
     // console.log("👀 positionPda ", positionPDA.toString())
     // console.log("😸 portfolioPda", portfolioPDA.toString());
@@ -216,10 +214,14 @@ export async function redeemSinglePositionSolend(
     // console.log("🦒 mint A", state.tokenA.mint.toString());
     // console.log("🦒 mint B", state.tokenB.mint.toString());
     // console.log("🦒 mint LP", state.poolTokenMint.toString());
+    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, currencyMint, solbondProgram)
+    let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     let ix = await solbondProgram.instruction.redeemPositionSolend(
         new BN(bumpPosition),
         new BN(portfolioBump),
+        new BN(bumpAtaLiq),
+        new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {
@@ -227,6 +229,7 @@ export async function redeemSinglePositionSolend(
                 positionPda: positionPDA,
                 userTransferAuthority: portfolioPDA,
                 destinationLiquidity: pdaOwnedATA,
+                liquidityMint: currencyMint,
                 sourceCollateral: pdaOwnedCollateral,
                 reserve: new PublicKey(solendAction.reserve.address),
                 reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),

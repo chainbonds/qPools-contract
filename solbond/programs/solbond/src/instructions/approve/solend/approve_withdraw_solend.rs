@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, Mint};
 use crate::state::{PortfolioAccount, PositionAccountSolend};
 use crate::utils::seeds;
+use crate::ErrorCode;
 
 #[derive(Accounts, Clone)]
 #[instruction(
@@ -48,11 +49,18 @@ pub fn handler(
     _index: u32,
 ) -> ProgramResult {
 
-    // assert!(
-    //     ctx.accounts.portfolio_pda.key() == ctx.accounts.position_pda.portfolio_pda,
-    //     "The provided portfolio_pda doesn't match the approved!"
-    // );
-    
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
+    if !ctx.accounts.position_pda.is_fulfilled {
+        return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
+    if ctx.accounts.position_pda.redeem_approved {
+        return Err(ErrorCode::RedeemAlreadyApproved.into());
+    }
+    if ! ctx.accounts.portfolio_pda.fully_created {
+        return Err(ErrorCode::PortfolioNotFullyCreated.into());
+    }
 
 
     let position_account = &mut ctx.accounts.position_pda;

@@ -21,6 +21,9 @@ use std::cmp;
 #[instruction(
     _bump_position: u8,
     _bump_portfolio: u8,
+    _bump_ata_a: u8,
+    _bump_ata_b: u8,
+    _bump_ata_lp: u8,
     _index: u32
 )]
 pub struct SaberLiquidityInstruction<'info> {
@@ -38,17 +41,24 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut, 
-        // seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
-    //#[account(mut)]
+    #[account(mut)]
     pub owner: AccountInfo<'info>,
 
   
     /// The output account for LP tokens.
     /// 
-    #[account(mut)]
+    #[account(
+        init,
+        payer = owner,
+        token::mint = pool_mint,
+        token::authority = portfolio_pda,
+        seeds = [owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_lp
+    )]
     pub output_lp: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
@@ -61,10 +71,15 @@ pub struct SaberLiquidityInstruction<'info> {
     //#[account(mut)]approved_position_details
     pub swap: AccountInfo<'info>,
 
+    pub mint_a: Account<'info,Mint>,
     // input block
     #[account(
-        mut,
-        //constraint = &qpools_a.owner == swap_authority.key,
+        init_if_needed,
+        payer = owner,
+        token::mint = mint_a,
+        token::authority = portfolio_pda,
+        seeds = [owner.key().as_ref(),mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_a,
         constraint = &qpools_a.owner == &portfolio_pda.key(),
 
     )]
@@ -76,10 +91,15 @@ pub struct SaberLiquidityInstruction<'info> {
     #[account(mut)]
     pub pool_token_account_b: Box<Account<'info, TokenAccount>>,
 
+    pub mint_b: Account<'info,Mint>,
 
     #[account(
-        mut,
-        //constraint = &qpools_b.owner == swap_authority.key
+        init_if_needed,
+        payer = owner,
+        token::mint = mint_b,
+        token::authority = portfolio_pda,
+        seeds = [owner.key().as_ref(),mint_b.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_b,
         constraint = &qpools_b.owner == &portfolio_pda.key(),
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
@@ -95,6 +115,9 @@ pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
     _bump_position: u8,
     _bump_portfolio: u8,
+    _bump_ata_a: u8,
+    _bump_ata_b: u8,
+    _bump_ata_lp: u8,
     _index: u32,
 ) -> ProgramResult {
     msg!("Creating a single saber position!");

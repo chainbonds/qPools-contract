@@ -5,7 +5,7 @@
  *  Replace the LogoFromSymbol with LogoFromMint for Mainnet ...
  */
 
-import {SolendAction, SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
+import {Obligation, SolendAction, SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
 import {Connection, PublicKey} from "@solana/web3.js";
 import {BN} from "@project-serum/anchor";
 import {ExplicitPool, ExplicitSolendPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
@@ -72,7 +72,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     return out;
 }
 
-export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPool[]> => {
+export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<ExplicitPool[]> => {
     console.log("#getSolendPools()");
     let connection: Connection;
     let market: SolendMarket;
@@ -126,9 +126,9 @@ export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPoo
         // TODO: Basically, once the user connects, we have to rebuild the reserves using the guys' key!
         let solendAction: SolendAction;
         if (getNetworkCluster() === Cluster.DEVNET) {
-            solendAction = await SolendAction.initialize("mint", new BN(0), x.config.symbol, userPubkey, connection, "devnet");
+            solendAction = await SolendAction.initialize("mint", new BN(0), x.config.symbol, portfolioPubkey, connection, "devnet");
         } else if (getNetworkCluster() === Cluster.MAINNET) {
-            solendAction = await SolendAction.initialize("mint", new BN(0), x.config.symbol, userPubkey, connection, "production");
+            solendAction = await SolendAction.initialize("mint", new BN(0), x.config.symbol, portfolioPubkey, connection, "production");
         } else {
             throw Error("Cluster not implemented! getSolendPools");
         }
@@ -146,4 +146,12 @@ export const getSolendPools = async (userPubkey: PublicKey): Promise<ExplicitPoo
     }));
     console.log("##getSolendPools()");
     return out;
+}
+
+export const getSolendPrice = async (solendAction: SolendAction, tokenMint: PublicKey): Promise<number> => {
+    console.log("#getSolendPrice()");
+    // solendAction.solendInfo.oracles.pythProgramID
+    let obligation: Obligation | null = solendAction.obligationAccountInfo;
+    console.log("##getSolendPrice()");
+    return 0.
 }

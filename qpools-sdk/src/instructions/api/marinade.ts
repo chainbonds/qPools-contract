@@ -4,6 +4,8 @@ import {ExplicitPool, ExplicitToken, Protocol, ProtocolType} from "../../types/i
 import {Cluster, getNetworkCluster} from "../../network";
 import {MAINNET_TOKEN_LIST_MARINADE} from "../../registry/mainnet/marinade/token-list.mainnet";
 import {MAINNET_POOLS_INFO_MARINADE} from "../../registry/mainnet/marinade/pools-info.mainnet";
+import {PublicKey} from "@solana/web3.js";
+import {getMarinadeSolMint, getWrappedSolMint} from "../../const";
 
 export const getMarinadeTokens = async (): Promise<ExplicitToken[]> => {
     let saberTokenList: ExplicitToken[];
@@ -37,4 +39,22 @@ export const getMarinadePools = async  (): Promise<ExplicitPool[]> => {
     }
     console.log("##getMarinadePools()");
     return marinadePoolList;
+}
+
+export const getMarinadePrice = async (tokenMint: PublicKey): Promise<number> => {
+    console.log("#getMarinadePrice()");
+    // Just call the coingecko API or so ..
+    // Should probably cache these in a separate object later on ...#
+    let out: number;
+    if (tokenMint.equals(getWrappedSolMint())) {
+        // Make a coingecko request ...?
+        out = 100.0;
+    } else if (tokenMint.equals(getMarinadeSolMint())) {
+        // Make a coingecko request ...
+        out = 107.0;
+    } else {
+        throw Error("This function is reserved for marinade finance. You don't seem to have put in either wrapped SOL, or mSOL, " + tokenMint.toString());
+    }
+    console.log("##getMarinadePrice()");
+    return out;
 }

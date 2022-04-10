@@ -111,10 +111,6 @@ export type Solbond = {
           "type": "u64"
         },
         {
-          "name": "minMintAmount",
-          "type": "u64"
-        },
-        {
           "name": "index",
           "type": "u32"
         }
@@ -771,7 +767,7 @@ export type Solbond = {
         },
         {
           "name": "swap",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1963,10 +1959,6 @@ export const IDL: Solbond = {
           "type": "u64"
         },
         {
-          "name": "minMintAmount",
-          "type": "u64"
-        },
-        {
           "name": "index",
           "type": "u32"
         }
@@ -2623,7 +2615,7 @@ export const IDL: Solbond = {
         },
         {
           "name": "swap",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

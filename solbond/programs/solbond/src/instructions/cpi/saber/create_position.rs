@@ -6,6 +6,9 @@ use stable_swap_anchor::{Deposit, SwapToken, SwapUserContext};
 use stable_swap_anchor::StableSwap;
 use crate::ErrorCode;
 use std::cmp;
+use stable_swap_math::curve::{StableSwap as StableCurve};
+use stable_swap_anchor::{SwapInfo};
+
 
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
@@ -52,24 +55,27 @@ pub struct SaberLiquidityInstruction<'info> {
     /// The output account for LP tokens.
     /// 
     #[account(
-        init,
+        init_if_needed,
         payer = owner,
         token::mint = pool_mint,
         token::authority = portfolio_pda,
         seeds = [owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_lp
+        bump = _bump_ata_lp,
+        constraint = &output_lp.owner == &portfolio_pda.key(),
     )]
     pub output_lp: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub pool_mint: Box<Account<'info, Mint>>,
+
     /// The authority of the swap.
     // swap authority doesn't have to be mut, tests pass
     pub swap_authority: AccountInfo<'info>,
 
     /// The swap.
     //#[account(mut)]approved_position_details
-    pub swap: AccountInfo<'info>,
+    #[account(mut)]
+    pub swap: Account<'info, SwapInfo>,//AccountInfo<'info>,
 
     pub mint_a: Account<'info,Mint>,
     // input block
@@ -104,6 +110,7 @@ pub struct SaberLiquidityInstruction<'info> {
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
     
+    #[account(address = StableSwap::id())]
     pub saber_swap_program: Program<'info, StableSwap>,
     
     pub system_program: Program<'info, System>,
@@ -135,6 +142,25 @@ pub fn handler(
     if ctx.accounts.pool_mint.key() != ctx.accounts.position_pda.pool_address {
         return Err(ErrorCode::ProvidedMintNotMatching.into());
     }
+    let clock = Clock::get().unwrap();
+    //let token_swap = SwapInfo::unpack(&ctx.accounts.swap.data.borrow())?;
+    let invariant: StableCurve = StableCurve::new(
+        ctx.accounts.swap.initial_amp_factor,
+        ctx.accounts.swap.target_amp_factor,
+        clock.unix_timestamp,
+        ctx.accounts.swap.start_ramp_ts,
+        ctx.accounts.swap.stop_ramp_ts,
+    );
+    let kir = invariant.compute_d(ctx.accounts.pool_token_account_a.amount, ctx.accounts.pool_token_account_b.amount).ok_or_else(|| ErrorCode::ProvidedMintNotMatching)?;
+    //let mint_amount = invariant.compute_mint_amount_for_deposit(
+    //    ctx.accounts.position_pda.max_initial_token_a_amount,
+    //    ctx.accounts.position_pda.max_initial_token_b_amount,
+    //    ctx.accounts.pool_token_account_a.amount,
+    //    ctx.accounts.pool_token_account_b.amount,
+    //    ctx.accounts.pool_mint.supply, 
+    //    &ctx.accounts.swap.fees,
+    //).ok_or_else(|| ErrorCode::ProvidedMintNotMatching)?;
+    msg!("kire khar tu kune {}", kir);
   
     let user_context: SwapUserContext = SwapUserContext {
         token_program: ctx.accounts.token_program.to_account_info(),
@@ -187,12 +213,13 @@ pub fn handler(
         ),
         approved_position_details.max_initial_token_a_amount,
         approved_position_details.max_initial_token_b_amount,
-        approved_position_details.min_mint_amount,
+        0,
     )?;
 
     approved_position_details.is_fulfilled = true;
+    approved_position_details.min_mint_amount = 0;
     
-    let clock = Clock::get().unwrap();
+    
     approved_position_details.timestamp = clock.unix_timestamp;
     let portfolio = &mut ctx.accounts.portfolio_pda;
     portfolio.num_created += 1;

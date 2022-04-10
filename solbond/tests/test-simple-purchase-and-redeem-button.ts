@@ -128,7 +128,7 @@ describe('qPools!', () => {
         }
     });
 
-    it("Creates the first transaction", async () => {
+    /*it("Creates the first transaction", async () => {
 
 
         let tx: Transaction = new Transaction();
@@ -167,7 +167,7 @@ describe('qPools!', () => {
             poolAddresses[0],
             AmountUsdc,
             new BN(0),  // Will be flipped in the backend ..
-            new BN(0),
+            //new BN(0),
             0,  // Hardcoded
             weights[0]
         )
@@ -207,24 +207,24 @@ describe('qPools!', () => {
             tx
         );
 
-    });
+    });*/
 
     it("run the cranks to fulfill the Saber, Marinade and solend Positions ...", async () => {
         // These are not instruction-chained, because the crankRPC is done through a keypair ...
         // Perhaps it could be useful to make it chained tho, just for the sake of atomicity
         let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0);
         console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
-        let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
-        console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
-        console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
+        // let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
+        // console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
+        // let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        // console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });
 
     /**
      * Now also redeem the positions ...
      */
-    it("start to withdraw the position again: ", async() => {
+    /*it("start to withdraw the position again: ", async() => {
         let tx: Transaction = new Transaction();
         console.log("Approving Withdraw Portfolio");
         let IxApproveWithdrawPortfolio = await portfolioObject.approveWithdrawPortfolio();
@@ -253,9 +253,9 @@ describe('qPools!', () => {
                 tx
             );
         }
-    })
+    })*/
 
-    it("run the cranks to send the assets back to the user", async () => {
+    /*it("run the cranks to send the assets back to the user", async () => {
         // Run the saber redeem cranks ..
         let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
@@ -280,6 +280,6 @@ describe('qPools!', () => {
         // console.log("Signature to send back Marinade SOL", sgTransferMarinadeSolToUser);
 
         // In reality, you would also swap back the mSOL to SOL ...
-    });
+    });*/
 
 })

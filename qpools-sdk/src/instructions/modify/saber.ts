@@ -24,7 +24,7 @@ export async function approvePositionWeightSaber(
     poolAddress: PublicKey,
     amountA: u64,
     amountB: u64,
-    minMintAmount: u64,
+    //minMintAmount: u64,
     index: number,
     weight: BN
 ): Promise<TransactionInstruction> {
@@ -57,7 +57,7 @@ export async function approvePositionWeightSaber(
         new BN(weight),
         new BN(amountA),
         new BN(amountB),
-        new BN(minMintAmount),
+        //new BN(minMintAmount),
         new BN(index),
         {
             accounts: {
@@ -160,8 +160,10 @@ export async function permissionlessFulfillSaber(
     let [ataA, bumpATAa] = await getATAPda(owner,state.tokenA.mint, solbondProgram)
     let [ataB, bumpATAb] = await getATAPda(owner,state.tokenB.mint, solbondProgram)
     let [ataLP, bumpATAlp] = await getATAPda(owner,state.poolTokenMint, solbondProgram)
-
-    let ix = await solbondProgram.instruction.createPositionSaber(
+    console.log("ataA ",ataA.toString())
+    console.log("ataB ",ataB.toString())
+    console.log("ataLP ",ataLP.toString())
+    let calledshit = await solbondProgram.rpc.createPositionSaber(
         bumpPosition,
         portfolioBump,
         new BN(bumpATAa),
@@ -191,8 +193,9 @@ export async function permissionlessFulfillSaber(
             },
         }
     )
+    let sig = await connection.confirmTransaction(calledshit)
     console.log("##permissionlessFulfillSaber()");
-    return ix;
+    return sig;
 }
 
 export async function redeemSinglePositionOnlyOne(

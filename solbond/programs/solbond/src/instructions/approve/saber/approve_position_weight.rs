@@ -3,7 +3,6 @@ use anchor_spl::token::{Token, Mint};
 use crate::state::{PortfolioAccount, PositionAccountSaber};
 use crate::utils::seeds;
 
-
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio: u8,
@@ -11,7 +10,7 @@ use crate::utils::seeds;
     _weight: u64,
     _max_initial_token_a_amount: u64,
     _max_initial_token_b_amount: u64,
-    _min_mint_amount: u64,
+    //_min_mint_amount: u64,
     _index: u32,
 )]
 pub struct ApprovePositionWeightSaber<'info> {
@@ -55,21 +54,21 @@ pub fn handler(
     _weight: u64,
     _max_initial_token_a_amount: u64,
     _max_initial_token_b_amount: u64,
-    _min_mint_amount: u64,
+    //_min_mint_amount: u64,
     _index: u32,
 ) -> ProgramResult {
 
     // let msg = format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING);
     // msg!("Seed string is: ");
     // msg!(&msg);
-
+   
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;
     position_account.weight = _weight;
 
     position_account.max_initial_token_a_amount = _max_initial_token_a_amount;
     position_account.max_initial_token_b_amount = _max_initial_token_b_amount;
-    position_account.min_mint_amount = _min_mint_amount;
+    position_account.min_mint_amount = 0;//_min_mint_amount;
 
     position_account.pool_token_amount = 0;
     position_account.minimum_token_amount_out = 0;

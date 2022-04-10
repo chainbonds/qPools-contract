@@ -21,7 +21,8 @@ anchor-spl = "0.20.1"
 solana-program = "1.9"
 spl-token = { version = "3.1.4", features = ["no-entrypoint"] }
 stable-swap-anchor = {path = "../../deps/stable-swap/stable-swap-anchor/"}
-
+stable-swap = {path = "../../deps/stable-swap/stable-swap-program/program/"}
+stable-swap-math = {path = "../../deps/stable-swap/stable-swap-math/"}
 marinade-finance = {path = "../../deps/liquid-staking-program/programs/marinade-finance/", features = ["no-entrypoint"]}
 marinade-onchain-helper = {path = "../../deps/marinade-onchain-helper/", features = ["no-entrypoint"]}
 spl-token-lending = { path = "../../deps/solana-program-library/token-lending/program/", features= ["no-entrypoint"] }

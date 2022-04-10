@@ -83,7 +83,7 @@ pub mod solbond {
         _weight: u64,
         _max_initial_token_a_amount: u64,
         _max_initial_token_b_amount: u64,
-        _min_mint_amount: u64,
+        //_min_mint_amount: u64,
         _index: u32,
     ) -> ProgramResult {
         
@@ -94,7 +94,7 @@ pub mod solbond {
             _weight,
             _max_initial_token_a_amount,
             _max_initial_token_b_amount,
-            _min_mint_amount,
+            //_min_mint_amount,
             _index,
         )
 

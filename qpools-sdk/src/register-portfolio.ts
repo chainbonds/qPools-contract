@@ -264,7 +264,7 @@ export class Portfolio {
             pool_address,
             token_a_amount,
             token_b_amount,
-            min_mint_amount,
+            //min_mint_amount,
             index,
             weight
         );

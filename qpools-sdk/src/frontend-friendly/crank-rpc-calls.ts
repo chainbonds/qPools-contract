@@ -5,7 +5,7 @@ import * as anchor from "@project-serum/anchor";
 import QWallet, {
      createAssociatedTokenAccountSendUnsigned,
     delay,
-    IWallet, sendAndSignInstruction
+    IWallet, sendAndSignInstruction,sendAndConfirmTransaction
 } from "../utils";
 import {StableSwapState} from "@saberhq/stableswap-sdk";
 import {getSolbondProgram} from "../index";
@@ -23,7 +23,9 @@ import {
     permissionlessFulfillSolend,
     redeemSinglePositionSolend
 } from "../instructions/modify/solend";
-
+import {
+    Transaction,
+} from '@solana/web3.js';
 import {sendLamports, transfer_to_user} from "../instructions/modify/portfolio-transfer";
 import {getPoolState} from "../instructions/fetch/saber";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
@@ -159,13 +161,16 @@ export class CrankRpcCalls {
             return "";
         }
 
-        let ix = await permissionlessFulfillSaber(
+        let sig = await permissionlessFulfillSaber(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
             index
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        //let tx = new Transaction()
+        //tx.add(ix);
+        //await sendAndConfirmTransaction(this.provider,this.connection, tx);
+        return sig//await sendAndConfirmTransaction(this.provider,this.connection, tx);//await sendAndSignInstruction(this.provider, ix);
     }
 
     async redeem_single_position(poolAddress: PublicKey, index: number) {

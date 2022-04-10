@@ -2,7 +2,7 @@
 // Write a function here which applies the pyth oracle ...
 // TODO: Replace this by a proper Pyth Provider, or pyth function ...
 import {PublicKey} from "@solana/web3.js";
-import {PythProvider} from "../../frontend-friendly/pyth-provider";
+import {PythProvider} from "../../oracle/pyth-provider";
 import {Registry} from "../../frontend-friendly/registry";
 import {BN, Provider} from '@project-serum/anchor';
 

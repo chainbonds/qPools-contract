@@ -1,7 +1,7 @@
 import { Commitment, Connection, PublicKey, Cluster } from '@solana/web3.js'
 import {PythHttpClient, getPythProgramKeyForCluster} from '@pythnetwork/client'
 import {PythHttpClientResult} from "@pythnetwork/client/lib/PythHttpClient";
-import {Registry} from "./registry";
+import {Registry} from "../frontend-friendly/registry";
 import {Provider} from "@project-serum/anchor";
 import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
 export class PythProvider {
@@ -45,7 +45,7 @@ export class PythProvider {
             if(data != undefined) {
                 //console.log(data);
                 let pythName = this.pythName(asset);
-                console.log("Retrieving ", pythName);
+                //console.log("Retrieving ", pythName);
                 let productInfo = data.productPrice.get(pythName);
                 //console.log(productInfo);
                 if (productInfo != undefined) {

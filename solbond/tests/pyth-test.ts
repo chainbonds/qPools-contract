@@ -45,7 +45,7 @@ describe('qPools!', () => {
     });
 
     //first query takes 1 sec, followings followings apprx 10ms.
-    it("10 additional queries to see how fast it is", async () => {
+    /*it("10 additional queries to see how fast it is", async () => {
         let pK = MOCK.DEV.SABER_USDC;
         let pythProvider = new PythProvider();
         let totalValue = await pythProvider.multiplyAmountByPythprice(100,pK);
@@ -60,6 +60,6 @@ describe('qPools!', () => {
         await pythProvider.multiplyAmountByPythprice(100,pK);
         await pythProvider.multiplyAmountByPythprice(100,pK);
         console.log("usdc total value :", totalValue);
-    });
+    });*/
 
 })

@@ -10,6 +10,7 @@ import {ExplicitPool} from "../types/ExplicitPool";
 import {Protocol} from "../types/PositionInfo";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
 import {ExplicitSaberPool} from "../types/ExplicitSaberPool";
+import {getCoinGeckoList} from "../instructions/api/coingecko";
 
 export class Registry {
 
@@ -27,6 +28,8 @@ export class Registry {
 
     tokenIndexedByTokenMint: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
     tokenIndexedBySymbol: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
+
+    coinGeckoMapping: Map<string, string>;
 
 
     // nativeSolMint: PublicKey = new PublicKey("NativeSo11111111111111111111111111111111111");
@@ -317,6 +320,23 @@ export class Registry {
             return null;
         }
     }
+
+    getCoinGeckoMapping(): Map<string, string> {
+        if (this.coinGeckoMapping != null) {
+            return this.coinGeckoMapping;
+        }
+        console.log("Creating coingeckoMapping")
+        let out: Map<string, string> = new Map<string, string>();
+        let tokenList = getCoinGeckoList();
+        tokenList.map((x) => {
+            let key = x.address;
+            let value = x.coingeckoId;
+            out.set(key, value);
+        });
+        this.coinGeckoMapping = out;
+        return this.coinGeckoMapping;
+    }
+
 
     /**
      * Anything specific to Marinade

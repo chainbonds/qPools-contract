@@ -3,7 +3,6 @@ import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
-import {getAccountForMintAndPDADontCreate} from "../../utils";
 
 import {PositionAccountSolend} from "../../types/account";
 import {SolendAction} from "@solendprotocol/solend-sdk";

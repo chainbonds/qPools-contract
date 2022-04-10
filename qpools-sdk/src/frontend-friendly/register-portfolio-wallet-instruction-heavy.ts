@@ -16,7 +16,7 @@ import {
 import {PortfolioAccount} from "../types/account";
 import {PositionAccountSaber} from "../types/account";
 
-import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
+import {getATAPda, getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import {PositionAccountMarinade} from "../types/account";
 import {UserCurrencyAccount} from "../types/account";
@@ -401,10 +401,15 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 29");
         let poolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        console.log("Calling Stableswap");
         const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
+        console.log("getting state");
         const {state} = stableSwapState;
-        let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+        console.log("get account for mint and pda");
+        // let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let [userAccountPoolToken, _] = await getATAPda(this.owner.publicKey, state.poolTokenMint, this.solbondProgram);
+        console.log("lp amount");
+        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountPoolToken)).value.amount;
         console.log("Is Redeemed is: ", positionAccount.isRedeemed);
         console.log(positionAccount);
         if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
@@ -525,9 +530,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         const {state} = stableSwapState;
 
         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
-        let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let [portfolioAtaA, portfolioAtaABump] = await getATAPda(this.owner.publicKey, state.tokenA.mint, this.solbondProgram);
+        let [portfolioAtaB, portfolioAtaBBump] = await getATAPda(this.owner.publicKey, state.tokenB.mint, this.solbondProgram);
+        let [portfolioAtaLp, portfolioAtaLpBump] = await getATAPda(this.owner.publicKey, state.poolTokenMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
         let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
@@ -585,7 +590,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // This is also the LP Mint ...
         // Gotta store this in the registry
         // TODO: Make this multi-asset logic more scalable
-        let portfolioAtaMSol = await getAccountForMintAndPDADontCreate(mSOLMint, this.portfolioPDA);
+        let [portfolioAtaMSol, _] = await getATAPda(this.owner.publicKey, mSOLMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
         let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;

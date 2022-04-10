@@ -29,7 +29,7 @@ import {
     transfer_to_user,
     transferUsdcFromUserToPortfolio
 } from "./instructions/modify/portfolio-transfer";
-import {getPortfolioPda} from "./types/account/pdas";
+import {getATAPda, getPortfolioPda} from "./types/account/pdas";
 import {getPoolState} from "./instructions/fetch/saber";
 import {MOCK} from "./const";
 import {Registry} from "./frontend-friendly";
@@ -110,18 +110,6 @@ export class Portfolio {
         // For the User!
         // Iterate through every currency ...
         // For USDC currency, create associated token account
-        console.log("ATA1!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, portfolioPDA)))) {
-            let tx1 = await createAssociatedTokenAccountUnsigned(
-                this.connection,
-                MOCK.DEV.SABER_USDC,
-                null,
-                portfolioPDA,
-                wallet,
-            );
-            let sg1 = await this.provider.send(tx1);
-            await this.provider.connection.confirmTransaction(sg1, "confirmed");
-        }
         // let portfolioUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, portfolioPDA);
         console.log("ATA2!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(MOCK.DEV.SABER_USDC, owner_keypair.publicKey)))) {
@@ -135,20 +123,6 @@ export class Portfolio {
             let sg2 = await this.provider.send(tx2);
             await this.provider.connection.confirmTransaction(sg2, "confirmed");
         }
-        // let userUsdcAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, owner_keypair.publicKey);
-        console.log("ATA3!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, portfolioPDA)))) {
-            let tx3 = await createAssociatedTokenAccountUnsigned(
-                this.connection,
-                wSOL,
-                null,
-                portfolioPDA,
-                wallet,
-            );
-            let sg3 = await this.provider.send(tx3);
-            await this.provider.connection.confirmTransaction(sg3, "confirmed");
-        }
-        // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA4!");
         if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(wSOL, owner_keypair.publicKey)))) {
             let tx4 = await createAssociatedTokenAccountUnsigned(
@@ -160,18 +134,6 @@ export class Portfolio {
             );
             let sg4 = await this.provider.send(tx4);
             await this.provider.connection.confirmTransaction(sg4, "confirmed");
-        }
-        console.log("ATA5!");
-        if (!(await tokenAccountExists(this.connection, await getAssociatedTokenAddressOffCurve(marinadeState.mSolMintAddress, portfolioPDA)))) {
-            let tx5 = await createAssociatedTokenAccountUnsigned(
-                this.connection,
-                marinadeState.mSolMintAddress,
-                null,
-                portfolioPDA,
-                wallet,
-            );
-            let sg5 = await this.provider.send(tx5);
-            await this.provider.connection.confirmTransaction(sg5, "confirmed");
         }
         // let portfolioMSolAccount = await getAccountForMintAndPDADontCreate(wSOL, portfolioPDA);
         console.log("ATA6!");

@@ -14,6 +14,7 @@ import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
 import {MOCK} from "../../const";
 import {Registry} from "../../frontend-friendly";
+import {sol} from "easy-spl";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSaber(
@@ -230,7 +231,7 @@ export async function redeemSinglePositionOnlyOne(
     // let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
     // let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
     // console.log("userA ", userAccountA.toString())
-    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+    let [userAccountpoolToken, _] = await getATAPda(this.owner.publicKey, state.poolTokenMint, solbondProgram);
     // let totalLPTokens = (await connection.getTokenAccountBalance(userAccountpoolToken)).value;
 
     // TODO: Hardcode to check for IF-ELSE statement on USDC ...
@@ -242,14 +243,14 @@ export async function redeemSinglePositionOnlyOne(
     let mintA: PublicKey;
     let reserveB: PublicKey;
     if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
-        userAccount = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
+        [userAccount, _] = await getATAPda(owner, state.tokenA.mint, solbondProgram);
         reserveA = state.tokenA.reserve
         feesA = state.tokenA.adminFeeAccount
         mintA = state.tokenA.mint
         reserveB = state.tokenB.reserve
 
     } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
-        userAccount = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
+        [userAccount, _] = await getATAPda(owner, state.tokenB.mint, solbondProgram);
         reserveA = state.tokenB.reserve
         feesA = state.tokenB.adminFeeAccount
         mintA = state.tokenB.mint
@@ -341,11 +342,11 @@ export async function redeem_single_position(
     const [authority] = await findSwapAuthorityKey(state.adminAccount, stableSwapProgramId);
     console.log("authority ", authority.toString())
 
-    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
+    let [userAccountA, userAccountABump] = await getATAPda(owner, state.tokenA.mint, solbondProgram);
     console.log("userA ", userAccountA.toString())
-    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
+    let [userAccountB, userAccountBBump] = await getATAPda(owner, state.tokenB.mint, solbondProgram);
     console.log("userB ", userAccountA.toString())
-    let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+    let [userAccountpoolToken, userAccountpoolTokenBump] = await getATAPda(owner, state.poolTokenMint, solbondProgram);
 
     console.log("👀 positionPda ", positionPDA.toString())
     console.log("😸 portfolioPda", portfolioPDA.toString());
@@ -406,9 +407,9 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
     // Creating ATA accounts if not existent yet ...
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     console.log("Checkpoint (2.1)");
-    let userAccountA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, portfolioPDA);
-    let userAccountB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, portfolioPDA);
-    let userAccountPoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
+    let [userAccountA, userAccountABump] = await getATAPda(owner, state.tokenA.mint, solbondProgram);
+    let [userAccountB, userAccountBBump] = await getATAPda(owner, state.tokenB.mint, solbondProgram);
+    let [userAccountPoolToken, userAccountPoolTokenBump] = await getATAPda(owner, state.poolTokenMint, solbondProgram);
     console.log("Checkpoint (2.2)");
 
     let txs = [];
@@ -419,7 +420,7 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
         let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
             connection,
             state.tokenA.mint,
-            null,
+            userAccountA,
             portfolioPDA,
             providerWallet,
         );
@@ -432,7 +433,7 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
         let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
             connection,
             state.tokenB.mint,
-            null,
+            userAccountB,
             portfolioPDA,
             providerWallet
         );
@@ -445,7 +446,7 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
         let ix: Transaction = await createAssociatedTokenAccountUnsignedInstruction(
             connection,
             state.poolTokenMint,
-            null,
+            userAccountPoolToken,
             portfolioPDA,
             providerWallet
         );

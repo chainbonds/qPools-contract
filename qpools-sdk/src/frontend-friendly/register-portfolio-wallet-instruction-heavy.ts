@@ -146,12 +146,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     async wrapSolTransaction(lamports: BN): Promise<Transaction> {
+        // First close the account if it exists, then re-create it again ...
         let out: Transaction = new Transaction();
-        let wrappedSolAta = await getAssociatedTokenAddress(
+        let wrappedSolAta = await getAssociatedTokenAddressOffCurve(
             getWrappedSolMint(),
             this.providerWallet.publicKey!
         );
-        // TODO: Can only close account if it exists already ...
+        // Can only close account if it exists already ...
+        // We assume that the createAssociatedTokenAccount creates these
         // Throw error if this account is not yet created ...?
         out.add(
             SystemProgram.transfer({
@@ -168,13 +170,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     async unwrapSolTransaction(): Promise<Transaction> {
         let out: Transaction = new Transaction();
-        let wrappedSolAta = await getAssociatedTokenAddress(
+        let wrappedSolAta = await getAssociatedTokenAddressOffCurve(
             getWrappedSolMint(),
             this.providerWallet.publicKey!
         );
         // Add a token transfer to the guy, and then unwrap the SOL
         // TODO: Can only close account if it exists already ...
         if ((await tokenAccountExists(this.connection, wrappedSolAta))) {
+            console.log("Wrapped Sol Account is closing ...!", wrappedSolAta.toString());
             out.add(
                 closeAccount({
                     source: wrappedSolAta,
@@ -194,16 +197,21 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         wallet: IWallet
     ): Promise<Transaction> {
 
-        // let instructions: TransactionInstruction[] = [];
-        // Change according to mainnet, or registry ...
-
         console.log("Getting portfolio PDA");
-        let [portfolioPDA, portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         let createdAtaAccounts: Set<string> = new Set();
         // For the Portfolio!
         // For all saber pool addresses (tokenA, tokenB, LPToken), create associated token address
         // For MSOL, create associated token addresses
         // For USDC currency, create associated token account
+
+        // Append the wrapped SOL mint to this just in case ..
+        mints = [...mints, getWrappedSolMint()];
+        // De-duplicate these mints beforehand ...
+        mints = mints.map((x: PublicKey) => x.toString()).filter(function(elem, index, self) {
+            return index === self.indexOf(elem);
+        }).map((x: string) => new PublicKey(x));
+
+
 
         let tx: Transaction = new Transaction();
         // await Promise.all(saber_pool_addresses.map(async (poolAddress: PublicKey) => {
@@ -234,15 +242,15 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         //     // }
         // }).filter((x: PublicKey | null): x is PublicKey => (x !== null));
 
+        // I think in an async-environment, the set logic is wrong !!!
         await Promise.all(mints.map(async (mint: PublicKey) => {
-
             let userAta = await getAssociatedTokenAddressOffCurve(mint, this.owner.publicKey);
-            if (!(await tokenAccountExists(this.connection, userAta)) && !createdAtaAccounts.has(userAta.toString())) {
+            if (!(await tokenAccountExists(this.connection, userAta))) {
                 console.log("Creating ATA: ", userAta.toString());
                 let tx2 = await createAssociatedTokenAccountUnsignedInstruction(
                     this.connection,
                     mint,
-                    null,
+                    userAta,
                     this.owner.publicKey,
                     wallet,
                 );

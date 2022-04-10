@@ -9,6 +9,7 @@ use crate::ErrorCode;
     _bump_portfolio: u8,
     _bump_position: u8,
     _bump_msol_ata: u8,
+    _bump_user_msol_ata: u8,
     _index: u32,
 )]
 pub struct ApproveWithdrawMarinade<'info> {

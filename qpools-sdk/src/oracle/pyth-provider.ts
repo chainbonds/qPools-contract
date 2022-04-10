@@ -43,9 +43,9 @@ export class PythProvider {
         //console.log(asset);
         let res = await this.getData().then(data => {
             if(data != undefined) {
-                //console.log(data);
+                console.log(data);
                 let pythName = this.pythName(asset);
-                //console.log("Retrieving ", pythName);
+                console.log("Retrieving ", pythName);
                 let productInfo = data.productPrice.get(pythName);
                 //console.log(productInfo);
                 if (productInfo != undefined) {

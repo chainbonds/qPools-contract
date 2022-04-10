@@ -24,7 +24,6 @@ export class CoinGeckoClient {
     }
 
     async multiplyAmountByUSDPrice (x: number, mint: PublicKey) : Promise<BN> {
-
         let res = this.getPriceFromMint(mint, "usd").then(price => {
             return new BN(x).mul(new BN(price*100)).div(new BN(100))
         })

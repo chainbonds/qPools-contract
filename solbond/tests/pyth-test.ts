@@ -2,7 +2,7 @@ import {BN, Provider} from '@project-serum/anchor';
 import {multiplyAmountByPythprice} from "@qpools/sdk";
 import {PublicKey} from "@solana/web3.js";
 import {MOCK} from "@qpools/sdk";
-import {PythProvider} from "@qpools/sdk/lib/frontend-friendly/pyth-provider";
+import {PythProvider} from "@qpools/sdk/lib/oracle/pyth-provider";
 
 describe('qPools!', () => {
 
@@ -45,7 +45,7 @@ describe('qPools!', () => {
     });
 
     //first query takes 1 sec, followings followings apprx 10ms.
-    /*it("10 additional queries to see how fast it is", async () => {
+    it("10 additional queries to see how fast it is", async () => {
         let pK = MOCK.DEV.SABER_USDC;
         let pythProvider = new PythProvider();
         let totalValue = await pythProvider.multiplyAmountByPythprice(100,pK);
@@ -60,6 +60,6 @@ describe('qPools!', () => {
         await pythProvider.multiplyAmountByPythprice(100,pK);
         await pythProvider.multiplyAmountByPythprice(100,pK);
         console.log("usdc total value :", totalValue);
-    });*/
+    });
 
 })

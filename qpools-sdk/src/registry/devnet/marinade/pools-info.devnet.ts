@@ -7,15 +7,8 @@ export const DEV_POOLS_INFO_MARINADE = [
                 "address": "So11111111111111111111111111111111111111112",
                 "chainId": 101,
                 "decimals": 9,
-                "extensions": {
-                    "coingeckoId": "solana",
-                    "currency": "SOL",
-                    "serumV3Usdc": "9wFFyRfZBsuAha4YcuxcXLKwMxJR43S7fPfQLusDBzvT",
-                    "serumV3Usdt": "HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1",
-                    "website": "https://solana.com/"
-                },
                 "logoURI": "https://spl-token-icons.static-assets.ship.capital/icons/101/So11111111111111111111111111111111111111112.png",
-                "name": "Wrapped SOL",
+                "name": "Solana",
                 "symbol": "SOL",
                 "tags": ["saber-mkt-sol"],
                 "pyth": {

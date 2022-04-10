@@ -1,16 +1,35 @@
 import {PublicKey} from "@solana/web3.js";
 import {BN} from "@project-serum/anchor";
+import {DEV_WHITELIST_TOKENS} from "./registry/devnet/whitelist-tokens.devnet";
 
-export const REDEEMABLES_DECIMALS = 9;
+/**
+ * An artificial Address created by us, which maps to native SOL
+ * Whenever you come across this address as a mint, you must create a case-distinction, and send actual SOL
+ *
+ * This address is identical in devnet, as well as mainnet
+ */
+export function getNativeSolMint(): PublicKey {
+    return new PublicKey("NativeSo11111111111111111111111111111111111");
+}
 
-// TODO: Make it your goal to delete this file!
+// TODO: Replace by Registry Class
+// Depending on devnet / mainnet, gotta modify these object!
+export function getMarinadeSolMint(): PublicKey {
+    return new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+}
+
+// TODO: Replace by Registry Class
+export function getWrappedSolMint(): PublicKey {
+    return new PublicKey("So11111111111111111111111111111111111111112");
+}
+
+export function getWhitelistTokens(): string[] {
+    return DEV_WHITELIST_TOKENS;
+}
+
+// TODO: Make it your goal to delete everything after this line
 
 export const MOCK = {
-    // DEV: {
-    //     SOL: new PublicKey("F8G26LpQSBUvdoYtAXJccLKUqQqzTdHwaoHixTDhcLJ1"),
-    //     USDC: new PublicKey("7xkFjfVqjhM9sVPY7WNKB8NmTyGVLD5UN8X2ZkwAn1fp"),
-    //     mSOL: new PublicKey("BNXT31pJZp8CBafSxet6cM37yPGz8ZWo3iYsGG7hbaKt"),
-    // },
     DEV: {
         SOL: new PublicKey('BJVjNqQzM1fywLWzzKbQEZ2Jsx9AVyhSLWzko3yF68PH'),
         USDC: new PublicKey('5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW'),
@@ -48,11 +67,11 @@ export const MOCK = {
 }
 
 export const PYTH_PRODUCTS = {
-    "SOL/USD" : {
+    "SOL/USD": {
         product: "ALP8SdU9oARYVLgLR7LrqMNCYBnhtnQz1cj6bwgwQmgj",
         price: "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
     },
-    "mSOL/USD" : {
+    "mSOL/USD": {
         product: "BS2iAqT67j8hA9Jji4B8UpL3Nfw9kwPfU5s4qeaf1e7r",
         price: "E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9"
     },

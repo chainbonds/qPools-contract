@@ -3,8 +3,7 @@ import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
-import {PositionAccountSaber} from "../../types/account/positionAccountSaber";
-import * as registry from "../../registry/registry-helper";
+import {PositionAccountSaber} from "../../types/account";
 import {
     createAssociatedTokenAccountUnsignedInstruction,
     getAccountForMintAndPDADontCreate, IWallet,
@@ -13,8 +12,8 @@ import {
 import {getPoolState} from "../fetch/saber";
 import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
-import {WalletI} from "easy-spl";
 import {MOCK} from "../../const";
+import {Registry} from "../../frontend-friendly";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSaber(
@@ -82,7 +81,8 @@ export async function signApproveWithdrawAmountSaber(
     owner: PublicKey,
     index: number,
     poolTokenAmount: u64,
-    minRedeemTokenAmount: u64
+    minRedeemTokenAmount: u64,
+    registry: Registry
 ) {
     console.log("#signApproveWithdrawAmountSaber()");
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
@@ -93,7 +93,7 @@ export async function signApproveWithdrawAmountSaber(
     console.log("aaa 27");
 
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
@@ -133,7 +133,8 @@ export async function permissionlessFulfillSaber(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    index: number
+    index: number,
+    registry: Registry
 ) {
     console.log("#permissionlessFulfillSaber()");
     // Index should take the account
@@ -144,7 +145,7 @@ export async function permissionlessFulfillSaber(
     let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
     console.log("aaa 21");
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
@@ -199,7 +200,8 @@ export async function redeemSinglePositionOnlyOne(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    index: number
+    index: number,
+    registry: Registry,
 ) {
     console.log("#redeemSinglePositionOnlyOne()");
     // TODO: Do a translation from index to state first ...
@@ -214,7 +216,7 @@ export async function redeemSinglePositionOnlyOne(
     console.log("aaa 25");
 
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
     console.log("got state ", state);
@@ -314,7 +316,8 @@ export async function redeem_single_position(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    index: number
+    index: number,
+    registry: Registry
 ) {
     console.log("#redeem_single_position()");
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
@@ -326,7 +329,7 @@ export async function redeem_single_position(
     console.log("aaa 23");
 
     // FOr some address, this is not needed ...
-    let poolAddress = registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
     console.log("got state ", state);
@@ -451,5 +454,7 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
     }
     console.log("Checkpoint (2.3)");
     console.log("##registerLiquidityPoolAssociatedTokenAccountsForPortfolio()");
+
+    // Next to exporting the tx, also export the associated token accounts that will be created ..
     return txs;
 }

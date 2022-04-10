@@ -113,15 +113,16 @@ export class CrankRpcCalls {
     /**
      * Transfers
      */
-    async transfer_to_user(currencyMint: PublicKey) {
+    async transfer_to_user(currencyMint: PublicKey, puller: Provider) {
         // Creating the user-account if it doesn't yet exist
         let ix = await transfer_to_user(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            puller.wallet.publicKey,
             currencyMint
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(puller, ix);
     }
 
     async sendToUsersWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
@@ -131,7 +132,7 @@ export class CrankRpcCalls {
     /**
      * Saber
      */
-    async permissionlessFulfillSaber(index: number) {
+    async permissionlessFulfillSaber(index: number, puller: Provider) {
 
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
 
@@ -163,9 +164,10 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            puller.wallet.publicKey,
             index
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(puller, ix);
     }
 
     async redeem_single_position(poolAddress: PublicKey, index: number) {
@@ -179,7 +181,7 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.provider, ix);
     }
 
-    async redeem_single_position_only_one(index: number) {
+    async redeem_single_position_only_one(index: number, puller: Provider) {
         // TODO: Rename function to include saber
         // TODO: Implement similar checks to the marinade commands ...
         // Or make modular imports
@@ -204,53 +206,57 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            puller.wallet.publicKey,
             index
         );
         console.log("i promise")
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(puller, ix);
     }
 
     /**
      * Marinade
      */
-    async createPositionMarinade(index: number) {
+    async createPositionMarinade(index: number, puller: Provider) {
         let ix = await createPositionMarinade(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            puller.wallet.publicKey,
             index,
             this.marinadeState
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(puller, ix);
     }
 
 
-    async createPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+    async createPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet", puller: Provider) {
         let ix = await permissionlessFulfillSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            puller.wallet.publicKey,
             currencyMint,
             index,
             tokenSymbol,
             environment
 
         );
-        return await sendAndSignInstruction(this.provider, ix)
+        return await sendAndSignInstruction(puller, ix)
     }
 
-    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet", puller: Provider) {
 
         let ix = await redeemSinglePositionSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            puller.wallet.publicKey,
             currencyMint,
             index,
             tokenSymbol,
             environment
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(puller, ix);
 
     }
 

@@ -12,7 +12,6 @@ import {
     tokenAccountExists,
     accountExists
 } from "./utils";
-import { Portfolio } from "./register-portfolio";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 import { PortfolioFrontendFriendlyChainedInstructions } from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
 import { IDL as SolbondIdl } from "./idl/solbond";
@@ -36,7 +35,6 @@ export {
     createAssociatedTokenAccountSendUnsigned,
     getAssociatedTokenAddressOffCurve,
     createAssociatedTokenAccountUnsigned,
-    Portfolio,
     DisplayPortfolios,
     PortfolioFrontendFriendlyChainedInstructions,
     SolbondIdl,

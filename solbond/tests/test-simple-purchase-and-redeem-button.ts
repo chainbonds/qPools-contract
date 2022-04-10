@@ -212,11 +212,11 @@ describe('qPools!', () => {
     it("run the cranks to fulfill the Saber, Marinade and solend Positions ...", async () => {
         // These are not instruction-chained, because the crankRPC is done through a keypair ...
         // Perhaps it could be useful to make it chained tho, just for the sake of atomicity
-        let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0);
+        let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0,provider);
         console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
-        let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
+        let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1,provider);
         console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet",provider)
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });
@@ -257,17 +257,17 @@ describe('qPools!', () => {
 
     it("run the cranks to send the assets back to the user", async () => {
         // Run the saber redeem cranks ..
-        let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
+        let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0,provider);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
 
-        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet",provider)
         console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend)
 
         // For each initial asset, send it back to the user
-        let sgTransferUsdcToUser = await crankRpcTool.transfer_to_user(USDC_mint);
+        let sgTransferUsdcToUser = await crankRpcTool.transfer_to_user(USDC_mint,provider);
         console.log("Signature to send back USDC", sgTransferUsdcToUser);
 
-        let sgTransferUsdcTosolendSol = await crankRpcTool.transfer_to_user(solSolendMint);
+        let sgTransferUsdcTosolendSol = await crankRpcTool.transfer_to_user(solSolendMint,provider);
         console.log("Signature to send back wSOL", sgTransferUsdcTosolendSol);
 
         

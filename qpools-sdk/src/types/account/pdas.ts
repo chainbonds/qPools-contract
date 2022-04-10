@@ -4,11 +4,11 @@ import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed375",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition775",
-    USER_CURRENCY_STRING: "UserCurrency3265",
-    USER_MARINADE_SEED: "UserMarinade2159",
-    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc1012",
+    PORTFOLIO_ACCOUNT: "portFolioSeed475",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition875",
+    USER_CURRENCY_STRING: "UserCurrency4265",
+    USER_MARINADE_SEED: "UserMarinade3159",
+    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc2012",
 }
 
 /**

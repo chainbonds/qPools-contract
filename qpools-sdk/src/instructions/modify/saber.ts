@@ -133,6 +133,7 @@ export async function permissionlessFulfillSaber(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
+    puller: PublicKey,
     index: number
 ) {
     console.log("#permissionlessFulfillSaber()");
@@ -162,15 +163,13 @@ export async function permissionlessFulfillSaber(
     let [ataLP, bumpATAlp] = await getATAPda(owner,state.poolTokenMint, solbondProgram)
 
     let ix = await solbondProgram.instruction.createPositionSaber(
-        bumpPosition,
-        portfolioBump,
         new BN(bumpATAa),
         new BN(bumpATAb),
         new BN(bumpATAlp),
         new BN(index),
         {
             accounts: {
-                owner: owner,
+                puller: puller,
                 positionPda: positionPDA,
                 portfolioPda: portfolioPDA,
                 outputLp: ataLP,
@@ -199,6 +198,7 @@ export async function redeemSinglePositionOnlyOne(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
+    puller: PublicKey,
     index: number
 ) {
     console.log("#redeemSinglePositionOnlyOne()");
@@ -280,8 +280,6 @@ export async function redeemSinglePositionOnlyOne(
     console.log("🦒 mint LP", state.poolTokenMint.toString());
 
     let ix = await solbondProgram.instruction.redeemPositionOneSaber(
-        new BN(portfolioBump),
-        new BN(bumpPosition),
         new BN(bumpATAa),
         new BN(bumpATAlp),
         new BN(index),
@@ -289,7 +287,7 @@ export async function redeemSinglePositionOnlyOne(
             accounts: {
                 positionPda: positionPDA,
                 portfolioPda: portfolioPDA,
-                portfolioOwner: owner,
+                puller: puller,
                 poolMint: state.poolTokenMint,
                 inputLp: ataPDA_lp,
                 swapAuthority: stableSwapState.config.authority,

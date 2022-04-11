@@ -110,6 +110,7 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             currencyMint
         );
         return await sendAndSignInstruction(this.crankProvider, ix);
@@ -146,6 +147,7 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             this.registry
         );
@@ -154,7 +156,6 @@ export class CrankRpcCalls {
     }
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
-        // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
         await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
@@ -200,6 +201,7 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             this.registry
         );
@@ -214,6 +216,7 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             this.marinadeState
         );
@@ -232,10 +235,11 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             solendAction
         );
-        return await sendAndSignInstruction(this.provider, ix)
+        return await sendAndSignInstruction(this.crankProvider, ix)
     }
 
     async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string) {
@@ -244,11 +248,12 @@ export class CrankRpcCalls {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             currencyMint,
             index,
             tokenSymbol
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
 
     }
 

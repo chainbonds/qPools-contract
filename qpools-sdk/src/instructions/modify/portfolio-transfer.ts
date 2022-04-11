@@ -70,6 +70,7 @@ export async function transfer_to_user(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
+    puller: PublicKey,
     currencyMint: PublicKey
 ): Promise<TransactionInstruction> {
     console.log("#transfer_to_user()");
@@ -83,14 +84,14 @@ export async function transfer_to_user(
     console.log("userOwnedUSDCAccount ", userOwnedUSDCAccount.toString());
     console.log("currencyMint ", currencyMint.toString());
     console.log("owner ", owner.toString());
+    console.log("puller ", puller.toString());
     let ix = await solbondProgram.instruction.transferRedeemedToUser(
-        new BN(portfolioBump),
         new BN(bumpCurrency),
         new BN(bumpATA),
         {
             accounts: {
                 portfolioPda: portfolioPDA,
-                portfolioOwner: owner,
+                puller: puller,
                 userCurrencyPdaAccount: currencyPDA,
                 userOwnedUserA: userOwnedUSDCAccount,
                 currencyMint: currencyMint,

@@ -10,8 +10,6 @@ use crate::ErrorCode;
 #[derive(Accounts)]
 // #[instruction(amount)]
 #[instruction(
-    _bump_position: u8,
-    _bump_portfolio: u8,
     _bump_ata_liq: u8,
     _bump_ata_col: u8,
     _index: u32,
@@ -20,32 +18,38 @@ pub struct SolendPositionInstruction<'info> {
 
     #[account(
         mut,
-        seeds = [
-            owner.key().as_ref(),
-            &_index.to_le_bytes(),
-            seeds::USER_POSITION_STRING
-        ],
-        bump = _bump_position,
+        //seeds = [
+        //    owner.key().as_ref(),
+        //    &_index.to_le_bytes(),
+        //    seeds::USER_POSITION_STRING
+        //],
+        //bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSolend>>,
 
     //#[account(mut)]
-    pub owner: AccountInfo<'info>,
+    //pub owner: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub puller: Signer<'info>,
 
     pub liquidity_mint: Account<'info, Mint>,
     #[account(
-        mut,
-        seeds = [owner.key().as_ref(),liquidity_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        init_if_needed, 
+        payer = puller,
+        token::mint = liquidity_mint,
+        token::authority = user_transfer_authority,
+        seeds = [user_transfer_authority.owner.key().as_ref(),liquidity_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_liq
     )]
     pub source_liquidity: Account<'info,TokenAccount>,
 
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = puller,
         token::mint = reserve_collateral_mint,
         token::authority = user_transfer_authority,
-        seeds = [owner.key().as_ref(),reserve_collateral_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        seeds = [user_transfer_authority.owner.key().as_ref(),reserve_collateral_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_col
     )]
     pub destination_collateral: Account<'info,TokenAccount>,
@@ -68,7 +72,7 @@ pub struct SolendPositionInstruction<'info> {
 
     #[account(
         mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        //seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub user_transfer_authority: Box<Account<'info, PortfolioAccount>>,
 
@@ -85,15 +89,15 @@ pub struct SolendPositionInstruction<'info> {
 
 pub fn handler(
     ctx: Context<SolendPositionInstruction>,
-    _bump_position: u8,
-    _bump_portfolio: u8,
     _bump_ata_liq: u8,
     _bump_ata_col: u8,
     _index: u32,
 ) -> ProgramResult {
     msg!("Creating a single solend position!");
     msg!("getting portfolio details!");
-    
+    if ctx.accounts.user_transfer_authority.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
     let approved_position_details = &mut ctx.accounts.position_pda;
 
     //let (lending_market_authority_pubkey, _bump_seed) = Pubkey::find_program_address(
@@ -133,9 +137,9 @@ pub fn handler(
         ],
         &[
             [
-                ctx.accounts.owner.key().as_ref(),
+                ctx.accounts.user_transfer_authority.owner.key().as_ref(),
                 seeds::PORTFOLIO_SEED,
-                &[_bump_portfolio]
+                &[ctx.accounts.user_transfer_authority.bump]
             ].as_ref()
         ])?;
 

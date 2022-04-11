@@ -106,6 +106,7 @@ export async function permissionlessFulfillSolend(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
+    puller: PublicKey,
     index: number,
     solendAction: SolendAction
 ) {
@@ -136,14 +137,12 @@ export async function permissionlessFulfillSolend(
     console.log("program id ", solendAction.solendInfo.programID.toString())    
 
     let ix = await solbondProgram.instruction.createPositionSolend(
-        bumpPosition,
-        portfolioBump,
         new BN(bumpAtaLiq),
         new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {
-                owner: owner,
+                puller: puller,
                 positionPda: positionPDA,
                 sourceLiquidity: pdaOwnedATA,
                 liquidityMint: positionAccount.currencyMint,
@@ -170,6 +169,7 @@ export async function redeemSinglePositionSolend(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
+    puller: PublicKey,
     currencyMint: PublicKey,
     index: number,
     tokenSymbol : string
@@ -220,14 +220,12 @@ export async function redeemSinglePositionSolend(
     let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     let ix = await solbondProgram.instruction.redeemPositionSolend(
-        new BN(bumpPosition),
-        new BN(portfolioBump),
         new BN(bumpAtaLiq),
         new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {
-                owner: owner,
+                puller: puller,
                 positionPda: positionPDA,
                 userTransferAuthority: portfolioPDA,
                 destinationLiquidity: pdaOwnedATA,

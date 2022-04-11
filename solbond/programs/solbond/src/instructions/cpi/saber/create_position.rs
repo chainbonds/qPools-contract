@@ -19,8 +19,6 @@ use std::cmp;
 #[derive(Accounts)]
 // #[instruction(amount)]
 #[instruction(
-    _bump_position: u8,
-    _bump_portfolio: u8,
     _bump_ata_a: u8,
     _bump_ata_b: u8,
     _bump_ata_lp: u8,
@@ -30,33 +28,36 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         mut,
-        seeds = [
-            owner.key().as_ref(),
-            &_index.to_le_bytes(),
-            seeds::USER_POSITION_STRING
-        ],
-        bump = _bump_position,
+        //seeds = [
+        //    owner.key().as_ref(),
+        //    &_index.to_le_bytes(),
+        //    seeds::USER_POSITION_STRING
+        //],
+        //bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
     #[account(
         mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        //seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
+    //#[account(mut)]
+    //pub owner: AccountInfo<'info>,
+    
     #[account(mut)]
-    pub owner: AccountInfo<'info>,
+    pub puller: Signer<'info>,
 
   
     /// The output account for LP tokens.
     /// 
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = puller,
         token::mint = pool_mint,
         token::authority = portfolio_pda,
-        seeds = [owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        seeds = [portfolio_pda.owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_lp
     )]
     pub output_lp: Box<Account<'info, TokenAccount>>,
@@ -75,10 +76,10 @@ pub struct SaberLiquidityInstruction<'info> {
     // input block
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = puller,
         token::mint = mint_a,
         token::authority = portfolio_pda,
-        seeds = [owner.key().as_ref(),mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        seeds = [portfolio_pda.owner.key().as_ref(),mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_a,
         constraint = &qpools_a.owner == &portfolio_pda.key(),
 
@@ -95,10 +96,10 @@ pub struct SaberLiquidityInstruction<'info> {
 
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = puller,
         token::mint = mint_b,
         token::authority = portfolio_pda,
-        seeds = [owner.key().as_ref(),mint_b.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        seeds = [portfolio_pda.owner.key().as_ref(),mint_b.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_b,
         constraint = &qpools_b.owner == &portfolio_pda.key(),
     )]
@@ -113,8 +114,6 @@ pub struct SaberLiquidityInstruction<'info> {
 
 pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
-    _bump_position: u8,
-    _bump_portfolio: u8,
     _bump_ata_a: u8,
     _bump_ata_b: u8,
     _bump_ata_lp: u8,
@@ -122,15 +121,14 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("Creating a single saber position!");
     msg!("getting portfolio details!");
-    
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
     if ctx.accounts.position_pda.is_fulfilled {
         return Err(ErrorCode::PositionAlreadyFulfilledError.into());
     }
     if ctx.accounts.position_pda.index > ctx.accounts.portfolio_pda.num_positions || ctx.accounts.portfolio_pda.fully_created {
         return Err(ErrorCode::PositionFullyCreatedError.into());
-    }
-    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }
     if ctx.accounts.pool_mint.key() != ctx.accounts.position_pda.pool_address {
         return Err(ErrorCode::ProvidedMintNotMatching.into());
@@ -179,9 +177,9 @@ pub fn handler(
             deposit_context,
             &[
                 [
-                    ctx.accounts.owner.key().as_ref(),
+                    ctx.accounts.portfolio_pda.owner.key().as_ref(),
                     seeds::PORTFOLIO_SEED,
-                    &[_bump_portfolio]
+                    &[ctx.accounts.portfolio_pda.bump]
                 ].as_ref()
             ]
         ),

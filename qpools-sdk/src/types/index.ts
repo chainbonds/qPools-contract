@@ -3,5 +3,5 @@ import * as interfacingAccount from "./interfacing";
 
 export {
     programAccount,
-    interfacingAccount
+    interfacingAccount,
 }

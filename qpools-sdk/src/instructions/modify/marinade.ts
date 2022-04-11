@@ -47,6 +47,7 @@ export async function createPositionMarinade(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
+    puller: PublicKey,
     index: number,
     marinadeState: MarinadeState
 ): Promise<TransactionInstruction> {
@@ -59,19 +60,18 @@ export async function createPositionMarinade(
     //const pda_msol = await getAccountForMintAndPDADontCreate(marinadeState.mSolMintAddress, portfolioPda);
 
     console.log("owner ", owner.toString())
+    console.log("puller ", puller.toString())
     console.log("positionPDA ", positionPDA.toString())
     console.log("portfolioPDA ", portfolioPda.toString())
     console.log("state ", marinadeState.marinadeStateAddress.toString())
     console.log("msolMInt ", marinadeState.mSolMintAddress.toString())
     let ix: TransactionInstruction = await solbondProgram.instruction.createPositionMarinade(
-        portfolioBump,
-        bumpPosition,
         new BN(bumpMarinade),
         new BN(bumpMsolAta),
         new BN(index),
         {
             accounts: {
-                owner: owner,
+                puller: puller,
                 positionPda: positionPDA,
                 portfolioPda: portfolioPda,
                 state: marinadeState.marinadeStateAddress,

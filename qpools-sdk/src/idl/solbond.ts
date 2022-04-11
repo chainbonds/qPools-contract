@@ -643,6 +643,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "puller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "state",
           "isMut": true,
           "isSigner": false
@@ -688,11 +693,6 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "marinadeProgram",
           "isMut": false,
           "isSigner": false
@@ -714,14 +714,6 @@ export type Solbond = {
         }
       ],
       "args": [
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
         {
           "name": "bumpMarinade",
           "type": "u8"
@@ -750,9 +742,9 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "puller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "outputLp",
@@ -827,14 +819,6 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
           "name": "bumpAtaA",
           "type": "u8"
         },
@@ -861,9 +845,9 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "name": "puller",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "liquidityMint",
@@ -937,14 +921,6 @@ export type Solbond = {
         }
       ],
       "args": [
-        {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
         {
           "name": "bumpAtaLiq",
           "type": "u8"
@@ -1072,9 +1048,9 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "portfolioOwner",
+          "name": "puller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "swapAuthority",
@@ -1149,14 +1125,6 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
           "name": "bumpAtaA",
           "type": "u8"
         },
@@ -1179,9 +1147,9 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "name": "puller",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "sourceCollateral",
@@ -1256,14 +1224,6 @@ export type Solbond = {
       ],
       "args": [
         {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
           "name": "bumpAtaLiq",
           "type": "u8"
         },
@@ -1286,9 +1246,9 @@ export type Solbond = {
           "isSigner": false
         },
         {
-          "name": "portfolioOwner",
+          "name": "puller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "userCurrencyPdaAccount",
@@ -1327,10 +1287,6 @@ export type Solbond = {
         }
       ],
       "args": [
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
         {
           "name": "bumpUserCurrency",
           "type": "u8"
@@ -2495,6 +2451,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "puller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "state",
           "isMut": true,
           "isSigner": false
@@ -2540,11 +2501,6 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "marinadeProgram",
           "isMut": false,
           "isSigner": false
@@ -2566,14 +2522,6 @@ export const IDL: Solbond = {
         }
       ],
       "args": [
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
         {
           "name": "bumpMarinade",
           "type": "u8"
@@ -2602,9 +2550,9 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "puller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "outputLp",
@@ -2679,14 +2627,6 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
           "name": "bumpAtaA",
           "type": "u8"
         },
@@ -2713,9 +2653,9 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "name": "puller",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "liquidityMint",
@@ -2789,14 +2729,6 @@ export const IDL: Solbond = {
         }
       ],
       "args": [
-        {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
         {
           "name": "bumpAtaLiq",
           "type": "u8"
@@ -2924,9 +2856,9 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "portfolioOwner",
+          "name": "puller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "swapAuthority",
@@ -3001,14 +2933,6 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
           "name": "bumpAtaA",
           "type": "u8"
         },
@@ -3031,9 +2955,9 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          "name": "puller",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "sourceCollateral",
@@ -3108,14 +3032,6 @@ export const IDL: Solbond = {
       ],
       "args": [
         {
-          "name": "bumpPosition",
-          "type": "u8"
-        },
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
-        {
           "name": "bumpAtaLiq",
           "type": "u8"
         },
@@ -3138,9 +3054,9 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
-          "name": "portfolioOwner",
+          "name": "puller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "userCurrencyPdaAccount",
@@ -3179,10 +3095,6 @@ export const IDL: Solbond = {
         }
       ],
       "args": [
-        {
-          "name": "bumpPortfolio",
-          "type": "u8"
-        },
         {
           "name": "bumpUserCurrency",
           "type": "u8"

@@ -11,29 +11,25 @@ import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {WalletI} from "easy-spl";
 import {Marinade, MarinadeConfig} from '@marinade.finance/marinade-ts-sdk';
-
 import {
     accountExists,
     createAssociatedTokenAccountUnsignedInstruction,
     delay,
-    getAccountForMintAndPDADontCreate,
     getAssociatedTokenAddressOffCurve, getTokenAmount,
     IWallet,
     tokenAccountExists
 } from "../utils";
 import {PortfolioAccount} from "../types/account";
 import {PositionAccountSaber} from "../types/account";
-
 import {getATAPda, getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import {PositionAccountMarinade} from "../types/account";
 import {UserCurrencyAccount} from "../types/account";
 import {Registry} from "./registry";
 import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
-import {getNativeSolMint, getWrappedSolMint} from "../const";
+import {getWrappedSolMint} from "../const";
 import {PositionAccountSolend} from "../types/account";
-import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
-import {syncNative} from "@solendprotocol/solend-sdk";
+import {SolendReserve, syncNative} from "@solendprotocol/solend-sdk";
 import {closeAccount} from "easy-spl/dist/tx/token-instructions";
 import * as instructions from "../instructions";
 import {PositionInfo, Protocol, ProtocolType} from "../types/interfacing";
@@ -423,20 +419,20 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix
     }
 
-    async approveWithdrawSolend(index: number) {
+    async approveWithdrawSolend(index: number): Promise<Transaction> {
         // Make redeem-amount the full amount
 
         // TODO: How do I get the balance from the solend account ...?
         // let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
         // throw Error("Not implemented yet!");
 
-        let ix = await instructions.modify.solend.signApproveWithdrawAmountSolend(
+        let tx = await instructions.modify.solend.signApproveWithdrawAmountSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
             index,
         );
-        return ix;
+        return tx;
     }
 
     /**
@@ -496,27 +492,95 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         // Add to the portfolio account
         // TODO: Implement members, gotta understand Solend for this
-        throw Error("Not yet implemented solend parseSolendPositionInfo!");
-        // @ts-ignore
+        // throw Error("Not yet implemented solend parseSolendPositionInfo!");
+        // // @ts-ignore
+
+        let [portfolioCurrencyAta, portfolioCurrencyAtaBump] = await getATAPda(this.owner.publicKey, positionAccount.currencyMint, this.solbondProgram);
+        // Check if the portfolio has this account, and fetch any funds ...
+        let currencyAmount: TokenAmount;
+        if (await tokenAccountExists(this.connection, portfolioCurrencyAta)) {
+            console.log("Setting currencAmount to non-zero");
+            currencyAmount = (await this.connection.getTokenAccountBalance(portfolioCurrencyAta)).value;
+        } else {
+            console.log("Setting currencAmount to zero");
+            currencyAmount = getTokenAmount(new BN(0), new BN(9));
+        }
+        let usdcValueA = await multiplyAmountByPythprice(currencyAmount.uiAmount, positionAccount.currencyMint);
+
+        // Now get the lp token from the currency mint
+        // and then get the funds of the user
+        let solendReserve: SolendReserve = await this.registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint);
+
+
+        // From the reserve create a solend action or so
+
+        // let solendObligation = new SolendObligation();
+        // instead of a constructor, they just use an initialize function keyword
+
+        // let solendAction: SolendAction = await SolendAction.initialize(
+        //     "mint",
+        //     new BN(0),
+        //     solendReserve.config.symbol,
+        //     this.portfolioPDA,
+        //     this.connection,
+        //     "devnet"
+        // );
+        // console.log("solendAction for this reserve and portfolio is: ", solendAction);
+
+        // let solendObligation: SolendObligation = new SolendObligation(
+        //     this.portfolioPDA,
+        //     null,
+        //     null,
+        //     [solendReserve]
+        // );
+        // console.log("solendObligation for this reserve and portfolio is: ", solendObligation);
+
+        let collateralMint = new PublicKey(solendReserve.config.collateralMintAddress);
+        let [portfolioCollateralAta, portfolioCollateralAtaBump] = await getATAPda(this.owner.publicKey, positionAccount.currencyMint, this.solbondProgram);
+        // Check if the portfolio has this account, and fetch any funds ...
+        let collateralAmount: TokenAmount;
+        if (await tokenAccountExists(this.connection, portfolioCollateralAta)) {
+            console.log("Setting collateral to non-zero");
+            collateralAmount = (await this.connection.getTokenAccountBalance(portfolioCollateralAta)).value;
+        } else {
+            console.log("Setting collateral to zero");
+            collateralAmount = getTokenAmount(new BN(0), new BN(9));
+        }
+        let usdcValueLp = await multiplyAmountByPythprice(collateralAmount.uiAmount, portfolioCollateralAta);
+
+        let totalPositionValue = usdcValueA + usdcValueLp;
+        // throw Error("Done!");
+
+        // Also update the positionInfo at some point ...
         let out: PositionInfo = {
-            // protocolType: ProtocolType.DEXLP,
-            // protocol: Protocol.saber,
-            // index: positionAccount.index,
-            // poolAddress: positionAccount.poolAddress,
-            // portfolio: this.portfolioPDA,
-            // mintA: state.tokenA.mint,
-            // ataA: portfolioAtaA,
-            // amountA: tokenAAmount,
-            // usdcValueA: usdcValueA,
-            // mintB: state.tokenB.mint,
-            // ataB: portfolioAtaB,
-            // amountB: tokenBAmount,
-            // usdcValueB: usdcValueB,
-            // mintLp: state.poolTokenMint,
-            // ataLp: portfolioAtaLp,
-            // amountLp: tokenLPAmount,
-            // usdcValueLP: usdcValueLP,
-            // totalPositionValue: totalPositionValue
+            protocolType: ProtocolType.Lending,
+            protocol: Protocol.solend,
+            index: positionAccount.index,
+
+            poolAddress: null,
+            portfolio: positionAccount.portfolioPda,
+
+            // A is the input token ...
+            mintA: positionAccount.currencyMint,
+            ataA: portfolioCurrencyAta,
+            amountA: currencyAmount,
+            usdcValueA: usdcValueA,
+
+            // B will be fully empty ..
+            mintB: null,
+            ataB: null,
+            amountB: null,
+            usdcValueB: null,
+
+            // Will be the c-token
+            mintLp: collateralMint,
+            ataLp: portfolioCollateralAta,
+            amountLp: collateralAmount,
+            usdcValueLP: usdcValueLp,
+
+
+            // Gotta calculate this from tokens a and b
+            totalPositionValue: totalPositionValue
         };
         console.log("##parseSolendPositionInfo()");
         return out;
@@ -641,6 +705,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             index: positionAccount.index,
             poolAddress: null,
             portfolio: this.portfolioPDA,
+
+            // Should replace this with the input currency ...
             mintA: mSOLMint,
             ataA: portfolioAtaMSol,
             amountA: mSOLAmount,
@@ -911,6 +977,30 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
 
+                let solendUsdcAmount = position.usdcValueA + position.usdcValueLP;
+                usdAmount += solendUsdcAmount;
+                // Again, we skip this for now because all tokens we work with are USDC-based
+                // // Also convert here to USD,
+                // let usdValueUserA = amountUserA;
+                // let usdValueUserB = amountUserB;
+                //
+                // // We can skip this step, bcs again, we only use stablecoins for now
+                // let userPositionValue = usdValueUserA + usdValueUserB + usdValueUserLp;
+                includedMints.add(position.mintLp.toString());
+
+                storedPositionUsdcAmounts.push(
+                    {totalPositionValue: solendUsdcAmount}
+                )
+            } else if (position.protocol === Protocol.solend) {
+
+                console.log("Position (Staking) is: ", position);
+
+                // Just take the totalPositionUsdcAmount ...
+
+                // let marinadeToken = position.amountA.uiAmount;
+                // Multiply this with the marinade token
+                // TODO: Change this with pyth oracle pricing from registry
+
                 let marinadeUsdcAmount = await multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
                 // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
@@ -927,6 +1017,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 storedPositionUsdcAmounts.push(
                     {totalPositionValue: marinadeUsdcAmount}
                 )
+
             } else {
                 throw Error("Protocol Type is none of: " + JSON.stringify(position));
             }

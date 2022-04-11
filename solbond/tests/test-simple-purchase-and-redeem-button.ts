@@ -72,7 +72,7 @@ describe('qPools!', () => {
 
         // TODO: For the crank, create a new keypair who runs these cranks ... (as is done on the front-end)
 
-        registry = new qpools.helperClasses.Registry();
+        registry = new qpools.helperClasses.Registry(connection);
 
         portfolioObject = new qpools.helperClasses.PortfolioFrontendFriendlyChainedInstructions(
             connection,
@@ -346,7 +346,7 @@ describe('qPools!', () => {
         let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
 
-        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2, tokenSymbolSolend);
+        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(2);
         console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend)
 
         // For each initial asset, send it back to the user

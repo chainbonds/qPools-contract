@@ -157,23 +157,46 @@ export class CrankRpcCalls {
     }
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[], positionsSolend: PositionAccountSolend[]): Promise<void> {
+        console.log("#redeemAllPositions()");
+        let inputCurrencyMints = new Set<string>();
         console.log("Running saber items: ", positionsSaber);
         await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
             console.log("Closing following position account: ", x);
+
+            const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, x.poolAddress);
+            console.log("getting state");
+            const {state} = stableSwapState;
+
+            // TODO: Add the input currency to the positions!
+            inputCurrencyMints.add(state.tokenA.mint.toString());
+            inputCurrencyMints.add(state.tokenB.mint.toString());
+
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
         }));
         // TODO: Also redeem solend!
-        // await Program.all(positionsSolend.map(async (x: PositionAccountSolend) => {
-        //     // Also get the symbol through the currency mint ...
-        //     // let token = await this.registry.getTokenIndexedBySymbol(x.currencyMint);
-        //     // Assuming that the token is exclusively used for solend ...
-        //     // TODO: Perhaps add a registry item to go from Solend Currency to Solend Symbol (?)
-        //     let sgRedeemSolendPositions = await this.redeemPositionSolend(x.currencyMint, x.index, token.symbol);
-        //     console.log("Signature to run the crank to get back USDC is: ", sgRedeemSolendPositions);
-        // }));
+        await Promise.all(positionsSolend.map(async (x: PositionAccountSolend) => {
+            // Also get the symbol through the currency mint ...
+            // let token = await this.registry.getTokenIndexedBySymbol(x.currencyMint);
+            // Assuming that the token is exclusively used for solend ...
+            inputCurrencyMints.add(x.currencyMint.toString());
+            // TODO: Perhaps add a registry item to go from Solend Currency to Solend Symbol (?)
+            let sgRedeemSolendPositions = await this.redeemPositionSolend(x.index);
+            console.log("Signature to run the crank to get back USDC is: ", sgRedeemSolendPositions);
+        }));
+
+        console.log("Now sendin back the currencies as well...");
+        // Now also redeem the individual currencies ..
+        await Promise.all(Array.from(inputCurrencyMints.values()).map(async (x: string) => {
+            let currencyMint = new PublicKey(x);
+            let sgTransferMSolToUser = await this.transfer_to_user(currencyMint);
+            console.log("Signature to send back mSOL", sgTransferMSolToUser);
+            return;
+        }));
+
         // We don't redeem marinade actively ...
         console.log("Approving Marinade Withdraw");
+        console.log("##redeemAllPositions()");
         return
     }
 
@@ -254,16 +277,15 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.crankProvider, ix)
     }
 
-    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string) {
+    async redeemPositionSolend(index: number) {
 
         let ix = await instructions.modify.solend.redeemSinglePositionSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
             this.crankProvider.wallet.publicKey,
-            currencyMint,
             index,
-            tokenSymbol
+            this.registry
         );
         return await sendAndSignInstruction(this.crankProvider, ix);
 

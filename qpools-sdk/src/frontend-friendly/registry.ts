@@ -1,13 +1,14 @@
 /**
  * A bunch of logic to make loading objects more efficient
  */
-import {PublicKey} from "@solana/web3.js";
+import {Connection, PublicKey} from "@solana/web3.js";
 import {getSaberPools, getSaberTokens} from "../instructions/api/saber";
 import {getMarinadePools, getMarinadeTokens} from "../instructions/api/marinade";
 import {getSolendPools, getSolendTokens} from "../instructions/api/solend";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
 import {ExplicitPool, ExplicitSaberPool, ExplicitToken, Protocol} from "../types/interfacing";
 import {getWrappedSolMint} from "../const";
+import {SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
 
 export class Registry {
 
@@ -26,6 +27,7 @@ export class Registry {
     tokenIndexedByTokenMint: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
     tokenIndexedBySymbol: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
 
+    // solendMarketIndexedByCurrencyMint: Map<string, SolendMarket> = new Map<>
 
     // nativeSolMint: PublicKey = new PublicKey("NativeSo11111111111111111111111111111111111");
     // wrappedSolMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
@@ -34,7 +36,21 @@ export class Registry {
 
     userPubkey: PublicKey = getWrappedSolMint();
 
-    constructor() {}
+    // Anything protocol specific
+    solendMarket: SolendMarket | null = null;
+    connection: Connection
+
+    constructor(connection: Connection) {
+        // Change devnet with actual environment
+        this.connection = connection;
+        this.initializeSolend()
+    }
+
+    async initializeSolend() {
+        if (!this.solendMarket) {
+            this.solendMarket = await SolendMarket.initialize(this.connection, "devnet");
+        }
+    }
 
     async setNewPubkey(userPubkey: PublicKey) {
         // Delete all pool indecies and objects, and re-create them on-load ...
@@ -352,6 +368,19 @@ export class Registry {
     /**
      * Anything specific to solend
      */
-
+    async getSolendReserveFromInputCurrencyMint(currencyMint: PublicKey): Promise<SolendReserve | null> {
+        await this.initializeSolend();
+        console.log("Reserves before are ...", this.solendMarket.reserves);
+        let reserves: SolendReserve[] = this.solendMarket.reserves.filter((res: SolendReserve) => {
+            return res.config.mintAddress === currencyMint.toString()
+        });
+        // Make sure that this is unique
+        console.log("Reserves are ...", reserves);
+        console.assert(reserves.length === 1)
+        if (reserves.length < 1) {
+            return null;
+        }
+        return reserves[0];
+    }
 
 }

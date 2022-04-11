@@ -1485,6 +1485,10 @@ export type Solbond = {
             "type": "publicKey"
           },
           {
+            "name": "poolAddress",
+            "type": "publicKey"
+          },
+          {
             "name": "isFulfilled",
             "type": "bool"
           },
@@ -3290,6 +3294,10 @@ export const IDL: Solbond = {
           },
           {
             "name": "currencyMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "poolAddress",
             "type": "publicKey"
           },
           {

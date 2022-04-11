@@ -1,4 +1,4 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
@@ -7,6 +7,7 @@ import * as anchor from "@project-serum/anchor";
 import {PositionAccountSolend} from "../../types/account";
 import {SolendAction} from "@solendprotocol/solend-sdk";
 import {Cluster, getNetworkCluster} from "../../network";
+import {Registry} from "../../frontend-friendly";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSolend(
@@ -57,8 +58,9 @@ export async function signApproveWithdrawAmountSolend(
     owner: PublicKey,
     index: number,
     // redeemAmount: u64
-) {
+): Promise<Transaction> {
     console.log("#signApproveWithdrawAmountSaber()");
+    let tx = new Transaction();
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
 
@@ -70,7 +72,7 @@ export async function signApproveWithdrawAmountSolend(
         throw Error("Something major is off 2");
     }
     if (positionAccount.redeemApproved) {
-        return null;
+        return tx;
     }
     // Take out as many c-tokens as there are ...
     // TODO: How to get the amount of c-tokens from here ...
@@ -98,8 +100,9 @@ export async function signApproveWithdrawAmountSolend(
             }
         }
     )
+    tx.add(ix)
     console.log("##signApproveWithdrawAmountSaber()");
-    return ix;
+    return tx;
 }
 
 /*
@@ -173,9 +176,8 @@ export async function redeemSinglePositionSolend(
     solbondProgram: Program,
     owner: PublicKey,
     puller: PublicKey,
-    currencyMint: PublicKey,
     index: number,
-    tokenSymbol : string
+    registry: Registry
 ) {
     console.log("#redeemSinglePositionOnlyOne()");
     // TODO: Do a translation from index to state first ...
@@ -190,12 +192,13 @@ export async function redeemSinglePositionSolend(
     console.log("aaa 25solend");
 
     // Almost all the arguments should be fetched from the program online ... very important.
+    let tokenSymbol = (await registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint)).config.symbol;
 
- 
     // const stableSwapState = await getPoolState(connection, pool_address);
     // const {state} = stableSwapState;
     let solendAction: SolendAction;
     if (getNetworkCluster() === Cluster.DEVNET) {
+        console.log("Token Symbol is: ", tokenSymbol);
         solendAction = await SolendAction.initialize(
             "mint",
             new BN(0),
@@ -221,7 +224,7 @@ export async function redeemSinglePositionSolend(
     // console.log("🦒 mint A", state.tokenA.mint.toString());
     // console.log("🦒 mint B", state.tokenB.mint.toString());
     // console.log("🦒 mint LP", state.poolTokenMint.toString());
-    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, currencyMint, solbondProgram)
+    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, positionAccount.currencyMint, solbondProgram)
     let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     let ix = await solbondProgram.instruction.redeemPositionSolend(
@@ -234,7 +237,7 @@ export async function redeemSinglePositionSolend(
                 positionPda: positionPDA,
                 userTransferAuthority: portfolioPDA,
                 destinationLiquidity: pdaOwnedATA,
-                liquidityMint: currencyMint,
+                liquidityMint: positionAccount.currencyMint,
                 sourceCollateral: pdaOwnedCollateral,
                 reserve: new PublicKey(solendAction.reserve.address),
                 reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),

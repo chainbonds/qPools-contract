@@ -91,6 +91,7 @@ pub fn handler(
                                     ],
         ), ctx.accounts.pda_msol_account.amount)?;
     
+    portfolio.num_redeemed += 1;
     let position = &mut ctx.accounts.position_pda;
     position.is_redeemed = true;
     //position_account.msol_out_amount = _msol_out_amount;

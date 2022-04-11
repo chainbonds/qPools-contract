@@ -73,7 +73,7 @@ pub struct MarinadePositionInstruction<'info> {
     pub reserve_pda: AccountInfo<'info>, // marinadeState.reserveAddress(),
 
     #[account(
-        init,
+        init_if_needed,
         payer = puller,
         token::mint = msol_mint,
         token::authority = portfolio_pda,

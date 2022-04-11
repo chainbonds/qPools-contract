@@ -19,6 +19,8 @@ export async function createPortfolioSigned(
         throw Error("Does not match in length!");
     }
     let sumOfWeights: BN = weights.reduce((sum, current) => sum.add(current), new BN(0));
+    console.assert(owner);
+    console.assert(solbondProgram);
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     const numPositions = weights.length;
     console.log("Creating Portfolio", portfolioPda.toString());

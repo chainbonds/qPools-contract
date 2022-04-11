@@ -3,7 +3,6 @@ import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
-import {getAccountForMintAndPDADontCreate} from "../../utils";
 
 import {PositionAccountSolend} from "../../types/account";
 import {SolendAction} from "@solendprotocol/solend-sdk";
@@ -75,12 +74,15 @@ export async function signApproveWithdrawAmountSolend(
     }
     // Take out as many c-tokens as there are ...
     // TODO: How to get the amount of c-tokens from here ...
-    throw Error("Not implemented yet!");
+    // throw Error("Not implemented yet!");
+    // Get the total amount of c-tokens that the user can withdraw ...
+    // perhaps should be tied to the withdraw_amount ...?
+    // positionAccount.withdrawAmount is 0!
 
     let ix = await solbondProgram.instruction.approveWithdrawSolend(
         portfolioBump,
         new BN(bumpPosition),
-        new BN(0),
+        new BN(1),
         new BN(index),
         {
             accounts: {

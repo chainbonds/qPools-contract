@@ -177,7 +177,7 @@ pub fn handler(
             deposit_context,
             &[
                 [
-                    ctx.accounts.portfolio_pda.key().as_ref(),
+                    ctx.accounts.portfolio_pda.owner.key().as_ref(),
                     seeds::PORTFOLIO_SEED,
                     &[ctx.accounts.portfolio_pda.bump]
                 ].as_ref()

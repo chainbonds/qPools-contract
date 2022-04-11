@@ -16,7 +16,7 @@ import {
 import {PortfolioAccount} from "../types/account";
 import {PositionAccountSaber} from "../types/account";
 
-import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
+import {getATAPda, getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import {PositionAccountMarinade} from "../types/account";
 import {UserCurrencyAccount} from "../types/account";
@@ -113,7 +113,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         const marinadeConfig = new MarinadeConfig({
             connection: connection,
             publicKey: provider.wallet.publicKey,
-
         });
         let marinade = new Marinade(marinadeConfig);
         MarinadeState.fetch(marinade).then((marinadeState: MarinadeState) => {
@@ -132,13 +131,29 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         delay(1000);
     }
 
+    async initializeState() {
+        const marinadeConfig = new MarinadeConfig({
+            connection: this.connection,
+            publicKey: this.provider.wallet.publicKey,
+        });
+        let marinade = new Marinade(marinadeConfig);
+        this.marinadeState = await MarinadeState.fetch(marinade);
+
+        // Also include the solend config here ...
+
+        // Perhaps initialize this with the mints ....
+        [this.portfolioPDA, this.portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+    }
+
     async wrapSolTransaction(lamports: BN): Promise<Transaction> {
+        // First close the account if it exists, then re-create it again ...
         let out: Transaction = new Transaction();
-        let wrappedSolAta = await getAssociatedTokenAddress(
+        let wrappedSolAta = await getAssociatedTokenAddressOffCurve(
             getWrappedSolMint(),
             this.providerWallet.publicKey!
         );
-        // TODO: Can only close account if it exists already ...
+        // Can only close account if it exists already ...
+        // We assume that the createAssociatedTokenAccount creates these
         // Throw error if this account is not yet created ...?
         out.add(
             SystemProgram.transfer({
@@ -155,13 +170,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     async unwrapSolTransaction(): Promise<Transaction> {
         let out: Transaction = new Transaction();
-        let wrappedSolAta = await getAssociatedTokenAddress(
+        let wrappedSolAta = await getAssociatedTokenAddressOffCurve(
             getWrappedSolMint(),
             this.providerWallet.publicKey!
         );
         // Add a token transfer to the guy, and then unwrap the SOL
         // TODO: Can only close account if it exists already ...
         if ((await tokenAccountExists(this.connection, wrappedSolAta))) {
+            console.log("Wrapped Sol Account is closing ...!", wrappedSolAta.toString());
             out.add(
                 closeAccount({
                     source: wrappedSolAta,
@@ -181,69 +197,31 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         wallet: IWallet
     ): Promise<Transaction> {
 
-        // let instructions: TransactionInstruction[] = [];
-        // Change according to mainnet, or registry ...
-
         console.log("Getting portfolio PDA");
-        let [portfolioPDA, portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
         let createdAtaAccounts: Set<string> = new Set();
         // For the Portfolio!
         // For all saber pool addresses (tokenA, tokenB, LPToken), create associated token address
         // For MSOL, create associated token addresses
         // For USDC currency, create associated token account
 
+        // Append the wrapped SOL mint to this just in case ..
+        mints = [...mints, getWrappedSolMint()];
+        // De-duplicate these mints beforehand ...
+        mints = mints.map((x: PublicKey) => x.toString()).filter(function(elem, index, self) {
+            return index === self.indexOf(elem);
+        }).map((x: string) => new PublicKey(x));
+
         let tx: Transaction = new Transaction();
-        // await Promise.all(saber_pool_addresses.map(async (poolAddress: PublicKey) => {
-        //
-        //     console.log("Getting portfolio PDA");
-        //     // Hmm, portfolio PDA is not
-        //     const stableSwapState = await getPoolState(this.connection, poolAddress);
-        //     const {state} = stableSwapState;
-        //     let ixs = await registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
-        //         this.connection,
-        //         this.solbondProgram,
-        //         this.owner.publicKey,
-        //         wallet,
-        //         state,
-        //         createdAtaAccounts  // TODO: Is this shit pass-by-reference
-        //     );
-        //     ixs.map((x: TransactionInstruction) => {tx.add(x)})
-        //
-        // }));
-        // Sign this transaction
 
-        // let mints: PublicKey[] = mints.map(([pool, token]: [registry.ExplicitPool, registry.ExplicitToken]) => {
-        //     let mint = new PublicKey(token.address);
-        //     // if (mint != registry.getNativeSolMint()) {
-        //     //     return null;
-        //     // } else {
-        //     //     return mint;
-        //     // }
-        // }).filter((x: PublicKey | null): x is PublicKey => (x !== null));
-
+        // I think in an async-environment, the set logic is wrong !!!
         await Promise.all(mints.map(async (mint: PublicKey) => {
-
-            let portfolioAta = await getAssociatedTokenAddressOffCurve(mint, portfolioPDA);
-            if (!(await tokenAccountExists(this.connection, portfolioAta)) && !createdAtaAccounts.has(portfolioAta.toString())) {
-                console.log("Creating ATA: ", portfolioAta.toString());
-                let tx1 = await createAssociatedTokenAccountUnsignedInstruction(
-                    this.connection,
-                    mint,
-                    null,
-                    portfolioPDA,
-                    wallet,
-                );
-                createdAtaAccounts.add(portfolioAta.toString());
-                tx.add(tx1);
-            } else {console.log("Skipping Creation of ATA: ", portfolioAta.toString());}
-
             let userAta = await getAssociatedTokenAddressOffCurve(mint, this.owner.publicKey);
-            if (!(await tokenAccountExists(this.connection, userAta)) && !createdAtaAccounts.has(userAta.toString())) {
+            if (!(await tokenAccountExists(this.connection, userAta))) {
                 console.log("Creating ATA: ", userAta.toString());
                 let tx2 = await createAssociatedTokenAccountUnsignedInstruction(
                     this.connection,
                     mint,
-                    null,
+                    userAta,
                     this.owner.publicKey,
                     wallet,
                 );
@@ -388,10 +366,15 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 29");
         let poolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        console.log("Calling Stableswap");
         const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
+        console.log("getting state");
         const {state} = stableSwapState;
-        let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
-        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountpoolToken)).value.amount;
+        console.log("get account for mint and pda");
+        // let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let [userAccountPoolToken, _] = await getATAPda(this.owner.publicKey, state.poolTokenMint, this.solbondProgram);
+        console.log("lp amount");
+        let lpAmount = (await this.connection.getTokenAccountBalance(userAccountPoolToken)).value.amount;
         console.log("Is Redeemed is: ", positionAccount.isRedeemed);
         console.log(positionAccount);
         if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
@@ -434,7 +417,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         // TODO: How do I get the balance from the solend account ...?
         // let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
-        throw Error("Not implemented yet!");
+        // throw Error("Not implemented yet!");
 
         let ix = await instructions.modify.solend.signApproveWithdrawAmountSolend(
             this.connection,
@@ -497,6 +480,37 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
 
+    async parseSolendPositionInfo(positionAccount: PositionAccountSolend): Promise<PositionInfo>{
+        console.log("#parseSolendPositionInfo()");
+
+        // Add to the portfolio account
+        // TODO: Implement members, gotta understand Solend for this
+        throw Error("Not yet implemented solend parseSolendPositionInfo!");
+        // @ts-ignore
+        let out: PositionInfo = {
+            // protocolType: ProtocolType.DEXLP,
+            // protocol: Protocol.saber,
+            // index: positionAccount.index,
+            // poolAddress: positionAccount.poolAddress,
+            // portfolio: this.portfolioPDA,
+            // mintA: state.tokenA.mint,
+            // ataA: portfolioAtaA,
+            // amountA: tokenAAmount,
+            // usdcValueA: usdcValueA,
+            // mintB: state.tokenB.mint,
+            // ataB: portfolioAtaB,
+            // amountB: tokenBAmount,
+            // usdcValueB: usdcValueB,
+            // mintLp: state.poolTokenMint,
+            // ataLp: portfolioAtaLp,
+            // amountLp: tokenLPAmount,
+            // usdcValueLP: usdcValueLP,
+            // totalPositionValue: totalPositionValue
+        };
+        console.log("##parseSolendPositionInfo()");
+        return out;
+    }
+
 
 
     // TODO: Could also port this into a separate instruction-only file
@@ -512,9 +526,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         const {state} = stableSwapState;
 
         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
-        let portfolioAtaA = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-        let portfolioAtaB = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-        let portfolioAtaLp = await getAccountForMintAndPDADontCreate(state.poolTokenMint, this.portfolioPDA);
+        let [portfolioAtaA, portfolioAtaABump] = await getATAPda(this.owner.publicKey, state.tokenA.mint, this.solbondProgram);
+        let [portfolioAtaB, portfolioAtaBBump] = await getATAPda(this.owner.publicKey, state.tokenB.mint, this.solbondProgram);
+        let [portfolioAtaLp, portfolioAtaLpBump] = await getATAPda(this.owner.publicKey, state.poolTokenMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
         let tokenAAmount = (await this.connection.getTokenAccountBalance(portfolioAtaA)).value;
@@ -569,20 +583,26 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Now from the state, you can infer LP tokens, mints, the portfolio PDAs mints
         // Also again maybe don't hard code this (not sure if possible tho, in the end, this is also a protocol...?)
         let mSOLMint = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+        let wrappedSolMint = getWrappedSolMint();
         // This is also the LP Mint ...
         // Gotta store this in the registry
         // TODO: Make this multi-asset logic more scalable
-        let portfolioAtaMSol = await getAccountForMintAndPDADontCreate(mSOLMint, this.portfolioPDA);
+        let [portfolioAtaMSol, portfolioAtaMSolBump] = await getATAPda(this.owner.publicKey, mSOLMint, this.solbondProgram);
+        let [portfolioAtaWrappedMSol, portfolioAtaWrappedMSolBump] = await getATAPda(this.owner.publicKey, wrappedSolMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
         let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
+        let wrappedSolAmount = (await this.connection.getTokenAccountBalance(portfolioAtaWrappedMSol)).value;
         console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
+        console.log("mSOL amount in the portfolio is...: ", wrappedSolAmount);
 
         // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
+        // Here, the usdcValueA should be normal SOL!!! (it is the input token afterall
+
         // Again, convert by the pyth price ...
-        let usdcValueA = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
+        let usdcValueA = await multiplyAmountByPythprice(wrappedSolAmount.uiAmount, wrappedSolMint); //  * 93.23;
         let usdcValueLP = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
 
         // Sum up all the values here to arrive at the Total Position Value?
@@ -732,10 +752,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // For all Saber positions. redeem them like this ...
         let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
         let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
+        let positionsSolend: PositionAccountSolend[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[2];
 
         console.log("Positions Saber and Positions Marinade are: ");
         console.log(positionsSaber);
         console.log(positionsMarinade);
+        console.log(positionsSolend);
+        console.log("Processing all positions ...");
 
         // Now for each one, run their own get-position-info-algorithm
         // Could even do an async map here actually
@@ -743,11 +766,19 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             let processedPosition: PositionInfo = await this.parseSaberPositionInfo(positionSaber);
             out.push(processedPosition);
         }));
+        console.log("Done processing Saber");
 
         await Promise.all(positionsMarinade.map(async (positionMarinade: PositionAccountMarinade) => {
             let processedPosition: PositionInfo = await this.parseMarinadePositionInfo(positionMarinade);
             out.push(processedPosition);
         }));
+        console.log("Done processing Marinade");
+
+        await Promise.all(positionsSolend.map(async (positionSolend: PositionAccountSolend) => {
+            let processedPosition: PositionInfo = await this.parseSolendPositionInfo(positionSolend);
+            out.push(processedPosition);
+        }));
+        console.log("Done processing Solend");
 
         console.log("Existing positions are: ", out);
         console.log("##getPortfolioInformation");

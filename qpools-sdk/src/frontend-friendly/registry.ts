@@ -70,6 +70,7 @@ export class Registry {
      */
     async getAllTokens(): Promise<ExplicitToken[]> {
         if (this.protocolTokenList.length < 1) {
+            console.log("#getAllTokens()");
             console.log("Creating protocolTokenList");
             let saberTokenList: ExplicitToken[] = await getSaberTokens();
             let marinadeTokenList: ExplicitToken[] = await getMarinadeTokens();
@@ -79,7 +80,8 @@ export class Registry {
                 ...marinadeTokenList,
                 ...solendTokenList
             ]
-            console.log("This protocolTokenList is: ", this.protocolPoolList);
+            // console.log("This protocolTokenList is: ", this.protocolPoolList);
+            console.log("##getAllTokens()");
         }
         return this.protocolTokenList;
     }
@@ -96,7 +98,7 @@ export class Registry {
                 ...marinadePoolList,
                 ...solendPoolList
             ];
-            console.log("This protocolPoolList is: ", this.protocolPoolList);
+            // console.log("This protocolPoolList is: ", this.protocolPoolList);
             console.log("##getAllPools()");
         }
         return this.protocolPoolList;

@@ -69,8 +69,7 @@ pub fn handler(
         return Err(ErrorCode::PortfolioNotFullyCreated.into());
     }
     
-    let portfolio = & mut ctx.accounts.portfolio_pda;
-    portfolio.num_redeemed += 1;
+    let portfolio = &mut ctx.accounts.portfolio_pda;
     let position_account = &mut ctx.accounts.position_pda;
     position_account.redeem_approved = true;
 
@@ -92,8 +91,6 @@ pub fn handler(
                                     ],
         ), ctx.accounts.pda_msol_account.amount)?;
     
-    let portfolio = &mut ctx.accounts.portfolio_pda;
-    portfolio.num_redeemed += 1;
     let position = &mut ctx.accounts.position_pda;
     position.is_redeemed = true;
     //position_account.msol_out_amount = _msol_out_amount;

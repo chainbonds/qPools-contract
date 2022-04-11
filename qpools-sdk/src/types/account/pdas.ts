@@ -4,12 +4,13 @@ import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed478",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition878",
-    USER_CURRENCY_STRING: "UserCurrency4268",
-    USER_MARINADE_SEED: "UserMarinade3162",
-    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc2015",
+    PORTFOLIO_ACCOUNT: "portFolioSeed480",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition880",
+    USER_CURRENCY_STRING: "UserCurrency4270",
+    USER_MARINADE_SEED: "UserMarinade3164",
+    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc2017",
 }
+
 
 /**
  * A list of PDAs that we don't really have types / accounts for ...

@@ -1,10 +1,11 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {getMarinadeSolPda, getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {getAccountForMintAndPDADontCreate} from "../../utils";
+import {fetchSinglePositionMarinade} from "../fetch/position";
 
 export async function approvePositionWeightMarinade(
     connection: Connection,
@@ -100,12 +101,24 @@ export async function approveWithdrawToMarinade(
     owner: PublicKey,
     index: number,
     marinade_state: MarinadeState
-): Promise<TransactionInstruction> {
+): Promise<Transaction> {
     console.log("#approveWithdrawToMarinade()");
     let [portfolioPda, bumpPortfolio] = await getPortfolioPda(owner, solbondProgram);
     let [msolATAPda, bumpMsolAta] = await getATAPda(owner, marinade_state.mSolMintAddress,solbondProgram)
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
-    
+
+    let tx: Transaction = new Transaction();
+
+    // Skip this if the marinade position has been fulfilled
+    let marinadePosition = await fetchSinglePositionMarinade(connection, solbondProgram, owner, index);
+    if (marinadePosition.isFulfilled && !marinadePosition.isFulfilled) {
+        throw Error("Something major is off 2");
+    }
+    if (marinadePosition.redeemApproved) {
+        console.log("Marinade is already redeemed!");
+        return tx;
+    }
+
     console.log("1111 pda for msol is: ", marinade_state.mSolMintAddress);
     //const pda_msol = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, portfolioPda);
     const usermsol = await getAccountForMintAndPDADontCreate(marinade_state.mSolMintAddress, owner);
@@ -130,5 +143,6 @@ export async function approveWithdrawToMarinade(
         }
     )
     console.log("##approveWithdrawToMarinade()");
-    return ix;
+    tx.add(ix);
+    return tx;
 }

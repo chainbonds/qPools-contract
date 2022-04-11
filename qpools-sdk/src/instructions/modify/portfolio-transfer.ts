@@ -1,7 +1,7 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
-import {getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve} from "../../utils";
+import {getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve, tokenAccountExists} from "../../utils";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 
@@ -72,8 +72,9 @@ export async function transfer_to_user(
     owner: PublicKey,
     puller: PublicKey,
     currencyMint: PublicKey
-): Promise<TransactionInstruction> {
+): Promise<Transaction> {
     console.log("#transfer_to_user()");
+    let tx: Transaction = new Transaction();
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [ataPDA, bumpATA] = await getATAPda(owner, currencyMint,solbondProgram);
     //let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA);
@@ -85,6 +86,10 @@ export async function transfer_to_user(
     console.log("currencyMint ", currencyMint.toString());
     console.log("owner ", owner.toString());
     console.log("puller ", puller.toString());
+    // This token account is closed, if it has been transferred back ...
+    if (!(await tokenAccountExists(connection, currencyPDA))) {
+        return tx;
+    }
     let ix = await solbondProgram.instruction.transferRedeemedToUser(
         new BN(bumpCurrency),
         new BN(bumpATA),
@@ -103,5 +108,6 @@ export async function transfer_to_user(
         }
     )
     console.log("##transfer_to_user()");
-    return ix;
+    tx.add(ix);
+    return tx;
 }

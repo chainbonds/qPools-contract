@@ -12,15 +12,15 @@ import {BN, Program} from "@project-serum/anchor";
 
 // TODO: Perhaps we should think about unifying these as well (?) at least add an ENUM in the beginning of the struct, defining which protocol this belongs to
 export interface PositionAccountMarinade {
-    portfolio_pda: PublicKey,
-    is_fulfilled: boolean,
-    is_redeemed: boolean,
-    redeem_approved: boolean,
+    portfolioPda: PublicKey,
+    isFulfilled: boolean,
+    isRedeemed: boolean,
+    redeemApproved: boolean,
     index: number,
     weight: u64,
-    initial_sol_amount: u64,
-    msol_out_amount: u64,
-    withdraw_sol_amount: u64,
+    initialSolAmount: u64,
+    msolOutAmount: u64,
+    withdrawSolAmount: u64,
     bump: number,
     timestamp: BN,
 }

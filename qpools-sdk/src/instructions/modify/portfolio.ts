@@ -1,8 +1,10 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
+import {PortfolioAccount} from "../../types/account";
+import {fetchPortfolio} from "../fetch/portfolio";
 
 export async function createPortfolioSigned(
     connection: Connection,
@@ -77,9 +79,16 @@ export async function approvePortfolioWithdraw(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey
-): Promise<TransactionInstruction> {
+): Promise<Transaction> {
     console.log("#registerCurrencyInputInPortfolio()");
+    let tx = new Transaction();
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    // Get the portfolioPda
+    // Only approveWithdraw if it has not been done already ..
+    let portfolio: PortfolioAccount = await fetchPortfolio(connection, solbondProgram, owner);
+    if (portfolio.toBeRedeemed) {
+        return tx;
+    }
     let ix: TransactionInstruction = solbondProgram.instruction.approveWithdrawToUser(
         new BN(portfolioBump),
         {
@@ -93,5 +102,6 @@ export async function approvePortfolioWithdraw(
         }
     )
     console.log("##registerCurrencyInputInPortfolio()");
-    return ix;
+    tx.add(ix);
+    return tx;
 }

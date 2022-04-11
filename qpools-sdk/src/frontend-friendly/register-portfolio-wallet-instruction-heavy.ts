@@ -1,4 +1,12 @@
-import {Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionInstruction} from "@solana/web3.js";
+import {
+    Connection,
+    Keypair,
+    PublicKey,
+    SystemProgram,
+    TokenAmount,
+    Transaction,
+    TransactionInstruction
+} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {WalletI} from "easy-spl";
@@ -9,7 +17,7 @@ import {
     createAssociatedTokenAccountUnsignedInstruction,
     delay,
     getAccountForMintAndPDADontCreate,
-    getAssociatedTokenAddressOffCurve,
+    getAssociatedTokenAddressOffCurve, getTokenAmount,
     IWallet,
     tokenAccountExists
 } from "../utils";
@@ -305,13 +313,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     // Redeem Operations
-    async approveWithdrawPortfolio(): Promise<TransactionInstruction> {
-        let ix = await instructions.modify.portfolio.approvePortfolioWithdraw(
+    async approveWithdrawPortfolio(): Promise<Transaction> {
+        let tx = await instructions.modify.portfolio.approvePortfolioWithdraw(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey
         );
-        return ix;
+        return tx;
     }
 
     /**
@@ -357,9 +365,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
     // Withdraw
-    async signApproveWithdrawAmountSaber(index: number, minRedeemTokenAmount: u64): Promise<TransactionInstruction> {
+    async signApproveWithdrawAmountSaber(index: number, minRedeemTokenAmount: u64): Promise<Transaction> {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
+        let tx = new Transaction();
         // Fetch the position
         // I guess, gotta double-check that Saber redeemable works ...
         console.log("aaa 28");
@@ -377,12 +386,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let lpAmount = (await this.connection.getTokenAccountBalance(userAccountPoolToken)).value.amount;
         console.log("Is Redeemed is: ", positionAccount.isRedeemed);
         console.log(positionAccount);
+        // This is not necessarily anything off ...
         if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
             throw Error("Something major is off 2");
         }
-
-        if (positionAccount.isRedeemed) {
-            return null;
+        if (positionAccount.redeemApproved) {
+            console.log("Marinade is already redeemed!");
+            return tx;
         }
         let ix = await instructions.modify.saber.signApproveWithdrawAmountSaber(
             this.connection,
@@ -393,7 +403,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             minRedeemTokenAmount,
             this.registry
         );
-        return ix;
+        tx.add(ix);
+        return tx;
     }
 
     /**
@@ -445,7 +456,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     // Withdraw
-    async approveWithdrawToMarinade(index: number): Promise<TransactionInstruction> {
+    async approveWithdrawToMarinade(index: number): Promise<Transaction> {
         let ix = await instructions.modify.marinade.approveWithdrawToMarinade(
             this.connection,
             this.solbondProgram,
@@ -576,6 +587,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     }
 
     async parseMarinadePositionInfo(positionAccount: PositionAccountMarinade): Promise<PositionInfo>{
+        console.log("#parseMarinadePositionInfo()");
         console.log("Pool Address is: ", positionAccount);
         // You can make the pool address the mSOL mint for now
         // console.log("Pool Address is: ", positionAccount.poolAddress.toString());
@@ -591,8 +603,20 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let [portfolioAtaWrappedMSol, portfolioAtaWrappedMSolBump] = await getATAPda(this.owner.publicKey, wrappedSolMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
-        let mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
-        let wrappedSolAmount = (await this.connection.getTokenAccountBalance(portfolioAtaWrappedMSol)).value;
+        console.log("Getting token account balances ...")
+        let mSOLAmount: TokenAmount;
+        if (await tokenAccountExists(this.connection, portfolioAtaMSol)) {
+            mSOLAmount = (await this.connection.getTokenAccountBalance(portfolioAtaMSol)).value;
+        } else {
+            mSOLAmount = getTokenAmount(new BN(0), new BN(9));
+        }
+        // Only grab these, if the respective account exists ...
+        let wrappedSolAmount: TokenAmount;
+        if (await tokenAccountExists(this.connection, portfolioAtaWrappedMSol)) {
+            wrappedSolAmount = (await this.connection.getTokenAccountBalance(portfolioAtaWrappedMSol)).value;
+        } else {
+            wrappedSolAmount = getTokenAmount(new BN(0), new BN(9));
+        }
         console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
         console.log("mSOL amount in the portfolio is...: ", wrappedSolAmount);
 
@@ -631,6 +655,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             usdcValueLP: usdcValueLP,
             totalPositionValue: totalPositionValue
         };
+        console.log("##parseMarinadePositionInfo()");
         return out;
     }
 
@@ -658,21 +683,22 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         positionsSaber: PositionAccountSaber[],
         positionsMarinade: PositionAccountMarinade[],
         positionsSolend: PositionAccountSolend[]
-    ): Promise<TransactionInstruction[]> {
+    ): Promise<Transaction> {
         // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
-        let out: TransactionInstruction[] = [];
+        // let out: TransactionInstruction[] = [];
+        let out: Transaction = new Transaction();
         await Promise.all(positionsSaber.map(async(x: PositionAccountSaber) => {
             let minRedeemAmount = new BN(0);  // This is the minimum amount of tokens that should be put out ...
             let IxApproveWithdrawSaber = await this.signApproveWithdrawAmountSaber(x.index, minRedeemAmount);
-            out.push(IxApproveWithdrawSaber);
+            out.add(IxApproveWithdrawSaber);
         }));
         await Promise.all(positionsMarinade.map(async(x: PositionAccountMarinade) => {
             let IxApproveWithdrawMarinade = await this.approveWithdrawToMarinade(x.index);
-            out.push(IxApproveWithdrawMarinade);
+            out.add(IxApproveWithdrawMarinade);
         }));
         await Promise.all(positionsSolend.map(async(x: PositionAccountSolend) => {
             let IxApproveWithdrawSolend = await this.approveWithdrawSolend(x.index);
-            out.push(IxApproveWithdrawSolend);
+            out.add(IxApproveWithdrawSolend);
         }));
         console.log("Approving Marinade Withdraw");
         return out;
@@ -752,7 +778,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // For all Saber positions. redeem them like this ...
         let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
         let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
-        let positionsSolend: PositionAccountSolend[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[2];
+        let positionsSolend: PositionAccountSolend[] = (await this.fetchAllPositionsByProtocol(Protocol.solend))[2];
 
         console.log("Positions Saber and Positions Marinade are: ");
         console.log(positionsSaber);

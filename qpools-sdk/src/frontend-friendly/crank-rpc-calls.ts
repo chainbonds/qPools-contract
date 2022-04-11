@@ -1,17 +1,18 @@
 import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
-import {delay, IWallet, QWallet, sendAndSignInstruction} from "../utils";
+import {delay, IWallet, QWallet, sendAndSignInstruction, sendAndSignTransaction} from "../utils";
 import {Marinade, MarinadeConfig, MarinadeState} from "@marinade.finance/marinade-ts-sdk";
 import {Registry} from "./registry";
 import {getSolbondProgram} from "../index";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {sendLamports} from "../instructions/modify/portfolio-transfer";
-import {PortfolioAccount, PositionAccountMarinade, PositionAccountSaber} from "../types/account";
+import {PortfolioAccount, PositionAccountMarinade, PositionAccountSaber, PositionAccountSolend} from "../types/account";
 import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
 import {SolendAction} from "@solendprotocol/solend-sdk";
 import {permissionlessFulfillSolend} from "../instructions/modify/solend";
 import * as instructions from "../instructions";
 import {Cluster, getNetworkCluster} from "../network";
+import {sendAndConfirm} from "easy-spl/dist/util";
 
 export class CrankRpcCalls {
 
@@ -59,7 +60,7 @@ export class CrankRpcCalls {
         let cluster: Cluster;
         if (getNetworkCluster() === Cluster.DEVNET) {
             cluster = Cluster.DEVNET;
-        }  else {
+        } else {
             throw Error("Cluster not implemented! crankRpcCalls Helper class");
         }
         this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, cluster);
@@ -106,14 +107,14 @@ export class CrankRpcCalls {
      */
     async transfer_to_user(currencyMint: PublicKey) {
         // Creating the user-account if it doesn't yet exist
-        let ix = await instructions.modify.portfolioTransfer.transfer_to_user(
+        let tx = await instructions.modify.portfolioTransfer.transfer_to_user(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
             this.crankProvider.wallet.publicKey,
             currencyMint
         );
-        return await sendAndSignInstruction(this.crankProvider, ix);
+        return await sendAndSignTransaction(this.crankProvider, tx);
     }
 
     async sendToUsersWallet(tmpKeypair: PublicKey, lamports: BN): Promise<TransactionInstruction> {
@@ -155,11 +156,22 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
-    async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
+    async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[], positionsSolend: PositionAccountSolend[]): Promise<void> {
+        console.log("Running saber items: ", positionsSaber);
         await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
+            console.log("Closing following position account: ", x);
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
         }));
+        // TODO: Also redeem solend!
+        // await Program.all(positionsSolend.map(async (x: PositionAccountSolend) => {
+        //     // Also get the symbol through the currency mint ...
+        //     // let token = await this.registry.getTokenIndexedBySymbol(x.currencyMint);
+        //     // Assuming that the token is exclusively used for solend ...
+        //     // TODO: Perhaps add a registry item to go from Solend Currency to Solend Symbol (?)
+        //     let sgRedeemSolendPositions = await this.redeemPositionSolend(x.currencyMint, x.index, token.symbol);
+        //     console.log("Signature to run the crank to get back USDC is: ", sgRedeemSolendPositions);
+        // }));
         // We don't redeem marinade actively ...
         console.log("Approving Marinade Withdraw");
         return
@@ -186,13 +198,13 @@ export class CrankRpcCalls {
         console.log("aaa 14");
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 15");
+        console.log("Current position is: ", currentPosition);
 
-        if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {
-            console.log("Crank Orders were already redeemed!");
-            throw Error("Something major is off!");
-            return;
-        }
-
+        // if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {
+        //     console.log("Crank Orders were already redeemed!");
+        //     throw Error("Something major is off!");
+        //     return;
+        // }
         if (currentPosition.isRedeemed) {
             console.log("Crank Orders were already redeemed!");
             return;

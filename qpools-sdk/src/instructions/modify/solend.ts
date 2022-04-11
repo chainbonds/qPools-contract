@@ -69,11 +69,14 @@ export async function signApproveWithdrawAmountSolend(
     if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
         throw Error("Something major is off 2");
     }
-    if (positionAccount.isRedeemed) {
+    if (positionAccount.redeemApproved) {
         return null;
     }
     // Take out as many c-tokens as there are ...
     // TODO: How to get the amount of c-tokens from here ...
+
+    // TODO: Also make sure that the position is not yet redeemed ..
+
     // throw Error("Not implemented yet!");
     // Get the total amount of c-tokens that the user can withdraw ...
     // perhaps should be tied to the withdraw_amount ...?
@@ -185,6 +188,8 @@ export async function redeemSinglePositionSolend(
     console.log("aaa 24solend");
     let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
     console.log("aaa 25solend");
+
+    // Almost all the arguments should be fetched from the program online ... very important.
 
  
     // const stableSwapState = await getPoolState(connection, pool_address);

@@ -4,7 +4,8 @@
         "test:integrate-marinade-and-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-and-saber.ts",
         "test:integrate-marinade": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-marinade-integration.ts",
         "test:integrate-chained": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-simple-purchase-and-redeem-button.ts",
-        "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts"
+        "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts",
+        "test:integrate-coingecko": "ANCHOR_WALLET=~/.config/solana/id.json /home/ahmet/.nvm/versions/node/v16.14.0/bin/node /home/ahmet/.nvm/versions/node/v16.14.0/bin/mocha -t 1000000 --require ts-node/register tests/coinGeckoTest.ts"
     },
     "dependencies": {
         "@project-serum/anchor": "^0.20.1",

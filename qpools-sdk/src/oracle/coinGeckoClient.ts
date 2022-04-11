@@ -8,7 +8,7 @@ import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPy
 import axios from "axios";
 export class CoinGeckoClient {
 
-    coinGeckoData;
+    static coinGeckoData;
     registry : Registry;
     vs_currencies = ["usd", "eur", "chf"]
 
@@ -45,9 +45,9 @@ export class CoinGeckoClient {
     }
 
     async getDataForAllRegisteredTokens (){
-        if(this.coinGeckoData != null){
+        if(CoinGeckoClient.coinGeckoData != null){
             console.log("I was here")
-            return this.coinGeckoData;
+            return CoinGeckoClient.coinGeckoData;
         }
         let priceEndpoint : string = "https://api.coingecko.com/api/v3/simple/price?"
 
@@ -57,9 +57,9 @@ export class CoinGeckoClient {
         let query_vsCurrency = "vs_currencies=".concat(this.arrayToQueryForm(this.vs_currencies))
         let query = priceEndpoint.concat(query_Ids).concat("&").concat(query_vsCurrency)
         console.log(query)
-        await axios.get<any>(query).then(result => { console.log(result.data); this.coinGeckoData = result.data})
+        await axios.get<any>(query).then(result => { console.log(result.data); CoinGeckoClient.coinGeckoData = result.data})
         //console.log(this.coinGeckoData)
-        return this.coinGeckoData
+        return CoinGeckoClient.coinGeckoData
 
     }
 

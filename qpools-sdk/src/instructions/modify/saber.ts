@@ -159,9 +159,9 @@ export async function permissionlessFulfillSaber(
     //console.log("userB ", userAccountA.toString());
     //let userAccountpoolToken = await getAccountForMintAndPDADontCreate(state.poolTokenMint, portfolioPDA);
 
-    let [ataA, bumpATAa] = await getATAPda(owner,state.tokenA.mint, solbondProgram)
-    let [ataB, bumpATAb] = await getATAPda(owner,state.tokenB.mint, solbondProgram)
-    let [ataLP, bumpATAlp] = await getATAPda(owner,state.poolTokenMint, solbondProgram)
+    let [ataA, bumpATAa] = await getATAPda(owner, state.tokenA.mint, solbondProgram)
+    let [ataB, bumpATAb] = await getATAPda(owner, state.tokenB.mint, solbondProgram)
+    let [ataLP, bumpATAlp] = await getATAPda(owner, state.poolTokenMint, solbondProgram)
 
     let ix = await solbondProgram.instruction.createPositionSaber(
         bumpPosition,

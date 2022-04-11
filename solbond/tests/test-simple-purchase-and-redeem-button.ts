@@ -70,6 +70,8 @@ describe('qPools!', () => {
     // Do some airdrop before we start the tests ...
     before(async () => {
 
+        // TODO: For the crank, create a new keypair who runs these cranks ... (as is done on the front-end)
+
         registry = new qpools.helperClasses.Registry();
 
         portfolioObject = new qpools.helperClasses.PortfolioFrontendFriendlyChainedInstructions(

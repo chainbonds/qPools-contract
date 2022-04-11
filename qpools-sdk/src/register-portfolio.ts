@@ -29,7 +29,7 @@ import {
     transfer_to_user,
     transferUsdcFromUserToPortfolio
 } from "./instructions/modify/portfolio-transfer";
-import {getATAPda, getPortfolioPda} from "./types/account/pdas";
+import {getPortfolioPda} from "./types/account/pdas";
 import {getPoolState} from "./instructions/fetch/saber";
 import {MOCK} from "./const";
 import {Registry} from "./frontend-friendly";

@@ -154,7 +154,6 @@ export class CrankRpcCalls {
     }
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
-        // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
         await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);

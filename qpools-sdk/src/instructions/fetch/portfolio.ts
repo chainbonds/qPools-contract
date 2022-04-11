@@ -46,7 +46,7 @@ export async function fetchPortfolio(
     let portfolioContent = null;
     console.log("Before trying to fetch");
     if (await accountExists(connection, portfolioPda)) {
-        console.log("Exists and trying to fetch");
+        console.log("Exists and trying to fetch", portfolioPda.toString());
         portfolioContent = (await solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
     }
     console.log("Now fetching again ...", portfolioContent);

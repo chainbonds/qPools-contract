@@ -82,6 +82,8 @@ describe('qPools!', () => {
         );
         await portfolioObject.initializeState();
 
+        // TODO: Create a new provider for the crank ... (?), and airdrop them some SOL
+
         crankRpcTool = new qpools.helperClasses.CrankRpcCalls(
             connection,
             genericPayer,

@@ -11,7 +11,6 @@ use crate::utils::seeds;
     _sum_of_weight:u64,
     _num_positions:u32,
     _num_currencies: u32,
-
 )]
 pub struct SavePortfolio<'info> {
 

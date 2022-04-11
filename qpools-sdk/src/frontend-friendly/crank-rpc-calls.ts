@@ -75,7 +75,7 @@ export class CrankRpcCalls {
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
-        this.loadPortfolioPdas();
+        this.initializeState();
 
         const marinadeConfig = new MarinadeConfig({
             connection: connection,
@@ -90,10 +90,15 @@ export class CrankRpcCalls {
         delay(1000);
     }
 
-    async loadPortfolioPdas() {
-        let [portfolioPDA, bumpPortfolio] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
-        this.portfolioPDA = portfolioPDA
-        this.portfolioBump = bumpPortfolio
+    async initializeState() {
+        [this.portfolioPDA, this.portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+        const marinadeConfig = new MarinadeConfig({
+            connection: this.connection,
+            publicKey: this.provider.wallet.publicKey,
+
+        });
+        let marinade = new Marinade(marinadeConfig);
+        this.marinadeState = await MarinadeState.fetch(marinade);
     }
 
     /**
@@ -151,7 +156,6 @@ export class CrankRpcCalls {
     }
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
-        // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
         await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
@@ -220,7 +224,7 @@ export class CrankRpcCalls {
     }
 
 
-    async createPositionSolend(index: number, solendAction: SolendAction, currencyMint: PublicKey) {
+    async createPositionSolend(index: number, solendAction: SolendAction) {
         // TODO: From the currency-mint, fetch the solend symbol ...
         // tokenSymbol: string
         // TODO: Remove the harcoded tokenSymbol variable ...

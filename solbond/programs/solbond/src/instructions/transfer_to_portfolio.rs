@@ -26,7 +26,7 @@ use crate::utils::seeds;
     pub user_owned_token_account: Box<Account<'info, TokenAccount>>,
     
     #[account(
-        init,         
+        init_if_needed,
         payer = owner,
         token::mint = token_mint,
         token::authority = portfolio_pda,

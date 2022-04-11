@@ -70,7 +70,6 @@ export async function getUserCurrencyPda(
     owner: PublicKey,
     currencyMint: PublicKey
 ): Promise<[PublicKey, number]> {
-    // throw Error("getUserCurrencyAccount not Implemented Yet!");
     let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
         [owner.toBuffer(),
             currencyMint.toBuffer() ,

@@ -13,7 +13,7 @@ import {
 //import {
 //    getSolbondProgram,
 //} from "@qpools/sdk";
-import {delay, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
+import {delay, QWallet, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
 import {SolendMarket, SolendAction, syncNative} from "@solendprotocol/solend-sdk";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 
@@ -84,9 +84,14 @@ describe('qPools!', () => {
 
         // TODO: Create a new provider for the crank ... (?), and airdrop them some SOL
 
+        // Send some SOL to the tmpKeypair
+        let tmpKeypair = Keypair.generate();
+        const sg = await connection.requestAirdrop(tmpKeypair.publicKey, 500_000_000);
+        const tx = await connection.confirmTransaction(sg);
+        console.log("airdrop tx: ", tx);
         crankRpcTool = new qpools.helperClasses.CrankRpcCalls(
             connection,
-            genericPayer,
+            tmpKeypair,
             provider,
             solbondProgram,
             registry

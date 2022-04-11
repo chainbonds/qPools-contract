@@ -1,5 +1,5 @@
-pub const PORTFOLIO_SEED: &[u8; 16] = b"portFolioSeed383";
-pub const USER_POSITION_STRING: &[u8; 16] = b"UsingPosition783";
-pub const USER_CURRENCY_STRING: &[u8; 16] = b"UserCurrency3273";
-pub const USER_MARINADE_SEED: &[u8; 16] = b"UserMarinade2167";
-pub const TOKEN_ACCOUNT_SEED: &[u8; 16] = b"pdaOTokenAcc1020";
+pub const PORTFOLIO_SEED: &[u8; 16] = b"portFolioSeed476";
+pub const USER_POSITION_STRING: &[u8; 16] = b"UsingPosition876";
+pub const USER_CURRENCY_STRING: &[u8; 16] = b"UserCurrency4266";
+pub const USER_MARINADE_SEED: &[u8; 16] = b"UserMarinade3160";
+pub const TOKEN_ACCOUNT_SEED: &[u8; 16] = b"pdaOTokenAcc2013";

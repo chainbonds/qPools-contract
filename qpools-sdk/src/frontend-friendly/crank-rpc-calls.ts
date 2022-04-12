@@ -163,7 +163,8 @@ export class CrankRpcCalls {
         await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
             console.log("Closing following position account: ", x);
 
-            const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, x.poolAddress);
+            let poolAddress = await this.registry.saberPoolLpToken2poolAddress(x.poolAddress);
+            const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
             console.log("getting state");
             const {state} = stableSwapState;
 

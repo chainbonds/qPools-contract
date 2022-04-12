@@ -511,6 +511,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // and then get the funds of the user
         let solendReserve: SolendReserve = await this.registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint);
 
+        // read out the token balance of the collateral mint account ..
+
+
 
         // From the reserve create a solend action or so
 
@@ -536,7 +539,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // console.log("solendObligation for this reserve and portfolio is: ", solendObligation);
 
         let collateralMint = new PublicKey(solendReserve.config.collateralMintAddress);
-        let [portfolioCollateralAta, portfolioCollateralAtaBump] = await getATAPda(this.owner.publicKey, positionAccount.currencyMint, this.solbondProgram);
+        let [portfolioCollateralAta, portfolioCollateralAtaBump] = await getATAPda(this.owner.publicKey, new PublicKey(solendReserve.config.collateralMintAddress), this.solbondProgram);
         // Check if the portfolio has this account, and fetch any funds ...
         let collateralAmount: TokenAmount;
         if (await tokenAccountExists(this.connection, portfolioCollateralAta)) {

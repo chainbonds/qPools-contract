@@ -23,7 +23,6 @@ export class CrankRpcCalls {
 
     public portfolioPDA: PublicKey;
     public portfolioBump: number;
-    public portfolioOwner: PublicKey;
 
     public payer: Keypair;
     public owner: IWallet;
@@ -83,6 +82,10 @@ export class CrankRpcCalls {
 
         });
         let marinade = new Marinade(marinadeConfig);
+        getPortfolioPda(this.owner.publicKey, this.solbondProgram).then(([portfolioPda, portfolioBump]) => {
+            this.portfolioPDA = portfolioPda;
+            this.portfolioBump =  portfolioBump;
+        });
         MarinadeState.fetch(marinade).then((marinadeState: MarinadeState) => {
             this.marinadeState = marinadeState;
         });
@@ -290,163 +293,5 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.crankProvider, ix);
 
     }
-
-
-    // async fullfillAllPermissionless(): Promise<boolean> {
-    //     await this.loadPortfolioPdas();
-    //     console.log("aaa 8");
-    //     let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-    //     console.log("aaa 9");
-    //     for (let index = 0; index < portfolioAccount.numPositions; index++) {
-    //         await this.permissionlessFulfillSaber(index);
-    //     }
-    //     return true;
-    // }
-    //
-    // /**
-    //  * Send all the rest of SOL back to the user
-    //  */
-
-    // async fullfillAllWithdrawalsPermissionless(): Promise<void> {
-    //     console.log("aaa 12");
-    //     let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-    //     console.log("aaa 13");
-    //     for (let index = 0; index < portfolioAccount.numPositions; index++) {
-    //         await this.redeemSinglePositionOnlyOne(index);
-    //     }
-    // }
-    //
-    // async redeemSinglePositionOnlyOne(index: number): Promise<string[]> {
-    // TODO: This case-distinction is important! To know which parameter to take out ...
-    // TODO: Might require some more refactoring in the backend ..
-    // TODO: Maybe add a refactoring item somewhere
-    //     const stableSwapState = await this.getPoolState(poolAddress);
-    //     const {state} = stableSwapState;
-    //     console.log("got state ", state);
-    //
-    //     let poolTokenMint = state.poolTokenMint
-    //     console.log("poolTokenMint ", poolTokenMint.toString());
-    //
-    //     const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
-    //     console.log("authority ", authority.toString());
-    //
-    //     // TODO: Depending on if USDC == mintA or USDC == mintB, you should reverse these
-    //
-    //     let userAccount;
-    //     let reserveA: PublicKey;
-    //     let feesA: PublicKey;
-    //     let mintA: PublicKey;
-    //     let reserveB: PublicKey;
-    //     let userAccountpoolToken = await getAccountForMintAndPDADontCreate(poolTokenMint, this.portfolioPDA);
-    //
-    //     if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
-    //         userAccount = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-    //         reserveA = state.tokenA.reserve
-    //         feesA = state.tokenA.adminFeeAccount
-    //         mintA = state.tokenA.mint
-    //         reserveB = state.tokenB.reserve
-    //
-    //     } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
-    //         userAccount = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-    //         reserveA = state.tokenB.reserve
-    //         feesA = state.tokenB.adminFeeAccount
-    //         mintA = state.tokenB.mint
-    //         reserveB = state.tokenA.reserve
-    //
-    //     } else {
-    //         throw Error(
-    //             "Could not find overlapping USDC Pool Mint Address!! " +
-    //             MOCK.DEV.SABER_USDC.toString() + " (Saber USDC) " +
-    //             state.tokenA.mint.toString() + " (MintA) " +
-    //             state.tokenB.mint.toString() + " (MintB) "
-    //         )
-    //     }
-    //
-    //     console.log("👀 positionPda ", positionPDA.toString());
-    //
-    //     console.log("😸 portfolioPda", this.portfolioPDA.toString());
-    //     console.log("👾 owner.publicKey",  this.owner.publicKey.toString());
-    //
-    //     console.log("🟢 poolTokenMint", poolTokenMint.toString());
-    //     console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
-    //
-    //     console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
-    //
-    //     console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
-    //     console.log("🤥 userAccountA", userAccount.toString());
-    //     console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
-    //
-    //     console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
-    //
-    //     console.log("🦒 mint A", state.tokenA.mint.toString());
-    //     console.log("🦒 mint B", state.tokenB.mint.toString());
-    //     console.log("🦒 mint LP", poolTokenMint.toString());
-    //
-    //     let finaltx = await this.crankSolbondProgram.rpc.redeemPositionOneSaber(
-    //         new BN(this.portfolioBump),
-    //         new BN(bumpPosition),
-    //         new BN(index),
-    //         {
-    //             accounts: {
-    //                 positionPda: positionPDA,
-    //                 portfolioPda: this.portfolioPDA,
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 poolMint: poolTokenMint,
-    //                 inputLp: userAccountpoolToken,
-    //                 swapAuthority: stableSwapState.config.authority,
-    //                 swap:stableSwapState.config.swapAccount,
-    //                 userA: userAccount,
-    //                 reserveA: reserveA,
-    //                 mintA: mintA,
-    //                 reserveB: reserveB,
-    //                 feesA: feesA,
-    //                 saberSwapProgram: this.stableSwapProgramId,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //             },
-    //         }
-    //     )
-    //
-    //     await this.provider.connection.confirmTransaction(finaltx);
-    //     console.log("Single Redeem Transaction is : ", finaltx);
-    //
-    //     return [finaltx];
-    // }
-    //
-    // async transferToUser(): Promise<string[]> {
-    //
-    //     // Get user's PDA for USDC
-    //     let userUsdcata = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.owner.publicKey);
-    //     let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
-    //
-    //     console.log("Check if these accounts exist, already ...");
-    //     console.log("userUsdcata", userUsdcata.toString());
-    //     console.log("pdaUSDCAccount", pdaUSDCAccount.toString());
-    //     console.log("userUsdcata", await tokenAccountExists(this.connection, userUsdcata));
-    //     console.log("pdaUSDCAccount", await tokenAccountExists(this.connection, pdaUSDCAccount));
-    //
-    //     let finaltx = await this.crankSolbondProgram.rpc.transferRedeemedToUser(
-    //         new BN(this.portfolioBump),
-    //         {
-    //             accounts: {
-    //                 portfolioPda: this.portfolioPDA,
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 userOwnedUserA: userUsdcata,
-    //                 pdaOwnedUserA: pdaUSDCAccount,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //
-    //                 // Create liquidity accounts
-    //             },
-    //             //signers:[signer]
-    //         }
-    //     )
-    //     await this.provider.connection.confirmTransaction(finaltx);
-    //     console.log("gave user money back : ", finaltx);
-    //
-    //     return [finaltx];
-    // }
 
 }

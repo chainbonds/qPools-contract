@@ -12,7 +12,6 @@ import {SolendAction} from "@solendprotocol/solend-sdk";
 import {permissionlessFulfillSolend} from "../instructions/modify/solend";
 import * as instructions from "../instructions";
 import {Cluster, getNetworkCluster} from "../network";
-import {sendAndConfirm} from "easy-spl/dist/util";
 
 export class CrankRpcCalls {
 

@@ -113,6 +113,8 @@ pub fn handler(
         return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }
     if ctx.accounts.position_pda.initial_sol_amount < ctx.accounts.state.min_deposit {
+        // send sol back for now
+        
         return Err(ErrorCode::MarinadeChanged.into());
 
     } 

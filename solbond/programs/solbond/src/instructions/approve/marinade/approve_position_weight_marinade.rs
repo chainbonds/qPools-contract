@@ -5,6 +5,7 @@ use crate::utils::seeds;
 use crate::ErrorCode;
 use anchor_lang::solana_program::{program::invoke, system_instruction, system_program};
 
+use marinade_finance::state::{State};
 
 #[derive(Accounts)]
 #[instruction(
@@ -33,6 +34,9 @@ pub struct ApprovePositionWeightMarinade<'info> {
         bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountMarinade>>,
+
+    //read only
+    pub state: Box<Account<'info, State>>,
 
     #[account(
         mut,
@@ -72,10 +76,15 @@ pub fn handler(
         return Err(ErrorCode::IndexHigherThanNumPos.into());
     }
 
+    if _initial_sol_amount < ctx.accounts.state.min_deposit {
+        return Err(ErrorCode::MinStakeAmount.into());
+    }
+
     let position_account = &mut ctx.accounts.position_pda;
     position_account.index = _index;
     position_account.weight = _weight;
-
+    // don't need to save it!
+    //position_account.min_deposit_when_approved = ctx.accounts.state.min_deposit;
     position_account.initial_sol_amount = _initial_sol_amount;
     position_account.withdraw_sol_amount = 0;
 

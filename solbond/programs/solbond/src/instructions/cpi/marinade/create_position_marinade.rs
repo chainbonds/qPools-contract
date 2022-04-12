@@ -16,6 +16,8 @@ use marinade_onchain_helper::{
     },
     cpi_util
 };
+use marinade_finance::state::{State};
+
 //use amm::{self, Tickmap, State, Pool, Tick, Position, PositionList};
 
 // init_if_needed,
@@ -56,7 +58,7 @@ pub struct MarinadePositionInstruction<'info> {
     pub puller: Signer<'info>,
 
     #[account(mut)]
-    pub state: AccountInfo<'info>, // marinadeState.marinadeStateAddress,
+    pub state: Box<Account<'info,State>>, // marinadeState.marinadeStateAddress,
 
     #[account(mut)]
     pub msol_mint: AccountInfo<'info>, // marinadeState.mSolMintAddress,.
@@ -110,6 +112,10 @@ pub fn handler(
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
         return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }
+    if ctx.accounts.position_pda.initial_sol_amount < ctx.accounts.state.min_deposit {
+        return Err(ErrorCode::MarinadeChanged.into());
+
+    } 
     let dep_amt: u64 = ctx.accounts.position_pda.initial_sol_amount;
 
     let data = marinade_finance::instruction::Deposit{ lamports:dep_amt };

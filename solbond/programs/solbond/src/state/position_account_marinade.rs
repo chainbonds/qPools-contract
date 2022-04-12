@@ -28,6 +28,8 @@ pub struct PositionAccountMarinade {
     pub bump: u8,
     pub timestamp: i64,
 
+    //pub min_deposit_when_approved: u64,
+
     
 
 }

@@ -363,12 +363,14 @@ pub mod solbond {
  */
 #[error]
 pub enum ErrorCode {
+    #[msg("Marinade needs more now..")]
+    MarinadeChanged,
     #[msg("Position can't be set for redeem before portfolio completion")]
     PortfolioNotFullyCreated,
     #[msg("Index of position surpasses approved number of positions")]
     IndexHigherThanNumPos,
-    #[msg("Marinade needs more than 1 SOL")]
-    MarinadeNeedsMoreThanOneSol,
+    #[msg("Marinade min stake!")]
+    MinStakeAmount,
     #[msg("Redeem has not been approved yet!")]
     RedeemNotApproved,
     #[msg("Position has already been redeemed!")]

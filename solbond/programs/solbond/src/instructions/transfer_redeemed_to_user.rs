@@ -8,22 +8,26 @@ use crate::ErrorCode;
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_portfolio: u8,
     _bump_user_currency: u8,
+    _bump_ata: u8,
+
 )]
 pub struct TransferRedeemedToUser<'info> {
     #[account(mut,
-    seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+    //seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
 
+    //#[account(mut)]
+    //pub portfolio_owner: AccountInfo<'info>,
+
     #[account(mut)]
-    pub portfolio_owner: AccountInfo<'info>,
+    pub puller: Signer<'info>,
 
     #[account(
         mut,
         seeds = [
-            portfolio_owner.key().as_ref(),
+            portfolio_pda.owner.key().as_ref(),
             currency_mint.key().as_ref(),
             seeds::USER_CURRENCY_STRING
         ],
@@ -34,11 +38,13 @@ pub struct TransferRedeemedToUser<'info> {
     //      user_token: SwapToken  block
     #[account(
         mut,
-        //constraint = &user_owned_user_a.owner == &portfolio_pda.key(),
+        constraint = &user_owned_user_a.owner == &portfolio_pda.owner.key(),
     )]
     pub user_owned_user_a: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
+        seeds = [portfolio_pda.owner.key().as_ref(),currency_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata,
         constraint = &pda_owned_user_a.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_user_a: Box<Account<'info, TokenAccount>>,
@@ -59,54 +65,14 @@ pub struct TransferRedeemedToUser<'info> {
 
 pub fn handler(
     ctx: Context<TransferRedeemedToUser>,
-    _bump_portfolio: u8,
     _bump_user_currency: u8,
+    _bump_ata: u8,
 ) -> ProgramResult {
 
     //let amount_after_fee;
-    let portfolio = &mut ctx.accounts.portfolio_pda;
-    if portfolio.num_redeemed < portfolio.num_positions {
+    if ctx.accounts.portfolio_pda.num_redeemed < ctx.accounts.portfolio_pda.num_positions {
         return Err(ErrorCode::NotReadyForTransferBack.into());
     }
-    // no fees for now 
-    /*if portfolio.withdraw_amount_USDC > portfolio.initial_amount_USDC {
-        msg!("Made some profits, will take 20% fees :P");
-        //let fee_amount = (amount * 20)/(100);
-        let profit = portfolio.withdraw_amount_USDC .checked_sub(portfolio.initial_amount_USDC).ok_or_else(| | {ErrorCode::CustomMathError6})?;
-        let tmp1 = profit.checked_mul(20).ok_or_else(||{ErrorCode::CustomMathError6})?;
-        let fee_amount = tmp1.checked_div(100).ok_or_else(||{ErrorCode::CustomMathError7})?;
-        amount_after_fee  = portfolio.withdraw_amount_USDC .checked_sub(fee_amount).ok_or_else(||{ErrorCode::CustomMathError8})?;
-        msg!(&format!("amount to take as fee {}", fee_amount));
-        msg!(&format!("amount to give to user {}", amount_after_fee));
-
-        let cpi_accounts_fees = Transfer {
-            from: ctx.accounts.pda_owned_user_a.to_account_info(),
-            to: ctx.accounts.fees_qpools_a.to_account_info(),
-            authority: ctx.accounts.portfolio_pda.to_account_info(),
-        };
-        ctx.accounts.pda_owned_user_a.amount;
-        let cpi_program_fees = ctx.accounts.token_program.to_account_info();
-        token::transfer(CpiContext::new_with_signer(
-            cpi_program_fees,
-            cpi_accounts_fees,
-            &[
-                [
-                    ctx.accounts.portfolio_owner.key.as_ref(),
-                    seeds::PORTFOLIO_SEED,
-                    &[_bump_portfolio]
-                ].as_ref()
-            ],
-
-        ), fee_amount)?;
-
-        msg!("transered fees to qPools");
-
-        
-    } else {
-        msg!("zero fees, sorry for your losses");
-        amount_after_fee = portfolio.withdraw_amount_USDC ;
-        
-    }*/
 
     let cpi_accounts = Transfer {
         from: ctx.accounts.pda_owned_user_a.to_account_info(),
@@ -120,16 +86,16 @@ pub fn handler(
             cpi_accounts,
             &[
                 [
-                    ctx.accounts.portfolio_owner.key.as_ref(),
+                    ctx.accounts.portfolio_pda.owner.key().as_ref(),
                     seeds::PORTFOLIO_SEED,
-                    &[_bump_portfolio]
+                    &[ctx.accounts.portfolio_pda.bump]
                 ].as_ref()
             ],
 
         ), ctx.accounts.pda_owned_user_a.amount as u64)?;
 
-    // close portfolio account
-    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
+    // close currency account
+    let owner_acc_info = ctx.accounts.puller.to_account_info();
     let user_starting_lamports = owner_acc_info.lamports();
     let user_currency_acc_info = ctx.accounts.user_currency_pda_account.to_account_info();
     **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(user_currency_acc_info.lamports()).unwrap();
@@ -137,14 +103,21 @@ pub fn handler(
     let mut user_currency_data = user_currency_acc_info.data.borrow_mut();
     user_currency_data.fill(0);
 
-    // close portfolio account
-    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
-    let user_starting_lamports = owner_acc_info.lamports();
-    let portfolio_acc_info = ctx.accounts.portfolio_pda.to_account_info();
-    **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(portfolio_acc_info.lamports()).unwrap();
-    **portfolio_acc_info.lamports.borrow_mut() = 0;
-    let mut portfolio_data = portfolio_acc_info.data.borrow_mut();
-    portfolio_data.fill(0);
+    
+    let portfolio = &mut ctx.accounts.portfolio_pda;
+    portfolio.num_currencies_sent_back += 1;
+    if portfolio.num_currencies_sent_back >= portfolio.num_currencies {
+        // close portfolio account
+        // only if all positions have been sent back to user
+        let owner_acc_info = ctx.accounts.puller.to_account_info();
+        let user_starting_lamports = owner_acc_info.lamports();
+        let portfolio_acc_info = ctx.accounts.portfolio_pda.to_account_info();
+        **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(portfolio_acc_info.lamports()).unwrap();
+        **portfolio_acc_info.lamports.borrow_mut() = 0;
+        let mut portfolio_data = portfolio_acc_info.data.borrow_mut();
+        portfolio_data.fill(0);
+    }
+    
 
     Ok(())
 }

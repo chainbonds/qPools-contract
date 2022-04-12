@@ -4,15 +4,29 @@ import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
 
 export const SEED = {
-    PORTFOLIO_ACCOUNT: "portFolioSeed591",
-    POSITION_ACCOUNT_APPENDUM: "UsingPosition373",
-    USER_CURRENCY_STRING: "UserCurrency1263",
-    USER_MARINADE_SEED: "UserMarinade0053"
+    PORTFOLIO_ACCOUNT: "portFolioSeed483",
+    POSITION_ACCOUNT_APPENDUM: "UsingPosition883",
+    USER_CURRENCY_STRING: "UserCurrency4273",
+    USER_MARINADE_SEED: "UserMarinade3167",
+    TOKEN_ACCOUNT_SEED: "pdaOTokenAcc2020",
 }
 
 /**
  * A list of PDAs that we don't really have types / accounts for ...
  */
+
+export async function getATAPda(
+    owner: PublicKey,
+    mint: PublicKey,
+    solbondProgram: Program
+): Promise<[PublicKey, number]> {
+    return await PublicKey.findProgramAddress(
+        [owner.toBuffer(), 
+        mint.toBuffer(),
+        Buffer.from(anchor.utils.bytes.utf8.encode(SEED.TOKEN_ACCOUNT_SEED))],
+        solbondProgram.programId
+    );
+}
 export async function getMarinadeSolPda(
     owner: PublicKey,
     solbondProgram: Program
@@ -56,7 +70,6 @@ export async function getUserCurrencyPda(
     owner: PublicKey,
     currencyMint: PublicKey
 ): Promise<[PublicKey, number]> {
-    // throw Error("getUserCurrencyAccount not Implemented Yet!");
     let [currencyPDA, bumpCurrency] = await PublicKey.findProgramAddress(
         [owner.toBuffer(),
             currencyMint.toBuffer() ,

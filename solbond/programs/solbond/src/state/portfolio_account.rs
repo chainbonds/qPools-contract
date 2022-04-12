@@ -22,6 +22,11 @@ pub struct PortfolioAccount {
     pub num_positions: u32,
     pub num_created: u32,
 
+    pub num_currencies: u32,
+    pub num_currencies_sent_back: u32,
+
+
+
     // time when portfolio signed
     pub start_timestamp: i64,
 
@@ -44,6 +49,6 @@ impl PortfolioAccount {
     std::mem::size_of::<u8>() + 
     std::mem::size_of::<bool>()*2 +
     std::mem::size_of::<u64>() +
-    std::mem::size_of::<u32>()*3 +
+    std::mem::size_of::<u32>()*5 +
     std::mem::size_of::<i64>()*2;
 }

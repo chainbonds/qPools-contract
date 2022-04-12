@@ -1,6 +1,6 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction, TokenAmount} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
 import {Wallet} from "@project-serum/anchor/src/provider";
 import {Buffer} from "buffer";
@@ -10,7 +10,27 @@ const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
 
-export default class QWallet implements Wallet {
+// TODO: The usage of this is ambigious. I need to chase these bugs everywhere!!!
+// TODO: Write tests for this stupid shit ...
+/**
+ *
+ * @param x The big-number that should be written into a tokenAmountNumber. Should be lamports, and include decimals!
+ *  This cannot be negative
+ * @param decimals
+ */
+export const getTokenAmount = (x: BN, decimals: BN): TokenAmount => {
+    let decimalsAsNumber = decimals.toNumber();
+    let decimalExpanded = (new BN(10)).pow(decimals);
+    let uiAmount = Math.max(x.toNumber() / decimalExpanded.toNumber(), 0.0);
+    return {
+        amount: x.toString(),
+        decimals: decimalsAsNumber,
+        uiAmount: uiAmount,
+        uiAmountString: uiAmount.toString()
+    };
+}
+
+export class QWallet implements Wallet {
 
     constructor(readonly payer: Keypair) {
         this.payer = payer
@@ -31,6 +51,13 @@ export default class QWallet implements Wallet {
     get publicKey(): PublicKey {
         return this.payer.publicKey;
     }
+}
+
+export async function sendAndSignTransaction(provider: Provider, tx: Transaction) {
+    let sg = await provider.send(tx);
+    await provider.connection.confirmTransaction(sg, "confirmed");
+    console.log("Transaction Signature is: ", sg);
+    return sg;
 }
 
 export async function sendAndSignInstruction(provider: Provider, ix: TransactionInstruction) {
@@ -56,9 +83,9 @@ export const sendAndConfirmTransaction = async (
 
     // Send and Confirm
     console.log("Signing transaction...");
-    console.log("About to send the following transactions: ", tx);
-    console.log("Program provider is: ", programProvider, typeof programProvider);
-    console.log("Sending wallet is: ", programProvider.wallet.publicKey, programProvider.wallet.publicKey.toString());
+    //console.log("About to send the following transactions: ", tx);
+    //console.log("Program provider is: ", programProvider, typeof programProvider);
+    console.log("Sending wallet is: ",  programProvider.wallet.publicKey.toString());
     let sg = await programProvider.send(tx);
     console.log("sg1 is: ", sg);
     await connection.confirmTransaction(sg, 'confirmed');

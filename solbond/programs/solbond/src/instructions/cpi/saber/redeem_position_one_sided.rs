@@ -9,30 +9,33 @@ use crate::ErrorCode;
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_portfolio: u8,
-    _bump_position: u8,
+    _bump_ata_a: u8,
+    _bump_ata_lp: u8,
     _index: u32,
 )]
 pub struct RedeemOneSaberPosition<'info> {
 
     #[account(
-    mut,
-    seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        mut,
+        //seeds = [portfolio_owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Account<'info, PortfolioAccount>,
 
+    //#[account(mut)]
+    //pub portfolio_owner: AccountInfo<'info>,
+
     #[account(mut)]
-    pub portfolio_owner: AccountInfo<'info>,
+    pub puller: Signer<'info>,
 
     pub swap_authority: AccountInfo<'info>,
     #[account(
         mut,
-        seeds = [
-            portfolio_owner.key().as_ref(),
-            &_index.to_le_bytes(),
-            seeds::USER_POSITION_STRING
-        ],
-        bump = _bump_position,
+        //seeds = [
+        //    portfolio_owner.key().as_ref(),
+        //    &_index.to_le_bytes(),
+        //    seeds::USER_POSITION_STRING
+        //],
+        //bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
@@ -40,15 +43,20 @@ pub struct RedeemOneSaberPosition<'info> {
 
     #[account(
         mut,
+        seeds = [portfolio_pda.owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_lp,
         constraint = &input_lp.owner == &portfolio_pda.key(),
     )]
     pub input_lp:  Box<Account<'info, TokenAccount>>,
+    
     #[account(mut)]
     pub pool_mint: Account<'info, Mint>,
 
 
     #[account(
         mut,
+        seeds = [portfolio_pda.owner.key().as_ref(),mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata_a,
         constraint = &user_a.owner == &portfolio_pda.key(),
     )]
     pub user_a: Box<Account<'info, TokenAccount>>,
@@ -77,13 +85,16 @@ pub struct RedeemOneSaberPosition<'info> {
 
 pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
-    _bump_portfolio: u8,
-    _bump_position: u8,
+    _bump_ata_a: u8,
+    _bump_ata_lp: u8,
     _index: u32,
 
 ) -> ProgramResult {
 
     msg!("withdraw single saber position");
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
     if !ctx.accounts.position_pda.redeem_approved {
         return Err(ErrorCode::RedeemNotApproved.into());
     }
@@ -136,9 +147,9 @@ pub fn handler(
             withdraw_context,
             &[
                 [
-                    ctx.accounts.portfolio_owner.key.as_ref(),
+                    ctx.accounts.portfolio_pda.owner.key().as_ref(),
                     seeds::PORTFOLIO_SEED,
-                    &[_bump_portfolio]
+                    &[ctx.accounts.portfolio_pda.bump]
                 ].as_ref()
             ]
         ),
@@ -154,7 +165,8 @@ pub fn handler(
 
     msg!("withdraw completed successfully");
     // close position account
-    let owner_acc_info = ctx.accounts.portfolio_owner.to_account_info();
+    // whoever closes this gets the lamports as a bonus for now lol
+    let owner_acc_info = ctx.accounts.puller.to_account_info();
     let user_starting_lamports = owner_acc_info.lamports();
     let position_acc_info = ctx.accounts.position_pda.to_account_info();
     **owner_acc_info.lamports.borrow_mut() = user_starting_lamports.checked_add(position_acc_info.lamports()).unwrap();

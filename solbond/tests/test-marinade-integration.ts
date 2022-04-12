@@ -14,6 +14,7 @@ import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda} from "@qpools/sdk/lib/types/account/pdas";
 import {getAccountForMintAndPDADontCreate} from "@qpools/sdk/lib/utils";
 import {PositionAccountMarinade} from "@qpools/sdk/lib/types/account/positionAccountMarinade";
+import {Cluster} from "@qpools/sdk/lib/network";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -23,7 +24,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     const payer = Keypair.generate();
     // @ts-expect-error

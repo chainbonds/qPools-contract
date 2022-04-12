@@ -21,7 +21,9 @@ export class CrankRpcCalls {
     public providerWallet: IWallet;
     public wallet: Keypair;
 
+    // @ts-ignore
     public portfolioPDA: PublicKey;
+    // @ts-ignore
     public portfolioBump: number;
 
     public payer: Keypair;
@@ -33,6 +35,7 @@ export class CrankRpcCalls {
     public crankSolbondProgram;
     public registry;
 
+    // @ts-ignore
     public marinadeState: MarinadeState;
 
     constructor(
@@ -166,6 +169,9 @@ export class CrankRpcCalls {
             console.log("Closing following position account: ", x);
 
             let poolAddress = await this.registry.saberPoolLpToken2poolAddress(x.poolAddress);
+            if (!poolAddress) {
+                throw Error("poolAddress not found! " + String(poolAddress));
+            }
             const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
             console.log("getting state");
             const {state} = stableSwapState;

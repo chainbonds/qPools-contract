@@ -21,6 +21,10 @@ export async function portfolioExists(
         if (exists) {
             // Also check if it was fulfilled so far. If not, display the original view
             let portfolio = await fetchPortfolio(connection, solbondProgram, owner);
+            if (!portfolio) {
+                console.log(portfolio);
+                throw Error("Portfolio exists, but fetching returns zero! Very odd! ");
+            }
             out = portfolio.fullyCreated;
         } else {
             out = false;

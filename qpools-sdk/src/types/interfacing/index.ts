@@ -6,12 +6,15 @@ import {PositionInfo, ProtocolType, Protocol} from "./PositionInfo";
 import {PythStruct} from "./PythStruct";
 
 export {
+    ProtocolType,
+    Protocol
+}
+
+export type {
     ExplicitPool,
     ExplicitSaberPool,
     ExplicitSolendPool,
     ExplicitToken,
     PositionInfo,
     PythStruct,
-    ProtocolType,
-    Protocol
 }

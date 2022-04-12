@@ -22,7 +22,6 @@ export async function transferUsdcFromUserToPortfolio(
     solbondProgram: Program,
     owner: PublicKey,
     currencyMint: PublicKey,
-    _userCurrencyAccount: PublicKey
 ): Promise<TransactionInstruction> {
     console.log("#transferUsdcFromUserToPortfolio()");
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);

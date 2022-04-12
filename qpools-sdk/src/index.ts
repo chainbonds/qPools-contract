@@ -8,8 +8,6 @@ import {
     getBlockchainEpoch,
     getPayer,
     waitForEpoch,
-    tokenAccountExists,
-    accountExists
 } from "./utils";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
 import { PortfolioFrontendFriendlyChainedInstructions } from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";

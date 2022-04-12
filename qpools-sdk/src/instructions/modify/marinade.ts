@@ -6,6 +6,7 @@ import * as anchor from "@project-serum/anchor";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {getAccountForMintAndPDADontCreate} from "../../utils";
 import {fetchSinglePositionMarinade} from "../fetch/position";
+import {PositionAccountMarinade} from "../../types/account";
 
 export async function approvePositionWeightMarinade(
     connection: Connection,
@@ -110,7 +111,10 @@ export async function approveWithdrawToMarinade(
     let tx: Transaction = new Transaction();
 
     // Skip this if the marinade position has been fulfilled
-    let marinadePosition = await fetchSinglePositionMarinade(connection, solbondProgram, owner, index);
+    let marinadePosition: PositionAccountMarinade | null = await fetchSinglePositionMarinade(connection, solbondProgram, owner, index);
+    if (!marinadePosition) {
+        throw Error("This index does not belong to this account! Your index-accounting is wrong " + String(index));
+    }
     if (marinadePosition.isFulfilled && !marinadePosition.isFulfilled) {
         throw Error("Something major is off 2");
     }

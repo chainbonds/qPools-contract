@@ -63,12 +63,15 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     public providerWallet: IWallet;
     public wallet: Keypair;
 
+    // @ts-ignore
     public portfolioPDA: PublicKey;
+    // @ts-ignore
     public portfolioBump: number;
 
     public payer: Keypair;
     public owner: WalletI;
 
+    // @ts-ignore
     public marinadeState: MarinadeState;
     public registry: Registry;
 
@@ -347,6 +350,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // From the LP Mint, retrieve the saber pool address
         // TODO: Also change this LP-based logic in the test...
         let poolAddressFromLp = await this.registry.saberPoolLpToken2poolAddress(new PublicKey(lpTokenMint));
+        if (!poolAddressFromLp) {
+            throw Error("Pool address from LP not found!" + String(poolAddressFromLp));
+        }
         let ix = await instructions.modify.saber.approvePositionWeightSaber(
             this.connection,
             this.solbondProgram,
@@ -372,6 +378,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("aaa 29");
         let poolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         console.log("Calling Stableswap");
+        if (!poolAddress) {
+            throw Error("Pool Address for given lp token not found! " + String(poolAddress));
+        }
         const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
         console.log("getting state");
         const {state} = stableSwapState;
@@ -390,7 +399,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Marinade is already redeemed!");
             return tx;
         }
-        let ix = await instructions.modify.saber.signApproveWithdrawAmountSaber(
+        let ix: Transaction = await instructions.modify.saber.signApproveWithdrawAmountSaber(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
@@ -481,8 +490,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            currencyMint,
-            null
+            currencyMint
         );
         return ix;
     }
@@ -505,11 +513,18 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting currencAmount to zero");
             currencyAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueA = await multiplyAmountByPythprice(currencyAmount.uiAmount, positionAccount.currencyMint);
+        let usdcValueA: number | null = await multiplyAmountByPythprice(currencyAmount.uiAmount!, positionAccount.currencyMint);
+        if (!usdcValueA && usdcValueA !== 0) {
+            throw Error("currency mint not in pyth registry: " + positionAccount.currencyMint.toString());
+        }
 
         // Now get the lp token from the currency mint
         // and then get the funds of the user
-        let solendReserve: SolendReserve = await this.registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint);
+        let solendReserve: SolendReserve | null = await this.registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint);
+        if (!solendReserve) {
+            console.log(solendReserve);
+            throw Error("For this currency, no solend reserve was found! " + String(positionAccount.currencyMint));
+        }
 
         // read out the token balance of the collateral mint account ..
 
@@ -549,7 +564,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting collateral to zero");
             collateralAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueLp = await multiplyAmountByPythprice(collateralAmount.uiAmount, portfolioCollateralAta);
+        let usdcValueLp: number | null = await multiplyAmountByPythprice(collateralAmount.uiAmount!, portfolioCollateralAta);
+        if (!usdcValueLp && usdcValueLp !== 0) {
+            throw Error("Collateral account not found! " + portfolioCollateralAta.toString());
+        }
 
         let totalPositionValue = usdcValueA + usdcValueLp;
         // throw Error("Done!");
@@ -560,7 +578,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             protocol: Protocol.solend,
             index: positionAccount.index,
 
-            poolAddress: null,
+            // poolAddress: undefined,
             portfolio: positionAccount.portfolioPda,
 
             // A is the input token ...
@@ -570,10 +588,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             usdcValueA: usdcValueA,
 
             // B will be fully empty ..
-            mintB: null,
-            ataB: null,
-            amountB: null,
-            usdcValueB: null,
+            // mintB: undefined,
+            // ataB: undefined,
+            // amountB: undefined,
+            usdcValueB: 0.,
 
             // Will be the c-token
             mintLp: collateralMint,
@@ -598,7 +616,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("Pool Address is: ", positionAccount.poolAddress.toString());
 
         // Translate from Pool Mint to Pool Address. We need to coordinate better the naming
-        let saberPoolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        let saberPoolAddress: PublicKey | null = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+        if (!saberPoolAddress) {
+            throw Error("LP Mint not found! " + String(saberPoolAddress))
+        }
         console.log("Saber Pool Address is: ", saberPoolAddress, typeof saberPoolAddress, saberPoolAddress.toString());
         const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, saberPoolAddress);
         const {state} = stableSwapState;
@@ -614,10 +635,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
 
         // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
-        let usdcValueA = tokenAAmount.uiAmount;
-        let usdcValueB = tokenBAmount.uiAmount;
+        let usdcValueA = tokenAAmount.uiAmount!;
+        let usdcValueB = tokenBAmount.uiAmount!;
         // TODO: Find a way to calculate the conversion rate here easily ...
-        let usdcValueLP = tokenLPAmount.uiAmount;
+        let usdcValueLP = tokenLPAmount.uiAmount!;
 
         // TODO: Calculate the virtualPrice of the LP tokens
         // TODO: Need to use whatever protocol has implemented them, depending on the curve and exact pool,
@@ -693,8 +714,14 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Here, the usdcValueA should be normal SOL!!! (it is the input token afterall
 
         // Again, convert by the pyth price ...
-        let usdcValueA = await multiplyAmountByPythprice(wrappedSolAmount.uiAmount, wrappedSolMint); //  * 93.23;
-        let usdcValueLP = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
+        let usdcValueA: number | null = await multiplyAmountByPythprice(wrappedSolAmount.uiAmount!, wrappedSolMint); //  * 93.23;
+        if (!usdcValueA && usdcValueA !== 0) {
+            throw Error("Mint not found! This should not happen " + wrappedSolMint.toString());
+        }
+        let usdcValueLP: number | null = await multiplyAmountByPythprice(mSOLAmount.uiAmount!, mSOLMint);
+        if (!usdcValueLP && usdcValueLP !== 0) {
+            throw Error("Mint not found! This should not happen " + mSOLMint.toString());
+        }
 
         // Sum up all the values here to arrive at the Total Position Value?
         // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
@@ -706,7 +733,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             protocolType: ProtocolType.Staking,
             protocol: Protocol.marinade,
             index: positionAccount.index,
-            poolAddress: null,
+            // poolAddress: null,
             portfolio: this.portfolioPDA,
 
             // Should replace this with the input currency ...
@@ -714,9 +741,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             ataA: portfolioAtaMSol,
             amountA: mSOLAmount,
             usdcValueA: usdcValueA,
-            mintB: null,
-            ataB: null,
-            amountB: null,
+
             usdcValueB: 0.,
             mintLp: mSOLMint,
             ataLp: portfolioAtaMSol,
@@ -735,7 +760,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         positionsSolend: PositionAccountSolend[]
     }> {
         // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
-        let portfolio: PortfolioAccount = await this.fetchPortfolio();
+        let portfolio: PortfolioAccount | null = await this.fetchPortfolio();
+        if (!portfolio) {
+            throw Error("No portfolio exists! You cannot get positions and stuff yet .. ");
+        }
         let positionsSaber: PositionAccountSaber[] = (await this.fetchAllPositionsByProtocol(Protocol.saber))[0];
         let positionsMarinade: PositionAccountMarinade[] = (await this.fetchAllPositionsByProtocol(Protocol.marinade))[1];
         let positionsSolend: PositionAccountSolend[] = (await this.fetchAllPositionsByProtocol(Protocol.solend))[2];
@@ -778,7 +806,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         console.log("#flushAllAccountsToConsole()");
         console.log("Flushing ...");
         // Get portfolio
-        let portfolio = await this.fetchPortfolio();
+        let portfolio: PortfolioAccount | null = await this.fetchPortfolio();
+        if (!portfolio) {
+            throw Error("No portfolio exists! You cannot get positions and stuff yet (2) .. ");
+        }
 
         // Get all positions
         let allSaberPositions = await this.fetchAllPositionsByProtocol(Protocol.saber);
@@ -838,7 +869,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }
 
         // let allPositions: (PositionAccountSaber | PositionAccountMarinade)[] = await this.fetchPositions();
-        let portfolio: PortfolioAccount = await this.fetchPortfolio();
+        let portfolio: PortfolioAccount | null = await this.fetchPortfolio();
+        if (!portfolio) {
+            throw Error("No portfolio exists! You cannot get positions and stuff yet (3).. ");
+        }
         let out: PositionInfo[] = [];
         // right now, position 0 is saber, position 1 is marinade ....
         console.log("Fetching the portfolio account: ", portfolio);
@@ -895,7 +929,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
             if (position.protocol === Protocol.saber) {
                 console.log("Position (DEX) is: ", position);
-                let saberPoolAddress = await this.registry.saberPoolLpToken2poolAddress(position.poolAddress);
+                let saberPoolAddress: PublicKey | null = await this.registry.saberPoolLpToken2poolAddress(position.poolAddress!);
+                if (!saberPoolAddress) {
+                    throw Error("Saber pool address not found " + String(saberPoolAddress));
+                }
                 const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, saberPoolAddress);
                 const {state} = stableSwapState;
 
@@ -906,7 +943,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                     state
                 );
                 let amountUserLp = position.amountLp.uiAmount;
-                console.log("Amount of Users LP tokens: ", amountUserLp.toString());
+                console.log("Amount of Users LP tokens: ", String(amountUserLp));
                 if (!supplyLpToken) {
                     throw Error("One of the LP information values is null or zero!" + String(supplyLpToken));
                 }
@@ -921,12 +958,12 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 let usdValueUserLp = (amountUserLp * poolContentsInUsdc) / supplyLpToken;
                 console.log("User portfolio value is: ", usdValueUserLp);
                 console.log("Token account address is: ", state.tokenA.reserve);
-                let amountUserA = position.amountA.uiAmount;
+                let amountUserA = position.amountA.uiAmount!;
                 console.log("amountUserA", amountUserA);
                 // Get Reserve B
 
                 console.log("Token account address is: ", state.tokenB.reserve);
-                let amountUserB = position.amountB.uiAmount;
+                let amountUserB = position.amountB!.uiAmount!;
                 console.log("amountUserB", amountUserB);
 
                 if ((!amountUserA && amountUserA != 0) || (!amountUserB && amountUserB != 0)) {
@@ -965,7 +1002,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Just take all the mint values, and add them if the respective mint has not yet been added
 
                 includedMints.add(position.mintA.toString());
-                includedMints.add(position.mintB.toString());
+                includedMints.add(position.mintB!.toString());
                 includedMints.add(position.mintLp.toString());
 
                 storedPositionUsdcAmounts.push(
@@ -1004,7 +1041,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
 
-                let marinadeUsdcAmount = await multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
+                let marinadeUsdcAmount: number | null = await multiplyAmountByPythprice(position.amountLp.uiAmount!, position.mintLp);
+                if (!marinadeUsdcAmount && marinadeUsdcAmount !== 0) {
+                    throw Error("Position LP mint not registered in pyth " + position.mintLp.toString());
+                }
                 // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
                 usdAmount += marinadeUsdcAmount

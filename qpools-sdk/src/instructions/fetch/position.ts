@@ -7,7 +7,6 @@ import {PositionAccountMarinade} from "../../types/account";
 import {fetchPortfolio} from "./portfolio";
 import {PortfolioAccount} from "../../types/account";
 import {PositionAccountSolend} from "../../types/account";
-import {Position} from "@solendprotocol/solend-sdk";
 
 // TODO: This position can either be a Marinade Position, or a Saber Position. Make sure to distinguish between the two!
 /**
@@ -60,7 +59,10 @@ export async function fetchAllPositions(
     // Get how many positions there are in total ...
     // let out: (PositionAccountSaber | PositionAccountMarinade)[] = [];
     // let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    let portfolio: PortfolioAccount = await fetchPortfolio(connection, solbondProgram, owner);
+    let portfolio: PortfolioAccount | null = await fetchPortfolio(connection, solbondProgram, owner);
+    if (!portfolio) {
+        throw Error("Portfolio could not be fetched ! (2) ");
+    }
     let pdas: PublicKey[] = (await Promise.all(
         (new Array(portfolio.numPositions).fill(''))
             .map(async (_, index: number) => {
@@ -71,9 +73,9 @@ export async function fetchAllPositions(
 
     // Fetch multiple for saber
     let responseSaber = await solbondProgram.account.positionAccountSaber.fetchMultiple(pdas);
-    let accountsSaber = responseSaber.filter((x: Object | null) => x).map((x: Object) => x as PositionAccountSaber);
+    let accountsSaber = responseSaber.filter((x: Object | null) => x).map((x: Object | null) => x! as PositionAccountSaber);
     let responseMarinade = await solbondProgram.account.positionAccountMarinade.fetchMultiple(pdas);
-    let accountsMarinade = responseMarinade.filter((x: Object | null) => x).map((x: Object) => x as PositionAccountMarinade);
+    let accountsMarinade = responseMarinade.filter((x: Object | null) => x).map((x: Object | null) => x! as PositionAccountMarinade);
 
     let out = [...accountsSaber, ...accountsMarinade];
     // out.set(Protocol.Saber, accountsSaber);
@@ -94,7 +96,10 @@ export async function fetchAllPositionsSaber(
     // Get how many positions there are in total ...
     // let out: (PositionAccountSaber | PositionAccountMarinade)[] = [];
     // let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    let portfolio: PortfolioAccount = await fetchPortfolio(connection, solbondProgram, owner);
+    let portfolio: PortfolioAccount | null = await fetchPortfolio(connection, solbondProgram, owner);
+    if (!portfolio) {
+        throw Error("Portfolio not found for some reason! (4)");
+    }
     let pdas: PublicKey[] = (await Promise.all(
         (new Array(portfolio.numPositions).fill(''))
             .map(async (_, index: number) => {
@@ -105,7 +110,7 @@ export async function fetchAllPositionsSaber(
 
     // Fetch multiple for saber
     let responseSaber = await solbondProgram.account.positionAccountSaber.fetchMultiple(pdas);
-    let accountsSaber = responseSaber.filter((x: Object | null) => x).map((x: Object) => x as PositionAccountSaber);
+    let accountsSaber = responseSaber.filter((x: Object | null) => x).map((x: Object | null) => x! as PositionAccountSaber);
 
     return accountsSaber
 };
@@ -120,7 +125,10 @@ export async function fetchAllPositionsMarinade(
     // Get how many positions there are in total ...
     // let out: (PositionAccountSaber | PositionAccountMarinade)[] = [];
     // let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    let portfolio: PortfolioAccount = await fetchPortfolio(connection, solbondProgram, owner);
+    let portfolio: PortfolioAccount | null = await fetchPortfolio(connection, solbondProgram, owner);
+    if (!portfolio) {
+        throw Error("Portfolio does not exist for some reason .. portfolio ");
+    }
     let pdas: PublicKey[] = (await Promise.all(
         (new Array(portfolio.numPositions).fill(''))
             .map(async (_, index: number) => {
@@ -131,7 +139,7 @@ export async function fetchAllPositionsMarinade(
 
     // Fetch multiple for saber
     let responseMarinade = await solbondProgram.account.positionAccountMarinade.fetchMultiple(pdas);
-    let accountsMarinade = responseMarinade.filter((x: Object | null) => x).map((x: Object) => x as PositionAccountMarinade);
+    let accountsMarinade = responseMarinade.filter((x: Object | null) => x).map((x: Object | null) => x! as PositionAccountMarinade);
 
     console.log("##fetchAllPositionsMarinade()");
     return accountsMarinade;
@@ -147,7 +155,10 @@ export async function fetchAllPositionsSolend(
     // Get how many positions there are in total ...
     // let out: (PositionAccountSaber | PositionAccountMarinade)[] = [];
     // let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
-    let portfolio: PortfolioAccount = await fetchPortfolio(connection, solbondProgram, owner);
+    let portfolio: PortfolioAccount | null = await fetchPortfolio(connection, solbondProgram, owner);
+    if (!portfolio) {
+        throw Error("portfolio is not existent (8)! ");
+    }
     let pdas: PublicKey[] = (await Promise.all(
         (new Array(portfolio.numPositions).fill(''))
             .map(async (_, index: number) => {
@@ -158,7 +169,7 @@ export async function fetchAllPositionsSolend(
 
     // Fetch multiple for saber
     let responseSolend = await solbondProgram.account.positionAccountSolend.fetchMultiple(pdas);
-    let accountsSolend = responseSolend.filter((x: Object | null) => x).map((x: Object) => x as PositionAccountSolend);
+    let accountsSolend = responseSolend.filter((x: Object | null) => x).map((x: Object | null) => x! as PositionAccountSolend);
 
     console.log("##fetchAllPositionsSolend()");
     return accountsSolend;

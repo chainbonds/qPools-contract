@@ -6,7 +6,10 @@ import {PositionAccountSolend} from "./PositionAccountSolend";
 import {UserCurrencyAccount} from "./UserCurrencyAccount";
 
 export {
-    pda,
+    pda
+}
+
+export type {
     PortfolioAccount,
     PositionAccountMarinade,
     PositionAccountSaber,

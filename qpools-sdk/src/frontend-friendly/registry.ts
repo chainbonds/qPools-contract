@@ -141,7 +141,10 @@ export class Registry {
             currentPool.tokens.map((inputToken: ExplicitToken) => {
                 if (out.has(inputToken.address)) {
                     // (1) If the input token was already instantiated, then append the pool if it not already in the list
-                    let pools: ExplicitPool[] = out.get(inputToken.address);
+                    let pools: ExplicitPool[] | undefined = out.get(inputToken.address);
+                    if (!pools) {
+                        throw Error("Input Token does not correspond to any tokens!! " + inputToken.address.toString());
+                    }
                     if (!pools.includes(currentPool)) {
                         let key = inputToken.address;
                         // Append this new pool to the list of all pols under this key
@@ -243,7 +246,7 @@ export class Registry {
     async getToken(tokenMint: string): Promise<ExplicitToken | null> {
         let map = await this.getTokenIndexedByTokenMint();
         if (map.has(tokenMint)) {
-            return map.get(tokenMint);
+            return map.get(tokenMint)!;
         } else {
             return null;
         }
@@ -255,7 +258,7 @@ export class Registry {
     async getLogoFromSymbol(symbol: string): Promise<string> {
         let map = await this.getTokenIndexedBySymbol();
         if (map.has(symbol)) {
-            return map.get(symbol).logoURI
+            return map.get(symbol)!.logoURI
         } else {
             console.log("WARN: This token symbol is not found in the map..: ", symbol);
         }
@@ -270,7 +273,7 @@ export class Registry {
     async getPoolsByInputToken(inputTokenMint: string): Promise<ExplicitPool[]> {
         let map = await this.getPoolListIndexedByInputTokenMint();
         if (map.has(inputTokenMint)) {
-            return map.get(inputTokenMint);
+            return map.get(inputTokenMint)!;
         } else {
             console.log("WARN: This token is not input-able into anywhere ...");
             return []
@@ -284,7 +287,7 @@ export class Registry {
     async getPoolByLpToken(lpTokenMint: string): Promise<ExplicitPool | null> {
         let map = await this.getPoolListIndexedByLpTokenMint();
         if (map.has(lpTokenMint)) {
-            return map.get(lpTokenMint);
+            return map.get(lpTokenMint)!;
         } else {
             console.log("WARN: This token is not input-able into anywhere ...");
             return null
@@ -298,7 +301,7 @@ export class Registry {
     async getIconUriFromToken(tokenMint: string): Promise<string> {
         let map = await this.getTokenIndexedByTokenMint();
         if (map.has(tokenMint)) {
-            return map.get(tokenMint).logoURI;
+            return map.get(tokenMint)!.logoURI;
         } else {
             console.log("WARNING: URI not found!", tokenMint);
             return "";
@@ -311,7 +314,7 @@ export class Registry {
         let map = await this.getPoolListIndexedByIdString();
         let out: ExplicitPool | null;
         if (map.has(idString)) {
-            out = map.get(idString);
+            out = map.get(idString)!;
         } else {
             console.log("WARNING: idString not found!", idString, map);
             out = null;
@@ -340,7 +343,7 @@ export class Registry {
         let tokenMint: string = lpTokenMint.toString();
         let map = await this.getPoolListIndexedByLpTokenMint();
         if (map.has(tokenMint)) {
-            let out = map.get(tokenMint)
+            let out = map.get(tokenMint)!;
             if (out.protocol === Protocol.saber) {
                 return out as ExplicitSaberPool;
             } else {
@@ -370,8 +373,8 @@ export class Registry {
      */
     async getSolendReserveFromInputCurrencyMint(currencyMint: PublicKey): Promise<SolendReserve | null> {
         await this.initializeSolend();
-        console.log("Reserves before are ...", this.solendMarket.reserves);
-        let reserves: SolendReserve[] = this.solendMarket.reserves.filter((res: SolendReserve) => {
+        console.log("Reserves before are ...", this.solendMarket!.reserves);
+        let reserves: SolendReserve[] = this.solendMarket!.reserves.filter((res: SolendReserve) => {
             return res.config.mintAddress === currencyMint.toString()
         });
         // Make sure that this is unique

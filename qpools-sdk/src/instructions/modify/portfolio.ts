@@ -85,7 +85,10 @@ export async function approvePortfolioWithdraw(
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     // Get the portfolioPda
     // Only approveWithdraw if it has not been done already ..
-    let portfolio: PortfolioAccount = await fetchPortfolio(connection, solbondProgram, owner);
+    let portfolio: PortfolioAccount | null = await fetchPortfolio(connection, solbondProgram, owner);
+    if (!portfolio) {
+        throw Error("Portfolio coudld not be fetched!! (19)");
+    }
     if (portfolio.toBeRedeemed) {
         return tx;
     }

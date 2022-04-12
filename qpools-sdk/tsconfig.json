@@ -9,7 +9,10 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "strict": true,
+    "noEmit": true,
+    "isolatedModules": true
   },
   "include": [
     "src"

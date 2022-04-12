@@ -5,7 +5,7 @@ import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "..
 import * as anchor from "@project-serum/anchor";
 
 import {PositionAccountSolend} from "../../types/account";
-import {SolendAction} from "@solendprotocol/solend-sdk";
+import {SolendAction, SolendReserve} from "@solendprotocol/solend-sdk";
 import {Cluster, getNetworkCluster} from "../../network";
 import {Registry} from "../../frontend-friendly";
 
@@ -192,7 +192,11 @@ export async function redeemSinglePositionSolend(
     console.log("aaa 25solend");
 
     // Almost all the arguments should be fetched from the program online ... very important.
-    let tokenSymbol = (await registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint)).config.symbol;
+    let solendReserve: SolendReserve | null = (await registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint));
+    if (!solendReserve) {
+        throw Error("This currency mint does not have a solend reserve: " + positionAccount.currencyMint.toString());
+    }
+    let tokenSymbol = solendReserve.config.symbol;
 
     // const stableSwapState = await getPoolState(connection, pool_address);
     // const {state} = stableSwapState;

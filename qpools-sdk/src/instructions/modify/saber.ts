@@ -84,17 +84,22 @@ export async function signApproveWithdrawAmountSaber(
     poolTokenAmount: u64,
     minRedeemTokenAmount: u64,
     registry: Registry
-) {
+): Promise<Transaction> {
     console.log("#signApproveWithdrawAmountSaber()");
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
+
+    let tx: Transaction = new Transaction();
 
     console.log("aaa 26");
     let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
     console.log("aaa 27");
 
     // FOr some address, this is not needed ...
-    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress: PublicKey | null = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    if (!poolAddress) {
+        throw Error("saber pool address not found for lp token: " + positionAccount.poolAddress.toString());
+    }
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
@@ -105,7 +110,7 @@ export async function signApproveWithdrawAmountSaber(
         throw Error("Something major is off 2");
     }
     if (positionAccount.isRedeemed) {
-        return null;
+        return tx;
     }
 
     let ix = await solbondProgram.instruction.approveWithdrawAmountSaber(
@@ -127,7 +132,8 @@ export async function signApproveWithdrawAmountSaber(
         }
     )
     console.log("##signApproveWithdrawAmountSaber()");
-    return ix;
+    tx.add(ix)
+    return tx;
 }
 
 export async function permissionlessFulfillSaber(
@@ -147,7 +153,10 @@ export async function permissionlessFulfillSaber(
     let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
     console.log("aaa 21");
     // FOr some address, this is not needed ...
-    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress: PublicKey | null = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    if (!poolAddress) {
+        throw Error("saber pool address not found for lp token (2): " + positionAccount.poolAddress.toString());
+    }
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
@@ -217,7 +226,10 @@ export async function redeemSinglePositionOnlyOne(
     console.log("aaa 25");
 
     // FOr some address, this is not needed ...
-    let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    let poolAddress: PublicKey | null = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    if (!poolAddress) {
+        throw Error("saber pool address not found for lp token (9): " + positionAccount.poolAddress.toString());
+    }
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
     console.log("got state ", state);
@@ -329,6 +341,9 @@ export async function redeem_single_position(
 
     // FOr some address, this is not needed ...
     let poolAddress = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
+    if (!poolAddress) {
+        throw Error("saber pool address not found for lp token (12): " + positionAccount.poolAddress.toString());
+    }
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
     console.log("got state ", state);

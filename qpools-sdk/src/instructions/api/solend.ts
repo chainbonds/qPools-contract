@@ -33,9 +33,9 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     // Only apply this on devnet
     let filter;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        filter = (x) => {return (new Set(["SOL"])).has(x.config.symbol)};
+        filter = (x: SolendReserve) => {return (new Set(["SOL"])).has(x.config.symbol)};
     } else if (getNetworkCluster() === Cluster.MAINNET) {
-        filter = (x) => {return true};
+        filter = (x: SolendReserve) => {return true};
         // Do not include any filters ...
     } else {
         throw Error("Cluster not implemented! getSolendTokens");
@@ -93,9 +93,9 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     // The filter is depending on mainnet or devnet !
     let filter: any;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        filter = (x) => {return (new Set(["SOL"])).has(x.config.symbol)};
+        filter = (x: SolendReserve) => {return (new Set(["SOL"])).has(x.config.symbol)};
     } else if (getNetworkCluster() === Cluster.MAINNET) {
-        filter = (x) => {return true};
+        filter = (x: SolendReserve) => {return true};
     } else {
         throw Error("Cluster not implemented! getSolendTokens");
     }

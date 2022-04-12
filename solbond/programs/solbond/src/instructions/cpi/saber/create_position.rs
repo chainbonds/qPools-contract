@@ -119,8 +119,7 @@ pub fn handler(
     _bump_ata_lp: u8,
     _index: u32,
 ) -> ProgramResult {
-    msg!("Creating a single saber position!");
-    msg!("getting portfolio details!");
+
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
         return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }
@@ -163,11 +162,6 @@ pub fn handler(
     let approved_position_details = &mut ctx.accounts.position_pda;
 
     // Will print out the user's balance
-    msg!("Printing the user portfolio's A and B amounts, as well as the amount to be distributed");
-    msg!(&format!("{}", ctx.accounts.qpools_a.amount));
-    msg!(&format!("{}", ctx.accounts.qpools_b.amount));
-    msg!(&format!("{}", approved_position_details.max_initial_token_a_amount));
-    msg!(&format!("{}", approved_position_details.max_initial_token_b_amount));
 
     // TODO: Make take the min between tokenamount and max initial token amount ?
 

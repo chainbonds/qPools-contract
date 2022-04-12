@@ -111,10 +111,6 @@ pub fn handler(
         return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }
     let dep_amt: u64 = ctx.accounts.position_pda.initial_sol_amount;
-    msg!("depamt {}", dep_amt);
-    msg!("owner of pda {}", ctx.accounts.position_pda.to_account_info().owner);
-    msg!("owner of pdaportfo {}", ctx.accounts.portfolio_pda.to_account_info().owner);
-    msg!("owner of pdaportfo {}", ctx.accounts.liq_pool_sol_leg_pda.to_account_info().owner);
 
     let data = marinade_finance::instruction::Deposit{ lamports:dep_amt };
     let cpi_accounts = MarinadeDeposit {

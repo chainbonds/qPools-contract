@@ -91,7 +91,6 @@ pub fn handler(
 
 ) -> ProgramResult {
 
-    msg!("withdraw single saber position");
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
         return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }
@@ -163,7 +162,6 @@ pub fn handler(
     let position = &mut ctx.accounts.position_pda;
     position.is_redeemed = true;
 
-    msg!("withdraw completed successfully");
     // close position account
     // whoever closes this gets the lamports as a bonus for now lol
     let owner_acc_info = ctx.accounts.puller.to_account_info();

@@ -44,7 +44,6 @@ pub fn handler(
 ) -> ProgramResult {
     
 
-    msg!("currency pda owner {}", ctx.accounts.user_currency_pda_account.to_account_info().owner);
     let user_currency_pda_account = &mut ctx.accounts.user_currency_pda_account;
   
     user_currency_pda_account.owner = ctx.accounts.owner.clone().key();

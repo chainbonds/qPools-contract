@@ -93,8 +93,6 @@ pub fn handler(
     _bump_ata_col: u8,
     _index: u32,
 ) -> ProgramResult {
-    msg!("Creating a single solend position!");
-    msg!("getting portfolio details!");
     if ctx.accounts.user_transfer_authority.key() != ctx.accounts.position_pda.portfolio_pda {
         return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
     }

@@ -307,23 +307,6 @@ pub mod solbond {
         )
     }
 
-    pub fn redeem_position_saber(
-        ctx: Context<RedeemSaberPosition>,
-        _bump_portfolio: u8,
-        _bump_position: u8,
-        //_bump_pool: u8,
-        _index: u32,
-    ) -> ProgramResult {
-
-        instructions::cpi::saber::redeem_position_two_sided::handler(
-            ctx, 
-            _bump_portfolio,
-        _bump_position, 
-        //_bump_pool, 
-        _index
-    )
-
-    }
 
 
     pub fn redeem_position_one_saber(

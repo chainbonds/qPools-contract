@@ -1,23 +1,90 @@
-# solbond
+# qPools-contract
 
-## Setup instructions
+This githubs consists of two modules:
 
-### (0) Setup qPools SDK locally
+### qpools-sdk
+This is the typescript library that interfaces with the Solana program, written in typescript. 
+You can find more information [here](./qpools-sdk/README.md)
 
-Please always run a watcher that automatically compiles the SDK. 
-This is to make sure that any modifications you make are immediately compiled, otherwise you might get weird bugs!
+### solbond 
+This is the "smart-contract" / Solana program written in Rust. 
+You can find more information [here](./solbond/README.md)
 
-``` 
-cd qpools-sdk
-tsc --watch
+## Serpius Endpoint 
+
+The Serpius Endpoint currently is on version v4.0.0. The file-structure it should delpoy looks like the following. 
+
+```
+{
+  "network": mainnet | devnet,
+  "allocations": [
+    {
+      "inputToken": {
+        "address": PublicKey,  // this is the token mint
+        "decimals": number,
+        "logoURI": string,
+        "name": string,
+        "symbol": string
+      }, 
+      "assets": [
+        {
+          id: string,
+          weight: number,
+          protocol: marinade | solend | saber,
+          apy_24h: number
+        }, 
+        ...
+      ]
+    },
+    ...
+  ]  
+}
 ```
 
-``` 
-cd qpools-admin-sdk
-tsc --watch
+One specific example of what the API could return looks as follows:
+
+```
+{
+  "network": "mainnet",
+  "allocations": [
+    {
+      "inputToken": {
+        "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "decimals": 6,
+        "logoURI": "https://spl-token-icons.static-assets.ship.capital/icons/101/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png",
+        "name": "USD Coin",
+        "symbol": "USDC"
+      }, 
+      "assets": [
+        {
+          "lp": "USDC",
+          "weight": 1000,
+          "protocol": "solend",
+          "apy_24h": 5.65
+        },
+        {
+          "lp": "USDCpo-USDC",
+          "weight": 0,
+          "protocol": "saber",
+          "apy_24h": 5.59
+        },
+        ...
+      ]
+    },
+    ...
+  ]  
+}
 ```
 
-Let this run in a background terimnal, and let this run anytime you might change something in the qpools-sdk, or qpools-admin-sdk package.
+## Github Actions
+
+`.github/workflows/publish-sdk.yml` includes all the logic on what runs when you trigger a github action. A github action is triggered when pushed to one of the specified branches starting from line 4 of that document (i.e. the `main` branch is one of them). It then installs Anchor, it installs Solana, compiles the typescript files, and uploads everything into a the npm package (as specified in the qpools-sdk README). 
+
+You can see a list of all actions that are run [here](https://github.com/chainbonds/qPools-contract/actions).
+
+ TODO: Move these into the Solbond Folder
+ 
+## Setup instructions 
 
 ### (1) Building and Testing
 run anchor build from 

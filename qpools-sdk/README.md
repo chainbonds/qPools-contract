@@ -1,5 +1,7 @@
 # @qpools/sdk
 
+You can find the latest, uploaded Package Repositry on NPM: https://www.npmjs.com/package/@qpools/sdk. The currently most updated version is defined in `package.json`. 
+
 ## Quick Start:
 
 To use the SDK, you can simply run 

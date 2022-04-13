@@ -2,12 +2,20 @@ import airdropAdmin from "./devnet/airdropAdmin";
 import {getSolbondProgram} from "./solbond-program";
 import {
     accountExists,
-    createAssociatedTokenAccountSendUnsigned, createAssociatedTokenAccountUnsigned,
+    createAssociatedTokenAccountSendUnsigned,
+    createAssociatedTokenAccountUnsigned,
     createMint,
     createMint2,
-    createTokenAccount, getAssociatedTokenAddressOffCurve,
+    createTokenAccount,
+    getAssociatedTokenAddressOffCurve,
     getBlockchainEpoch,
-    getPayer, getTokenAmount, QWallet, sendAndConfirmTransaction, sendAndSignTransaction, tokenAccountExists,
+    getPayer,
+    getTokenAmount,
+    getTokenAmountFromString,
+    QWallet,
+    sendAndConfirmTransaction,
+    sendAndSignTransaction,
+    tokenAccountExists,
     waitForEpoch,
 } from "./utils";
 import { DisplayPortfolios } from "./frontend-friendly/display-portfolios";
@@ -49,6 +57,8 @@ export {
     getAssociatedTokenAddressOffCurve,
     createAssociatedTokenAccountUnsigned,
     SolbondIdl,
+
+    getTokenAmountFromString,
 
     getWrappedSolMint,
     getWhitelistTokens,

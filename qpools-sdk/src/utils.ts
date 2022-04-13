@@ -19,14 +19,33 @@ let _payer: Keypair | null = null;
  * @param decimals
  */
 export const getTokenAmount = (x: BN, decimals: BN): TokenAmount => {
+    const safeConst = 1_000_000;
     let decimalsAsNumber = decimals.toNumber();
     let decimalExpanded = (new BN(10)).pow(decimals);
-    let uiAmount = Math.max(x.toNumber() / decimalExpanded.toNumber(), 0.0);
+    console.log("x and decimals are: ", x.toString(), decimalExpanded.toString());
+    let decimalDivision = x.muln(safeConst).div(decimalExpanded).toNumber() / safeConst;
+    let uiAmount = Math.max(decimalDivision, 0.0);
     return {
         amount: x.toString(),
         decimals: decimalsAsNumber,
         uiAmount: uiAmount,
         uiAmountString: uiAmount.toString()
+    };
+}
+
+/**
+ * A floating point representation (.toFixed) of a numer
+ * @param x
+ */
+export const getTokenAmountFromString = (x: string): TokenAmount => {
+    let decimals = x.split("").reverse().join("").indexOf(".");
+    let number = x.replace(".", "");
+    // remove dot, then put into BN with tokenAmount
+    return {
+        amount: number,
+        decimals: decimals,
+        uiAmount: Number(x),
+        uiAmountString: x
     };
 }
 

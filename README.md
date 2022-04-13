@@ -1,5 +1,15 @@
 # qPools-contract
 
+This githubs consists of two modules:
+
+### qpools-sdk
+This is the typescript library that interfaces with the Solana program, written in typescript. 
+You can find more information [here](./qpools-sdk/README.md)
+
+### solbond 
+This is the "smart-contract" / Solana program written in Rust. 
+You can find more information [here](./solbond/README.md)
+
 ## Serpius Endpoint 
 
 The Serpius Endpoint currently is on version v4.0.0. The file-structure it should delpoy looks like the following. 
@@ -66,8 +76,14 @@ One specific example of what the API could return looks as follows:
 }
 ```
 
+## Github Actions
 
+`.github/workflows/publish-sdk.yml` includes all the logic on what runs when you trigger a github action. A github action is triggered when pushed to one of the specified branches starting from line 4 of that document (i.e. the `main` branch is one of them). It then installs Anchor, it installs Solana, compiles the typescript files, and uploads everything into a the npm package (as specified in the qpools-sdk README). 
 
+You can see a list of all actions that are run [here](https://github.com/chainbonds/qPools-contract/actions).
+
+ TODO: Move these into the Solbond Folder
+ 
 ## Setup instructions 
 
 ### (1) Building and Testing

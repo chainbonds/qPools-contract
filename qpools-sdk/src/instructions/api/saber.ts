@@ -5,6 +5,7 @@ import {ExplicitToken} from "../../types/ExplicitToken";
 import {ExplicitPool} from "../../types/ExplicitPool";
 import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import * as spl from 'easy-spl'
+import {BN} from "@project-serum/anchor";
 /**
  * Gotta just copy it from the registry ....
  */
@@ -51,7 +52,13 @@ export async function saberPoolTokenPrice(connection: Connection, lpMint: Public
     const lp_supply = (await connection.getTokenSupply(lpMint)).value.uiAmount
     const price = (token_a_bal+ token_b_bal)/lp_supply
     return price;
+}
 
+export async function saberMultiplyAmountByUSDPrice (x: number, mint: PublicKey, connection: Connection) : Promise<BN> {
+    let res = saberPoolTokenPrice(connection, mint).then(price => {
+        return new BN(x).mul(new BN(price*(10**8))).div(new BN(10**8))
+    })
+    return res;
 }
 
 

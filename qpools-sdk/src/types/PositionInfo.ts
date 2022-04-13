@@ -1,4 +1,5 @@
 import {PublicKey, TokenAmount} from "@solana/web3.js";
+import {BN} from "@project-serum/anchor";
 
 export enum ProtocolType {
     Staking,
@@ -21,14 +22,14 @@ export interface PositionInfo {
     mintA: PublicKey,
     ataA: PublicKey,
     amountA: TokenAmount,
-    usdcValueA: number,
+    usdcValueA: BN,
     mintB: PublicKey,
     ataB: PublicKey,
     amountB: TokenAmount,
-    usdcValueB: number,
+    usdcValueB: BN,
     mintLp: PublicKey,
     ataLp: PublicKey,
     amountLp: TokenAmount,
-    usdcValueLP: number,
-    totalPositionValue: number
+    usdcValueLP: BN,
+    totalPositionValue: BN
 }

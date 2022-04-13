@@ -21,9 +21,8 @@ export const getMarinadePools = async  (): Promise<ExplicitPool[]> => {
     return marinadePoolList;
 }
 
-export const getMarinadePriceUSD = async (tokenMint: PublicKey): Promise<number> => {
+export const getMarinadePriceUSD = async (tokenMint: PublicKey, coinGeckoClient : CoinGeckoClient): Promise<number> => {
     console.log("#getMarinadePrice()");
-    let coinGeckoClient = new CoinGeckoClient();
     let out: number;
     if (tokenMint.equals(getWrappedSolMint()) || tokenMint.equals(getMarinadeSolMint()) ) {
         out = await coinGeckoClient.getPriceFromMint(tokenMint, "usd");

@@ -1,13 +1,13 @@
 import {BN, Provider} from '@project-serum/anchor';
-import {multiplyAmountByPythprice} from "@qpools/sdk";
 import {PublicKey} from "@solana/web3.js";
-import {MOCK} from "@qpools/sdk";
+import {MOCK, Registry} from "@qpools/sdk";
 import {PythProvider} from "@qpools/sdk/lib/frontend-friendly/pyth-provider";
 import {CoinGeckoClient} from "@qpools/sdk/lib/oracle/coinGeckoClient";
 
 describe('Price oracle test', () => {
 
-    let coinGeckoClient = new CoinGeckoClient();
+    let registry = new Registry();
+    let coinGeckoClient = new CoinGeckoClient(registry);
 
     /*it("Get prices for our registered tokens from coingecko", async () => {
         let data = await coinGeckoClient.getDataForAllRegisteredTokens();
@@ -30,6 +30,11 @@ describe('Price oracle test', () => {
     });
     it("Currency : USDC - Multiply amount by usd price", async () => {
         let value = await coinGeckoClient.multiplyAmountByUSDPrice(100, MOCK.DEV.SABER_USDC);
+        console.log("Total value of usdc is : ", value.toString());
+
+    });
+    it("Currency : Bullshit pubkey - Multiply amount by usd price", async () => {
+        let value = await coinGeckoClient.multiplyAmountByUSDPrice(100, new PublicKey(new PublicKey("So11111111331111122111111111111111111111112")));
         console.log("Total value of usdc is : ", value.toString());
 
     });

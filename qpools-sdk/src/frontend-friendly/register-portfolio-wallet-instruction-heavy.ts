@@ -25,11 +25,16 @@ import {
     registerCurrencyInputInPortfolio
 } from "../instructions/modify/portfolio";
 import {approvePositionWeightMarinade, approveWithdrawToMarinade} from "../instructions/modify/marinade";
+
 import {Protocol} from "../types/PositionInfo";
 import {
     approvePositionWeightSaber,
     signApproveWithdrawAmountSaber
 } from "../instructions/modify/saber";
+import {
+    saberMultiplyAmountByUSDPrice,
+    saberPoolTokenPrice
+} from "../instructions/api/saber";
 
 import {
     approvePositionWeightSolend,
@@ -50,9 +55,10 @@ import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade"
 import {UserCurrencyAccount} from "../types/account/UserCurrencyAccount";
 import {getTotalInputAmount} from "../instructions/fetch/currency";
 import {Registry} from "./registry";
-import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
 import {getNativeSolMint} from "../const";
+import {getMarinadePriceUSD} from "../instructions/api/marinade";
 
+import {CoinGeckoClient} from "../oracle/coinGeckoClient";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -90,6 +96,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     public marinadeState: MarinadeState;
     public registry: Registry;
+    public coinGeckoClient : CoinGeckoClient;
 
     // There are a lot of accounts that need would be created twice
     // (assuming we use the same pool, but that pool has not been instantiated yet)
@@ -104,6 +111,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     ) {
 
         this.registry = registry;
+        this.coinGeckoClient = new CoinGeckoClient(registry);
 
         this.owner = provider.wallet;
 
@@ -506,10 +514,11 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
 
         // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
-        let usdcValueA = tokenAAmount.uiAmount;
-        let usdcValueB = tokenBAmount.uiAmount;
+
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenAAmount.uiAmount, state.tokenA.mint);
+        let usdcValueB = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenBAmount.uiAmount, state.tokenB.mint);
         // TODO: Find a way to calculate the conversion rate here easily ...
-        let usdcValueLP = tokenLPAmount.uiAmount;
+        let usdcValueLP = await saberMultiplyAmountByUSDPrice(tokenLPAmount.uiAmount, state.poolTokenMint, this.connection)
 
         // TODO: Calculate the virtualPrice of the LP tokens
         // TODO: Need to use whatever protocol has implemented them, depending on the curve and exact pool,
@@ -566,8 +575,11 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
 
         // Again, convert by the pyth price ...
-        let usdcValueA = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
-        let usdcValueLP = await multiplyAmountByPythprice(mSOLAmount.uiAmount, mSOLMint);
+
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
+        let usdcValueLP = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount, mSOLMint);
+
+
 
         // Sum up all the values here to arrive at the Total Position Value?
         // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
@@ -575,6 +587,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         // Again, perhaps we should remove the MintA token, and instead just keep the LP token ...
         // Add to the portfolio account
+
         let out = {
             protocolType: ProtocolType.Staking,
             protocol: Protocol.marinade,
@@ -588,7 +601,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             mintB: null,
             ataB: null,
             amountB: null,
-            usdcValueB: 0.,
+            usdcValueB: new BN(0),
             mintLp: mSOLMint,
             ataLp: portfolioAtaMSol,
             amountLp: mSOLAmount,
@@ -824,12 +837,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
                 // let marinadeToken = position.amountA.uiAmount;
                 // Multiply this with the marinade token
-                // TODO: Change this with pyth oracle pricing from registry
 
-                let marinadeUsdcAmount = await multiplyAmountByPythprice(position.amountLp.uiAmount, position.mintLp);
+                let marinadeUsdcAmount = await this.coinGeckoClient.multiplyAmountByUSDPrice(position.amountLp.uiAmount, position.mintLp);
                 // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
-                usdAmount += marinadeUsdcAmount
+
+                //TODO : usd Amount should be of type BN, or we can convert BN to number here. Just to run tests I am converting to number
+                usdAmount += marinadeUsdcAmount.toNumber()
                 // Again, we skip this for now because all tokens we work with are USDC-based
                 // // Also convert here to USD,
                 // let usdValueUserA = amountUserA;

@@ -23,7 +23,7 @@ import { CrankRpcCalls } from "./frontend-friendly/crank-rpc-calls";
 import { NETWORK } from "./types/cluster";
 import { Protocol, ProtocolType } from "./types/PositionInfo";
 
-import {multiplyAmountByPythprice} from "./instructions/pyth/multiplyAmountByPythPrice";
+import {CoinGeckoClient} from "./oracle/coinGeckoClient";
 import {getWhitelistTokens} from "./const";
 
 import {ExplicitToken} from "./types/ExplicitToken";
@@ -61,7 +61,7 @@ export {
     ExplicitPool,
     PositionInfo,
 
-    multiplyAmountByPythprice,
+    CoinGeckoClient,
 
     getWhitelistTokens
 }

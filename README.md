@@ -35,7 +35,7 @@ One specific example of what the API could return looks as follows:
 
 ```
 {
-  "network": mainnet | devnet,
+  "network": "mainnet",
   "allocations": [
     {
       "inputToken": {

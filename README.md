@@ -1,6 +1,74 @@
-# solbond
+# qPools-contract
 
-## Setup instructions
+## Serpius Endpoint 
+
+The Serpius Endpoint currently is on version v4.0.0. The file-structure it should delpoy looks like the following. 
+
+```
+{
+  "network": mainnet | devnet,
+  "allocations": [
+    {
+      "inputToken": {
+        "address": PublicKey,  // this is the token mint
+        "decimals": number,
+        "logoURI": string,
+        "name": string,
+        "symbol": string
+      }, 
+      "assets": [
+        {
+          id: string,
+          weight: number,
+          protocol: marinade | solend | saber,
+          apy_24h: number
+        }, 
+        ...
+      ]
+    },
+    ...
+  ]  
+}
+```
+
+One specific example of what the API could return looks as follows:
+
+```
+{
+  "network": mainnet | devnet,
+  "allocations": [
+    {
+      "inputToken": {
+        "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "decimals": 6,
+        "logoURI": "https://spl-token-icons.static-assets.ship.capital/icons/101/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png",
+        "name": "USD Coin",
+        "symbol": "USDC"
+      }, 
+      "assets": [
+        {
+          "lp": "USDC",
+          "weight": 1000,
+          "protocol": "solend",
+          "apy_24h": 5.65
+        },
+        {
+          "lp": "USDCpo-USDC",
+          "weight": 0,
+          "protocol": "saber",
+          "apy_24h": 5.59
+        },
+        ...
+      ]
+    },
+    ...
+  ]  
+}
+```
+
+
+
+## Setup instructions 
 
 ### (0) Setup qPools SDK locally
 

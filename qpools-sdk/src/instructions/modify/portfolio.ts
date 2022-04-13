@@ -3,8 +3,8 @@ import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
-import {PortfolioAccount} from "../../types/account";
 import {fetchPortfolio} from "../fetch/portfolio";
+import {PortfolioAccount} from "../../types/account/PortfolioAccount";
 
 export async function createPortfolioSigned(
     connection: Connection,
@@ -49,7 +49,7 @@ export async function registerCurrencyInputInPortfolio(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    amount: u64,
+    amount: BN,
     currencyMint: PublicKey
 ): Promise<TransactionInstruction> {
     console.log("#registerCurrencyInputInPortfolio()");

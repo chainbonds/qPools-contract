@@ -19,21 +19,20 @@ import {
     IWallet,
     tokenAccountExists
 } from "../utils";
-import {PortfolioAccount} from "../types/account";
-import {PositionAccountSaber} from "../types/account";
+import type {PortfolioAccount} from "../types/account/PortfolioAccount";
+import type {PositionAccountSaber} from "../types/account/PositionAccountSaber";
 import {getATAPda, getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionAccountMarinade} from "../types/account";
-import {UserCurrencyAccount} from "../types/account";
+import type {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import type {UserCurrencyAccount} from "../types/account/UserCurrencyAccount";
 import {Registry} from "./registry";
 import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
 import {getWrappedSolMint} from "../const";
-import {PositionAccountSolend} from "../types/account";
+import type {PositionAccountSolend} from "../types/account/PositionAccountSolend";
 import {SolendReserve, syncNative} from "@solendprotocol/solend-sdk";
 import {closeAccount} from "easy-spl/dist/tx/token-instructions";
 import * as instructions from "../instructions";
-import {PositionInfo, Protocol, ProtocolType} from "../types/interfacing";
-
+import {PositionInfo, Protocol, ProtocolType} from "../types/interfacing/PositionInfo";
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -300,7 +299,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
 
-    async registerCurrencyInputInPortfolio(amount: u64, currencyMint: PublicKey): Promise<TransactionInstruction> {
+    async registerCurrencyInputInPortfolio(amount: BN, currencyMint: PublicKey): Promise<TransactionInstruction> {
         let ix = await instructions.modify.portfolio.registerCurrencyInputInPortfolio(
             this.connection,
             this.solbondProgram,
@@ -341,9 +340,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     // Deposit
     async approvePositionWeightSaber(
         lpTokenMint: PublicKey,
-        token_a_amount: u64,
-        token_b_amount: u64,
-        min_mint_amount: u64,
+        token_a_amount: BN,
+        token_b_amount: BN,
+        min_mint_amount: BN,
         index: number,
         weight: BN
     ): Promise<TransactionInstruction> {
@@ -367,7 +366,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return ix;
     }
     // Withdraw
-    async signApproveWithdrawAmountSaber(index: number, minRedeemTokenAmount: u64): Promise<Transaction> {
+    async signApproveWithdrawAmountSaber(index: number, minRedeemTokenAmount: BN): Promise<Transaction> {
         // Add some boilerplate checkers here
         let [positionPDA, bumpPosition] = await getPositionPda(this.owner.publicKey, index, this.solbondProgram);
         let tx = new Transaction();
@@ -415,7 +414,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     /**
      * POSITION: Solend Operations (Fetch Approve);
      */
-    async approvePositionWeightSolend(currencyMint: PublicKey, input_amount: u64, index: number, weight: BN) {
+    async approvePositionWeightSolend(currencyMint: PublicKey, input_amount: BN, index: number, weight: BN) {
         let ix = await instructions.modify.solend.approvePositionWeightSolend(
             this.connection,
             this.solbondProgram,
@@ -448,7 +447,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
      * POSITION: Marinade Operations (Fetch Approve);
      */
     // Deposit
-    async approvePositionWeightMarinade(init_sol_amount: u64, index: number, weight: BN): Promise<TransactionInstruction> {
+    async approvePositionWeightMarinade(init_sol_amount: BN, index: number, weight: BN): Promise<TransactionInstruction> {
         let ix = await instructions.modify.marinade.approvePositionWeightMarinade(
             this.connection,
             this.solbondProgram,

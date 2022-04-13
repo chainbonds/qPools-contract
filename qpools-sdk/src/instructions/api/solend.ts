@@ -8,8 +8,11 @@
 import {Obligation, SolendAction, SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
 import {Connection, PublicKey} from "@solana/web3.js";
 import {BN} from "@project-serum/anchor";
-import {ExplicitPool, ExplicitSolendPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
 import {Cluster, getNetworkCluster} from "../../network";
+import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
+import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
+import {ExplicitSolendPool} from "../../types/interfacing/ExplicitSolendPool";
+import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
 
 
 export const getSolendTokens = async (): Promise<ExplicitToken[]> => {

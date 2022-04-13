@@ -6,9 +6,12 @@ import {getSaberPools, getSaberTokens} from "../instructions/api/saber";
 import {getMarinadePools, getMarinadeTokens} from "../instructions/api/marinade";
 import {getSolendPools, getSolendTokens} from "../instructions/api/solend";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
-import {ExplicitPool, ExplicitSaberPool, ExplicitToken, Protocol} from "../types/interfacing";
 import {getWrappedSolMint} from "../const";
 import {SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
+import {ExplicitPool} from "../types/interfacing/ExplicitPool";
+import {ExplicitToken} from "../types/interfacing/ExplicitToken";
+import {ExplicitSaberPool} from "../types/interfacing/ExplicitSaberPool";
+import {Protocol} from "../types/interfacing/PositionInfo";
 
 export class Registry {
 

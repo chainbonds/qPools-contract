@@ -1,9 +1,8 @@
 import {Connection, PublicKey} from "@solana/web3.js";
 import {Program} from "@project-serum/anchor";
-import {PortfolioAccount} from "../../types/account";
 import {accountExists} from "../../utils";
 import {getPortfolioPda} from "../../types/account/pdas";
-import {sol} from "easy-spl";
+import {PortfolioAccount} from "../../types/account/PortfolioAccount";
 
 /**
  * Check if the portfolio exists

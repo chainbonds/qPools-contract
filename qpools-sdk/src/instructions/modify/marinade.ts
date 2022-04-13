@@ -6,13 +6,13 @@ import * as anchor from "@project-serum/anchor";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {getAccountForMintAndPDADontCreate} from "../../utils";
 import {fetchSinglePositionMarinade} from "../fetch/position";
-import {PositionAccountMarinade} from "../../types/account";
+import {PositionAccountMarinade} from "../../types/account/PositionAccountMarinade";
 
 export async function approvePositionWeightMarinade(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    init_sol_amount: u64,
+    init_sol_amount: BN,
     index: number,
     weight: BN,
 ): Promise<TransactionInstruction> {

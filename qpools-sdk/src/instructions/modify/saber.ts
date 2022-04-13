@@ -3,7 +3,6 @@ import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
-import {PositionAccountSaber} from "../../types/account";
 import {
     createAssociatedTokenAccountUnsignedInstruction,
     getAccountForMintAndPDADontCreate, IWallet,
@@ -13,8 +12,9 @@ import {getPoolState} from "../fetch/saber";
 import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
 import {MOCK} from "../../const";
-import {Registry} from "../../frontend-friendly";
 import {sol} from "easy-spl";
+import {Registry} from "../../frontend-friendly/registry";
+import {PositionAccountSaber} from "../../types/account/PositionAccountSaber";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSaber(
@@ -22,9 +22,9 @@ export async function approvePositionWeightSaber(
     solbondProgram: Program,
     owner: PublicKey,
     poolAddress: PublicKey,
-    amountA: u64,
-    amountB: u64,
-    minMintAmount: u64,
+    amountA: BN,
+    amountB: BN,
+    minMintAmount: BN,
     index: number,
     weight: BN
 ): Promise<TransactionInstruction> {
@@ -81,8 +81,8 @@ export async function signApproveWithdrawAmountSaber(
     solbondProgram: Program,
     owner: PublicKey,
     index: number,
-    poolTokenAmount: u64,
-    minRedeemTokenAmount: u64,
+    poolTokenAmount: BN,
+    minRedeemTokenAmount: BN,
     registry: Registry
 ): Promise<Transaction> {
     console.log("#signApproveWithdrawAmountSaber()");

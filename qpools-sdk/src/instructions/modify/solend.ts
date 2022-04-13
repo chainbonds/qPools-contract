@@ -4,10 +4,10 @@ import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 
-import {PositionAccountSolend} from "../../types/account";
 import {SolendAction, SolendReserve} from "@solendprotocol/solend-sdk";
 import {Cluster, getNetworkCluster} from "../../network";
-import {Registry} from "../../frontend-friendly";
+import {PositionAccountSolend} from "../../types/account/PositionAccountSolend";
+import {Registry} from "../../frontend-friendly/registry";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSolend(
@@ -15,7 +15,7 @@ export async function approvePositionWeightSolend(
     solbondProgram: Program,
     owner: PublicKey,
     currencyMint: PublicKey,
-    inputAmount: u64,
+    inputAmount: BN,
     index: number,
     weight: BN
 ): Promise<TransactionInstruction> {

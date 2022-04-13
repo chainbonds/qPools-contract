@@ -1,6 +1,5 @@
 import {DEV_TOKEN_LIST_SABER} from "../../registry/devnet/saber/token-list.devnet";
 import {DEV_POOLS_INFO_SABER} from "../../registry/devnet/saber/pools-info.devnet";
-import {ExplicitPool, ExplicitSaberPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
 import {Cluster, getNetworkCluster} from "../../network";
 import {MAINNET_TOKEN_LIST_SABER} from "../../registry/mainnet/saber/token-list.mainnet";
 import {MAINNET_POOLS_INFO_SABER} from "../../registry/mainnet/saber/pools-info.mainnet";
@@ -11,6 +10,10 @@ import {
     StableSwap
 } from "@saberhq/stableswap-sdk";
 import { TokenInfo as SaberTokenInfo, Token as SaberToken, TokenAmount as SaberTokenAmount } from "@saberhq/token-utils";
+import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
+import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
+import {ExplicitSaberPool} from "../../types/interfacing/ExplicitSaberPool";
+import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
 
 /**
  * Gotta just copy it from the registry ....

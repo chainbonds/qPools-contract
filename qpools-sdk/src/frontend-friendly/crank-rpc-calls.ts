@@ -3,15 +3,20 @@ import {BN, Program, Provider} from "@project-serum/anchor";
 import {delay, IWallet, QWallet, sendAndSignInstruction, sendAndSignTransaction} from "../utils";
 import {Marinade, MarinadeConfig, MarinadeState} from "@marinade.finance/marinade-ts-sdk";
 import {Registry} from "./registry";
-import {getSolbondProgram} from "../index";
+import {
+    PortfolioAccount,
+    PositionAccountMarinade,
+    PositionAccountSaber,
+    PositionAccountSolend
+} from "../index";
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {sendLamports} from "../instructions/modify/portfolio-transfer";
-import {PortfolioAccount, PositionAccountMarinade, PositionAccountSaber, PositionAccountSolend} from "../types/account";
 import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
 import {SolendAction} from "@solendprotocol/solend-sdk";
 import {permissionlessFulfillSolend} from "../instructions/modify/solend";
-import * as instructions from "../instructions";
 import {Cluster, getNetworkCluster} from "../network";
+import * as instructions from "../instructions";
+import {getSolbondProgram} from "../solbond-program";
 
 export class CrankRpcCalls {
 

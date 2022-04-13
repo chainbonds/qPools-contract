@@ -10,9 +10,10 @@
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src",
+//    "baseUrl": "./src",
     "strict": true,
-    "noEmit": true,
-    "isolatedModules": true
+//    "noEmit": true,
+//    "isolatedModules": true
   },
   "include": [
     "src"

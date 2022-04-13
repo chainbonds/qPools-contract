@@ -1,11 +1,13 @@
 import {DEV_TOKEN_LIST_MARINADE} from "../../registry/devnet/marinade/token-list.devnet";
 import {DEV_POOLS_INFO_MARINADE} from "../../registry/devnet/marinade/pools-info.devnet";
-import {ExplicitPool, ExplicitToken, Protocol, ProtocolType} from "../../types/interfacing";
 import {Cluster, getNetworkCluster} from "../../network";
 import {MAINNET_TOKEN_LIST_MARINADE} from "../../registry/mainnet/marinade/token-list.mainnet";
 import {MAINNET_POOLS_INFO_MARINADE} from "../../registry/mainnet/marinade/pools-info.mainnet";
 import {PublicKey} from "@solana/web3.js";
 import {getMarinadeSolMint, getWrappedSolMint} from "../../const";
+import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
+import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
+import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
 
 export const getMarinadeTokens = async (): Promise<ExplicitToken[]> => {
     let saberTokenList: ExplicitToken[];

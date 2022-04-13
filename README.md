@@ -1,17 +1,5 @@
 # qPools-contract
 
-## Quick Start:
-
-To use the SDK, you can simple run 
-
-```
-yarn dev
-```
-
-This will install all packages if they're not installed yet. It will then link the package repository to your global, locally editable repository (using `yarn link`), and then it will run `tsc --watch` to account for any items that you edit. If you pull a new version, please make sure to run this command again. You can also run `yarn dev-clean` to delete any previous packages and reinstall everything from scratch. This deletes `node_modules/` and `package-lock.json` before you apply anything. 
-
-You can find the exact line of commands executed in `qpools-sdk/package.json` in the `script` attribute.
-
 ## Serpius Endpoint 
 
 The Serpius Endpoint currently is on version v4.0.0. The file-structure it should delpoy looks like the following. 
@@ -81,23 +69,6 @@ One specific example of what the API could return looks as follows:
 
 
 ## Setup instructions 
-
-### (0) Setup qPools SDK locally
-
-Please always run a watcher that automatically compiles the SDK. 
-This is to make sure that any modifications you make are immediately compiled, otherwise you might get weird bugs!
-
-``` 
-cd qpools-sdk
-tsc --watch
-```
-
-``` 
-cd qpools-admin-sdk
-tsc --watch
-```
-
-Let this run in a background terimnal, and let this run anytime you might change something in the qpools-sdk, or qpools-admin-sdk package.
 
 ### (1) Building and Testing
 run anchor build from 

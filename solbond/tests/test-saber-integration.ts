@@ -7,6 +7,7 @@ import {MarinadeState} from  '@marinade.finance/marinade-ts-sdk';
 import {getSolbondProgram} from "@qpools/sdk";
 import {Portfolio} from "@qpools/sdk";
 import {getAccountForMintAndPDADontCreate} from "@qpools/sdk/lib/utils";
+import {Cluster} from "@qpools/sdk/lib/network";
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -16,7 +17,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     const payer = Keypair.generate();
     // @ts-expect-error

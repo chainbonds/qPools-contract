@@ -1,12 +1,13 @@
 import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
-import {getPortfolioPda, getPositionPda, getUserCurrencyPda} from "../../types/account/pdas";
+import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
-import {getAccountForMintAndPDADontCreate} from "../../utils";
 
+import {SolendAction, SolendReserve} from "@solendprotocol/solend-sdk";
+import {Cluster, getNetworkCluster} from "../../network";
 import {PositionAccountSolend} from "../../types/account/PositionAccountSolend";
-import {SolendAction} from "@solendprotocol/solend-sdk";
+import {Registry} from "../../frontend-friendly/registry";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
 export async function approvePositionWeightSolend(
@@ -14,7 +15,7 @@ export async function approvePositionWeightSolend(
     solbondProgram: Program,
     owner: PublicKey,
     currencyMint: PublicKey,
-    inputAmount: u64,
+    inputAmount: BN,
     index: number,
     weight: BN
 ): Promise<TransactionInstruction> {
@@ -56,9 +57,10 @@ export async function signApproveWithdrawAmountSolend(
     solbondProgram: Program,
     owner: PublicKey,
     index: number,
-    redeemAmount: u64
-) {
+    // redeemAmount: u64
+): Promise<Transaction> {
     console.log("#signApproveWithdrawAmountSaber()");
+    let tx = new Transaction();
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
 
@@ -66,19 +68,26 @@ export async function signApproveWithdrawAmountSolend(
     let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
     console.log("aaa 27");
 
-   
-
     if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
         throw Error("Something major is off 2");
     }
-    if (positionAccount.isRedeemed) {
-        return null;
+    if (positionAccount.redeemApproved) {
+        return tx;
     }
+    // Take out as many c-tokens as there are ...
+    // TODO: How to get the amount of c-tokens from here ...
+
+    // TODO: Also make sure that the position is not yet redeemed ..
+
+    // throw Error("Not implemented yet!");
+    // Get the total amount of c-tokens that the user can withdraw ...
+    // perhaps should be tied to the withdraw_amount ...?
+    // positionAccount.withdrawAmount is 0!
 
     let ix = await solbondProgram.instruction.approveWithdrawSolend(
         portfolioBump,
         new BN(bumpPosition),
-        new BN(redeemAmount),
+        new BN(1),
         new BN(index),
         {
             accounts: {
@@ -91,8 +100,9 @@ export async function signApproveWithdrawAmountSolend(
             }
         }
     )
+    tx.add(ix)
     console.log("##signApproveWithdrawAmountSaber()");
-    return ix;
+    return tx;
 }
 
 /*
@@ -102,24 +112,10 @@ export async function permissionlessFulfillSolend(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    currencyMint : PublicKey,
+    puller: PublicKey,
     index: number,
-    tokenSymbol : string,
-    environment : "devnet"
+    solendAction: SolendAction
 ) {
-    /*
-    If we want to sail to other markets, we should find a
-     */
-    const solendAction = await SolendAction.initialize(
-        "mint",
-        new BN(0),
-        "SOL",
-        owner,
-        connection,
-        "devnet",
-    )
-
-
     console.log("#permissionlessFulfillSolend()");
     // Index should take the account
     // And find the poolAddress through a get request
@@ -127,10 +123,12 @@ export async function permissionlessFulfillSolend(
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("aaa 20");
     let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
-    const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
-    const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
+    //const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
+    //const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
     console.log("aaa 21");
     
+    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, positionAccount.currencyMint, solbondProgram)
+    let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     console.log("owner ", owner.toString())
     console.log("positionPDA ", positionPDA.toString())
@@ -145,14 +143,15 @@ export async function permissionlessFulfillSolend(
     console.log("program id ", solendAction.solendInfo.programID.toString())    
 
     let ix = await solbondProgram.instruction.createPositionSolend(
-        bumpPosition,
-        portfolioBump,
+        new BN(bumpAtaLiq),
+        new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {
-                owner: owner,
+                puller: puller,
                 positionPda: positionPDA,
                 sourceLiquidity: pdaOwnedATA,
+                liquidityMint: positionAccount.currencyMint,
                 destinationCollateral: pdaOwnedCollateral,
                 reserve: new PublicKey(solendAction.reserve.address),
                 reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),
@@ -176,10 +175,9 @@ export async function redeemSinglePositionSolend(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    currencyMint: PublicKey,
+    puller: PublicKey,
     index: number,
-    tokenSymbol : string,
-    environment : "devnet"
+    registry: Registry
 ) {
     console.log("#redeemSinglePositionOnlyOne()");
     // TODO: Do a translation from index to state first ...
@@ -193,20 +191,29 @@ export async function redeemSinglePositionSolend(
     let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
     console.log("aaa 25solend");
 
- 
+    // Almost all the arguments should be fetched from the program online ... very important.
+    let solendReserve: SolendReserve | null = (await registry.getSolendReserveFromInputCurrencyMint(positionAccount.currencyMint));
+    if (!solendReserve) {
+        throw Error("This currency mint does not have a solend reserve: " + positionAccount.currencyMint.toString());
+    }
+    let tokenSymbol = solendReserve.config.symbol;
+
     // const stableSwapState = await getPoolState(connection, pool_address);
     // const {state} = stableSwapState;
-    const solendAction = await SolendAction.initialize(
-        "mint",
-        new BN(0),
-        tokenSymbol,
-        owner,
-        connection,
-        environment,
-    )
-    const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
-    const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
-  
+    let solendAction: SolendAction;
+    if (getNetworkCluster() === Cluster.DEVNET) {
+        console.log("Token Symbol is: ", tokenSymbol);
+        solendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            tokenSymbol,
+            owner,
+            connection,
+            "devnet",
+        )
+    } else {
+        throw Error("Cluster not implemented! getMarinadeTokens");
+    }
     
     // console.log("👀 positionPda ", positionPDA.toString())
     // console.log("😸 portfolioPda", portfolioPDA.toString());
@@ -221,17 +228,20 @@ export async function redeemSinglePositionSolend(
     // console.log("🦒 mint A", state.tokenA.mint.toString());
     // console.log("🦒 mint B", state.tokenB.mint.toString());
     // console.log("🦒 mint LP", state.poolTokenMint.toString());
+    let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, positionAccount.currencyMint, solbondProgram)
+    let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)
 
     let ix = await solbondProgram.instruction.redeemPositionSolend(
-        new BN(bumpPosition),
-        new BN(portfolioBump),
+        new BN(bumpAtaLiq),
+        new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {
-                owner: owner,
+                puller: puller,
                 positionPda: positionPDA,
                 userTransferAuthority: portfolioPDA,
                 destinationLiquidity: pdaOwnedATA,
+                liquidityMint: positionAccount.currencyMint,
                 sourceCollateral: pdaOwnedCollateral,
                 reserve: new PublicKey(solendAction.reserve.address),
                 reserveCollateralMint: new PublicKey(solendAction.reserve.collateralMintAddress),

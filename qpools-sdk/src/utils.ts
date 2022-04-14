@@ -1,6 +1,6 @@
 import { web3, Provider, BN } from '@project-serum/anchor';
 import {ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64} from '@solana/spl-token';
-import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction} from "@solana/web3.js";
+import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction, TokenAmount} from "@solana/web3.js";
 import {account, util, WalletI} from "easy-spl";
 import {Wallet} from "@project-serum/anchor/src/provider";
 import {Buffer} from "buffer";
@@ -10,7 +10,46 @@ const DEFAULT_DECIMALS = 6;
 
 let _payer: Keypair | null = null;
 
-export default class QWallet implements Wallet {
+// TODO: The usage of this is ambigious. I need to chase these bugs everywhere!!!
+// TODO: Write tests for this stupid shit ...
+/**
+ *
+ * @param x The big-number that should be written into a tokenAmountNumber. Should be lamports, and include decimals!
+ *  This cannot be negative
+ * @param decimals
+ */
+export const getTokenAmount = (x: BN, decimals: BN): TokenAmount => {
+    const safeConst = 1_000_000;
+    let decimalsAsNumber = decimals.toNumber();
+    let decimalExpanded = (new BN(10)).pow(decimals);
+    console.log("x and decimals are: ", x.toString(), decimalExpanded.toString());
+    let decimalDivision = x.muln(safeConst).div(decimalExpanded).toNumber() / safeConst;
+    let uiAmount = Math.max(decimalDivision, 0.0);
+    return {
+        amount: x.toString(),
+        decimals: decimalsAsNumber,
+        uiAmount: uiAmount,
+        uiAmountString: uiAmount.toString()
+    };
+}
+
+/**
+ * A floating point representation (.toFixed) of a numer
+ * @param x
+ */
+export const getTokenAmountFromString = (x: string): TokenAmount => {
+    let decimals = x.split("").reverse().join("").indexOf(".");
+    let number = x.replace(".", "");
+    // remove dot, then put into BN with tokenAmount
+    return {
+        amount: number,
+        decimals: decimals,
+        uiAmount: Number(x),
+        uiAmountString: x
+    };
+}
+
+export class QWallet implements Wallet {
 
     constructor(readonly payer: Keypair) {
         this.payer = payer
@@ -31,6 +70,13 @@ export default class QWallet implements Wallet {
     get publicKey(): PublicKey {
         return this.payer.publicKey;
     }
+}
+
+export async function sendAndSignTransaction(provider: Provider, tx: Transaction) {
+    let sg = await provider.send(tx);
+    await provider.connection.confirmTransaction(sg, "confirmed");
+    console.log("Transaction Signature is: ", sg);
+    return sg;
 }
 
 export async function sendAndSignInstruction(provider: Provider, ix: TransactionInstruction) {

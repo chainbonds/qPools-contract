@@ -2,20 +2,18 @@ import * as anchor from "@project-serum/anchor";
 import {Connection} from "@solana/web3.js";
 import {Provider} from "@project-serum/anchor";
 import {IDL} from "./idl/solbond";
-import {NETWORK} from "./types/cluster";
+import {Cluster} from "./network";
 
-export const getSolbondProgram = (connection: Connection, provider: Provider, network: NETWORK = NETWORK.LOCALNET) => {
+export const getSolbondProgram = (connection: Connection, provider: Provider, network: Cluster = Cluster.DEVNET) => {
 
     // Have a list of all addresses, based on DEVNET, MAINNET, ETC.
     let programAddress;
-    if (network == NETWORK.LOCALNET) {
+
+    if (network == Cluster.DEVNET) {
         programAddress = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi";
-    } else if (network == NETWORK.DEVNET) {
+    } else if (network == Cluster.MAINNET) {
         programAddress = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi";
-    } else if (network == NETWORK.TESTNET) {
-        programAddress = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi";
-    } else if (network == NETWORK.MAINNET) {
-        programAddress = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi";
+
     } else {
         throw Error("Solana Cluster not specified!" + String(network));
     }

@@ -7,6 +7,7 @@ use crate::utils::seeds;
 #[instruction(
     _bump_portfolio:u8, 
     _bump_user_currency: u8,
+    _bump_ata: u8,
 )]
 
     pub struct TransferToPortfolio<'info> {
@@ -24,7 +25,13 @@ use crate::utils::seeds;
     #[account(mut)]
     pub user_owned_token_account: Box<Account<'info, TokenAccount>>,
     
-    #[account(mut,         
+    #[account(
+        init_if_needed,
+        payer = owner,
+        token::mint = token_mint,
+        token::authority = portfolio_pda,
+        seeds = [owner.key().as_ref(),token_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_ata,
         constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_token_account: Box<Account<'info,TokenAccount>>,
@@ -56,23 +63,9 @@ pub fn handler(
     ctx: Context<TransferToPortfolio>,
     _bump_portfolio: u8,
     _bump_user_currency: u8,
+    _bump_ata: u8,
 ) -> ProgramResult {
-    msg!("transfer initial funds from user to portfolio");
-    msg!("how much a dollar cost {}", ctx.accounts.user_currency_pda_account.initial_amount);
-    msg!("balance user owned token {}", ctx.accounts.user_owned_token_account.amount);
-    
-    msg!("huso1 mint {}", ctx.accounts.user_owned_token_account.mint.key());
-    msg!("huso1 del amount {}", ctx.accounts.user_owned_token_account.delegated_amount);
-    msg!("huso1 owner {}", ctx.accounts.user_owned_token_account.owner.key());
-    msg!("huso1 pubkey {}", ctx.accounts.user_owned_token_account.to_account_info().key());
-
-
-    msg!("balance pda owned token {}", ctx.accounts.pda_owned_token_account.amount);
-    msg!("huso2 mint {}", ctx.accounts.pda_owned_token_account.mint.key());
-    msg!("huso2 del amount {}", ctx.accounts.pda_owned_token_account.delegated_amount);
-    msg!("huso2 owner {}", ctx.accounts.pda_owned_token_account.owner.key());
-    msg!("huso2 pubkey {}", ctx.accounts.pda_owned_token_account.to_account_info().key());
-    msg!("wsol {}", ctx.accounts.token_mint.key());
+   
     let cpi_accounts = Transfer {
         from: ctx.accounts.user_owned_token_account.to_account_info(),
         to: ctx.accounts.pda_owned_token_account.to_account_info(),

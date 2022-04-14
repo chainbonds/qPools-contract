@@ -1,34 +1,22 @@
 import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
-import {WalletI} from "easy-spl";
-import {BN, Program, Provider, web3} from "@project-serum/anchor";
-import * as anchor from "@project-serum/anchor";
-import QWallet, {
-     createAssociatedTokenAccountSendUnsigned,
-    delay,
-    IWallet, sendAndSignInstruction
-} from "../utils";
-import {StableSwapState} from "@saberhq/stableswap-sdk";
-import {getSolbondProgram, PortfolioAccount} from "../index";
-import {NETWORK} from "../types/cluster";
-import {PositionAccountSaber} from "../types/account/PositionAccountSaber";
-import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
-import {createPositionMarinade} from "../instructions/modify/marinade";
-import {
-    permissionlessFulfillSaber,
-    redeem_single_position,
-    redeemSinglePositionOnlyOne
-} from "../instructions/modify/saber";
-import {
-    permissionlessFulfillSolend,
-    redeemSinglePositionSolend
-} from "../instructions/modify/solend";
-
-import {sendLamports, transfer_to_user} from "../instructions/modify/portfolio-transfer";
-import {getPoolState} from "../instructions/fetch/saber";
-import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk';
-import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
-import {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
+import {BN, Program, Provider} from "@project-serum/anchor";
+import {delay, IWallet, QWallet, sendAndSignInstruction, sendAndSignTransaction} from "../utils";
+import {Marinade, MarinadeConfig, MarinadeState} from "@marinade.finance/marinade-ts-sdk";
 import {Registry} from "./registry";
+import {
+    PortfolioAccount,
+    PositionAccountMarinade,
+    PositionAccountSaber,
+    PositionAccountSolend
+} from "../index";
+import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
+import {sendLamports} from "../instructions/modify/portfolio-transfer";
+import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
+import {SolendAction} from "@solendprotocol/solend-sdk";
+import {permissionlessFulfillSolend} from "../instructions/modify/solend";
+import {Cluster, getNetworkCluster} from "../network";
+import * as instructions from "../instructions";
+import {getSolbondProgram} from "../solbond-program";
 
 export class CrankRpcCalls {
 
@@ -38,12 +26,13 @@ export class CrankRpcCalls {
     public providerWallet: IWallet;
     public wallet: Keypair;
 
+    // @ts-ignore
     public portfolioPDA: PublicKey;
+    // @ts-ignore
     public portfolioBump: number;
-    public portfolioOwner: PublicKey;
 
     public payer: Keypair;
-    public owner: WalletI;
+    public owner: IWallet;
 
     // Gotta make sure that the crank-wallet sends the signatures
     public crankWallet;
@@ -51,6 +40,7 @@ export class CrankRpcCalls {
     public crankSolbondProgram;
     public registry;
 
+    // @ts-ignore
     public marinadeState: MarinadeState;
 
     constructor(
@@ -72,10 +62,14 @@ export class CrankRpcCalls {
         // Clean the different types of providers ...
 
         this.crankWallet = new QWallet(tmpKeypair);
-        this.crankProvider = new anchor.Provider(this.connection, this.crankWallet, {
-            preflightCommitment: "confirmed"
-        });
-        this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, NETWORK.DEVNET);
+        this.crankProvider = new Provider(this.connection, this.crankWallet, {preflightCommitment: "confirmed"});
+        let cluster: Cluster;
+        if (getNetworkCluster() === Cluster.DEVNET) {
+            cluster = Cluster.DEVNET;
+        } else {
+            throw Error("Cluster not implemented! crankRpcCalls Helper class");
+        }
+        this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, cluster);
 
         this.providerWallet = this.provider.wallet;
         console.log("PPP Pubkey is: ", this.providerWallet.publicKey);
@@ -88,7 +82,7 @@ export class CrankRpcCalls {
         // @ts-expect-error
         this.payer = provider.wallet.payer as Keypair;
 
-        this.loadPortfolioPdas();
+        this.initializeState();
 
         const marinadeConfig = new MarinadeConfig({
             connection: connection,
@@ -96,6 +90,10 @@ export class CrankRpcCalls {
 
         });
         let marinade = new Marinade(marinadeConfig);
+        getPortfolioPda(this.owner.publicKey, this.solbondProgram).then(([portfolioPda, portfolioBump]) => {
+            this.portfolioPDA = portfolioPda;
+            this.portfolioBump =  portfolioBump;
+        });
         MarinadeState.fetch(marinade).then((marinadeState: MarinadeState) => {
             this.marinadeState = marinadeState;
         });
@@ -103,10 +101,15 @@ export class CrankRpcCalls {
         delay(1000);
     }
 
-    async loadPortfolioPdas() {
-        let [portfolioPDA, bumpPortfolio] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
-        this.portfolioPDA = portfolioPDA
-        this.portfolioBump = bumpPortfolio
+    async initializeState() {
+        [this.portfolioPDA, this.portfolioBump] = await getPortfolioPda(this.owner.publicKey, this.solbondProgram);
+        const marinadeConfig = new MarinadeConfig({
+            connection: this.connection,
+            publicKey: this.provider.wallet.publicKey,
+
+        });
+        let marinade = new Marinade(marinadeConfig);
+        this.marinadeState = await MarinadeState.fetch(marinade);
     }
 
     /**
@@ -114,16 +117,17 @@ export class CrankRpcCalls {
      */
     async transfer_to_user(currencyMint: PublicKey) {
         // Creating the user-account if it doesn't yet exist
-        let ix = await transfer_to_user(
+        let tx = await instructions.modify.portfolioTransfer.transfer_to_user(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             currencyMint
         );
-        return await sendAndSignInstruction(this.crankProvider, ix);
+        return await sendAndSignTransaction(this.crankProvider, tx);
     }
 
-    async sendToUsersWallet(tmpKeypair: PublicKey, lamports: number): Promise<TransactionInstruction> {
+    async sendToUsersWallet(tmpKeypair: PublicKey, lamports: BN): Promise<TransactionInstruction> {
         return sendLamports(tmpKeypair, this.owner.publicKey, lamports);
     }
 
@@ -150,10 +154,11 @@ export class CrankRpcCalls {
         // if (await accountExists(this.connection, positionPDA)) {
         // let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
         // Return if the current position was already fulfilled
-        let ix = await permissionlessFulfillSaber(
+        let ix = await instructions.modify.saber.permissionlessFulfillSaber(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             this.registry
         );
@@ -161,20 +166,57 @@ export class CrankRpcCalls {
         return await sendAndSignInstruction(this.crankProvider, ix);
     }
 
-    async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[]): Promise<void> {
-        // let {portfolio, positionsSaber, positionsMarinade} = await this.getPortfolioAndPositions();
-        await Promise.all(positionsSaber.map(async(x: PositionAccountSaber) => {
+    async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[], positionsSolend: PositionAccountSolend[]): Promise<void> {
+        console.log("#redeemAllPositions()");
+        let inputCurrencyMints = new Set<string>();
+        console.log("Running saber items: ", positionsSaber);
+        await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
+            console.log("Closing following position account: ", x);
+
+            let poolAddress = await this.registry.saberPoolLpToken2poolAddress(x.poolAddress);
+            if (!poolAddress) {
+                throw Error("poolAddress not found! " + String(poolAddress));
+            }
+            const stableSwapState = await instructions.fetch.saber.getPoolState(this.connection, poolAddress);
+            console.log("getting state");
+            const {state} = stableSwapState;
+
+            // TODO: Add the input currency to the positions!
+            inputCurrencyMints.add(state.tokenA.mint.toString());
+            inputCurrencyMints.add(state.tokenB.mint.toString());
+
             let sgRedeemSinglePositionOnlyOne = await this.redeem_single_position_only_one(x.index);
             console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
         }));
+        // TODO: Also redeem solend!
+        await Promise.all(positionsSolend.map(async (x: PositionAccountSolend) => {
+            // Also get the symbol through the currency mint ...
+            // let token = await this.registry.getTokenIndexedBySymbol(x.currencyMint);
+            // Assuming that the token is exclusively used for solend ...
+            inputCurrencyMints.add(x.currencyMint.toString());
+            // TODO: Perhaps add a registry item to go from Solend Currency to Solend Symbol (?)
+            let sgRedeemSolendPositions = await this.redeemPositionSolend(x.index);
+            console.log("Signature to run the crank to get back USDC is: ", sgRedeemSolendPositions);
+        }));
+
+        console.log("Now sendin back the currencies as well...");
+        // Now also redeem the individual currencies ..
+        await Promise.all(Array.from(inputCurrencyMints.values()).map(async (x: string) => {
+            let currencyMint = new PublicKey(x);
+            let sgTransferMSolToUser = await this.transfer_to_user(currencyMint);
+            console.log("Signature to send back mSOL", sgTransferMSolToUser);
+            return;
+        }));
+
         // We don't redeem marinade actively ...
         console.log("Approving Marinade Withdraw");
+        console.log("##redeemAllPositions()");
         return
     }
 
     async redeem_single_position(poolAddress: PublicKey, index: number) {
         // TODO: Rename to sth saber, or make module imports ...
-        let ix = await redeem_single_position(
+        let ix = await instructions.modify.saber.redeem_single_position(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -193,13 +235,13 @@ export class CrankRpcCalls {
         console.log("aaa 14");
         let currentPosition = (await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
         console.log("aaa 15");
+        console.log("Current position is: ", currentPosition);
 
-        if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {
-            console.log("Crank Orders were already redeemed!");
-            throw Error("Something major is off!");
-            return;
-        }
-
+        // if (currentPosition.isRedeemed && !currentPosition.isFulfilled) {
+        //     console.log("Crank Orders were already redeemed!");
+        //     throw Error("Something major is off!");
+        //     return;
+        // }
         if (currentPosition.isRedeemed) {
             console.log("Crank Orders were already redeemed!");
             return;
@@ -208,6 +250,7 @@ export class CrankRpcCalls {
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             this.registry
         );
@@ -218,10 +261,11 @@ export class CrankRpcCalls {
      * Marinade
      */
     async createPositionMarinade(index: number) {
-        let ix = await createPositionMarinade(
+        let ix = await instructions.modify.marinade.createPositionMarinade(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
+            this.crankProvider.wallet.publicKey,
             index,
             this.marinadeState
         );
@@ -229,201 +273,36 @@ export class CrankRpcCalls {
     }
 
 
-    async createPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+    async createPositionSolend(index: number, solendAction: SolendAction) {
+        // TODO: From the currency-mint, fetch the solend symbol ...
+        // tokenSymbol: string
+        // TODO: Remove the harcoded tokenSymbol variable ...
+
+        // Initialize a solend market using the mint ...
+
         let ix = await permissionlessFulfillSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            currencyMint,
+            this.crankProvider.wallet.publicKey,
             index,
-            tokenSymbol,
-            environment
-
+            solendAction
         );
-        return await sendAndSignInstruction(this.provider, ix)
+        return await sendAndSignInstruction(this.crankProvider, ix)
     }
 
-    async redeemPositionSolend(currencyMint: PublicKey, index: number, tokenSymbol: string, environment: "devnet") {
+    async redeemPositionSolend(index: number) {
 
-        let ix = await redeemSinglePositionSolend(
+        let ix = await instructions.modify.solend.redeemSinglePositionSolend(
             this.connection,
             this.solbondProgram,
             this.owner.publicKey,
-            currencyMint,
+            this.crankProvider.wallet.publicKey,
             index,
-            tokenSymbol,
-            environment
+            this.registry
         );
-        return await sendAndSignInstruction(this.provider, ix);
+        return await sendAndSignInstruction(this.crankProvider, ix);
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    // async fullfillAllPermissionless(): Promise<boolean> {
-    //     await this.loadPortfolioPdas();
-    //     console.log("aaa 8");
-    //     let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-    //     console.log("aaa 9");
-    //     for (let index = 0; index < portfolioAccount.numPositions; index++) {
-    //         await this.permissionlessFulfillSaber(index);
-    //     }
-    //     return true;
-    // }
-    //
-    // /**
-    //  * Send all the rest of SOL back to the user
-    //  */
-
-    // async fullfillAllWithdrawalsPermissionless(): Promise<void> {
-    //     console.log("aaa 12");
-    //     let portfolioAccount: PortfolioAccount = (await this.crankSolbondProgram.account.portfolioAccount.fetch(this.portfolioPDA)) as PortfolioAccount;
-    //     console.log("aaa 13");
-    //     for (let index = 0; index < portfolioAccount.numPositions; index++) {
-    //         await this.redeemSinglePositionOnlyOne(index);
-    //     }
-    // }
-    //
-    // async redeemSinglePositionOnlyOne(index: number): Promise<string[]> {
-    // TODO: This case-distinction is important! To know which parameter to take out ...
-    // TODO: Might require some more refactoring in the backend ..
-    // TODO: Maybe add a refactoring item somewhere
-    //     const stableSwapState = await this.getPoolState(poolAddress);
-    //     const {state} = stableSwapState;
-    //     console.log("got state ", state);
-    //
-    //     let poolTokenMint = state.poolTokenMint
-    //     console.log("poolTokenMint ", poolTokenMint.toString());
-    //
-    //     const [authority] = await findSwapAuthorityKey(state.adminAccount, this.stableSwapProgramId);
-    //     console.log("authority ", authority.toString());
-    //
-    //     // TODO: Depending on if USDC == mintA or USDC == mintB, you should reverse these
-    //
-    //     let userAccount;
-    //     let reserveA: PublicKey;
-    //     let feesA: PublicKey;
-    //     let mintA: PublicKey;
-    //     let reserveB: PublicKey;
-    //     let userAccountpoolToken = await getAccountForMintAndPDADontCreate(poolTokenMint, this.portfolioPDA);
-    //
-    //     if (MOCK.DEV.SABER_USDC.equals(state.tokenA.mint)) {
-    //         userAccount = await getAccountForMintAndPDADontCreate(state.tokenA.mint, this.portfolioPDA);
-    //         reserveA = state.tokenA.reserve
-    //         feesA = state.tokenA.adminFeeAccount
-    //         mintA = state.tokenA.mint
-    //         reserveB = state.tokenB.reserve
-    //
-    //     } else if (MOCK.DEV.SABER_USDC.equals(state.tokenB.mint)) {
-    //         userAccount = await getAccountForMintAndPDADontCreate(state.tokenB.mint, this.portfolioPDA);
-    //         reserveA = state.tokenB.reserve
-    //         feesA = state.tokenB.adminFeeAccount
-    //         mintA = state.tokenB.mint
-    //         reserveB = state.tokenA.reserve
-    //
-    //     } else {
-    //         throw Error(
-    //             "Could not find overlapping USDC Pool Mint Address!! " +
-    //             MOCK.DEV.SABER_USDC.toString() + " (Saber USDC) " +
-    //             state.tokenA.mint.toString() + " (MintA) " +
-    //             state.tokenB.mint.toString() + " (MintB) "
-    //         )
-    //     }
-    //
-    //     console.log("👀 positionPda ", positionPDA.toString());
-    //
-    //     console.log("😸 portfolioPda", this.portfolioPDA.toString());
-    //     console.log("👾 owner.publicKey",  this.owner.publicKey.toString());
-    //
-    //     console.log("🟢 poolTokenMint", poolTokenMint.toString());
-    //     console.log("🟢 userAccountpoolToken", userAccountpoolToken.toString());
-    //
-    //     console.log("🤯 stableSwapState.config.authority", stableSwapState.config.authority.toString());
-    //
-    //     console.log("🤥 stableSwapState.config.swapAccount", stableSwapState.config.swapAccount.toString());
-    //     console.log("🤥 userAccountA", userAccount.toString());
-    //     console.log("🤗 state.tokenA.reserve", state.tokenA.reserve.toString());
-    //
-    //     console.log("🤠 state.tokenB.reserve", state.tokenB.reserve.toString());
-    //
-    //     console.log("🦒 mint A", state.tokenA.mint.toString());
-    //     console.log("🦒 mint B", state.tokenB.mint.toString());
-    //     console.log("🦒 mint LP", poolTokenMint.toString());
-    //
-    //     let finaltx = await this.crankSolbondProgram.rpc.redeemPositionOneSaber(
-    //         new BN(this.portfolioBump),
-    //         new BN(bumpPosition),
-    //         new BN(index),
-    //         {
-    //             accounts: {
-    //                 positionPda: positionPDA,
-    //                 portfolioPda: this.portfolioPDA,
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 poolMint: poolTokenMint,
-    //                 inputLp: userAccountpoolToken,
-    //                 swapAuthority: stableSwapState.config.authority,
-    //                 swap:stableSwapState.config.swapAccount,
-    //                 userA: userAccount,
-    //                 reserveA: reserveA,
-    //                 mintA: mintA,
-    //                 reserveB: reserveB,
-    //                 feesA: feesA,
-    //                 saberSwapProgram: this.stableSwapProgramId,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //             },
-    //         }
-    //     )
-    //
-    //     await this.provider.connection.confirmTransaction(finaltx);
-    //     console.log("Single Redeem Transaction is : ", finaltx);
-    //
-    //     return [finaltx];
-    // }
-    //
-    // async transferToUser(): Promise<string[]> {
-    //
-    //     // Get user's PDA for USDC
-    //     let userUsdcata = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.owner.publicKey);
-    //     let pdaUSDCAccount = await getAccountForMintAndPDADontCreate(MOCK.DEV.SABER_USDC, this.portfolioPDA);
-    //
-    //     console.log("Check if these accounts exist, already ...");
-    //     console.log("userUsdcata", userUsdcata.toString());
-    //     console.log("pdaUSDCAccount", pdaUSDCAccount.toString());
-    //     console.log("userUsdcata", await tokenAccountExists(this.connection, userUsdcata));
-    //     console.log("pdaUSDCAccount", await tokenAccountExists(this.connection, pdaUSDCAccount));
-    //
-    //     let finaltx = await this.crankSolbondProgram.rpc.transferRedeemedToUser(
-    //         new BN(this.portfolioBump),
-    //         {
-    //             accounts: {
-    //                 portfolioPda: this.portfolioPDA,
-    //                 portfolioOwner: this.owner.publicKey,
-    //                 userOwnedUserA: userUsdcata,
-    //                 pdaOwnedUserA: pdaUSDCAccount,
-    //                 tokenProgram: TOKEN_PROGRAM_ID,
-    //                 systemProgram: web3.SystemProgram.programId,
-    //                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //
-    //                 // Create liquidity accounts
-    //             },
-    //             //signers:[signer]
-    //         }
-    //     )
-    //     await this.provider.connection.confirmTransaction(finaltx);
-    //     console.log("gave user money back : ", finaltx);
-    //
-    //     return [finaltx];
-    // }
 
 }

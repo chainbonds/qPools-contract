@@ -1,16 +1,21 @@
 /**
  * A bunch of logic to make loading objects more efficient
  */
-import {ExplicitToken} from "../types/ExplicitToken";
-import {PublicKey} from "@solana/web3.js";
+import {Connection, PublicKey} from "@solana/web3.js";
 import {getSaberPools, getSaberTokens} from "../instructions/api/saber";
 import {getMarinadePools, getMarinadeTokens} from "../instructions/api/marinade";
 import {getSolendPools, getSolendTokens} from "../instructions/api/solend";
-import {ExplicitPool} from "../types/ExplicitPool";
-import {Protocol} from "../types/PositionInfo";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
-import {ExplicitSaberPool} from "../types/ExplicitSaberPool";
+
 import {getCoinGeckoList} from "../instructions/api/coingecko";
+
+import {getWrappedSolMint} from "../const";
+import {SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
+import {ExplicitPool} from "../types/interfacing/ExplicitPool";
+import {ExplicitToken} from "../types/interfacing/ExplicitToken";
+import {ExplicitSaberPool} from "../types/interfacing/ExplicitSaberPool";
+import {Protocol} from "../types/interfacing/PositionInfo";
+
 
 export class Registry {
 
@@ -29,14 +34,54 @@ export class Registry {
     tokenIndexedByTokenMint: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
     tokenIndexedBySymbol: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
 
+
     coinGeckoMapping: Map<string, string>;
+
+
+    // solendMarketIndexedByCurrencyMint: Map<string, SolendMarket> = new Map<>
 
 
     // nativeSolMint: PublicKey = new PublicKey("NativeSo11111111111111111111111111111111111");
     // wrappedSolMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
+    // TODO: Replace based on mainnet vs devnet ...
     serpiusEndpoint: string = "https://qpools.serpius.com/weight_status_devnet_solend_v2.json";
 
-    constructor() {
+    userPubkey: PublicKey = getWrappedSolMint();
+
+    // Anything protocol specific
+    solendMarket: SolendMarket | null = null;
+    connection: Connection
+
+    constructor(connection: Connection) {
+        // Change devnet with actual environment
+        this.connection = connection;
+        this.initializeSolend()
+    }
+
+    async initializeSolend() {
+        if (!this.solendMarket) {
+            this.solendMarket = await SolendMarket.initialize(this.connection, "devnet");
+        }
+    }
+
+    async setNewPubkey(userPubkey: PublicKey) {
+        // Delete all pool indecies and objects, and re-create them on-load ...
+        // Right now, only solend has some public key in the constructor
+        this.protocolPoolList = [];
+        this.poolListIndexedByInputTokenMint = new Map<string, ExplicitPool[]>();
+        this.poolListIndexedByLpTokenMint = new Map<string, ExplicitPool>();
+        this.poolListIndexedByIdString = new Map<string, ExplicitPool>();
+
+        this.userPubkey = userPubkey;
+
+        // Don't do lazy-loading, fucks up with the UI
+        this.getAllTokens();
+        this.getAllPools();
+        this.getPoolListIndexedByInputTokenMint();
+        this.getPoolListIndexedByIdString();
+        this.getPoolListIndexedByLpTokenMint();
+        this.getTokenIndexedBySymbol();
+        this.getTokenIndexedByTokenMint();
     }
 
     /**
@@ -53,6 +98,7 @@ export class Registry {
      */
     async getAllTokens(): Promise<ExplicitToken[]> {
         if (this.protocolTokenList.length < 1) {
+            console.log("#getAllTokens()");
             console.log("Creating protocolTokenList");
             let saberTokenList: ExplicitToken[] = await getSaberTokens();
             let marinadeTokenList: ExplicitToken[] = await getMarinadeTokens();
@@ -62,23 +108,28 @@ export class Registry {
                 ...marinadeTokenList,
                 ...solendTokenList
             ]
-            //console.log("This protocolTokenList is: ", this.protocolPoolList);
+
+            // console.log("This protocolTokenList is: ", this.protocolPoolList);
+            console.log("##getAllTokens()");
+
         }
         return this.protocolTokenList;
     }
 
     async getAllPools(): Promise<ExplicitPool[]> {
         if (this.protocolPoolList.length < 1) {
+            console.log("#getAllPools()");
             console.log("Creating protocolPoolList");
             let saberPoolList: ExplicitPool[] = await getSaberPools();
             let marinadePoolList: ExplicitPool[] = await getMarinadePools();
-            let solendPoolList: ExplicitPool[] = await getSolendPools();
+            let solendPoolList: ExplicitPool[] = await getSolendPools(this.userPubkey);
             this.protocolPoolList = [
                 ...saberPoolList,
                 ...marinadePoolList,
                 ...solendPoolList
             ];
-            console.log("This protocolPoolList is: ", this.protocolPoolList);
+            // console.log("This protocolPoolList is: ", this.protocolPoolList);
+            console.log("##getAllPools()");
         }
         return this.protocolPoolList;
     }
@@ -93,6 +144,7 @@ export class Registry {
      *
      */
     async getPoolListIndexedByInputTokenMint(): Promise<Map<string, ExplicitPool[]>> {
+        console.log("#getPoolListIndexedByInputTokenMint()");
         if (this.poolListIndexedByInputTokenMint.size > 0) {
             return this.poolListIndexedByInputTokenMint;
         }
@@ -103,7 +155,10 @@ export class Registry {
             currentPool.tokens.map((inputToken: ExplicitToken) => {
                 if (out.has(inputToken.address)) {
                     // (1) If the input token was already instantiated, then append the pool if it not already in the list
-                    let pools: ExplicitPool[] = out.get(inputToken.address);
+                    let pools: ExplicitPool[] | undefined = out.get(inputToken.address);
+                    if (!pools) {
+                        throw Error("Input Token does not correspond to any tokens!! " + inputToken.address.toString());
+                    }
                     if (!pools.includes(currentPool)) {
                         let key = inputToken.address;
                         // Append this new pool to the list of all pols under this key
@@ -117,11 +172,13 @@ export class Registry {
             });
         })
         this.poolListIndexedByInputTokenMint = out;
+        console.log("##getPoolListIndexedByInputTokenMint()");
         return this.poolListIndexedByInputTokenMint;
     }
 
     // createIndexTokenMintToToken()
     async getTokenIndexedByTokenMint(): Promise<Map<string, ExplicitToken>> {
+        console.log("#getTokenIndexedByTokenMint()");
         if (this.tokenIndexedByTokenMint.size > 0) {
             return this.tokenIndexedByTokenMint;
         }
@@ -134,11 +191,13 @@ export class Registry {
             out.set(key, value);
         });
         this.tokenIndexedByTokenMint = out;
+        console.log("##getTokenIndexedByTokenMint()");
         return this.tokenIndexedByTokenMint;
     }
 
     // createIndexSymbolToToken()
     async getTokenIndexedBySymbol(): Promise<Map<string, ExplicitToken>> {
+        console.log("#getTokenIndexedBySymbol()");
         if (this.tokenIndexedBySymbol.size > 0) {
             return this.tokenIndexedBySymbol;
         }
@@ -151,11 +210,13 @@ export class Registry {
             out.set(key, value);
         });
         this.tokenIndexedBySymbol = out;
+        console.log("##getTokenIndexedBySymbol()");
         return this.tokenIndexedBySymbol;
     }
 
     // createIndexByLpTokenMint()
     async getPoolListIndexedByLpTokenMint(): Promise<Map<string, ExplicitPool>> {
+        console.log("#getPoolListIndexedByLpTokenMint()");
         if (this.poolListIndexedByLpTokenMint.size > 0) {
             return this.poolListIndexedByLpTokenMint;
         }
@@ -168,23 +229,27 @@ export class Registry {
             out.set(key, value);
         });
         this.poolListIndexedByLpTokenMint = out;
+        console.log("##getPoolListIndexedByLpTokenMint()");
         return this.poolListIndexedByLpTokenMint;
     }
 
     // createIndexByPoolId()
     async getPoolListIndexedByIdString(): Promise<Map<string, ExplicitPool>> {
+        console.log("#getPoolListIndexedByIdString()");
         if (this.poolListIndexedByIdString.size > 0) {
             return this.poolListIndexedByIdString;
         }
         console.log("Creating poolListIndexedByIdString");
         let out: Map<string, ExplicitPool> = new Map<string, ExplicitPool>();
-        let pools = await this.getAllPools();
+        let pools: ExplicitPool[] = await this.getAllPools();
+        console.log("Elloo!");
         pools.map((x: ExplicitPool) => {
             let key = x.id;
             let value = x;
             out.set(key, value);
         });
         this.poolListIndexedByIdString = out;
+        console.log("##getPoolListIndexedByIdString()");
         return this.poolListIndexedByIdString;
     }
 
@@ -195,7 +260,7 @@ export class Registry {
     async getToken(tokenMint: string): Promise<ExplicitToken | null> {
         let map = await this.getTokenIndexedByTokenMint();
         if (map.has(tokenMint)) {
-            return map.get(tokenMint);
+            return map.get(tokenMint)!;
         } else {
             return null;
         }
@@ -219,7 +284,7 @@ export class Registry {
     async getLogoFromSymbol(symbol: string): Promise<string> {
         let map = await this.getTokenIndexedBySymbol();
         if (map.has(symbol)) {
-            return map.get(symbol).logoURI
+            return map.get(symbol)!.logoURI
         } else {
             console.log("WARN: This token symbol is not found in the map..: ", symbol);
         }
@@ -231,10 +296,10 @@ export class Registry {
      * Given an input token, get a list of all pools that this token can be deposited into
      * @param inputTokenMint
      */
-    async getPoolByInputToken(inputTokenMint: string): Promise<ExplicitPool[]> {
+    async getPoolsByInputToken(inputTokenMint: string): Promise<ExplicitPool[]> {
         let map = await this.getPoolListIndexedByInputTokenMint();
         if (map.has(inputTokenMint)) {
-            return map.get(inputTokenMint);
+            return map.get(inputTokenMint)!;
         } else {
             console.log("WARN: This token is not input-able into anywhere ...");
             return []
@@ -248,7 +313,7 @@ export class Registry {
     async getPoolByLpToken(lpTokenMint: string): Promise<ExplicitPool | null> {
         let map = await this.getPoolListIndexedByLpTokenMint();
         if (map.has(lpTokenMint)) {
-            return map.get(lpTokenMint);
+            return map.get(lpTokenMint)!;
         } else {
             console.log("WARN: This token is not input-able into anywhere ...");
             return null
@@ -262,7 +327,7 @@ export class Registry {
     async getIconUriFromToken(tokenMint: string): Promise<string> {
         let map = await this.getTokenIndexedByTokenMint();
         if (map.has(tokenMint)) {
-            return map.get(tokenMint).logoURI;
+            return map.get(tokenMint)!.logoURI;
         } else {
             console.log("WARNING: URI not found!", tokenMint);
             return "";
@@ -271,13 +336,17 @@ export class Registry {
     }
 
     async getPoolFromSplStringId(idString: string): Promise<ExplicitPool | null> {
+        console.log("#getPoolFromSplStringId()");
         let map = await this.getPoolListIndexedByIdString();
+        let out: ExplicitPool | null;
         if (map.has(idString)) {
-            return map.get(idString);
+            out = map.get(idString)!;
         } else {
             console.log("WARNING: idString not found!", idString, map);
-            return null;
+            out = null;
         }
+        console.log("#getPoolFromSplStringId()");
+        return out
     }
 
     // async function getLogoFromMint(mint: PublicKey): Promise<string> {
@@ -300,7 +369,7 @@ export class Registry {
         let tokenMint: string = lpTokenMint.toString();
         let map = await this.getPoolListIndexedByLpTokenMint();
         if (map.has(tokenMint)) {
-            let out = map.get(tokenMint)
+            let out = map.get(tokenMint)!;
             if (out.protocol === Protocol.saber) {
                 return out as ExplicitSaberPool;
             } else {
@@ -345,6 +414,19 @@ export class Registry {
     /**
      * Anything specific to solend
      */
-
+    async getSolendReserveFromInputCurrencyMint(currencyMint: PublicKey): Promise<SolendReserve | null> {
+        await this.initializeSolend();
+        console.log("Reserves before are ...", this.solendMarket!.reserves);
+        let reserves: SolendReserve[] = this.solendMarket!.reserves.filter((res: SolendReserve) => {
+            return res.config.mintAddress === currencyMint.toString()
+        });
+        // Make sure that this is unique
+        console.log("Reserves are ...", reserves);
+        console.assert(reserves.length === 1)
+        if (reserves.length < 1) {
+            return null;
+        }
+        return reserves[0];
+    }
 
 }

@@ -7,6 +7,8 @@ pub struct PositionAccountSolend {
     pub portfolio_pda: Pubkey,
     pub currency_mint: Pubkey,
     //pub marinade_position_sol_account: Pubkey,
+
+    pub pool_address: Pubkey,
     
 
     // is position already fulfilled or no?
@@ -34,7 +36,7 @@ pub struct PositionAccountSolend {
 
 impl PositionAccountSolend {
     pub const LEN: usize =
-            std::mem::size_of::<Pubkey>()*2  // portfolio_pda, pool_address
+            std::mem::size_of::<Pubkey>()*3  // portfolio_pda, pool_address
             + std::mem::size_of::<bool>()*3      // is_fulfilled
             + std::mem::size_of::<u32>()      // index
             + std::mem::size_of::<u64>() * 3   // weight, a_amount, b_amount, min_mint_amount

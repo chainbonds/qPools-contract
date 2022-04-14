@@ -1,27 +1,28 @@
 import {BN, Provider} from '@project-serum/anchor';
-import {Keypair, PublicKey, SystemProgram, TransactionInstruction} from "@solana/web3.js";
-import {
-    CrankRpcCalls,
-    MOCK,
-    NETWORK,
-    PortfolioFrontendFriendlyChainedInstructions,
-    getSolbondProgram
-} from "@qpools/sdk";
+import {Keypair, PublicKey, SystemProgram} from "@solana/web3.js";
+//import {
+//    CrankRpcCalls,
+//    MOCK,
+//    NETWORK,
+//    PortfolioFrontendFriendlyChainedInstructions
+//} from "@qpools/sdk";
 import {
     Transaction,
 } from '@solana/web3.js';
-import {
-    createAssociatedTokenAccountUnsignedInstruction,
-    delay,
-    getAccountForMintAndPDA,
-    sendAndConfirmTransaction
-} from "@qpools/sdk/lib/utils";
-import {SolendMarket, syncNative} from "@solendprotocol/solend-sdk";
-// import {ASSOCIATED_TOKEN_PROGRAM_ID} from "@saberhq/token-utils";
+//import {
+//    getSolbondProgram,
+//} from "@qpools/sdk";
+import {delay, QWallet, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
+import {SolendMarket, SolendAction, syncNative} from "@solendprotocol/solend-sdk";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
-import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
-import {struct, u8} from "@solana/buffer-layout";
-// import {TokenInstruction} from "@solendprotocol/solend-sdk/dist/instructions/instruction";
+import {
+    Cluster,
+    CrankRpcCalls,
+    getSolbondProgram, MOCK,
+    PortfolioFrontendFriendlyChainedInstructions,
+    Registry
+} from '@qpools/sdk';
+
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
@@ -45,7 +46,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, NETWORK.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
@@ -63,6 +64,7 @@ describe('qPools!', () => {
 
     let portfolioObject: PortfolioFrontendFriendlyChainedInstructions;
     let crankRpcTool: CrankRpcCalls;
+    let registry: Registry;
     let valueInUsdc: number;
     let AmountUsdc: BN;
     let valueInSol: number;
@@ -74,26 +76,42 @@ describe('qPools!', () => {
     // Do some airdrop before we start the tests ...
     before(async () => {
 
+        // TODO: For the crank, create a new keypair who runs these cranks ... (as is done on the front-end)
+
+        registry = new Registry(connection);
+
         portfolioObject = new PortfolioFrontendFriendlyChainedInstructions(
             connection,
             provider,
-            solbondProgram
+            solbondProgram,
+            registry
         );
+        await portfolioObject.initializeState();
 
+        // TODO: Create a new provider for the crank ... (?), and airdrop them some SOL
+
+        // Send some SOL to the tmpKeypair
+        let tmpKeypair = Keypair.generate();
+        const sg = await connection.requestAirdrop(tmpKeypair.publicKey, 500_000_000);
+        const tx = await connection.confirmTransaction(sg);
+        console.log("airdrop tx: ", tx);
         crankRpcTool = new CrankRpcCalls(
             connection,
-            genericPayer,
+            tmpKeypair,
             provider,
-            solbondProgram
+            solbondProgram,
+            registry
         );
+        await crankRpcTool.initializeState();
 
         // Delay a bit so the async call works ...
         await delay(5000);
-
+        
         weights = [new BN(500), new BN(500), new BN(500)];
 
         USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
-        USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");  // This is the pool address, not the LP token ...
+        // USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");  // This is the pool address, not the LP token ...
+        USDC_USDT_pubkey = new PublicKey("YakofBo4X3zMxa823THQJwZ8QeoU8pxPdFdxJs7JW57");
         mSOLLpToken = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");  // Assume the LP token to be the denominator for what underlying asset we target ...
 
         // Todo, wrap some SOL and send this to the account ...
@@ -132,10 +150,13 @@ describe('qPools!', () => {
         // solSolendMint
 
         // Fetch solend, and the other currencies that we are using ...
+        console.log("Creating associated token addresses for: ", [poolAddresses].map((x) => x.toString()));
+        // get the mint addresses
 
-
-        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts([poolAddresses[0]],provider.wallet);
+        // This is the token mint for the USDC-USDT pool
+        let txCreateATA: Transaction = await portfolioObject.createAssociatedTokenAccounts(poolAddresses, provider.wallet);
         if (txCreateATA.instructions.length > 0) {
+            console.log("Transaction is: ", txCreateATA);
             await sendAndConfirmTransaction(
                 solbondProgram.provider,
                 connection,
@@ -152,6 +173,7 @@ describe('qPools!', () => {
             console.log("Airdropped 1!");
         }
 
+        // If it exists, skip this.
         const associatedTokenAccountWrappedSol = await getAssociatedTokenAddress(
             wrappedSolMint,
             genericPayer.publicKey
@@ -160,7 +182,7 @@ describe('qPools!', () => {
             SystemProgram.transfer({
                      fromPubkey: genericPayer.publicKey,
                      toPubkey: associatedTokenAccountWrappedSol,
-                     lamports: 2e9,
+                     lamports: 4e8,
             }),
             // createSyncNativeInstruction(associatedTokenAccountWrappedSol)
             syncNative(associatedTokenAccountWrappedSol)
@@ -189,6 +211,7 @@ describe('qPools!', () => {
 
         let tx: Transaction = new Transaction();
         // hardcode this for now lol
+        console.log("createPortfolioSigned");
         let IxCreatePortfolioPda = await portfolioObject.createPortfolioSigned(
             weights,
             poolAddresses,
@@ -197,11 +220,14 @@ describe('qPools!', () => {
         tx.add(IxCreatePortfolioPda);
 
         console.log("Transfer Asset to Portfolio");
+        console.log("registerCurrencyInputInPortfolio");
         let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
-            AmountUsdc, USDC_mint
+            AmountUsdc,
+            USDC_mint
         );
         tx.add(IxRegisterCurrencyUsdcInput);
 
+        console.log("registerCurrencyInputInPortfolio");
         let IxRegisterCurrencywSOLInput = await portfolioObject.registerCurrencyInputInPortfolio(
             new BN(1).mul(new BN(10**9)), solSolendMint
         );
@@ -219,6 +245,7 @@ describe('qPools!', () => {
         // I guess we gotta make the case distinction here lol
         // TODO: Copy the case-distinction from below. Then you can continue
         // TODO: figure out tokenA and tokenB ==> Currently hard-coded...
+        console.log("approvePositionWeightSaber");
         let IxApproveiPositionWeightSaber = await portfolioObject.approvePositionWeightSaber(
             poolAddresses[0],
             AmountUsdc,
@@ -230,6 +257,7 @@ describe('qPools!', () => {
         tx.add(IxApproveiPositionWeightSaber);
 
         console.log("Approve Position Marinade");
+        console.log("approvePositionWeightMarinade");
         let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
             new BN(1).mul(new BN(10**6)),
             1, // Hardcoded
@@ -272,7 +300,15 @@ describe('qPools!', () => {
         console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
         let sgPermissionlessFullfillMarinade = await crankRpcTool.createPositionMarinade(1);
         console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        let solendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            tokenSymbolSolend,
+            provider.wallet.publicKey,
+            connection,
+            "devnet"
+        )
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2, solendAction)
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });
@@ -297,8 +333,8 @@ describe('qPools!', () => {
         tx.add(IxApproveWithdrawMarinade);
 
 
-        let minRedeemAmount2 = new BN(1).mul(new BN(10**4));  // This is the minimum amount of tokens that should be put out ...
-        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2, minRedeemAmount2);
+        // let minRedeemAmount2 = new BN(1).mul(new BN(10**4));  // This is the minimum amount of tokens that should be put out ...
+        let IxApproveWithdrawSolend = await portfolioObject.approveWithdrawSolend(2);
         tx.add(IxApproveWithdrawSolend);
 
         console.log("Send some to Crank Wallet");
@@ -316,7 +352,7 @@ describe('qPools!', () => {
         let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
 
-        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(solSolendMint,2,tokenSymbolSolend, "devnet")
+        let sgPermissionlessFullfillSolend = await crankRpcTool.redeemPositionSolend(2);
         console.log("Redeem sg Solend is: ", sgPermissionlessFullfillSolend)
 
         // For each initial asset, send it back to the user

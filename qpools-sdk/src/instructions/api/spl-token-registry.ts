@@ -1,5 +1,5 @@
 import splTokenList from '../../registry/mainnet/spl-token-list.json';
-import {ExplicitToken} from "../../types/ExplicitToken"; // This import style requires "esModuleInterop", see "side notes"
+import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
 
 export const getSplTokenList = async (): Promise<ExplicitToken[]> => {
     // The Solana Token List is too long (4MB). We use the Saber, as we assume that there will be enough protocols in there for now.

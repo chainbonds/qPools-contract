@@ -19,21 +19,12 @@ export class SaberInteractToolFrontendFriendly {
     public providerWallet: IWallet;
     public wallet: Keypair;
 
-    // All tokens owned by the protocol
-    public qPoolAccount: PublicKey;
-    public bumpQPoolAccount: number;
-
     public currencyTokenMint: PublicKey | undefined;
 
     public mintA: Token | undefined;
     public mintB: Token | undefined;
     public poolMint: Token | undefined;
 
-    public userAccountA: PublicKey | undefined;
-    public userAccountB: PublicKey | undefined;
-    public userAccountPoolToken: PublicKey | undefined;
-
-    public fetchedStableSwapPool: StableSwap | undefined;
     public stableSwapState: StableSwapState | undefined;
 
     constructor(

@@ -1,10 +1,12 @@
 {
   "name": "@qpools/sdk",
-  "version": "1.1.1",
+  "version": "1.2.8",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
+    "dev": "npm install && yarn link && tsc --watch",
+    "dev-clean": "rm -rf node_modules/ && rm package-lock.json && npm install && yarn link && tsc --watch",
     "build": "tsc"
   },
   "keywords": [],

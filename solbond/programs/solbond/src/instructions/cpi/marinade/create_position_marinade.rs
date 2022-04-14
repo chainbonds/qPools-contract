@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::{state::{PositionAccountMarinade, PortfolioAccount}};
 use crate::utils::seeds;
+use crate::ErrorCode;
+
 use anchor_lang::{
     prelude::*,
     InstructionData,
@@ -27,29 +29,31 @@ use marinade_onchain_helper::{
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_portfolio: u8,
-    _bump_position: u8,
     _bump_marinade: u8,
+    _bump_msol_ata: u8,
     _index: u32,
 )]
 pub struct MarinadePositionInstruction<'info> {
 
     #[account(
         mut,
-        seeds = [
-            owner.key().as_ref(),
-            &_index.to_le_bytes(),
-            seeds::USER_POSITION_STRING
-        ],
-        bump = _bump_position,
+        //seeds = [
+        //    owner.key().as_ref(),
+        //    &_index.to_le_bytes(),
+        //    seeds::USER_POSITION_STRING
+        //],
+        //bump = _bump_position,
     )]
     pub position_pda: Box<Account<'info, PositionAccountMarinade>>,
 
     #[account(
         mut, 
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
+        //seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump_portfolio
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
+
+    #[account(mut)]
+    pub puller: Signer<'info>,
 
     #[account(mut)]
     pub state: AccountInfo<'info>, // marinadeState.marinadeStateAddress,
@@ -68,18 +72,24 @@ pub struct MarinadePositionInstruction<'info> {
     #[account(mut)]
     pub reserve_pda: AccountInfo<'info>, // marinadeState.reserveAddress(),
 
-    #[account(mut)]
+    #[account(
+        init_if_needed,
+        payer = puller,
+        token::mint = msol_mint,
+        token::authority = portfolio_pda,
+        seeds = [portfolio_pda.owner.key().as_ref(),msol_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
+        bump = _bump_msol_ata
+    )]
     pub mint_to: Account<'info,TokenAccount>, // associatedMSolTokenAccountAddress, need to create this
 
     pub msol_mint_authority: AccountInfo<'info>, // await marinadeState.mSolMintAuthority(),
 
     #[account(
         mut,
-        seeds = [owner.key().as_ref(), seeds::USER_MARINADE_SEED], bump = _bump_marinade
+        seeds = [portfolio_pda.owner.key().as_ref(), seeds::USER_MARINADE_SEED], bump = _bump_marinade
     )]
     pub owner_sol_pda: AccountInfo<'info>, // check this the right one
     //#[account(mut)]
-    pub owner: AccountInfo<'info>, //
 
     #[account(address = marinade_finance::ID)]
     pub marinade_program: AccountInfo<'info>,
@@ -92,17 +102,15 @@ pub struct MarinadePositionInstruction<'info> {
 
 pub fn handler(
     ctx: Context<MarinadePositionInstruction>,
-    _bump_portfolio: u8,
-    _bump_position: u8,
     _bump_marinade: u8,
+    _bump_msol_ata: u8,
     _index: u32,
 ) -> ProgramResult {
 
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
     let dep_amt: u64 = ctx.accounts.position_pda.initial_sol_amount;
-    msg!("depamt {}", dep_amt);
-    msg!("owner of pda {}", ctx.accounts.position_pda.to_account_info().owner);
-    msg!("owner of pdaportfo {}", ctx.accounts.portfolio_pda.to_account_info().owner);
-    msg!("owner of pdaportfo {}", ctx.accounts.liq_pool_sol_leg_pda.to_account_info().owner);
 
     let data = marinade_finance::instruction::Deposit{ lamports:dep_amt };
     let cpi_accounts = MarinadeDeposit {
@@ -140,7 +148,7 @@ pub fn handler(
         &cpictx.to_account_infos(),
         &[
             [
-                ctx.accounts.owner.key().as_ref(),
+                ctx.accounts.portfolio_pda.owner.key().as_ref(),
                 seeds::USER_MARINADE_SEED,
                 &[_bump_marinade]
             ].as_ref()

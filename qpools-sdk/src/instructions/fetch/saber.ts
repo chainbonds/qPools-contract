@@ -48,7 +48,7 @@ export async function getLpTokenExchangeRateItems(
     console.log("Amount A and Amount B are: ", amountReserveA.toString(), amountReserveB.toString());
     // Add these up, to get an idea of how much total value is in the pool
     let poolContentsInUsdc = amountReserveA + amountReserveB;
-    let supplyLpToken = (await connection.getTokenSupply(state.poolTokenMint)).value.uiAmount;
+    let supplyLpToken = (await connection.getTokenSupply(state.poolTokenMint)).value.uiAmount!;
     console.log("Supply of all LP tokens is: ", supplyLpToken.toString());
 
     console.log("##getLpTokenExchangeRateItems()");

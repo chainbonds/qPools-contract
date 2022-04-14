@@ -11,7 +11,6 @@ use crate::utils::seeds;
     _sum_of_weight:u64,
     _num_positions:u32,
     _num_currencies: u32,
-
 )]
 pub struct SavePortfolio<'info> {
 
@@ -41,7 +40,6 @@ pub fn handler(
 ) -> ProgramResult {
     //let sum: u64 = _weights.iter().sum();
     //assert!(sum/1000 == 1, "weights do not sum to 1!");
-
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
   
     portfolio_account.owner = ctx.accounts.owner.clone().key();

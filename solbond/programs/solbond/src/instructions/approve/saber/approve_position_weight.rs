@@ -22,12 +22,7 @@ pub struct ApprovePositionWeightSaber<'info> {
     #[account(
         init,
         payer = owner,
-        space =
-        {
-            msg!("hmmmmmm {:?}", _index.to_le_bytes());
-            msg!("hmmmmmm 2 {:?}", [owner.key().as_ref(), &_index.to_le_bytes(), seeds::USER_POSITION_STRING]);
-            8 + PositionAccountSaber::LEN 
-        },
+        space =8 + PositionAccountSaber::LEN,
         seeds = [
             owner.key().as_ref(),
             &_index.to_le_bytes(),

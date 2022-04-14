@@ -1,8 +1,10 @@
-import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import * as anchor from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
+import {fetchPortfolio} from "../fetch/portfolio";
+import {PortfolioAccount} from "../../types/account/PortfolioAccount";
 
 export async function createPortfolioSigned(
     connection: Connection,
@@ -19,6 +21,8 @@ export async function createPortfolioSigned(
         throw Error("Does not match in length!");
     }
     let sumOfWeights: BN = weights.reduce((sum, current) => sum.add(current), new BN(0));
+    console.assert(owner);
+    console.assert(solbondProgram);
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     const numPositions = weights.length;
     console.log("Creating Portfolio", portfolioPda.toString());
@@ -45,7 +49,7 @@ export async function registerCurrencyInputInPortfolio(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey,
-    amount: u64,
+    amount: BN,
     currencyMint: PublicKey
 ): Promise<TransactionInstruction> {
     console.log("#registerCurrencyInputInPortfolio()");
@@ -75,9 +79,19 @@ export async function approvePortfolioWithdraw(
     connection: Connection,
     solbondProgram: Program,
     owner: PublicKey
-): Promise<TransactionInstruction> {
+): Promise<Transaction> {
     console.log("#registerCurrencyInputInPortfolio()");
+    let tx = new Transaction();
     let [portfolioPda, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
+    // Get the portfolioPda
+    // Only approveWithdraw if it has not been done already ..
+    let portfolio: PortfolioAccount | null = await fetchPortfolio(connection, solbondProgram, owner);
+    if (!portfolio) {
+        throw Error("Portfolio coudld not be fetched!! (19)");
+    }
+    if (portfolio.toBeRedeemed) {
+        return tx;
+    }
     let ix: TransactionInstruction = solbondProgram.instruction.approveWithdrawToUser(
         new BN(portfolioBump),
         {
@@ -91,5 +105,6 @@ export async function approvePortfolioWithdraw(
         }
     )
     console.log("##registerCurrencyInputInPortfolio()");
-    return ix;
+    tx.add(ix);
+    return tx;
 }

@@ -51,16 +51,17 @@ pub fn handler(
     _index: u32,
 ) -> ProgramResult {
 
-    assert!(
-        ctx.accounts.portfolio_pda.key() == ctx.accounts.position_pda.portfolio_pda,
-        "The provided portfolio_pda doesn't match the approved!"
-    );
-    assert!(
-        ctx.accounts.pool_mint.key() == ctx.accounts.position_pda.pool_address,
-        "The mint address provided in the context doesn't match the approved mint!"
-    );
+    if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
+        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+    }
     if !ctx.accounts.position_pda.is_fulfilled {
         return Err(ErrorCode::PositionNotFulfilledYet.into());
+    }
+    if ctx.accounts.position_pda.redeem_approved {
+        return Err(ErrorCode::RedeemAlreadyApproved.into());
+    }
+    if ! ctx.accounts.portfolio_pda.fully_created {
+        return Err(ErrorCode::PortfolioNotFullyCreated.into());
     }
 
     let position_account = &mut ctx.accounts.position_pda;

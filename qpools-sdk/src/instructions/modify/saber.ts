@@ -34,7 +34,7 @@ export async function approvePositionWeightSaber(
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
-    console.assert(amountB.eq(new BN(0)));
+    console.assert(amountB.eq(0));
 
     // Double check if already fulfilled, and skip it if not ...
     if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {

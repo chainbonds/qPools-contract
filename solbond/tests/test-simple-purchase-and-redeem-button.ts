@@ -6,7 +6,6 @@ import {Keypair, PublicKey, SystemProgram} from "@solana/web3.js";
 //    NETWORK,
 //    PortfolioFrontendFriendlyChainedInstructions
 //} from "@qpools/sdk";
-import * as qpools from "@qpools/sdk";
 import {
     Transaction,
 } from '@solana/web3.js';
@@ -16,6 +15,13 @@ import {
 import {delay, QWallet, sendAndConfirmTransaction} from "@qpools/sdk/lib/utils";
 import {SolendMarket, SolendAction, syncNative} from "@solendprotocol/solend-sdk";
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
+import {
+    Cluster,
+    CrankRpcCalls,
+    getSolbondProgram, MOCK,
+    PortfolioFrontendFriendlyChainedInstructions,
+    Registry
+} from '@qpools/sdk';
 
 
 const SOLANA_START_AMOUNT = 10_000_000_000;
@@ -40,7 +46,7 @@ describe('qPools!', () => {
     const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = qpools.getSolbondProgram(connection, provider, qpools.network.Cluster.DEVNET);
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
     // @ts-expect-error
     const genericPayer = provider.wallet.payer as Keypair;
@@ -56,9 +62,9 @@ describe('qPools!', () => {
     let wrappedSolMint: PublicKey;
     let mSOL: PublicKey;
 
-    let portfolioObject: qpools.helperClasses.PortfolioFrontendFriendlyChainedInstructions;
-    let crankRpcTool: qpools.helperClasses.CrankRpcCalls;
-    let registry: qpools.helperClasses.Registry;
+    let portfolioObject: PortfolioFrontendFriendlyChainedInstructions;
+    let crankRpcTool: CrankRpcCalls;
+    let registry: Registry;
     let valueInUsdc: number;
     let AmountUsdc: BN;
     let valueInSol: number;
@@ -72,9 +78,9 @@ describe('qPools!', () => {
 
         // TODO: For the crank, create a new keypair who runs these cranks ... (as is done on the front-end)
 
-        registry = new qpools.helperClasses.Registry(connection);
+        registry = new Registry(connection);
 
-        portfolioObject = new qpools.helperClasses.PortfolioFrontendFriendlyChainedInstructions(
+        portfolioObject = new PortfolioFrontendFriendlyChainedInstructions(
             connection,
             provider,
             solbondProgram,
@@ -89,7 +95,7 @@ describe('qPools!', () => {
         const sg = await connection.requestAirdrop(tmpKeypair.publicKey, 500_000_000);
         const tx = await connection.confirmTransaction(sg);
         console.log("airdrop tx: ", tx);
-        crankRpcTool = new qpools.helperClasses.CrankRpcCalls(
+        crankRpcTool = new CrankRpcCalls(
             connection,
             tmpKeypair,
             provider,
@@ -190,7 +196,7 @@ describe('qPools!', () => {
 
     it("Prepare the amount of SOL and USDC to pay in ", async () => {
         valueInUsdc = 2;
-        AmountUsdc = new BN(valueInUsdc).mul(new BN(10**qpools.constDefinitions.MOCK.DEV.SABER_USDC_DECIMALS));
+        AmountUsdc = new BN(valueInUsdc).mul(new BN(10**MOCK.DEV.SABER_USDC_DECIMALS));
         valueInSol = 2;
         // I guess mSOL has 9 decimal points
         AmountSol = new BN(valueInSol).mul(new BN(10**9));

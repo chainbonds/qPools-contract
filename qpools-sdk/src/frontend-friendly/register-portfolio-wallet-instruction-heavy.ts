@@ -19,25 +19,15 @@ import {
     IWallet,
     tokenAccountExists
 } from "../utils";
-
-
-
-import {
-    saberMultiplyAmountByUSDPrice,
-    saberPoolTokenPrice
-} from "../instructions/api/saber";
-
+import {saberMultiplyAmountByUSDPrice} from "../instructions/api/saber";
 import type {PortfolioAccount} from "../types/account/PortfolioAccount";
 import type {PositionAccountSaber} from "../types/account/PositionAccountSaber";
 import {getATAPda, getPortfolioPda, getPositionPda} from "../types/account/pdas";
-
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import type {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
 import type {UserCurrencyAccount} from "../types/account/UserCurrencyAccount";
 import {Registry} from "./registry";
-
 import {CoinGeckoClient} from "../oracle/coinGeckoClient";
-
 import {getWrappedSolMint} from "../const";
 import type {PositionAccountSolend} from "../types/account/PositionAccountSolend";
 import {SolendReserve, syncNative} from "@solendprotocol/solend-sdk";
@@ -526,7 +516,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting currencAmount to zero");
             currencyAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueA: number | null = await multiplyAmountByPythprice(currencyAmount.uiAmount!, positionAccount.currencyMint);
+        let usdcValueA: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(currencyAmount.uiAmount!, positionAccount.currencyMint);
         if (!usdcValueA && usdcValueA !== 0) {
             throw Error("currency mint not in pyth registry: " + positionAccount.currencyMint.toString());
         }
@@ -577,7 +567,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting collateral to zero");
             collateralAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueLp: number | null = await multiplyAmountByPythprice(collateralAmount.uiAmount!, portfolioCollateralAta);
+        let usdcValueLp: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(collateralAmount.uiAmount!, portfolioCollateralAta);
         if (!usdcValueLp && usdcValueLp !== 0) {
             throw Error("Collateral account not found! " + portfolioCollateralAta.toString());
         }
@@ -650,10 +640,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
 
 
-        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenAAmount.uiAmount, state.tokenA.mint);
-        let usdcValueB = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenBAmount.uiAmount, state.tokenB.mint);
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenAAmount.uiAmount!, state.tokenA.mint);
+        let usdcValueB = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenBAmount.uiAmount!, state.tokenB.mint);
         // TODO: Find a way to calculate the conversion rate here easily ...
-        let usdcValueLP = await saberMultiplyAmountByUSDPrice(tokenLPAmount.uiAmount, state.poolTokenMint, this.connection)
+        let usdcValueLP = await saberMultiplyAmountByUSDPrice(tokenLPAmount.uiAmount!, state.poolTokenMint, this.connection, this.registry, this.coinGeckoClient);
 
 
         // TODO: Calculate the virtualPrice of the LP tokens
@@ -732,8 +722,8 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Again, convert by the pyth price ...
 
 
-        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount, mSOLMint); //  * 93.23;
-        let usdcValueLP = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount, mSOLMint);
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint); //  * 93.23;
+        let usdcValueLP = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint);
 
 
         //TODO : cna give error like below
@@ -1069,7 +1059,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
 
-                let marinadeUsdcAmount: number | null = await multiplyAmountByPythprice(position.amountLp.uiAmount!, position.mintLp);
+                let marinadeUsdcAmount: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(position.amountLp.uiAmount!, position.mintLp);
                 if (!marinadeUsdcAmount && marinadeUsdcAmount !== 0) {
                     throw Error("Position LP mint not registered in pyth " + position.mintLp.toString());
                 }
@@ -1078,7 +1068,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
 
                 //TODO : usd Amount should be of type BN, or we can convert BN to number here. Just to run tests I am converting to number
-                usdAmount += marinadeUsdcAmount.toNumber()
+                usdAmount += marinadeUsdcAmount
                 // Again, we skip this for now because all tokens we work with are USDC-based
                 // // Also convert here to USD,
                 // let usdValueUserA = amountUserA;

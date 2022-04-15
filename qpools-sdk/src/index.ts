@@ -6,7 +6,7 @@ import {
     createAssociatedTokenAccountUnsigned,
     createMint,
     createMint2,
-    createTokenAccount,
+    createTokenAccount, delay,
     getAssociatedTokenAddressOffCurve,
     getBlockchainEpoch,
     getPayer,
@@ -46,7 +46,6 @@ import {getMarinadeSolMint, getWhitelistTokens, getWrappedSolMint, MOCK} from ".
 import {Protocol, ProtocolType} from "./types/interfacing/PositionInfo";
 import {CrankRpcCalls} from "./frontend-friendly/crank-rpc-calls";
 
-
 export {
     airdropAdmin,
     getSolbondProgram,
@@ -60,6 +59,7 @@ export {
     getAssociatedTokenAddressOffCurve,
     createAssociatedTokenAccountUnsigned,
     SolbondIdl,
+    delay,
 
     getTokenAmountFromString,
 

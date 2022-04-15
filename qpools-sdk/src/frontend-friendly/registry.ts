@@ -12,6 +12,7 @@ import {ExplicitPool} from "../types/interfacing/ExplicitPool";
 import {ExplicitToken} from "../types/interfacing/ExplicitToken";
 import {ExplicitSaberPool} from "../types/interfacing/ExplicitSaberPool";
 import {Protocol} from "../types/interfacing/PositionInfo";
+import {ExplicitSolendPool} from "../types/interfacing/ExplicitSolendPool";
 
 export class Registry {
 
@@ -387,6 +388,18 @@ export class Registry {
             return null;
         }
         return reserves[0];
+    }
+
+    async getSolendPoolFromInputCurrencyMint(currencyMint: PublicKey): Promise<ExplicitSolendPool | null> {
+        await this.getAllPools();
+        // TODO: For devnet and for now, assume that the currency is unique to the address (for solend ...
+        let pool: ExplicitPool[] | undefined = this.poolListIndexedByInputTokenMint.get(currencyMint.toString())
+            ?.filter((x: ExplicitPool) => x.protocol.valueOf() === Protocol.solend);
+        // Assert that a solendAction is included in the pool ..
+        console.log("Pool is: ", pool)
+        console.assert(pool && pool?.length === 1);
+        let solendPool: ExplicitSolendPool = pool![0] as ExplicitSolendPool;
+        return solendPool;
     }
 
 }

@@ -113,8 +113,8 @@ export async function permissionlessFulfillSolend(
     solbondProgram: Program,
     owner: PublicKey,
     puller: PublicKey,
-    index: number,
-    solendAction: SolendAction
+    registry: Registry,
+    index: number
 ) {
     console.log("#permissionlessFulfillSolend()");
     // Index should take the account
@@ -126,6 +126,9 @@ export async function permissionlessFulfillSolend(
     //const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
     //const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
     console.log("aaa 21");
+
+    // Create the solend action here ...
+    let solendAction = (await registry.getSolendPoolFromInputCurrencyMint(positionAccount.currencyMint))!.solendAction;
     
     let [pdaOwnedATA, bumpAtaLiq] = await getATAPda(owner, positionAccount.currencyMint, solbondProgram)
     let [pdaOwnedCollateral, bumpAtaCol] = await getATAPda(owner, new PublicKey(solendAction.reserve.collateralMintAddress), solbondProgram)

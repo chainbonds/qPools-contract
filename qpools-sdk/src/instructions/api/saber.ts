@@ -12,7 +12,7 @@ import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
 import {ExplicitSaberPool} from "../../types/interfacing/ExplicitSaberPool";
 import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
 import {Registry} from "../../frontend-friendly/registry";
-import {registry} from "./index";
+import {CoinGeckoClient} from "../../oracle/coinGeckoClient";
 
 
 /**
@@ -57,7 +57,7 @@ export const getSaberPools = async  (): Promise<ExplicitPool[]> => {
 }
 
 
-export async function saberPoolTokenPrice(connection: Connection, lpMint: PublicKey, registry: Registry): Promise<number> {
+export async function saberPoolTokenPrice(connection: Connection, lpMint: PublicKey, registry: Registry, coingeckoClient: CoinGeckoClient): Promise<number> {
 
     // map pool address to exchange
     const swap: ExplicitSaberPool | null = await registry.getSaberPoolContainingLpToken(lpMint);
@@ -65,19 +65,21 @@ export async function saberPoolTokenPrice(connection: Connection, lpMint: Public
         throw Error("The provided lpMint is not a saber LP token ... " + lpMint.toString());
     }
     const token_reserve_a = swap.swap.state.tokenA.reserve;
+    const tokenMintA = swap.swap.state.tokenA.mint;
     const token_reserve_b = swap.swap.state.tokenB.reserve;
+    const tokenMintB = swap.swap.state.tokenB.mint;
     const token_a_bal = await connection.getBalance(new PublicKey(token_reserve_a))
     const token_b_bal = await connection.getBalance(new PublicKey(token_reserve_b))
 
-    // TODO: You gotta also multiple with the exchange rate for each token here ... Otherwise you're not taking into account the USDC value!
-
+    let tokenAUsdcBalance = await coingeckoClient.multiplyAmountByUSDPrice(token_a_bal, tokenMintA);
+    let tokenBUsdcBalance = await coingeckoClient.multiplyAmountByUSDPrice(token_b_bal, tokenMintB);
     const lp_supply = (await connection.getTokenSupply(lpMint)).value.uiAmount!;
-    const price = (token_a_bal+ token_b_bal)/lp_supply
+    const price = (tokenAUsdcBalance + tokenBUsdcBalance)/lp_supply
     return price;
 }
 
-export async function saberMultiplyAmountByUSDPrice (x: number, mint: PublicKey, connection: Connection, registry: Registry) : Promise<number> {
-    let exchangeRate = await saberPoolTokenPrice(connection, mint, registry);
+export async function saberMultiplyAmountByUSDPrice (x: number, mint: PublicKey, connection: Connection, registry: Registry, coingeckoClient: CoinGeckoClient) : Promise<number> {
+    let exchangeRate = await saberPoolTokenPrice(connection, mint, registry, coingeckoClient);
     return x * exchangeRate;
 }
 

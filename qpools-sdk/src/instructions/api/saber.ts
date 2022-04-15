@@ -6,17 +6,13 @@ import {BN} from "@project-serum/anchor";
 import {Cluster, getNetworkCluster} from "../../network";
 import {MAINNET_TOKEN_LIST_SABER} from "../../registry/mainnet/saber/token-list.mainnet";
 import {MAINNET_POOLS_INFO_SABER} from "../../registry/mainnet/saber/pools-info.mainnet";
-import {Connection, PublicKey, TokenAmount} from "@solana/web3.js";
-import {
-    calculateEstimatedWithdrawOneAmount, IExchangeInfo,
-    loadExchangeInfoFromSwapAccount,
-    StableSwap
-} from "@saberhq/stableswap-sdk";
-import { TokenInfo as SaberTokenInfo, Token as SaberToken, TokenAmount as SaberTokenAmount } from "@saberhq/token-utils";
+import {Connection, PublicKey} from "@solana/web3.js";
 import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
 import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
 import {ExplicitSaberPool} from "../../types/interfacing/ExplicitSaberPool";
 import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
+import {Registry} from "../../frontend-friendly/registry";
+import {registry} from "./index";
 
 
 /**
@@ -61,41 +57,28 @@ export const getSaberPools = async  (): Promise<ExplicitPool[]> => {
 }
 
 
+export async function saberPoolTokenPrice(connection: Connection, lpMint: PublicKey, registry: Registry): Promise<number> {
 
-export const getSaberLpTokens = async (): Promise<ExplicitToken[]> => {
-    let saberTokenList: ExplicitToken[] = DEV_POOLS_INFO_SABER["lpToken"];
-    return saberTokenList;
-}
-
-export const saberPoolTokenToSwap = async (): Promise<any> => {
- 
-    let map = DEV_POOLS_INFO_SABER["swap"]["state"]["poolTokenMint"].map((x,i) => [
-        x,DEV_POOLS_INFO_SABER["swap"][i]
-    ])
-    return map
-
-}
-
-
-
-export async function saberPoolTokenPrice(connection: Connection, lpMint: PublicKey): Promise<number> {
-    // map pool address to exchange 
-    const thisSwap = await saberPoolTokenToSwap[lpMint.toString()]
-    const token_reserve_a = thisSwap["state"]["tokenA"]["reserve"]
-    const token_reserve_b = thisSwap["state"]["tokenB"]["reserve"]
+    // map pool address to exchange
+    const swap: ExplicitSaberPool | null = await registry.getSaberPoolContainingLpToken(lpMint);
+    if (!swap) {
+        throw Error("The provided lpMint is not a saber LP token ... " + lpMint.toString());
+    }
+    const token_reserve_a = swap.swap.state.tokenA.reserve;
+    const token_reserve_b = swap.swap.state.tokenB.reserve;
     const token_a_bal = await connection.getBalance(new PublicKey(token_reserve_a))
     const token_b_bal = await connection.getBalance(new PublicKey(token_reserve_b))
 
-    const lp_supply = (await connection.getTokenSupply(lpMint)).value.uiAmount
+    // TODO: You gotta also multiple with the exchange rate for each token here ... Otherwise you're not taking into account the USDC value!
+
+    const lp_supply = (await connection.getTokenSupply(lpMint)).value.uiAmount!;
     const price = (token_a_bal+ token_b_bal)/lp_supply
     return price;
 }
 
-export async function saberMultiplyAmountByUSDPrice (x: number, mint: PublicKey, connection: Connection) : Promise<BN> {
-    let res = saberPoolTokenPrice(connection, mint).then(price => {
-        return new BN(x).mul(new BN(price*(10**8))).div(new BN(10**8))
-    })
-    return res;
+export async function saberMultiplyAmountByUSDPrice (x: number, mint: PublicKey, connection: Connection, registry: Registry) : Promise<number> {
+    let exchangeRate = await saberPoolTokenPrice(connection, mint, registry);
+    return x * exchangeRate;
 }
 
 

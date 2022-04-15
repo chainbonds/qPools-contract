@@ -1,14 +1,11 @@
-import { Commitment, Connection, PublicKey, Cluster } from '@solana/web3.js'
-import {PythHttpClient, getPythProgramKeyForCluster} from '@pythnetwork/client'
-import {PythHttpClientResult} from "@pythnetwork/client/lib/PythHttpClient";
+import {PublicKey} from '@solana/web3.js'
 import {Registry} from "../frontend-friendly/registry";
-import fetch from "node-fetch";
 import {BN, Provider} from "@project-serum/anchor";
 import axios from "axios";
 import {min} from "@solendprotocol/solend-sdk/dist/examples/common";
 export class CoinGeckoClient {
 
-    static coinGeckoData ;
+    static coinGeckoData :any ;
     static initialized = false;
     registry : Registry;
     vs_currencies = ["usd", "eur", "chf"]
@@ -19,26 +16,32 @@ export class CoinGeckoClient {
 
 
     async getPriceFromMint (mint : PublicKey, vs_currency :string){
-        let coinGeckoId = this.registry.getCoinGeckoMapping().get(mint.toString());
-        let data = await this.getDataForAllRegisteredTokens();
-        if (data.hasOwnProperty(coinGeckoId)){
-            return data[coinGeckoId][vs_currency];
+        let coinGeckoId  = this.registry.getCoinGeckoMapping().get(mint.toString());
+        if(coinGeckoId == undefined){
+            console.log("Mint is not registered in the registry for coingecko", mint.toString())
+            return 0;
         }
         else {
-            console.log("For this mint there is no price in the coingecko query", mint.toString())
-            return 0;
+            let data = await this.getDataForAllRegisteredTokens();
+            if (data.hasOwnProperty(coinGeckoId)){
+                return data[coinGeckoId][vs_currency];
+            }
+            else {
+                console.log("For this mint there is no price in the coingecko query", mint.toString())
+                return 0;
+            }
         }
 
     }
 
     /**
-     * Calculates the value of the token for a given amount. Maximum value that can be returned is 10^12.
+     * Calculates the value of the token for a given amount.
      * @param x
      * @param mint
      */
-    async multiplyAmountByUSDPrice (x: number, mint: PublicKey) : Promise<BN> {
+    async multiplyAmountByUSDPrice (x: number, mint: PublicKey) : Promise<number> {
         let res = this.getPriceFromMint(mint, "usd").then(price => {
-            return new BN(x).mul(new BN(price*(10**8))).div(new BN(10**8))
+            return price*x
         })
         return res;
     }

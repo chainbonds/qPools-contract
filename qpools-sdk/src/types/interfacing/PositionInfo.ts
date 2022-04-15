@@ -23,15 +23,14 @@ export interface PositionInfo {
     ataA: PublicKey,
     amountA: TokenAmount,
 
-    usdcValueA: BN,
+    usdcValueA: number,
     mintB?: PublicKey,
     ataB?: PublicKey,
     amountB?: TokenAmount,
-    usdcValueB: BN,
-
+    usdcValueB: number,
     mintLp: PublicKey,
     ataLp: PublicKey,
     amountLp: TokenAmount,
-    usdcValueLP: BN,
-    totalPositionValue: BN
+    usdcValueLP: number,
+    totalPositionValue: number
 }

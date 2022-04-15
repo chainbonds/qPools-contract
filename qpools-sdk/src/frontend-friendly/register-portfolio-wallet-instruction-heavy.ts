@@ -643,7 +643,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenAAmount.uiAmount!, state.tokenA.mint);
         let usdcValueB = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenBAmount.uiAmount!, state.tokenB.mint);
         // TODO: Find a way to calculate the conversion rate here easily ...
-        let usdcValueLP = await saberMultiplyAmountByUSDPrice(tokenLPAmount.uiAmount!, state.poolTokenMint, this.connection, this.registry);
+        let usdcValueLP = await saberMultiplyAmountByUSDPrice(tokenLPAmount.uiAmount!, state.poolTokenMint, this.connection, this.registry, this.coinGeckoClient);
 
 
         // TODO: Calculate the virtualPrice of the LP tokens

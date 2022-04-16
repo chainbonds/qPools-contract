@@ -6,7 +6,10 @@ import {CoinGeckoClient} from "@qpools/sdk/lib/oracle/coinGeckoClient";
 
 describe('Price oracle test', () => {
 
-    let registry = new Registry();
+    const provider = Provider.local("https://api.devnet.solana.com");
+    //anchor.setProvider(provider);
+    const connection = provider.connection;
+    let registry = new Registry(connection);
     let coinGeckoClient = new CoinGeckoClient(registry);
 
     /*it("Get prices for our registered tokens from coingecko", async () => {

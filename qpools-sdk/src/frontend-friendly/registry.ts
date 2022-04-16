@@ -13,6 +13,7 @@ import {ExplicitToken} from "../types/interfacing/ExplicitToken";
 import {ExplicitSaberPool} from "../types/interfacing/ExplicitSaberPool";
 import {Protocol} from "../types/interfacing/PositionInfo";
 import {ExplicitSolendPool} from "../types/interfacing/ExplicitSolendPool";
+import {getSerpiusUrl} from "../instructions/api/serpius";
 
 export class Registry {
 
@@ -32,11 +33,6 @@ export class Registry {
     tokenIndexedBySymbol: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
 
     // solendMarketIndexedByCurrencyMint: Map<string, SolendMarket> = new Map<>
-
-    // nativeSolMint: PublicKey = new PublicKey("NativeSo11111111111111111111111111111111111");
-    // wrappedSolMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
-    // TODO: Replace based on mainnet vs devnet ...
-    serpiusEndpoint: string = "https://qpools.serpius.com/weight_status_devnet_solend_v2.json";
 
     userPubkey: PublicKey = getWrappedSolMint();
 
@@ -82,7 +78,7 @@ export class Registry {
      * Gotta also make this devnet / mainnet dependent
      */
     getSerpiusEndpoint(): string {
-        return this.serpiusEndpoint;
+        return getSerpiusUrl();
     }
 
     /**

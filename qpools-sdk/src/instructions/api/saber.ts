@@ -1,19 +1,19 @@
 import {DEV_TOKEN_LIST_SABER} from "../../registry/devnet/saber/token-list.devnet";
 import {DEV_POOLS_INFO_SABER} from "../../registry/devnet/saber/pools-info.devnet";
+
+import {BN} from "@project-serum/anchor";
+
 import {Cluster, getNetworkCluster} from "../../network";
 import {MAINNET_TOKEN_LIST_SABER} from "../../registry/mainnet/saber/token-list.mainnet";
 import {MAINNET_POOLS_INFO_SABER} from "../../registry/mainnet/saber/pools-info.mainnet";
-import {Connection, PublicKey, TokenAmount} from "@solana/web3.js";
-import {
-    calculateEstimatedWithdrawOneAmount, IExchangeInfo,
-    loadExchangeInfoFromSwapAccount,
-    StableSwap
-} from "@saberhq/stableswap-sdk";
-import { TokenInfo as SaberTokenInfo, Token as SaberToken, TokenAmount as SaberTokenAmount } from "@saberhq/token-utils";
+import {Connection, PublicKey} from "@solana/web3.js";
 import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
 import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
 import {ExplicitSaberPool} from "../../types/interfacing/ExplicitSaberPool";
 import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
+import {Registry} from "../../frontend-friendly/registry";
+import {CoinGeckoClient} from "../../oracle/coinGeckoClient";
+
 
 /**
  * Gotta just copy it from the registry ....
@@ -56,7 +56,35 @@ export const getSaberPools = async  (): Promise<ExplicitPool[]> => {
     return saberPoolList;
 }
 
-export const getSaberPrice = async (
+
+export async function saberPoolTokenPrice(connection: Connection, lpMint: PublicKey, registry: Registry, coingeckoClient: CoinGeckoClient): Promise<number> {
+
+    // map pool address to exchange
+    const swap: ExplicitSaberPool | null = await registry.getSaberPoolContainingLpToken(lpMint);
+    if (!swap) {
+        throw Error("The provided lpMint is not a saber LP token ... " + lpMint.toString());
+    }
+    const token_reserve_a = swap.swap.state.tokenA.reserve;
+    const tokenMintA = swap.swap.state.tokenA.mint;
+    const token_reserve_b = swap.swap.state.tokenB.reserve;
+    const tokenMintB = swap.swap.state.tokenB.mint;
+    const token_a_bal = await connection.getBalance(new PublicKey(token_reserve_a))
+    const token_b_bal = await connection.getBalance(new PublicKey(token_reserve_b))
+
+    let tokenAUsdcBalance = await coingeckoClient.multiplyAmountByUSDPrice(token_a_bal, tokenMintA);
+    let tokenBUsdcBalance = await coingeckoClient.multiplyAmountByUSDPrice(token_b_bal, tokenMintB);
+    const lp_supply = (await connection.getTokenSupply(lpMint)).value.uiAmount!;
+    const price = (tokenAUsdcBalance + tokenBUsdcBalance)/lp_supply
+    return price;
+}
+
+export async function saberMultiplyAmountByUSDPrice (x: number, mint: PublicKey, connection: Connection, registry: Registry, coingeckoClient: CoinGeckoClient) : Promise<number> {
+    let exchangeRate = await saberPoolTokenPrice(connection, mint, registry, coingeckoClient);
+    return x * exchangeRate;
+}
+
+
+/*export const getSaberPrice = async (
     connection: Connection,
     saberSwap: StableSwap,
     tokenMint: PublicKey,
@@ -93,4 +121,5 @@ export const getSaberPrice = async (
 
     console.log("##getSaberPricee()");
     return 0.
-}
+}*/
+

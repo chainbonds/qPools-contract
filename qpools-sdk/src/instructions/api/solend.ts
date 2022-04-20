@@ -31,7 +31,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     // console.log("market reserves are: ");
     // console.log(market);
     // console.log("Config is: ", market.config);
-    console.log("Reserves are: ", market.reserves);
+    //console.log("Reserves are: ", market.reserves);
     let out: ExplicitToken[] = [];
     // Only apply this on devnet
     let filter;
@@ -149,6 +149,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     }));
     console.log("##getSolendPools()");
     return out;
+
 }
 
 export const getSolendPrice = async (solendAction: SolendAction, tokenMint: PublicKey): Promise<number> => {

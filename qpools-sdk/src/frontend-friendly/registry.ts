@@ -6,6 +6,9 @@ import {getSaberPools, getSaberTokens} from "../instructions/api/saber";
 import {getMarinadePools, getMarinadeTokens} from "../instructions/api/marinade";
 import {getSolendPools, getSolendTokens} from "../instructions/api/solend";
 import {getSplTokenList} from "../instructions/api/spl-token-registry";
+
+import {getCoinGeckoList} from "../instructions/api/coingecko";
+
 import {getWrappedSolMint} from "../const";
 import {SolendMarket, SolendReserve} from "@solendprotocol/solend-sdk";
 import {ExplicitPool} from "../types/interfacing/ExplicitPool";
@@ -14,6 +17,7 @@ import {ExplicitSaberPool} from "../types/interfacing/ExplicitSaberPool";
 import {Protocol} from "../types/interfacing/PositionInfo";
 import {ExplicitSolendPool} from "../types/interfacing/ExplicitSolendPool";
 import {getSerpiusUrl} from "../instructions/api/serpius";
+
 
 export class Registry {
 
@@ -31,6 +35,10 @@ export class Registry {
 
     tokenIndexedByTokenMint: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
     tokenIndexedBySymbol: Map<string, ExplicitToken> = new Map<string, ExplicitToken>();
+
+
+    coinGeckoMapping: Map<string, string>;
+
 
     // solendMarketIndexedByCurrencyMint: Map<string, SolendMarket> = new Map<>
 
@@ -96,8 +104,10 @@ export class Registry {
                 ...marinadeTokenList,
                 ...solendTokenList
             ]
+
             // console.log("This protocolTokenList is: ", this.protocolPoolList);
             console.log("##getAllTokens()");
+
         }
         return this.protocolTokenList;
     }
@@ -253,6 +263,18 @@ export class Registry {
     }
 
     /**
+     * Get symbol of the token in uppercase, given the mint of the token.
+     * @param tokenMint
+     */
+    async getTokenSymbolFromMint(tokenMint: PublicKey): Promise<string | null> {
+        let token = await this.getToken(tokenMint.toString());
+        if(token){
+            return token.symbol.toUpperCase();
+        }
+        else return null;
+    }
+
+    /**
      * Get the logoURI based on the Symbol of the asset
      */
     async getLogoFromSymbol(symbol: string): Promise<string> {
@@ -363,6 +385,23 @@ export class Registry {
             return null;
         }
     }
+
+    getCoinGeckoMapping(): Map<string, string> {
+        if (this.coinGeckoMapping != null) {
+            return this.coinGeckoMapping;
+        }
+        console.log("Creating coingeckoMapping")
+        let out: Map<string, string> = new Map<string, string>();
+        let tokenList = getCoinGeckoList();
+        tokenList.map((x) => {
+            let key = x.address;
+            let value = x.coingeckoId;
+            out.set(key, value);
+        });
+        this.coinGeckoMapping = out;
+        return this.coinGeckoMapping;
+    }
+
 
     /**
      * Anything specific to Marinade

@@ -1,5 +1,9 @@
 import {DEV_TOKEN_LIST_MARINADE} from "../../registry/devnet/marinade/token-list.devnet";
 import {DEV_POOLS_INFO_MARINADE} from "../../registry/devnet/marinade/pools-info.devnet";
+
+
+import {CoinGeckoClient} from "../../oracle/coinGeckoClient";
+
 import {Cluster, getNetworkCluster} from "../../network";
 import {MAINNET_TOKEN_LIST_MARINADE} from "../../registry/mainnet/marinade/token-list.mainnet";
 import {MAINNET_POOLS_INFO_MARINADE} from "../../registry/mainnet/marinade/pools-info.mainnet";
@@ -8,6 +12,7 @@ import {getMarinadeSolMint, getWrappedSolMint} from "../../const";
 import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
 import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
 import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
+
 
 export const getMarinadeTokens = async (): Promise<ExplicitToken[]> => {
     let saberTokenList: ExplicitToken[];
@@ -43,17 +48,13 @@ export const getMarinadePools = async  (): Promise<ExplicitPool[]> => {
     return marinadePoolList;
 }
 
-export const getMarinadePrice = async (tokenMint: PublicKey): Promise<number> => {
+
+export const getMarinadePriceUSD = async (tokenMint: PublicKey, coinGeckoClient : CoinGeckoClient): Promise<number> => {
     console.log("#getMarinadePrice()");
-    // Just call the coingecko API or so ..
-    // Should probably cache these in a separate object later on ...#
     let out: number;
-    if (tokenMint.equals(getWrappedSolMint())) {
-        // Make a coingecko request ...?
-        out = 100.0;
-    } else if (tokenMint.equals(getMarinadeSolMint())) {
-        // Make a coingecko request ...
-        out = 107.0;
+    if (tokenMint.equals(getWrappedSolMint()) || tokenMint.equals(getMarinadeSolMint()) ) {
+        out = await coinGeckoClient.getPriceFromMint(tokenMint, "usd");
+
     } else {
         throw Error("This function is reserved for marinade finance. You don't seem to have put in either wrapped SOL, or mSOL, " + tokenMint.toString());
     }

@@ -3,13 +3,15 @@ cluster = "https://api.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-solbond = "FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng"
+
+solbond = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi"
 
 [programs.devnet]
-solbond = "FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng"
+solbond = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi"
+
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [scripts]
-test = "/usr/local/bin/node /usr/local/bin/mocha -t 1000000 --require ts-node/register"
+test = "/home/ahmet/.nvm/versions/node/v16.14.0/bin/node /home/ahmet/.nvm/versions/node/v16.14.0/bin/mocha -t 1000000 --require ts-node/register"

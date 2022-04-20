@@ -1,4 +1,4 @@
-import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {delay, IWallet, QWallet, sendAndSignInstruction, sendAndSignTransaction} from "../utils";
 import {Marinade, MarinadeConfig, MarinadeState} from "@marinade.finance/marinade-ts-sdk";
@@ -12,7 +12,7 @@ import {
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {sendLamports} from "../instructions/modify/portfolio-transfer";
 import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
-import {SolendAction} from "@solendprotocol/solend-sdk";
+import {SolendAction, SolendReserve} from "@solendprotocol/solend-sdk";
 import {permissionlessFulfillSolend} from "../instructions/modify/solend";
 import {Cluster, getNetworkCluster} from "../network";
 import * as instructions from "../instructions";
@@ -154,7 +154,11 @@ export class CrankRpcCalls {
         // if (await accountExists(this.connection, positionPDA)) {
         // let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
         // Return if the current position was already fulfilled
-        let ix = await instructions.modify.saber.permissionlessFulfillSaber(
+        // Include a getComputeBudget to this shit
+        let ixIncreaseComputeBudget: Transaction = await instructions.requestComputeBudget(
+            new BN(256000)
+        )
+        let ix: TransactionInstruction = await instructions.modify.saber.permissionlessFulfillSaber(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -163,7 +167,42 @@ export class CrankRpcCalls {
             this.registry
         );
         console.log("Sending saber instruciton ....", ix);
-        return await sendAndSignInstruction(this.crankProvider, ix);
+        let tx = new Transaction();
+        tx.add(ixIncreaseComputeBudget);
+        tx.add(ix);
+        return await sendAndSignTransaction(this.crankProvider, tx);
+    }
+
+    async depositAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[], positionsSolend: PositionAccountSolend[]): Promise<void> {
+        console.log("#redeemAllPositions()");
+        let inputCurrencyMints = new Set<string>();
+        console.log("Running saber items: ", positionsSaber);
+        await Promise.all(positionsSaber.map(async (x: PositionAccountSaber) => {
+            console.log("Closing following position account: ", x);
+            let sgPermissionlessFullfillSaber = await this.permissionlessFulfillSaber(x.index);
+            console.log("Fulfilled sg Saber is: ", sgPermissionlessFullfillSaber);
+        }));
+        // TODO: Also redeem solend!
+        await Promise.all(positionsSolend.map(async (x: PositionAccountSolend) => {
+            // let solendPool = x.pool as ExplicitSolendPool;
+            // get the solend pool from the currency ..
+            let sgPermissionlessFullfillSolend = await this.createPositionSolend(x.index);
+            console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillSolend);
+        }));
+
+        console.log("Now sendin back the currencies as well...");
+        // Now also redeem the individual currencies ..
+        await Promise.all(Array.from(positionsMarinade.values()).map(async (x: PositionAccountMarinade) => {
+            let sgPermissionlessFullfillMarinade = await this.createPositionMarinade(x.index);
+            console.log("Fulfilled sg Marinade is: ", sgPermissionlessFullfillMarinade);
+        }));
+
+        // the transfer ones are not run here, those are approved separately ...
+
+        // We don't redeem marinade actively ...
+        console.log("Approving Marinade Withdraw");
+        console.log("##redeemAllPositions()");
+        return
     }
 
     async redeemAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[], positionsSolend: PositionAccountSolend[]): Promise<void> {
@@ -273,7 +312,7 @@ export class CrankRpcCalls {
     }
 
 
-    async createPositionSolend(index: number, solendAction: SolendAction) {
+    async createPositionSolend(index: number) {
         // TODO: From the currency-mint, fetch the solend symbol ...
         // tokenSymbol: string
         // TODO: Remove the harcoded tokenSymbol variable ...
@@ -285,8 +324,8 @@ export class CrankRpcCalls {
             this.solbondProgram,
             this.owner.publicKey,
             this.crankProvider.wallet.publicKey,
-            index,
-            solendAction
+            this.registry,
+            index
         );
         return await sendAndSignInstruction(this.crankProvider, ix)
     }

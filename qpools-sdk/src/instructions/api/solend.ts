@@ -19,7 +19,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://api.google.devnet.solana.com");
+        connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.google.mainnet-beta.solana.com");
@@ -80,7 +80,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://api.google.devnet.solana.com");
+        connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.google.mainnet-beta.solana.com");

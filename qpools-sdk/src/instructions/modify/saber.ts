@@ -143,7 +143,7 @@ export async function permissionlessFulfillSaber(
     puller: PublicKey,
     index: number,
     registry: Registry
-) {
+): Promise<TransactionInstruction> {
     console.log("#permissionlessFulfillSaber()");
     // Index should take the account
     // And find the poolAddress through a get request

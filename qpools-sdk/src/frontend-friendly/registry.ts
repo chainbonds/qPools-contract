@@ -15,6 +15,8 @@ import {ExplicitPool} from "../types/interfacing/ExplicitPool";
 import {ExplicitToken} from "../types/interfacing/ExplicitToken";
 import {ExplicitSaberPool} from "../types/interfacing/ExplicitSaberPool";
 import {Protocol} from "../types/interfacing/PositionInfo";
+import {ExplicitSolendPool} from "../types/interfacing/ExplicitSolendPool";
+import {getSerpiusUrl} from "../instructions/api/serpius";
 
 
 export class Registry {
@@ -39,12 +41,6 @@ export class Registry {
 
 
     // solendMarketIndexedByCurrencyMint: Map<string, SolendMarket> = new Map<>
-
-
-    // nativeSolMint: PublicKey = new PublicKey("NativeSo11111111111111111111111111111111111");
-    // wrappedSolMint: PublicKey = new PublicKey("So11111111111111111111111111111111111111112");
-    // TODO: Replace based on mainnet vs devnet ...
-    serpiusEndpoint: string = "https://qpools.serpius.com/weight_status_devnet_solend_v2.json";
 
     userPubkey: PublicKey = getWrappedSolMint();
 
@@ -90,7 +86,7 @@ export class Registry {
      * Gotta also make this devnet / mainnet dependent
      */
     getSerpiusEndpoint(): string {
-        return this.serpiusEndpoint;
+        return getSerpiusUrl();
     }
 
     /**
@@ -427,6 +423,18 @@ export class Registry {
             return null;
         }
         return reserves[0];
+    }
+
+    async getSolendPoolFromInputCurrencyMint(currencyMint: PublicKey): Promise<ExplicitSolendPool | null> {
+        await this.getAllPools();
+        // TODO: For devnet and for now, assume that the currency is unique to the address (for solend ...
+        let pool: ExplicitPool[] | undefined = this.poolListIndexedByInputTokenMint.get(currencyMint.toString())
+            ?.filter((x: ExplicitPool) => x.protocol.valueOf() === Protocol.solend);
+        // Assert that a solendAction is included in the pool ..
+        console.log("Pool is: ", pool)
+        console.assert(pool && pool?.length === 1);
+        let solendPool: ExplicitSolendPool = pool![0] as ExplicitSolendPool;
+        return solendPool;
     }
 
 }

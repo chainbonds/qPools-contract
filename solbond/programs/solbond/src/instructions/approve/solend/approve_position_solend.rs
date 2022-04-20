@@ -8,7 +8,6 @@ use crate::utils::seeds;
 #[derive(Accounts)]
 #[instruction(
     _bump_portfolio: u8,
-    _bump_position: u8,
     _bump_currency: u8,
     _weight: u64,
     _input_amount: u64,
@@ -28,7 +27,7 @@ pub struct ApprovePositionWeightSolend<'info> {
             seeds::USER_POSITION_STRING
         ],
 
-        bump = _bump_position,
+        bump,
     )]
     pub position_pda: Box<Account<'info, PositionAccountSolend>>,
 
@@ -65,12 +64,11 @@ pub struct ApprovePositionWeightSolend<'info> {
 pub fn handler(
     ctx: Context<ApprovePositionWeightSolend>,
     _bump_portfolio: u8,
-    _bump_position: u8,
     _bump_currency: u8,
     _weight: u64,
     _input_amount: u64,
     _index: u32,
-) -> ProgramResult {
+) -> Result<()> {
 
     // let msg = format!("{index}{seed}", index = _index, seed = seeds::USER_POSITION_STRING);
     // msg!("Seed string is: ");
@@ -88,7 +86,7 @@ pub fn handler(
     position_account.is_fulfilled = false;
     position_account.is_redeemed = false;
     position_account.redeem_approved = false;
-    position_account.bump = _bump_position;
+    position_account.bump = *ctx.bumps.get("position_pda").unwrap();
 
     //position_account.pool_address = ctx.accounts.pool_mint.key().clone();
     position_account.portfolio_pda = ctx.accounts.portfolio_pda.key().clone();

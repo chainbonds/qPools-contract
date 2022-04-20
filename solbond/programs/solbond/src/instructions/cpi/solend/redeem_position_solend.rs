@@ -86,9 +86,9 @@ pub fn handler(
     _bump_ata_liq: u8,
     _bump_ata_col: u8,
     _index: u32,
-) -> ProgramResult {
+) -> Result<()> {
     if ctx.accounts.user_transfer_authority.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedPortfolioNotMatching));
     }
     let position = &mut ctx.accounts.position_pda;
 

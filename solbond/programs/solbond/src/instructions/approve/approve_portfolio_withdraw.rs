@@ -34,7 +34,7 @@ pub struct ApproveWithdrawPortfolio<'info> {
 pub fn handler(
     ctx: Context<ApproveWithdrawPortfolio>,
     _bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
     //assert!(portfolio_account.fully_created, "portfolio can't be withdrawn before full creation");
     

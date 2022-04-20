@@ -30,7 +30,6 @@ use marinade_onchain_helper::{
 #[derive(Accounts)]
 #[instruction(
     _bump_marinade: u8,
-    _bump_msol_ata: u8,
     _index: u32,
 )]
 pub struct MarinadePositionInstruction<'info> {
@@ -78,7 +77,7 @@ pub struct MarinadePositionInstruction<'info> {
         token::mint = msol_mint,
         token::authority = portfolio_pda,
         seeds = [portfolio_pda.owner.key().as_ref(),msol_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_msol_ata
+        bump,
     )]
     pub mint_to: Account<'info,TokenAccount>, // associatedMSolTokenAccountAddress, need to create this
 
@@ -103,12 +102,11 @@ pub struct MarinadePositionInstruction<'info> {
 pub fn handler(
     ctx: Context<MarinadePositionInstruction>,
     _bump_marinade: u8,
-    _bump_msol_ata: u8,
     _index: u32,
-) -> ProgramResult {
+) -> Result<()> {
 
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedPortfolioNotMatching));
     }
     let dep_amt: u64 = ctx.accounts.position_pda.initial_sol_amount;
 
@@ -139,7 +137,7 @@ pub fn handler(
                                                         }
                                                         meta
                                                     }).collect(),
-        data: data.data()
+        data: data.try_to_vec()?
 
     };
 

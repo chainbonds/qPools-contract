@@ -54,19 +54,19 @@ pub fn handler(
     _bump_position: u8,
     _bump_msol_ata: u8,
     _index: u32,
-) -> ProgramResult {
+) -> Result<()> {
 
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedPortfolioNotMatching));
     }
     if !ctx.accounts.position_pda.is_fulfilled {
-        return Err(ErrorCode::PositionNotFulfilledYet.into());
+        return Err(error!(ErrorCode::PositionNotFulfilledYet));
     }
     if ctx.accounts.position_pda.redeem_approved {
-        return Err(ErrorCode::RedeemAlreadyApproved.into());
+        return Err(error!(ErrorCode::RedeemAlreadyApproved));
     }
     if ! ctx.accounts.portfolio_pda.fully_created {
-        return Err(ErrorCode::PortfolioNotFullyCreated.into());
+        return Err(error!(ErrorCode::PortfolioNotFullyCreated));
     }
     
     let portfolio = &mut ctx.accounts.portfolio_pda;

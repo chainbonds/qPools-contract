@@ -10,8 +10,6 @@ use crate::ErrorCode;
 #[derive(Accounts)]
 // #[instruction(amount)]
 #[instruction(
-    _bump_ata_liq: u8,
-    _bump_ata_col: u8,
     _index: u32,
 )]
 pub struct SolendPositionInstruction<'info> {
@@ -40,7 +38,7 @@ pub struct SolendPositionInstruction<'info> {
         token::mint = liquidity_mint,
         token::authority = user_transfer_authority,
         seeds = [user_transfer_authority.owner.key().as_ref(),liquidity_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_liq
+        bump,
     )]
     pub source_liquidity: Account<'info,TokenAccount>,
 
@@ -50,7 +48,7 @@ pub struct SolendPositionInstruction<'info> {
         token::mint = reserve_collateral_mint,
         token::authority = user_transfer_authority,
         seeds = [user_transfer_authority.owner.key().as_ref(),reserve_collateral_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_col
+        bump,
     )]
     pub destination_collateral: Account<'info,TokenAccount>,
 
@@ -89,12 +87,10 @@ pub struct SolendPositionInstruction<'info> {
 
 pub fn handler(
     ctx: Context<SolendPositionInstruction>,
-    _bump_ata_liq: u8,
-    _bump_ata_col: u8,
     _index: u32,
-) -> ProgramResult {
+) -> Result<()> {
     if ctx.accounts.user_transfer_authority.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedPortfolioNotMatching));
     }
     let approved_position_details = &mut ctx.accounts.position_pda;
 

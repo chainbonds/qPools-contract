@@ -7,20 +7,20 @@ use crate::utils::seeds;
 
 #[derive(Accounts, Clone)]
 #[instruction(
-    _bump:u8, 
     _sum_of_weight:u64,
     _num_positions:u32,
     _num_currencies: u32,
 )]
 pub struct SavePortfolio<'info> {
 
+    #[account(mut)]
     pub owner: Signer<'info>,
 
     #[account(
         init,
         payer = owner,
         space = 8 + PortfolioAccount::LEN,
-        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump = _bump
+        seeds = [owner.key().as_ref(), seeds::PORTFOLIO_SEED], bump,
     )]
     pub portfolio_pda: Box<Account<'info, PortfolioAccount>>,
     
@@ -33,18 +33,17 @@ pub struct SavePortfolio<'info> {
 
 pub fn handler(
     ctx: Context<SavePortfolio>,
-    _bump: u8,
     _sum_of_weights: u64,
     _num_positions: u32,
     _num_currencies: u32,
-) -> ProgramResult {
+) -> Result<()> {
     //let sum: u64 = _weights.iter().sum();
     //assert!(sum/1000 == 1, "weights do not sum to 1!");
     let portfolio_account = &mut ctx.accounts.portfolio_pda;
   
     portfolio_account.owner = ctx.accounts.owner.clone().key();
     
-    portfolio_account.bump = _bump;
+    portfolio_account.bump = *ctx.bumps.get("portfolio_pda").unwrap();
     portfolio_account.fully_created = false;
     portfolio_account.to_be_redeemed = false;
 

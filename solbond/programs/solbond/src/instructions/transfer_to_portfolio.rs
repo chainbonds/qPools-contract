@@ -7,7 +7,6 @@ use crate::utils::seeds;
 #[instruction(
     _bump_portfolio:u8, 
     _bump_user_currency: u8,
-    _bump_ata: u8,
 )]
 
     pub struct TransferToPortfolio<'info> {
@@ -31,7 +30,7 @@ use crate::utils::seeds;
         token::mint = token_mint,
         token::authority = portfolio_pda,
         seeds = [owner.key().as_ref(),token_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata,
+        bump,
         constraint = &pda_owned_token_account.owner == &portfolio_pda.key(),
     )]
     pub pda_owned_token_account: Box<Account<'info,TokenAccount>>,
@@ -63,8 +62,7 @@ pub fn handler(
     ctx: Context<TransferToPortfolio>,
     _bump_portfolio: u8,
     _bump_user_currency: u8,
-    _bump_ata: u8,
-) -> ProgramResult {
+) -> Result<()> {
    
     let cpi_accounts = Transfer {
         from: ctx.accounts.user_owned_token_account.to_account_info(),

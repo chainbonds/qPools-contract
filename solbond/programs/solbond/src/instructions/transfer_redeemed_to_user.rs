@@ -67,11 +67,11 @@ pub fn handler(
     ctx: Context<TransferRedeemedToUser>,
     _bump_user_currency: u8,
     _bump_ata: u8,
-) -> ProgramResult {
+) -> Result<()> {
 
     //let amount_after_fee;
     if ctx.accounts.portfolio_pda.num_redeemed < ctx.accounts.portfolio_pda.num_positions {
-        return Err(ErrorCode::NotReadyForTransferBack.into());
+        return Err(error!(ErrorCode::NotReadyForTransferBack));
     }
 
     let cpi_accounts = Transfer {

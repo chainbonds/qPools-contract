@@ -19,9 +19,6 @@ use std::cmp;
 #[derive(Accounts)]
 // #[instruction(amount)]
 #[instruction(
-    _bump_ata_a: u8,
-    _bump_ata_b: u8,
-    _bump_ata_lp: u8,
     _index: u32
 )]
 pub struct SaberLiquidityInstruction<'info> {
@@ -58,7 +55,7 @@ pub struct SaberLiquidityInstruction<'info> {
         token::mint = pool_mint,
         token::authority = portfolio_pda,
         seeds = [portfolio_pda.owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_lp
+        bump,
     )]
     pub output_lp: Box<Account<'info, TokenAccount>>,
 
@@ -80,7 +77,7 @@ pub struct SaberLiquidityInstruction<'info> {
         token::mint = mint_a,
         token::authority = portfolio_pda,
         seeds = [portfolio_pda.owner.key().as_ref(),mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_a,
+        bump,
         constraint = &qpools_a.owner == &portfolio_pda.key(),
 
     )]
@@ -100,7 +97,7 @@ pub struct SaberLiquidityInstruction<'info> {
         token::mint = mint_b,
         token::authority = portfolio_pda,
         seeds = [portfolio_pda.owner.key().as_ref(),mint_b.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_b,
+        bump,
         constraint = &qpools_b.owner == &portfolio_pda.key(),
     )]
     pub qpools_b: Box<Account<'info,TokenAccount>>,
@@ -114,23 +111,20 @@ pub struct SaberLiquidityInstruction<'info> {
 
 pub fn handler(
     ctx: Context<SaberLiquidityInstruction>,
-    _bump_ata_a: u8,
-    _bump_ata_b: u8,
-    _bump_ata_lp: u8,
     _index: u32,
-) -> ProgramResult {
+) -> Result<()> {
 
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedPortfolioNotMatching));
     }
     if ctx.accounts.position_pda.is_fulfilled {
-        return Err(ErrorCode::PositionAlreadyFulfilledError.into());
+        return Err(error!(ErrorCode::PositionAlreadyFulfilledError));
     }
     if ctx.accounts.position_pda.index > ctx.accounts.portfolio_pda.num_positions || ctx.accounts.portfolio_pda.fully_created {
-        return Err(ErrorCode::PositionFullyCreatedError.into());
+        return Err(error!(ErrorCode::PositionFullyCreatedError));
     }
     if ctx.accounts.pool_mint.key() != ctx.accounts.position_pda.pool_address {
-        return Err(ErrorCode::ProvidedMintNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedMintNotMatching));
     }
   
     let user_context: SwapUserContext = SwapUserContext {

@@ -9,8 +9,6 @@ use crate::ErrorCode;
 
 #[derive(Accounts)]
 #[instruction(
-    _bump_ata_a: u8,
-    _bump_ata_lp: u8,
     _index: u32,
 )]
 pub struct RedeemOneSaberPosition<'info> {
@@ -44,7 +42,7 @@ pub struct RedeemOneSaberPosition<'info> {
     #[account(
         mut,
         seeds = [portfolio_pda.owner.key().as_ref(),pool_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_lp,
+        bump,
         constraint = &input_lp.owner == &portfolio_pda.key(),
     )]
     pub input_lp:  Box<Account<'info, TokenAccount>>,
@@ -56,7 +54,7 @@ pub struct RedeemOneSaberPosition<'info> {
     #[account(
         mut,
         seeds = [portfolio_pda.owner.key().as_ref(),mint_a.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
-        bump = _bump_ata_a,
+        bump,
         constraint = &user_a.owner == &portfolio_pda.key(),
     )]
     pub user_a: Box<Account<'info, TokenAccount>>,
@@ -85,26 +83,24 @@ pub struct RedeemOneSaberPosition<'info> {
 
 pub fn handler(
     ctx: Context<RedeemOneSaberPosition>,
-    _bump_ata_a: u8,
-    _bump_ata_lp: u8,
     _index: u32,
 
-) -> ProgramResult {
+) -> Result<()> {
 
     if ctx.accounts.portfolio_pda.key() != ctx.accounts.position_pda.portfolio_pda {
-        return Err(ErrorCode::ProvidedPortfolioNotMatching.into());
+        return Err(error!(ErrorCode::ProvidedPortfolioNotMatching));
     }
     if !ctx.accounts.position_pda.redeem_approved {
-        return Err(ErrorCode::RedeemNotApproved.into());
+        return Err(error!(ErrorCode::RedeemNotApproved));
     }
     if ctx.accounts.portfolio_pda.num_redeemed >= ctx.accounts.portfolio_pda.num_positions {
-        return Err(ErrorCode::AllPositionsRedeemed.into());
+        return Err(error!(ErrorCode::AllPositionsRedeemed));
     }
     if !ctx.accounts.position_pda.is_fulfilled {
-        return Err(ErrorCode::PositionNotFulfilledYet.into());
+        return Err(error!(ErrorCode::PositionNotFulfilledYet));
     }
     if ctx.accounts.position_pda.is_redeemed {
-        return Err(ErrorCode::PositionAlreadyRedeemed.into());
+        return Err(error!(ErrorCode::PositionAlreadyRedeemed));
 
     }
 

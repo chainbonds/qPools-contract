@@ -14,7 +14,7 @@ pub mod solbond {
     use super::*;
 
 
-    pub fn solana_test_healthcheck(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
+    pub fn solana_test_healthcheck(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: &[u8]) -> Result<()> {
         msg!(
             "process_instruction: {}: {} accounts, data={:?}",
             program_id,
@@ -52,15 +52,13 @@ pub mod solbond {
     */
     pub fn create_portfolio(
         ctx: Context<SavePortfolio>,
-        _bump: u8,
         _sum_of_weights: u64,
         _num_positions: u32,
         _num_currencies: u32,
 
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::approve_portfolio_weights::handler(
             ctx,
-            _bump,
             _sum_of_weights,
             _num_positions,
             _num_currencies,
@@ -78,18 +76,16 @@ pub mod solbond {
     pub fn approve_position_weight_saber(
         ctx: Context<ApprovePositionWeightSaber>,
         _bump_portfolio: u8,
-        _bump_position: u8,
         _weight: u64,
         _max_initial_token_a_amount: u64,
         _max_initial_token_b_amount: u64,
         _min_mint_amount: u64,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         
         instructions::approve::saber::approve_position_weight::handler(
             ctx,
             _bump_portfolio,
-            _bump_position,
             _weight,
             _max_initial_token_a_amount,
             _max_initial_token_b_amount,
@@ -102,16 +98,14 @@ pub mod solbond {
     pub fn approve_position_weight_marinade(
         ctx: Context<ApprovePositionWeightMarinade>,
         _bump_portfolio: u8,
-        _bump_position: u8,
         _bump_marinade: u8,
         _weight: u64,
         _initial_sol_amount: u64,
         _index: u32
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::marinade::approve_position_weight_marinade::handler(
             ctx,
             _bump_portfolio,
-            _bump_position,
             _bump_marinade,
             _weight,
             _initial_sol_amount,
@@ -122,16 +116,14 @@ pub mod solbond {
     pub fn approve_position_weight_solend(
         ctx: Context<ApprovePositionWeightSolend>,
         _bump_portfolio: u8,
-        _bump_position: u8,
         _bump_currency: u8,
         _weight: u64,
         _input_amount: u64,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::solend::approve_position_solend::handler(
             ctx,
             _bump_portfolio,
-            _bump_position,
             _bump_currency,
             _weight,
             _input_amount,
@@ -146,14 +138,11 @@ pub mod solbond {
         ctx: Context<TransferToPortfolio>,
         _bump_portfolio: u8,
         _bump_user_currency: u8,
-        _bump_ata: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
             instructions::transfer_to_portfolio::handler(
                 ctx,
                 _bump_portfolio,
                 _bump_user_currency,
-                _bump_ata,
-
             )
     }
 
@@ -178,7 +167,7 @@ pub mod solbond {
     pub fn approve_withdraw_to_user(
         ctx: Context<ApproveWithdrawPortfolio>,
         _bump_portfolio: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve_portfolio_withdraw::handler(
             ctx,
             _bump_portfolio,
@@ -192,7 +181,7 @@ pub mod solbond {
         _pool_token_amount: u64,
         _minimum_token_amount: u64,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::saber::approve_withdraw_amount::handler(
             ctx,
             _bump_portfolio,
@@ -209,7 +198,7 @@ pub mod solbond {
         _bump_position: u8,
         _bump_msol_ata: u8,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::marinade::approve_withdraw_marinade::handler(
             ctx,
             _bump_portfolio,
@@ -225,7 +214,7 @@ pub mod solbond {
         _bump_position: u8,
         _withdraw_amount: u64,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::solend::approve_withdraw_solend::handler(
             ctx, 
             _bump_portfolio,
@@ -237,12 +226,10 @@ pub mod solbond {
 
     pub fn approve_initial_currency_amount(
         ctx: Context<ApproveInitialCurrencyAmount>,
-        _bump_user_currency: u8,
         _input_amount_currency: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::approve_initial_currency_amount::handler(
             ctx,
-            _bump_user_currency,
             _input_amount_currency,
         )
     }
@@ -252,7 +239,7 @@ pub mod solbond {
         _bump_portfolio: u8,
         _bump_user_currency: u8,
         _withdraw_amount_currency: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::approve::approve_currency_withdraw_amount::handler(
             ctx,
             _bump_portfolio,
@@ -266,43 +253,31 @@ pub mod solbond {
     pub fn create_position_marinade(
         ctx: Context<MarinadePositionInstruction>,
         _bump_marinade: u8,
-        _bump_msol_ata: u8,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::cpi::marinade::create_position_marinade::handler(
             ctx, 
             _bump_marinade,
-            _bump_msol_ata,
             _index
         )
     }
 
     pub fn create_position_saber(
         ctx: Context<SaberLiquidityInstruction>,
-        _bump_ata_a: u8,
-        _bump_ata_b: u8,
-        _bump_ata_lp: u8,
         _index:u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::cpi::saber::create_position::handler(
             ctx, 
-            _bump_ata_a,
-            _bump_ata_b,
-            _bump_ata_lp,
             _index, 
         )
     }
 
     pub fn create_position_solend(
         ctx: Context<SolendPositionInstruction>,
-        _bump_ata_liq: u8,
-        _bump_ata_col: u8,
         _index:u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::cpi::solend::create_position_solend::handler(
             ctx, 
-            _bump_ata_liq,
-            _bump_ata_col,
             _index, 
         )
     }
@@ -311,14 +286,10 @@ pub mod solbond {
 
     pub fn redeem_position_one_saber(
         ctx: Context<RedeemOneSaberPosition>,
-        _bump_ata_a: u8,
-        _bump_ata_lp: u8,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::cpi::saber::redeem_position_one_sided::handler(
             ctx, 
-        _bump_ata_a,
-        _bump_ata_lp,
         _index,
         )
     }
@@ -328,7 +299,7 @@ pub mod solbond {
         _bump_ata_liq: u8,
         _bump_ata_col: u8,
         _index: u32,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         instructions::cpi::solend::redeem_position_solend::handler(
             ctx, 
             _bump_ata_liq,
@@ -345,7 +316,7 @@ pub mod solbond {
         _bump_user_currency: u8,
         _bump_ata: u8,
 
-    ) -> ProgramResult {
+    ) -> Result<()> {
 
         instructions::transfer_redeemed_to_user::handler(
             ctx,
@@ -361,7 +332,7 @@ pub mod solbond {
 /**
  * Error definitions
  */
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("Position can't be set for redeem before portfolio completion")]
     PortfolioNotFullyCreated,

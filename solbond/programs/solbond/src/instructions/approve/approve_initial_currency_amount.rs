@@ -7,7 +7,6 @@ use crate::utils::seeds;
 
 #[derive(Accounts, Clone)]
 #[instruction(
-    _bump_user_currency: u8,
     _total_amount_currency: u64,
 )]
 pub struct ApproveInitialCurrencyAmount<'info> {
@@ -24,7 +23,7 @@ pub struct ApproveInitialCurrencyAmount<'info> {
             currency_mint.key().as_ref(),
             seeds::USER_CURRENCY_STRING
         ],
-        bump = _bump_user_currency,
+        bump,
     )]
     pub user_currency_pda_account: Account<'info, UserCurrencyAccount>,
     
@@ -39,16 +38,15 @@ pub struct ApproveInitialCurrencyAmount<'info> {
 
 pub fn handler(
     ctx: Context<ApproveInitialCurrencyAmount>,
-    _bump_user_currency: u8,
     _total_amount_currency: u64,
-) -> ProgramResult {
+) -> Result<()> {
     
 
     let user_currency_pda_account = &mut ctx.accounts.user_currency_pda_account;
   
     user_currency_pda_account.owner = ctx.accounts.owner.clone().key();
     
-    user_currency_pda_account.bump = _bump_user_currency;
+    user_currency_pda_account.bump = *ctx.bumps.get("user_currency_pda_account").unwrap();
     user_currency_pda_account.initial_amount = _total_amount_currency;
     user_currency_pda_account.withdraw_amount = 0;
     

@@ -8,14 +8,12 @@ on:
       - dev
       - stage
       - main
-      - remove-google-api
 
   pull_request:
     branches: 
       - dev
       - stage
       - main
-      - remove-google-api
 
 env:
   solana_verion: 1.8.12

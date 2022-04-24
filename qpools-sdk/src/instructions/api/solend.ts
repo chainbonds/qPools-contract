@@ -22,7 +22,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
         connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
-        connection = new Connection("https://api.google.mainnet-beta.solana.com");
+        connection = new Connection("https://api.mainnet-beta.solana.com");
         market = await SolendMarket.initialize(connection, "production");
     }  else {
         throw Error("Cluster not implemented! getSolendTokens");
@@ -83,7 +83,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
         connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
-        connection = new Connection("https://api.google.mainnet-beta.solana.com");
+        connection = new Connection("https://api.mainnet-beta.solana.com");
         market = await SolendMarket.initialize(connection, "production");
     } else {
         throw Error("Cluster not implemented! getSolendPools");

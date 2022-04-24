@@ -30,6 +30,8 @@ export class CoinGeckoClient {
             return 0;
         } else {
             let data = await this.getDataForAllRegisteredTokens();
+            console.log(data);
+            console.log("Type of data is: ", typeof data);
             if (data && data.has(coinGeckoId)){
                 return data.get(coinGeckoId)!.usd;
             }
@@ -67,7 +69,7 @@ export class CoinGeckoClient {
         }
     }
 
-    async getDataForAllRegisteredTokens (){
+    async getDataForAllRegisteredTokens(): Promise<Map<string, PriceInterface>> {
         if(this.initialized && this.coinGeckoData != null){
             console.log("Price already in cache")
             return this.coinGeckoData;
@@ -81,23 +83,48 @@ export class CoinGeckoClient {
         let query = priceEndpoint.concat(query_Ids).concat("&").concat(query_vsCurrency)
         console.log(query)
         await axios.get<any>(query).then(result => {
+            let newMap: Map<string, PriceInterface> = new Map<string, PriceInterface>();
+            console.log("The data is: ", result.data);
             console.log(result.data);
-            this.coinGeckoData = result.data;
-        })
-            .catch( error => {
-                console.error('There was an error! Fixing the prices to 0 ', error);
-                //TODO : change the hardcoded initialization below
-                this.coinGeckoData = new Map<string, PriceInterface>(
-                    [
-                        ["msol", { usd: 0, eur: 0, chf: 0 }],
-                        ["solana", { usd: 0, eur: 0, chf: 0 }],
-                        ["usdc", { usd: 0, eur: 0, chf: 0 }],
-                        ["wsol", { usd: 0, eur: 0, chf: 0 }]
-                    ]
-                )}
-            );
 
-        return this.coinGeckoData
+            // Array.from(data.entries()).map(([key, value]) => {
+            //     console.log("Key and Value are");
+            //     console.log(key);
+            //     console.log(value);
+            // });
+            // data.map((x: entry) => {
+            //
+            // });
+            console.log("Old map is: ");
+            console.log(newMap);
+            for (let value in result.data) {
+                newMap.set(value, result.data[value])
+            }
+            console.log("New map after");
+            console.log(newMap);
+
+            // let tmpMap = new Map();
+            // result.data.entries((x: any) => {
+            //    console.log("Item");
+            //    console.log(x);
+            // });
+            this.coinGeckoData = newMap;
+            console.log("Written in the data now ..");
+        })
+            // .catch( error => {
+            //     console.error('There was an error! Fixing the prices to 0 ', error);
+            //     //TODO : change the hardcoded initialization below
+            //     this.coinGeckoData = new Map<string, PriceInterface>(
+            //         [
+            //             ["msol", { usd: 0, eur: 0, chf: 0 }],
+            //             ["solana", { usd: 0, eur: 0, chf: 0 }],
+            //             ["usdc", { usd: 0, eur: 0, chf: 0 }],
+            //             ["wsol", { usd: 0, eur: 0, chf: 0 }]
+            //         ]
+            //     )}
+            // );
+
+        return this.coinGeckoData!
 
     }
 

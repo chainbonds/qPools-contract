@@ -694,7 +694,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Gotta store this in the registry
         // TODO: Make this multi-asset logic more scalable
         let [portfolioAtaMSol, portfolioAtaMSolBump] = await getATAPda(this.owner.publicKey, mSOLMint, this.solbondProgram);
-        let [portfolioAtaWrappedMSol, portfolioAtaWrappedMSolBump] = await getATAPda(this.owner.publicKey, wrappedSolMint, this.solbondProgram);
+        let [portfolioAtaWrappedSol, portfolioAtaWrappedSolBump] = await getATAPda(this.owner.publicKey, wrappedSolMint, this.solbondProgram);
 
         // Also get the token amounts, I guess lol
         console.log("Getting token account balances ...")
@@ -706,13 +706,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         }
         // Only grab these, if the respective account exists ...
         let wrappedSolAmount: TokenAmount;
-        if (await tokenAccountExists(this.connection, portfolioAtaWrappedMSol)) {
-            wrappedSolAmount = (await this.connection.getTokenAccountBalance(portfolioAtaWrappedMSol)).value;
+        if (await tokenAccountExists(this.connection, portfolioAtaWrappedSol)) {
+            wrappedSolAmount = (await this.connection.getTokenAccountBalance(portfolioAtaWrappedSol)).value;
         } else {
             wrappedSolAmount = getTokenAmount(new BN(0), new BN(9));
         }
         console.log("mSOL amount in the portfolio is...: ", mSOLAmount);
-        console.log("mSOL amount in the portfolio is...: ", wrappedSolAmount);
+        console.log("wrapped SOL amount in the portfolio is...: ", wrappedSolAmount);
 
         // Interesting ... In the case of the staking and lending, the LP tokens is equivalent to the MintA Token!
         // In fact, we should probably remove the LP Token, or the MintA token from the struct in this case ...
@@ -722,7 +722,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Again, convert by the pyth price ...
 
 
-        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint); //  * 93.23;
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(wrappedSolAmount.uiAmount!, wrappedSolMint); //  * 93.23;
         let usdcValueLP = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint);
 
 
@@ -752,9 +752,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             portfolio: this.portfolioPDA,
 
             // Should replace this with the input currency ...
-            mintA: mSOLMint,
-            ataA: portfolioAtaMSol,
-            amountA: mSOLAmount,
+            mintA: wrappedSolMint,
+            ataA: portfolioAtaWrappedSol,
+            amountA: wrappedSolAmount,
             usdcValueA: usdcValueA,
 
 

@@ -1,4 +1,4 @@
-import {Connection, Keypair, PublicKey, TransactionInstruction} from "@solana/web3.js";
+import {Connection, Keypair, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {delay, IWallet, QWallet, sendAndSignInstruction, sendAndSignTransaction} from "../utils";
 import {Marinade, MarinadeConfig, MarinadeState} from "@marinade.finance/marinade-ts-sdk";
@@ -154,7 +154,11 @@ export class CrankRpcCalls {
         // if (await accountExists(this.connection, positionPDA)) {
         // let currentPosition = await this.crankSolbondProgram.account.positionAccountSaber.fetch(positionPDA) as PositionAccountSaber;
         // Return if the current position was already fulfilled
-        let ix = await instructions.modify.saber.permissionlessFulfillSaber(
+        // Include a getComputeBudget to this shit
+        let ixIncreaseComputeBudget: Transaction = await instructions.requestComputeBudget(
+            new BN(256000)
+        )
+        let ix: TransactionInstruction = await instructions.modify.saber.permissionlessFulfillSaber(
             this.connection,
             this.crankSolbondProgram,
             this.owner.publicKey,
@@ -163,7 +167,10 @@ export class CrankRpcCalls {
             this.registry
         );
         console.log("Sending saber instruciton ....", ix);
-        return await sendAndSignInstruction(this.crankProvider, ix);
+        let tx = new Transaction();
+        tx.add(ixIncreaseComputeBudget);
+        tx.add(ix);
+        return await sendAndSignTransaction(this.crankProvider, tx);
     }
 
     async depositAllPositions(portfolio: PortfolioAccount, positionsSaber: PositionAccountSaber[], positionsMarinade: PositionAccountMarinade[], positionsSolend: PositionAccountSolend[]): Promise<void> {

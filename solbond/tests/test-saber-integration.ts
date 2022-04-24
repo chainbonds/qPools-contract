@@ -14,7 +14,7 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    const provider = Provider.local("https://api.devnet.solana.com");
+    const provider = Provider.local("https://api.google.devnet.solana.com");
     //anchor.setProvider(provider);
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);

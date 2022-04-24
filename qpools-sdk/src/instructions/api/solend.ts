@@ -19,10 +19,10 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://api.google.devnet.solana.com");
+        connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
-        connection = new Connection("https://api.google.mainnet-beta.solana.com");
+        connection = new Connection("https://api.mainnet-beta.solana.com");
         market = await SolendMarket.initialize(connection, "production");
     }  else {
         throw Error("Cluster not implemented! getSolendTokens");
@@ -31,7 +31,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     // console.log("market reserves are: ");
     // console.log(market);
     // console.log("Config is: ", market.config);
-    console.log("Reserves are: ", market.reserves);
+    //console.log("Reserves are: ", market.reserves);
     let out: ExplicitToken[] = [];
     // Only apply this on devnet
     let filter;
@@ -80,10 +80,10 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://api.google.devnet.solana.com");
+        connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
-        connection = new Connection("https://api.google.mainnet-beta.solana.com");
+        connection = new Connection("https://api.mainnet-beta.solana.com");
         market = await SolendMarket.initialize(connection, "production");
     } else {
         throw Error("Cluster not implemented! getSolendPools");
@@ -149,6 +149,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     }));
     console.log("##getSolendPools()");
     return out;
+
 }
 
 export const getSolendPrice = async (solendAction: SolendAction, tokenMint: PublicKey): Promise<number> => {

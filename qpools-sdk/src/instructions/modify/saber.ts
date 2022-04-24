@@ -34,7 +34,7 @@ export async function approvePositionWeightSaber(
     const stableSwapState = await getPoolState(connection, poolAddress);
     const {state} = stableSwapState;
 
-    console.assert(amountB.eq(new BN(0)));
+    console.assert(amountB.eq( new BN(0)));
 
     // Double check if already fulfilled, and skip it if not ...
     if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {
@@ -143,7 +143,7 @@ export async function permissionlessFulfillSaber(
     puller: PublicKey,
     index: number,
     registry: Registry
-) {
+): Promise<TransactionInstruction> {
     console.log("#permissionlessFulfillSaber()");
     // Index should take the account
     // And find the poolAddress through a get request

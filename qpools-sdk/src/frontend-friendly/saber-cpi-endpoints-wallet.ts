@@ -1,7 +1,7 @@
 import {Connection, Keypair, PublicKey} from "@solana/web3.js";
 import {Program, Provider} from "@project-serum/anchor";
 import {Token} from "@solana/spl-token";
-import {StableSwap, StableSwapState} from "@saberhq/stableswap-sdk";
+import {StableSwapState} from "@saberhq/stableswap-sdk";
 import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "../utils";
 import {sendAndConfirm} from "easy-spl/dist/util";
 

@@ -6,7 +6,7 @@ import {
     createAssociatedTokenAccountUnsigned,
     createMint,
     createMint2,
-    createTokenAccount,
+    createTokenAccount, delay,
     getAssociatedTokenAddressOffCurve,
     getBlockchainEpoch,
     getPayer,
@@ -38,10 +38,12 @@ import type {UserCurrencyAccount} from "./types/account/UserCurrencyAccount";
 import { PortfolioFrontendFriendlyChainedInstructions } from "./frontend-friendly/register-portfolio-wallet-instruction-heavy";
 import { Registry } from "./frontend-friendly/registry";
 
+
+import {CoinGeckoClient} from "./oracle/coinGeckoClient";
+
 import {Cluster, getNetworkCluster} from "./network";
 import {getMarinadeSolMint, getWhitelistTokens, getWrappedSolMint, MOCK} from "./const";
 import {Protocol, ProtocolType} from "./types/interfacing/PositionInfo";
-import {multiplyAmountByPythprice} from "./instructions/pyth/multiplyAmountByPythPrice";
 import {CrankRpcCalls} from "./frontend-friendly/crank-rpc-calls";
 
 export {
@@ -57,6 +59,7 @@ export {
     getAssociatedTokenAddressOffCurve,
     createAssociatedTokenAccountUnsigned,
     SolbondIdl,
+    delay,
 
     getTokenAmountFromString,
 
@@ -69,7 +72,7 @@ export {
     sendAndConfirmTransaction,
     tokenAccountExists,
     accountExists,
-    multiplyAmountByPythprice,
+    CoinGeckoClient,
     MOCK,
 
     DisplayPortfolios,
@@ -97,3 +100,4 @@ export type {
     PositionAccountSolend,
     UserCurrencyAccount,
 }
+

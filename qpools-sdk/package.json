@@ -1,6 +1,6 @@
 {
   "name": "@qpools/sdk",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -19,7 +19,6 @@
     "@marinade.finance/marinade-ts-sdk": "^2.0.9",
     "@project-serum/anchor": "^0.20.1",
     "@project-serum/serum": "^0.13.58",
-    "@pythnetwork/client": "^2.6.0",
     "@saberhq/stableswap-sdk": "^1.12.42",
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "^0.1.8",

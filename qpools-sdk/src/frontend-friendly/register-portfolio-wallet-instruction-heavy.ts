@@ -19,6 +19,7 @@ import {
     IWallet,
     tokenAccountExists
 } from "../utils";
+import {saberMultiplyAmountByUSDPrice} from "../instructions/api/saber";
 import type {PortfolioAccount} from "../types/account/PortfolioAccount";
 import type {PositionAccountSaber} from "../types/account/PositionAccountSaber";
 import {getATAPda, getPortfolioPda, getPositionPda} from "../types/account/pdas";
@@ -26,13 +27,14 @@ import {MarinadeState} from '@marinade.finance/marinade-ts-sdk';
 import type {PositionAccountMarinade} from "../types/account/PositionAccountMarinade";
 import type {UserCurrencyAccount} from "../types/account/UserCurrencyAccount";
 import {Registry} from "./registry";
-import {multiplyAmountByPythprice} from "../instructions/pyth/multiplyAmountByPythPrice";
+import {CoinGeckoClient} from "../oracle/coinGeckoClient";
 import {getWrappedSolMint} from "../const";
 import type {PositionAccountSolend} from "../types/account/PositionAccountSolend";
 import {SolendReserve, syncNative} from "@solendprotocol/solend-sdk";
 import {closeAccount} from "easy-spl/dist/tx/token-instructions";
 import * as instructions from "../instructions";
 import {PositionInfo, Protocol, ProtocolType} from "../types/interfacing/PositionInfo";
+
 
 export interface PositionsInput {
     percentageWeight: BN,
@@ -73,6 +75,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     // @ts-ignore
     public marinadeState: MarinadeState;
     public registry: Registry;
+    public coinGeckoClient : CoinGeckoClient;
 
     // There are a lot of accounts that need would be created twice
     // (assuming we use the same pool, but that pool has not been instantiated yet)
@@ -87,6 +90,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     ) {
 
         this.registry = registry;
+        this.coinGeckoClient = new CoinGeckoClient(registry);
 
         this.owner = provider.wallet;
 
@@ -512,7 +516,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting currencAmount to zero");
             currencyAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueA: number | null = await multiplyAmountByPythprice(currencyAmount.uiAmount!, positionAccount.currencyMint);
+        let usdcValueA: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(currencyAmount.uiAmount!, positionAccount.currencyMint);
         if (!usdcValueA && usdcValueA !== 0) {
             throw Error("currency mint not in pyth registry: " + positionAccount.currencyMint.toString());
         }
@@ -563,7 +567,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting collateral to zero");
             collateralAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueLp: number | null = await multiplyAmountByPythprice(collateralAmount.uiAmount!, portfolioCollateralAta);
+        let usdcValueLp: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(collateralAmount.uiAmount!, portfolioCollateralAta);
         if (!usdcValueLp && usdcValueLp !== 0) {
             throw Error("Collateral account not found! " + portfolioCollateralAta.toString());
         }
@@ -634,10 +638,13 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         let tokenLPAmount = (await this.connection.getTokenAccountBalance(portfolioAtaLp)).value;
 
         // Convert each token by the pyth price conversion, (or whatever calculation is needed here), to arrive at the USDC price
-        let usdcValueA = tokenAAmount.uiAmount!;
-        let usdcValueB = tokenBAmount.uiAmount!;
+
+
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenAAmount.uiAmount!, state.tokenA.mint);
+        let usdcValueB = await this.coinGeckoClient.multiplyAmountByUSDPrice(tokenBAmount.uiAmount!, state.tokenB.mint);
         // TODO: Find a way to calculate the conversion rate here easily ...
-        let usdcValueLP = tokenLPAmount.uiAmount!;
+        let usdcValueLP = await saberMultiplyAmountByUSDPrice(tokenLPAmount.uiAmount!, state.poolTokenMint, this.connection, this.registry, this.coinGeckoClient);
+
 
         // TODO: Calculate the virtualPrice of the LP tokens
         // TODO: Need to use whatever protocol has implemented them, depending on the curve and exact pool,
@@ -713,14 +720,22 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Here, the usdcValueA should be normal SOL!!! (it is the input token afterall
 
         // Again, convert by the pyth price ...
-        let usdcValueA: number | null = await multiplyAmountByPythprice(wrappedSolAmount.uiAmount!, wrappedSolMint); //  * 93.23;
+
+
+        let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint); //  * 93.23;
+        let usdcValueLP = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint);
+
+
+        //TODO : cna give error like below
+        /*let usdcValueA: number | null = await multiplyAmountByPythprice(wrappedSolAmount.uiAmount!, wrappedSolMint); //  * 93.23;
         if (!usdcValueA && usdcValueA !== 0) {
             throw Error("Mint not found! This should not happen " + wrappedSolMint.toString());
         }
         let usdcValueLP: number | null = await multiplyAmountByPythprice(mSOLAmount.uiAmount!, mSOLMint);
         if (!usdcValueLP && usdcValueLP !== 0) {
             throw Error("Mint not found! This should not happen " + mSOLMint.toString());
-        }
+        }*/
+
 
         // Sum up all the values here to arrive at the Total Position Value?
         // The LP token is equivalent to the MintA token, so we don't need to sum these up ...
@@ -728,6 +743,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         // Again, perhaps we should remove the MintA token, and instead just keep the LP token ...
         // Add to the portfolio account
+
         let out = {
             protocolType: ProtocolType.Staking,
             protocol: Protocol.marinade,
@@ -740,6 +756,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             ataA: portfolioAtaMSol,
             amountA: mSOLAmount,
             usdcValueA: usdcValueA,
+
 
             usdcValueB: 0.,
             mintLp: mSOLMint,
@@ -1016,7 +1033,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
                 // let marinadeToken = position.amountA.uiAmount;
                 // Multiply this with the marinade token
-                // TODO: Change this with pyth oracle pricing from registry
+
+               // TODO : FIX THE REST OF THIS FUNCTION
+                //let marinadeUsdcAmount = await this.coinGeckoClient.multiplyAmountByUSDPrice(position.amountLp.uiAmount, position.mintLp);
 
                 let solendUsdcAmount = position.usdcValueA + position.usdcValueLP;
                 usdAmount += solendUsdcAmount;
@@ -1042,12 +1061,15 @@ export class PortfolioFrontendFriendlyChainedInstructions {
                 // Multiply this with the marinade token
                 // TODO: Change this with pyth oracle pricing from registry
 
-                let marinadeUsdcAmount: number | null = await multiplyAmountByPythprice(position.amountLp.uiAmount!, position.mintLp);
+                let marinadeUsdcAmount: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(position.amountLp.uiAmount!, position.mintLp);
                 if (!marinadeUsdcAmount && marinadeUsdcAmount !== 0) {
                     throw Error("Position LP mint not registered in pyth " + position.mintLp.toString());
                 }
+
                 // let marinadeUsdcAmount = marinadeToken * 93;
                 console.log("Marinade USDC Amount is: ", marinadeUsdcAmount)
+
+                //TODO : usd Amount should be of type BN, or we can convert BN to number here. Just to run tests I am converting to number
                 usdAmount += marinadeUsdcAmount
                 // Again, we skip this for now because all tokens we work with are USDC-based
                 // // Also convert here to USD,

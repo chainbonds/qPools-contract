@@ -1,30 +1,37 @@
 import {PublicKey} from '@solana/web3.js'
 import {Registry} from "../frontend-friendly/registry";
-import {BN, Provider} from "@project-serum/anchor";
 import axios from "axios";
-import {min} from "@solendprotocol/solend-sdk/dist/examples/common";
+
+
+interface PriceInterface {
+    usd: number,
+    eur: number,
+    chf: number
+}
+
 export class CoinGeckoClient {
 
-    static coinGeckoData :any ;
-    static initialized = false;
+    coinGeckoData: Map<string, PriceInterface> | null;
+    initialized: boolean;
     registry : Registry;
     vs_currencies = ["usd", "eur", "chf"]
 
     constructor(registery : Registry) {
         this.registry = registery;
+        this.initialized = false;
+        this.coinGeckoData = null;
     }
 
 
-    async getPriceFromMint (mint : PublicKey, vs_currency :string){
+    async getPriceFromMint(mint : PublicKey) {
         let coinGeckoId  = this.registry.getCoinGeckoMapping().get(mint.toString());
-        if(coinGeckoId == undefined){
+        if (coinGeckoId == undefined){
             console.log("Mint is not registered in the registry for coingecko", mint.toString())
             return 0;
-        }
-        else {
+        } else {
             let data = await this.getDataForAllRegisteredTokens();
-            if (data.hasOwnProperty(coinGeckoId)){
-                return data[coinGeckoId][vs_currency];
+            if (data && data.has(coinGeckoId)){
+                return data.get(coinGeckoId)!.usd;
             }
             else {
                 console.log("For this mint there is no price in the coingecko query", mint.toString())
@@ -40,7 +47,7 @@ export class CoinGeckoClient {
      * @param mint
      */
     async multiplyAmountByUSDPrice (x: number, mint: PublicKey) : Promise<number> {
-        let res = this.getPriceFromMint(mint, "usd").then(price => {
+        let res = this.getPriceFromMint(mint).then(price => {
             return price*x
         })
         return res;
@@ -61,9 +68,9 @@ export class CoinGeckoClient {
     }
 
     async getDataForAllRegisteredTokens (){
-        if(CoinGeckoClient.initialized && CoinGeckoClient.coinGeckoData != null){
+        if(this.initialized && this.coinGeckoData != null){
             console.log("Price already in cache")
-            return CoinGeckoClient.coinGeckoData;
+            return this.coinGeckoData;
         }
         let priceEndpoint : string = "https://api.coingecko.com/api/v3/simple/price?"
 
@@ -75,21 +82,22 @@ export class CoinGeckoClient {
         console.log(query)
         await axios.get<any>(query).then(result => {
             console.log(result.data);
-            CoinGeckoClient.coinGeckoData = result.data;
-            CoinGeckoClient.initialized = true ;})
+            this.coinGeckoData = result.data;
+        })
             .catch( error => {
                 console.error('There was an error! Fixing the prices to 0 ', error);
                 //TODO : change the hardcoded initialization below
-                CoinGeckoClient.coinGeckoData = {
-                    msol: { usd: 0, eur: 0, chf: 0 },
-                    solana: { usd: 0, eur: 0, chf: 0 },
-                    'usd-coin': { usd: 0, eur: 0, chf: 0 },
-                    'wrapped-solana': { usd: 0, eur: 0, chf: 0 }
-                }
-            } )
+                this.coinGeckoData = new Map<string, PriceInterface>(
+                    [
+                        ["msol", { usd: 0, eur: 0, chf: 0 }],
+                        ["solana", { usd: 0, eur: 0, chf: 0 }],
+                        ["usdc", { usd: 0, eur: 0, chf: 0 }],
+                        ["wsol", { usd: 0, eur: 0, chf: 0 }]
+                    ]
+                )}
+            );
 
-        //console.log(this.coinGeckoData)
-        return CoinGeckoClient.coinGeckoData
+        return this.coinGeckoData
 
     }
 

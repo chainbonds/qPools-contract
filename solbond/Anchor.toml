@@ -4,10 +4,10 @@ wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
 
-solbond = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi"
+solbond = "FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng"
 
 [programs.devnet]
-solbond = "2Wjm2Wpu4JsV1zv8yHgTEtJxCmGCTieUiPtisHimVBHi"
+solbond = "FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng"
 
 
 [registry]

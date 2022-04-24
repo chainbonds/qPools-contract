@@ -53,7 +53,7 @@ export const getMarinadePriceUSD = async (tokenMint: PublicKey, coinGeckoClient 
     console.log("#getMarinadePrice()");
     let out: number;
     if (tokenMint.equals(getWrappedSolMint()) || tokenMint.equals(getMarinadeSolMint()) ) {
-        out = await coinGeckoClient.getPriceFromMint(tokenMint, "usd");
+        out = await coinGeckoClient.getPriceFromMint(tokenMint);
 
     } else {
         throw Error("This function is reserved for marinade finance. You don't seem to have put in either wrapped SOL, or mSOL, " + tokenMint.toString());

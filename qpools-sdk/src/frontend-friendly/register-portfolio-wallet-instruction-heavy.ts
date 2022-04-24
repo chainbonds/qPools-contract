@@ -529,9 +529,9 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             throw Error("For this currency, no solend reserve was found! " + String(positionAccount.currencyMint));
         }
 
+        console.log("USDC value is: ", usdcValueA);
+
         // read out the token balance of the collateral mint account ..
-
-
 
         // From the reserve create a solend action or so
 
@@ -558,6 +558,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
         let collateralMint = new PublicKey(solendReserve.config.collateralMintAddress);
         let [portfolioCollateralAta, portfolioCollateralAtaBump] = await getATAPda(this.owner.publicKey, new PublicKey(solendReserve.config.collateralMintAddress), this.solbondProgram);
+        // TODO: This thing does not seem to own any of this ...
         // Check if the portfolio has this account, and fetch any funds ...
         let collateralAmount: TokenAmount;
         if (await tokenAccountExists(this.connection, portfolioCollateralAta)) {
@@ -571,8 +572,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         if (!usdcValueLp && usdcValueLp !== 0) {
             throw Error("Collateral account not found! " + portfolioCollateralAta.toString());
         }
+        console.log("Collateral value is: ", usdcValueLp);
 
         let totalPositionValue = usdcValueA + usdcValueLp;
+        console.log("Total position value is: ", totalPositionValue);
         // throw Error("Done!");
 
         // Also update the positionInfo at some point ...
@@ -722,8 +725,11 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Again, convert by the pyth price ...
 
 
+        console.log("Parsing marinade shit ...");
         let usdcValueA = await this.coinGeckoClient.multiplyAmountByUSDPrice(wrappedSolAmount.uiAmount!, wrappedSolMint); //  * 93.23;
+        console.log("Usdc value A is: ", usdcValueA);
         let usdcValueLP = await this.coinGeckoClient.multiplyAmountByUSDPrice(mSOLAmount.uiAmount!, mSOLMint);
+        console.log("Usdc value LP is: ", usdcValueLP);
 
 
         //TODO : cna give error like below
@@ -756,7 +762,6 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             ataA: portfolioAtaWrappedSol,
             amountA: wrappedSolAmount,
             usdcValueA: usdcValueA,
-
 
             usdcValueB: 0.,
             mintLp: mSOLMint,

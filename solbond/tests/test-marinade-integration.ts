@@ -20,7 +20,7 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    const provider = Provider.local("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
+    const provider = Provider.local(process.env.NEXT_PUBLIC_CLUSTER_URL);
     //anchor.setProvider(provider);
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);

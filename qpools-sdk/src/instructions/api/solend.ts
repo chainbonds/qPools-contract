@@ -21,7 +21,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
+        connection = new Connection(process.env.NEXT_PUBLIC_CLUSTER_URL!);
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -82,7 +82,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
+        connection = new Connection(process.env.NEXT_PUBLIC_CLUSTER_URL!);
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.mainnet-beta.solana.com");

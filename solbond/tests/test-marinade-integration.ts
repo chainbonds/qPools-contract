@@ -1,6 +1,6 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {Keypair, PublicKey} from "@solana/web3.js";
-import {MOCK, NETWORK, PortfolioAccount} from "@qpools/sdk";
+import {MOCK, PortfolioAccount} from "@qpools/sdk";
 import { Marinade, MarinadeConfig } from '@marinade.finance/marinade-ts-sdk'
 import {MarinadeState} from  '@marinade.finance/marinade-ts-sdk'
 import {
@@ -10,7 +10,6 @@ import {
 import {
     getSolbondProgram,
 } from "@qpools/sdk";
-import {Portfolio} from "@qpools/sdk/lib/register-portfolio";
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda} from "@qpools/sdk/lib/types/account/pdas";
 import {getAccountForMintAndPDADontCreate} from "@qpools/sdk/lib/utils";
 import {PositionAccountMarinade} from "@qpools/sdk/lib/types/account/positionAccountMarinade";
@@ -21,7 +20,7 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    const provider = Provider.local("https://api.google.devnet.solana.com");
+    const provider = Provider.local("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
     //anchor.setProvider(provider);
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
@@ -38,7 +37,7 @@ describe('qPools!', () => {
     let USDC_CASH_pubkey: PublicKey;
     let USDC_TEST_pubkey: PublicKey;
     let wSOL: PublicKey;
-    let portfolio: Portfolio;
+    let portfolio;
     let marinade;
 
     // Do some airdrop before we start the tests ...

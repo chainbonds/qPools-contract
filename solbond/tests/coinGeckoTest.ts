@@ -1,12 +1,11 @@
 import {BN, Provider} from '@project-serum/anchor';
 import {PublicKey} from "@solana/web3.js";
 import {MOCK, Registry} from "@qpools/sdk";
-import {PythProvider} from "@qpools/sdk/lib/frontend-friendly/pyth-provider";
 import {CoinGeckoClient} from "@qpools/sdk/lib/oracle/coinGeckoClient";
 
 describe('Price oracle test', () => {
 
-    const provider = Provider.local("https://api.devnet.solana.com");
+    const provider = Provider.local("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
     //anchor.setProvider(provider);
     const connection = provider.connection;
     let registry = new Registry(connection);

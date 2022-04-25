@@ -19,7 +19,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://api.devnet.solana.com");
+        connection = new Connection("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -80,7 +80,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     let connection: Connection;
     let market: SolendMarket;
     if (getNetworkCluster() === Cluster.DEVNET) {
-        connection = new Connection("https://api.devnet.solana.com");
+        connection = new Connection("https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/");
         market = await SolendMarket.initialize(connection, "devnet");
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -152,10 +152,10 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
 
 }
 
-export const getSolendPrice = async (solendAction: SolendAction, tokenMint: PublicKey): Promise<number> => {
+export const getSolendPrice = async (solendReserve: SolendReserve): Promise<number> => {
     console.log("#getSolendPrice()");
     // solendAction.solendInfo.oracles.pythProgramID
-    let obligation: Obligation | null = solendAction.obligationAccountInfo;
+    // let obligation: Obligation | null = solendAction.obligationAccountInfo;
     console.log("##getSolendPrice()");
     return 0.
 }

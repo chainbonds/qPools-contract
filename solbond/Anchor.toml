@@ -1,5 +1,5 @@
 [provider]
-cluster = "https://api.devnet.solana.com"
+cluster = "https://withered-twilight-frost.solana-devnet.quiknode.pro/43ea73628381d3d62b1edd54c1d3b5eb18737fef/"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]

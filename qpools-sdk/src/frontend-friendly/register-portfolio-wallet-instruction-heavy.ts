@@ -30,10 +30,11 @@ import {Registry} from "./registry";
 import {CoinGeckoClient} from "../oracle/coinGeckoClient";
 import {getWrappedSolMint} from "../const";
 import type {PositionAccountSolend} from "../types/account/PositionAccountSolend";
-import {SolendReserve, syncNative} from "@solendprotocol/solend-sdk";
+import {SolendAction, SolendReserve, syncNative} from "@solendprotocol/solend-sdk";
 import {closeAccount} from "easy-spl/dist/tx/token-instructions";
 import * as instructions from "../instructions";
 import {PositionInfo, Protocol, ProtocolType} from "../types/interfacing/PositionInfo";
+import {getSolendPrice} from "../instructions/api/solend";
 
 
 export interface PositionsInput {
@@ -538,14 +539,15 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // let solendObligation = new SolendObligation();
         // instead of a constructor, they just use an initialize function keyword
 
-        // let solendAction: SolendAction = await SolendAction.initialize(
-        //     "mint",
-        //     new BN(0),
-        //     solendReserve.config.symbol,
-        //     this.portfolioPDA,
-        //     this.connection,
-        //     "devnet"
-        // );
+        let solendAction: SolendAction = await SolendAction.initialize(
+            "mint",
+            new BN(0),
+            solendReserve.config.symbol,
+            this.portfolioPDA,
+            this.connection,
+            "devnet"
+        );
+
         // console.log("solendAction for this reserve and portfolio is: ", solendAction);
 
         // let solendObligation: SolendObligation = new SolendObligation(
@@ -568,7 +570,10 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             console.log("Setting collateral to zero");
             collateralAmount = getTokenAmount(new BN(0), new BN(9));
         }
-        let usdcValueLp: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(collateralAmount.uiAmount!, portfolioCollateralAta);
+        console.log("Collateral Amount is: ", collateralAmount);
+        let usdcPricePerLpToken: number = await getSolendPrice(solendReserve);
+        // let usdcValueLp: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(collateralAmount.uiAmount!, new PublicKey(solendReserve.config.collateralMintAddress));
+        let usdcValueLp: number = usdcPricePerLpToken * collateralAmount.uiAmount!;
         if (!usdcValueLp && usdcValueLp !== 0) {
             throw Error("Collateral account not found! " + portfolioCollateralAta.toString());
         }

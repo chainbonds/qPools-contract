@@ -23,8 +23,9 @@ export class CoinGeckoClient {
     }
 
 
-    async getPriceFromMint(mint : PublicKey) {
+    async getPriceFromMint(mint: PublicKey) {
         let coinGeckoId  = this.registry.getCoinGeckoMapping().get(mint.toString());
+        console.log("Converting mint : ", mint.toString());
         if (coinGeckoId == undefined){
             console.log("Mint is not registered in the registry for coingecko", mint.toString())
             return 0;
@@ -49,8 +50,9 @@ export class CoinGeckoClient {
      * @param mint
      */
     async multiplyAmountByUSDPrice (x: number, mint: PublicKey) : Promise<number> {
-        let res = this.getPriceFromMint(mint).then(price => {
-            return price*x
+        let res = await this.getPriceFromMint(mint).then(price => {
+            console.log("Price is: ", price);
+            return price * x
         })
         return res;
     }

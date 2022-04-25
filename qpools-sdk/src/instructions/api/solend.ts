@@ -13,6 +13,8 @@ import {ExplicitToken} from "../../types/interfacing/ExplicitToken";
 import {ExplicitPool} from "../../types/interfacing/ExplicitPool";
 import {ExplicitSolendPool} from "../../types/interfacing/ExplicitSolendPool";
 import {Protocol, ProtocolType} from "../../types/interfacing/PositionInfo";
+import {CoinGeckoClient} from "../../oracle/coinGeckoClient";
+import {sol} from "easy-spl";
 
 
 export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
@@ -152,10 +154,28 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
 
 }
 
-export const getSolendPrice = async (solendReserve: SolendReserve): Promise<number> => {
+export const getSolendPrice = async (connection: Connection, userCTokenAmount: number, solendReserve: SolendReserve, coingeckoClient: CoinGeckoClient): Promise<number> => {
     console.log("#getSolendPrice()");
+    // Calculate the price of a token, given the reserve, and the coingecko registry
+
+    // How many LP tokens does the user have, out of the total supply?
+    let cTokenSupply: number = (await connection.getTokenSupply(new PublicKey(solendReserve.config.collateralMintAddress))).value.uiAmount!;
+    // I think the actual tokens were saved in the liquidityAddress?
+    let tokenSupply: number = (await connection.getTokenAccountBalance(new PublicKey(solendReserve.config.liquidityAddress))).value.uiAmount!;
+
+    // Now calculate the amount of SOL per cSOL (or whatever underlying asset you are using beneath...)
+    // Make sure floating point operations dont mess this up ...
+    let priceCTokenPerToken: number = cTokenSupply / tokenSupply;
+    let estimatedUserTokens: number = priceCTokenPerToken * userCTokenAmount;
+
+    let priceUsdcPerToken: number = await coingeckoClient.getPriceFromMint(new PublicKey(solendReserve.config.mintAddress));
+    let estimatedUsdcValue: number = priceUsdcPerToken * estimatedUserTokens;
+
+
+    // How many LP tokens
+
     // solendAction.solendInfo.oracles.pythProgramID
     // let obligation: Obligation | null = solendAction.obligationAccountInfo;
     console.log("##getSolendPrice()");
-    return 0.
+    return estimatedUsdcValue;
 }

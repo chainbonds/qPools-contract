@@ -571,10 +571,12 @@ export class PortfolioFrontendFriendlyChainedInstructions {
             collateralAmount = getTokenAmount(new BN(0), new BN(9));
         }
         console.log("Collateral Amount is: ", collateralAmount);
-        // let usdcPricePerLpToken: number = await getSolendPrice(solendReserve);
-        // let usdcPricePerLpToken: number = 0.;
-        let usdcValueLp: number | null = await this.coinGeckoClient.multiplyAmountByUSDPrice(collateralAmount.uiAmount!, new PublicKey(solendReserve.config.collateralMintAddress));
-        // let usdcValueLp: number = usdcPricePerLpToken * collateralAmount.uiAmount!;
+        let usdcValueLp: number = await getSolendPrice(
+            this.connection,
+            collateralAmount.uiAmount!,
+            solendReserve,
+            this.coinGeckoClient
+        );
         if (!usdcValueLp && usdcValueLp !== 0) {
             throw Error("Collateral account not found! " + portfolioCollateralAta.toString());
         }

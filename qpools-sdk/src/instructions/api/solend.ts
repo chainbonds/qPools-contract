@@ -165,12 +165,11 @@ export const getSolendPrice = async (connection: Connection, userCTokenAmount: n
 
     // Now calculate the amount of SOL per cSOL (or whatever underlying asset you are using beneath...)
     // Make sure floating point operations dont mess this up ...
-    let priceCTokenPerToken: number = cTokenSupply / tokenSupply;
+    let priceCTokenPerToken: number = tokenSupply / cTokenSupply;
     let estimatedUserTokens: number = priceCTokenPerToken * userCTokenAmount;
 
     let priceUsdcPerToken: number = await coingeckoClient.getPriceFromMint(new PublicKey(solendReserve.config.mintAddress));
     let estimatedUsdcValue: number = priceUsdcPerToken * estimatedUserTokens;
-
 
     // How many LP tokens
 

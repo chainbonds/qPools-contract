@@ -42,6 +42,8 @@ pub struct ApprovePositionWeightSaber<'info> {
     #[account(mut)]
     pub pool_mint: Account<'info, Mint>,
 
+    pub input_currency_mint: Account<'info, Mint>,
+
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -82,8 +84,7 @@ pub fn handler(
 
     position_account.pool_address = ctx.accounts.pool_mint.key().clone();
     position_account.portfolio_pda = ctx.accounts.portfolio_pda.key().clone();
-    
-
+    position_account.input_currency_mint = ctx.accounts.input_currency_mint.key().clone();
 
     Ok(())
 }

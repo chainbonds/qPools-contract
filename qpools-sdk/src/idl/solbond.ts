@@ -74,6 +74,11 @@ export type Solbond = {
           "isSigner": false
         },
         {
+          "name": "inputCurrencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -1314,6 +1319,10 @@ export type Solbond = {
           },
           {
             "name": "poolAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "inputCurrencyMint",
             "type": "publicKey"
           },
           {
@@ -1782,6 +1791,11 @@ export const IDL: Solbond = {
           "isSigner": false
         },
         {
+          "name": "inputCurrencyMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -3022,6 +3036,10 @@ export const IDL: Solbond = {
           },
           {
             "name": "poolAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "inputCurrencyMint",
             "type": "publicKey"
           },
           {

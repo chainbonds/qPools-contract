@@ -35,7 +35,13 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    const provider = Provider.local(process.env.NEXT_PUBLIC_CLUSTER_URL);
+    let connectionString: string = "https://api.devnet.solana.com";
+    // console.log("Connection is: ", process.env.NEXT_PUBLIC_CLUSTER_URL);
+    // if (!process.env.NEXT_PUBLIC_CLUSTER_URL) {
+    //     console.log(process.env.NEXT_PUBLIC_CLUSTER_URL);
+    //     throw Error("connection string not found ...!");
+    // }
+    const provider = Provider.local(connectionString);
     //anchor.setProvider(provider);
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
@@ -300,7 +306,7 @@ describe('qPools!', () => {
             connection,
             "devnet"
         )
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2, solendAction)
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2);
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });

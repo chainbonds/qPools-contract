@@ -1,22 +1,22 @@
 import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
-import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
+import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
 import * as anchor from "@project-serum/anchor";
 import {
     createAssociatedTokenAccountUnsignedInstruction,
-    getAccountForMintAndPDADontCreate, IWallet,
+    IWallet,
     tokenAccountExists
 } from "../../utils";
 import {getPoolState} from "../fetch/saber";
 import {findSwapAuthorityKey, StableSwapState} from "@saberhq/stableswap-sdk";
 import {stableSwapProgramId} from "../saber";
 import {MOCK} from "../../const";
-import {sol} from "easy-spl";
 import {Registry} from "../../frontend-friendly/registry";
 import {PositionAccountSaber} from "../../types/account/PositionAccountSaber";
 
 // TODO: For all withdraw actions, remove the poolAddress, and get this from the saved position, and then convert it back
+// TODO: Should input an input-currency logic
 export async function approvePositionWeightSaber(
     connection: Connection,
     solbondProgram: Program,
@@ -36,16 +36,25 @@ export async function approvePositionWeightSaber(
 
     console.assert(amountB.eq( new BN(0)));
 
+    let inputCurrency: PublicKey;
     // Double check if already fulfilled, and skip it if not ...
     if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {
         console.log("tokenA");
         // Don't do any swap
+        inputCurrency = state.tokenA.mint;
+        // TODO: Gotta remove this hardcoded item ...
+        // Otherwise we only support USDC items ....
     } else if (state.tokenB.mint.equals(MOCK.DEV.SABER_USDC)) {
         console.log("tokenB");
         amountB = amountA;
         amountA = new BN(0);
+        inputCurrency = state.tokenB.mint;
     } else {
         throw Error("KSLDJLKAJSD ERROR");
+    }
+    if (!inputCurrency) {
+        console.log(inputCurrency);
+        throw Error("input currency is empty!");
     }
 
     // Make sure to swap asomountA and amountB accordingly ...
@@ -64,6 +73,7 @@ export async function approvePositionWeightSaber(
                 owner: owner,
                 positionPda: positionPDA,
                 portfolioPda: portfolioPDA,
+                inputCurrencyMint: inputCurrency,
                 poolMint: state.poolTokenMint,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 systemProgram: web3.SystemProgram.programId,

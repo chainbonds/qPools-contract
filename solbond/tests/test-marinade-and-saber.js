@@ -1,98 +1,77 @@
-import {BN, Provider} from '@project-serum/anchor';
-import {Keypair, PublicKey} from "@solana/web3.js";
-import {Marinade, MarinadeConfig} from '@marinade.finance/marinade-ts-sdk'
-import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
-import {
-    getSolbondProgram,
-} from "@qpools/sdk";
-import {Cluster} from "@qpools/sdk/lib/network";
-
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const anchor_1 = require("@project-serum/anchor");
+const web3_js_1 = require("@solana/web3.js");
+const marinade_ts_sdk_1 = require("@marinade.finance/marinade-ts-sdk");
+const marinade_ts_sdk_2 = require("@marinade.finance/marinade-ts-sdk");
+const sdk_1 = require("@qpools/sdk");
+const network_1 = require("@qpools/sdk/lib/network");
 describe('qPools!', () => {
-
     // Configure the client to use the local cluster.
-    const provider = Provider.local(process.env.NEXT_PUBLIC_CLUSTER_URL);
+    const provider = anchor_1.Provider.local(process.env.NEXT_PUBLIC_CLUSTER_URL);
     //anchor.setProvider(provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
-
-    const payer = Keypair.generate();
+    const solbondProgram = (0, sdk_1.getSolbondProgram)(connection, provider, network_1.Cluster.DEVNET);
+    const payer = web3_js_1.Keypair.generate();
     // @ts-expect-error
-    const genericPayer = provider.wallet.payer as Keypair;
+    const genericPayer = provider.wallet.payer;
     // const genericPayer = payer;
-
-    let stableSwapProgramId: PublicKey;
-
-
-    let weights: Array<BN>;
-    let pool_addresses: Array<PublicKey>;
-    let USDC_USDT_pubkey: PublicKey;
-    let USDC_CASH_pubkey: PublicKey;
-    let USDC_TEST_pubkey: PublicKey;
-    let wSOL: PublicKey;
-    let portfolio: Portfolio;
+    let stableSwapProgramId;
+    let weights;
+    let pool_addresses;
+    let USDC_USDT_pubkey;
+    let USDC_CASH_pubkey;
+    let USDC_TEST_pubkey;
+    let wSOL;
+    let portfolio;
     let marinade;
-
-
     // Do some airdrop before we start the tests ...
-    before(async () => {
-
+    before(() => __awaiter(void 0, void 0, void 0, function* () {
         // await connection.requestAirdrop(genericPayer.publicKey, 1e9);
-
         console.log("swapprogramid");
-        stableSwapProgramId = new PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
-        USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
-        USDC_CASH_pubkey = new PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
-        USDC_TEST_pubkey = new PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
-        wSOL = new PublicKey("So11111111111111111111111111111111111111112");
-
-        weights = [new BN(500), new BN(500), new BN(500)];
+        stableSwapProgramId = new web3_js_1.PublicKey("SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ");
+        USDC_USDT_pubkey = new web3_js_1.PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");
+        USDC_CASH_pubkey = new web3_js_1.PublicKey("B94iYzzWe7Q3ksvRnt5yJm6G5YquerRFKpsUVUvasdmA");
+        USDC_TEST_pubkey = new web3_js_1.PublicKey("AqBGfWy3D9NpW8LuknrSSuv93tJUBiPWYxkBrettkG7x");
+        wSOL = new web3_js_1.PublicKey("So11111111111111111111111111111111111111112");
+        weights = [new anchor_1.BN(500), new anchor_1.BN(500), new anchor_1.BN(500)];
         pool_addresses = [USDC_USDT_pubkey, USDC_CASH_pubkey, USDC_TEST_pubkey];
-
         portfolio = new Portfolio(connection, provider, solbondProgram, genericPayer);
-
-        const marinadeConfig = new MarinadeConfig({
+        const marinadeConfig = new marinade_ts_sdk_1.MarinadeConfig({
             connection: connection,
             publicKey: provider.wallet.publicKey,
-
         });
-        marinade = new Marinade(marinadeConfig);
-
-    })
-
-    it("Create all the Associated Token Accounts", async () => {
-        await portfolio.createAssociatedTokenAccounts(
-            pool_addresses,
-            genericPayer,
-            provider.wallet,
-            marinade
-        )
-    })
-
-    it("create a marinade position and deposit", async () => {
-        const marinadeState = await MarinadeState.fetch(marinade);
+        marinade = new marinade_ts_sdk_1.Marinade(marinadeConfig);
+    }));
+    it("Create all the Associated Token Accounts", () => __awaiter(void 0, void 0, void 0, function* () {
+        yield portfolio.createAssociatedTokenAccounts(pool_addresses, genericPayer, provider.wallet, marinade);
+    }));
+    it("create a marinade position and deposit", () => __awaiter(void 0, void 0, void 0, function* () {
+        const marinadeState = yield marinade_ts_sdk_2.MarinadeState.fetch(marinade);
         //const weights = [new BN(500), new BN(500), new BN(500)];
-        const amount = new BN(2e9);
+        const amount = new anchor_1.BN(2e9);
         // create a portfolio with 1 base currency (sol)
         try {
-            const init_sig = await portfolio.createPortfolioSigned(
-                weights,
-                genericPayer,
-                new BN(2),
-                pool_addresses
-            )
-        } catch (e) {
+            const init_sig = yield portfolio.createPortfolioSigned(weights, genericPayer, new anchor_1.BN(2), pool_addresses);
         }
-
+        catch (e) {
+        }
         try {
-
-            const cur_sig = await portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL);
-
-        } catch (err) {
+            const cur_sig = yield portfolio.registerCurrencyInputInPortfolio(genericPayer, amount, wSOL);
         }
-
-        let sigs_rest = await portfolio.transfer_to_user(provider.wallet, wSOL);
-    })
-
+        catch (err) {
+        }
+        let sigs_rest = yield portfolio.transfer_to_user(provider.wallet, wSOL);
+    }));
     /*
     it('create a new portfolio', async() => {
         let total_amount_USDC = new u64(340000);
@@ -209,7 +188,6 @@ describe('qPools!', () => {
     })
 
     */
-
     /*
 
 
@@ -279,4 +257,4 @@ describe('qPools!', () => {
 
     })
     */
-})
+});

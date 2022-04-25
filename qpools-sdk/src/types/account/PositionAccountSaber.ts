@@ -6,6 +6,7 @@ export interface PositionAccountSaber {
     portfolioPda: PublicKey,
     // Pool Address is the Pool's Mint
     poolAddress: PublicKey,
+    inputCurrencyMint: PublicKey,
     isFulfilled: boolean,
     isRedeemed: boolean,
     redeemApproved: boolean,

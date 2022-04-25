@@ -308,7 +308,7 @@ describe('qPools!', () => {
             connection,
             "devnet"
         )
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2, solendAction)
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2)
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });

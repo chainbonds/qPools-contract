@@ -17,7 +17,7 @@ import {SolendMarket, SolendAction, syncNative} from "@solendprotocol/solend-sdk
 import {getAssociatedTokenAddress} from "easy-spl/dist/tx/associated-token-account";
 import {
     Cluster, CoinGeckoClient,
-    CrankRpcCalls,
+    CrankRpcCalls, getAssociatedTokenAddressOffCurve,
     getSolbondProgram, MOCK,
     PortfolioFrontendFriendlyChainedInstructions,
     Registry
@@ -179,7 +179,7 @@ describe('qPools!', () => {
         }
 
         // If it exists, skip this.
-        const associatedTokenAccountWrappedSol = await getAssociatedTokenAddressOff(
+        const associatedTokenAccountWrappedSol = await getAssociatedTokenAddressOffCurve(
             wrappedSolMint,
             genericPayer.publicKey
         );
@@ -313,7 +313,7 @@ describe('qPools!', () => {
             connection,
             "devnet"
         )
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2, solendAction)
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2)
         //console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
     });

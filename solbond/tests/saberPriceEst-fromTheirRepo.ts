@@ -14,6 +14,7 @@ import {
     calculateEstimatedWithdrawOneAmount,
     calculateVirtualPrice,
 } from "@saberhq/stableswap-sdk";
+import {expect} from "chai";
 
 const exchange = {
     swapAccount: new PublicKey("YAkoNb6HKmSxQN9L8hiBE5tPJRsniSSMzND1boHmZxe"),

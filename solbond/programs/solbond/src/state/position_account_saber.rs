@@ -7,6 +7,7 @@ pub struct PositionAccountSaber {
    
     pub portfolio_pda: Pubkey,
     pub pool_address: Pubkey,
+    pub input_currency_mint: Pubkey,
     
 
     // is position already fulfilled or no?
@@ -38,7 +39,7 @@ pub struct PositionAccountSaber {
 
 impl PositionAccountSaber {
     pub const LEN: usize =
-            std::mem::size_of::<Pubkey>() * 2 // portfolio_pda, pool_address
+            std::mem::size_of::<Pubkey>() * 3 // portfolio_pda, pool_address
             + std::mem::size_of::<bool>()*3      // is_fulfilled
             + std::mem::size_of::<u32>()      // index
             + std::mem::size_of::<u64>() * 6   // weight, a_amount, b_amount, min_mint_amount

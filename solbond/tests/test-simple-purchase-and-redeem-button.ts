@@ -35,12 +35,13 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    let connectionString: string = "https://api.devnet.solana.com";
-    // console.log("Connection is: ", process.env.NEXT_PUBLIC_CLUSTER_URL);
-    // if (!process.env.NEXT_PUBLIC_CLUSTER_URL) {
-    //     console.log(process.env.NEXT_PUBLIC_CLUSTER_URL);
-    //     throw Error("connection string not found ...!");
-    // }
+    let connectionString: string = process.env.NEXT_PUBLIC_URL;
+    console.log("Connection is: ", process.env.NEXT_PUBLIC_CLUSTER_URL);
+    if (!process.env.NEXT_PUBLIC_CLUSTER_URL) {
+        console.log(process.env.NEXT_PUBLIC_CLUSTER_URL);
+        throw Error("connection string not found ...!");
+    }
+    console.log("Connection string is: ", connectionString);
     const provider = Provider.local(connectionString);
     //anchor.setProvider(provider);
     const connection = provider.connection;

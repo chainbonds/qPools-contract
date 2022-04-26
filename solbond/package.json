@@ -8,7 +8,8 @@
         "test:integrate-coingecko": "ANCHOR_WALLET=~/.config/solana/id.json /home/ahmet/.nvm/versions/node/v16.14.0/bin/node /home/ahmet/.nvm/versions/node/v16.14.0/bin/mocha -t 1000000 --require ts-node/register tests/coinGeckoTest.ts",
 
         "test:integrate-chained": "eval $(cat .env) anchor build && cp target/types/solbond.ts ../qpools-sdk/src/idl/ &&  NEXT_PUBLIC_CLUSTER_NAME=devnet anchor test --skip-build  tests/test-simple-purchase-and-redeem-button.ts",
-        "test:integrate-chained-skip-deploy": "eval $(cat .env) anchor test --skip-build --skip-deploy tests/test-simple-purchase-and-redeem-button.ts",
+        "test:integrate-chained-skip-deploy": "anchor test --skip-build --skip-deploy tests/test-simple-purchase-and-redeem-button.ts",
+        "test:integrate-chained-skip-deploy-dumb": "PROGRAM_ID=FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng NEXT_PUBLIC_CLUSTER_NAME=devnet NEXT_PUBLIC_CLUSTER_URL=https://wild-fragrant-tree.solana-devnet.quiknode.pro/747e62d6554b83e3f8f2e3c365509e982cce81c2/ RPC_URL=https://wild-fragrant-tree.solana-devnet.quiknode.pro/747e62d6554b83e3f8f2e3c365509e982cce81c2/ ANCHOR_WALLET=~/.config/solana/id.json anchor test --skip-build --skip-deploy tests/test-simple-purchase-and-redeem-button.ts",
 
         "test:integrate-saber": "ANCHOR_WALLET=~/.config/solana/id.json anchor test tests/test-saber-integration.ts"
     },

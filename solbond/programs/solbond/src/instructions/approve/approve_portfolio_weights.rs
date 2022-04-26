@@ -46,7 +46,7 @@ pub fn handler(
     portfolio_account.bump = *ctx.bumps.get("portfolio_pda").unwrap();
     portfolio_account.fully_created = false;
     portfolio_account.to_be_redeemed = false;
-
+    portfolio_account.bump = 0 as u8;
     portfolio_account.sum_of_weights = _sum_of_weights;
     portfolio_account.num_positions = _num_positions;
     portfolio_account.num_redeemed = 0 as u32;

@@ -29,7 +29,6 @@ export async function approvePositionWeightSolend(
     // TODO: Gotta define how much to pay in, depending on if mintA == USDC, or mintB == USDC
     let approveWeightInstruction: TransactionInstruction = await solbondProgram.instruction.approvePositionWeightSolend(
         portfolioBump,
-        bumpPosition,
         bumpCurrency,
         new BN(weight),
         new BN(inputAmount),
@@ -87,6 +86,7 @@ export async function signApproveWithdrawAmountSolend(
     let ix = await solbondProgram.instruction.approveWithdrawSolend(
         portfolioBump,
         new BN(bumpPosition),
+        // very nicely hardcoded solid!
         new BN(1),
         new BN(index),
         {
@@ -146,8 +146,6 @@ export async function permissionlessFulfillSolend(
     console.log("program id ", solendAction.solendInfo.programID.toString())    
 
     let ix = await solbondProgram.instruction.createPositionSolend(
-        new BN(bumpAtaLiq),
-        new BN(bumpAtaCol),
         new BN(index),
         {
             accounts: {

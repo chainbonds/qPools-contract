@@ -35,8 +35,9 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    const provider = Provider.local("https://api.google.devnet.solana.com");
+    const provider = Provider.local("https://api.devnet.solana.com");
     //anchor.setProvider(provider);
+    console.log("provider jsadkjjsdfjk ", provider);
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
 
@@ -159,11 +160,11 @@ describe('qPools!', () => {
         console.log("Airdropping some wrapped SOL");
 
         // create a wrapped SOL account
-        if ((await connection.getBalance(genericPayer.publicKey)) <= 3e9) {
-            let tx1 = await connection.requestAirdrop(genericPayer.publicKey, 3e9);
-            await connection.confirmTransaction(tx1, 'finalized');
-            console.log("Airdropped 1!");
-        }
+        // if ((await connection.getBalance(genericPayer.publicKey)) <= 3e9) {
+        //     let tx1 = await connection.requestAirdrop(genericPayer.publicKey, 1e9);
+        //     await connection.confirmTransaction(tx1, 'finalized');
+        //     console.log("Airdropped 1!");
+        // }
 
         // If it exists, skip this.
         const associatedTokenAccountWrappedSol = await getAssociatedTokenAddress(
@@ -207,23 +208,23 @@ describe('qPools!', () => {
         let IxCreatePortfolioPda = await portfolioObject.createPortfolioSigned(
             weights,
             poolAddresses,
-            new BN(2)
+            2
         );
         tx.add(IxCreatePortfolioPda);
 
         console.log("Transfer Asset to Portfolio");
         console.log("registerCurrencyInputInPortfolio");
-        let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
-            AmountUsdc,
-            USDC_mint
-        );
-        tx.add(IxRegisterCurrencyUsdcInput);
+        //let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
+        //    AmountUsdc,
+        //    USDC_mint
+        //);
+        //tx.add(IxRegisterCurrencyUsdcInput);
 
         console.log("registerCurrencyInputInPortfolio");
-        let IxRegisterCurrencywSOLInput = await portfolioObject.registerCurrencyInputInPortfolio(
-            new BN(1).mul(new BN(10**9)), solSolendMint
-        );
-        tx.add(IxRegisterCurrencywSOLInput);
+        //let IxRegisterCurrencywSOLInput = await portfolioObject.registerCurrencyInputInPortfolio(
+        //    new BN(1).mul(new BN(10**9)), solSolendMint
+        //);
+        //tx.add(IxRegisterCurrencywSOLInput);
         // let IxRegisterCurrencyMSolInput = await qPoolContext.portfolioObject!.registerCurrencyInputInPortfolio(
         //     AmountSol, wrappedSolMint
         // );
@@ -238,39 +239,39 @@ describe('qPools!', () => {
         // TODO: Copy the case-distinction from below. Then you can continue
         // TODO: figure out tokenA and tokenB ==> Currently hard-coded...
         console.log("approvePositionWeightSaber");
-        let IxApproveiPositionWeightSaber = await portfolioObject.approvePositionWeightSaber(
-            poolAddresses[0],
-            AmountUsdc,
-            new BN(0),  // Will be flipped in the backend ..
-            new BN(0),
-            0,  // Hardcoded
-            weights[0]
-        )
-        tx.add(IxApproveiPositionWeightSaber);
+        // let IxApproveiPositionWeightSaber = await portfolioObject.approvePositionWeightSaber(
+        //     poolAddresses[0],
+        //     AmountUsdc,
+        //     new BN(0),  // Will be flipped in the backend ..
+        //     new BN(0),
+        //     0,  // Hardcoded
+        //     weights[0]
+        // )
+        // tx.add(IxApproveiPositionWeightSaber);
 
         console.log("Approve Position Marinade");
         console.log("approvePositionWeightMarinade");
-        let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
-            new BN(1).mul(new BN(10**6)),
-            1, // Hardcoded
-            weights[1]
-        );
-        tx.add(IxApprovePositionWeightMarinade);
+        // let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
+        //     new BN(1).mul(new BN(10**6)),
+        //     1, // Hardcoded
+        //     weights[1]
+        // );
+        // tx.add(IxApprovePositionWeightMarinade);
 
         console.log("Approve Position Solend");
-        let IxApprovePositionWeightSolend = await portfolioObject.approvePositionWeightSolend(
-            solSolendMint,
-            new BN(1).mul(new BN(10**5)),
-            2, // Hardcoded
-            weights[2]
-        );
-        tx.add(IxApprovePositionWeightSolend);
+        // let IxApprovePositionWeightSolend = await portfolioObject.approvePositionWeightSolend(
+        //     solSolendMint,
+        //     new BN(1).mul(new BN(10**5)),
+        //     2, // Hardcoded
+        //     weights[2]
+        // );
+        // tx.add(IxApprovePositionWeightSolend);
 
         console.log("Sending USDC");
-        let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
-        let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
-        tx.add(IxSendUsdcToPortfolio);
-        tx.add(IxSendSolendSoltoPortfolio);
+        //let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
+        //let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
+        //tx.add(IxSendUsdcToPortfolio);
+        //tx.add(IxSendSolendSoltoPortfolio);
 
         // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
         console.log("Sending and signing the transaction");
@@ -285,7 +286,7 @@ describe('qPools!', () => {
 
     });
 
-    it("run the cranks to fulfill the Saber, Marinade and solend Positions ...", async () => {
+    /*it("run the cranks to fulfill the Saber, Marinade and solend Positions ...", async () => {
         // These are not instruction-chained, because the crankRPC is done through a keypair ...
         // Perhaps it could be useful to make it chained tho, just for the sake of atomicity
         let sgPermissionlessFullfillSaber = await crankRpcTool.permissionlessFulfillSaber(0);
@@ -300,15 +301,15 @@ describe('qPools!', () => {
             connection,
             "devnet"
         )
-        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2, solendAction)
+        let sgPermissionlessFullfillSolend = await crankRpcTool.createPositionSolend(2)
         console.log("Fulfilled sg Solend is: ", sgPermissionlessFullfillSolend);
 
-    });
+    });*/
 
     /**
      * Now also redeem the positions ...
      */
-    it("start to withdraw the position again: ", async() => {
+    /*it("start to withdraw the position again: ", async() => {
         let tx: Transaction = new Transaction();
         console.log("Approving Withdraw Portfolio");
         let IxApproveWithdrawPortfolio = await portfolioObject.approveWithdrawPortfolio();
@@ -337,9 +338,9 @@ describe('qPools!', () => {
                 tx
             );
         }
-    })
+    })*/
 
-    it("run the cranks to send the assets back to the user", async () => {
+    /*it("run the cranks to send the assets back to the user", async () => {
         // Run the saber redeem cranks ..
         let sgRedeemSinglePositionOnlyOne = await crankRpcTool.redeem_single_position_only_one(0);
         console.log("Signature to run the crank to get back USDC is: ", sgRedeemSinglePositionOnlyOne);
@@ -364,6 +365,6 @@ describe('qPools!', () => {
         // console.log("Signature to send back Marinade SOL", sgTransferMarinadeSolToUser);
 
         // In reality, you would also swap back the mSOL to SOL ...
-    });
+    });*/
 
 })

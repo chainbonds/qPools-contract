@@ -10,9 +10,9 @@ export const getSolbondProgram = (connection: Connection, provider: Provider, ne
     let programAddress;
 
     if (network == Cluster.DEVNET) {
-        programAddress = "FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng";
+        programAddress = "ELkkgofct1n4bpFASAe9C27nWQEKkd7HYwoFq5hXT9XW";
     } else if (network == Cluster.MAINNET) {
-        programAddress = "FAFYPjvceW8PsAgbaxT84CizUM6zV7hosbhgiCm2fkng";
+        programAddress = "ELkkgofct1n4bpFASAe9C27nWQEKkd7HYwoFq5hXT9XW";
 
     } else {
         throw Error("Solana Cluster not specified!" + String(network));

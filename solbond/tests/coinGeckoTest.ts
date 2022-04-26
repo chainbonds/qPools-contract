@@ -6,7 +6,8 @@ import {CoinGeckoClient} from "@qpools/sdk/lib/oracle/coinGeckoClient";
 
 describe('Price oracle test', () => {
 
-    const provider = Provider.local("https://api.devnet.solana.com");
+    const provider = Provider.local("https://api.devnet.solana.com
+");
     //anchor.setProvider(provider);
     const connection = provider.connection;
     let registry = new Registry(connection);

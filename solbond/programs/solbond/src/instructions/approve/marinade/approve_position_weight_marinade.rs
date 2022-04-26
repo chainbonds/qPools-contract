@@ -22,7 +22,7 @@ pub struct ApprovePositionWeightMarinade<'info> {
     #[account(
         init,
         payer = owner,
-        space =8 + PositionAccountMarinade::LEN,
+        space = 8 + PositionAccountMarinade::LEN,
         seeds = [
             owner.key().as_ref(),
             &_index.to_le_bytes(),

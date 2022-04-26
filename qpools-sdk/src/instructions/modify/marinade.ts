@@ -23,7 +23,6 @@ export async function approvePositionWeightMarinade(
 
     let ix: TransactionInstruction = await solbondProgram.instruction.approvePositionWeightMarinade(
         portfolioBump,
-        bumpPosition,
         new BN(bumpMarinade),
         new BN(weight),
         new BN(init_sol_amount),
@@ -69,7 +68,6 @@ export async function createPositionMarinade(
     console.log("msolMInt ", marinadeState.mSolMintAddress.toString())
     let ix: TransactionInstruction = await solbondProgram.instruction.createPositionMarinade(
         new BN(bumpMarinade),
-        new BN(bumpMsolAta),
         new BN(index),
         {
             accounts: {

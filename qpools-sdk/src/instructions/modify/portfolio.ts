@@ -12,14 +12,14 @@ export async function createPortfolioSigned(
     owner: PublicKey,
     weights: BN[],
     poolAddresses: PublicKey[],
-    numCurrencies: BN,
+    numCurrencies: number,
 ): Promise<TransactionInstruction> {
     console.log("#createPortfolioSigned()");
     console.log("owner thing ", owner.toString())
     console.assert(weights.length === poolAddresses.length);
     if (weights.length != poolAddresses.length) {
         throw Error("Does not match in length!");
-    }
+    } 
     let sumOfWeights: BN = weights.reduce((sum, current) => sum.add(current), new BN(0));
     console.assert(owner);
     console.assert(solbondProgram);
@@ -27,7 +27,6 @@ export async function createPortfolioSigned(
     const numPositions = weights.length;
     console.log("Creating Portfolio", portfolioPda.toString());
     let create_transaction_instructions: TransactionInstruction = solbondProgram.instruction.createPortfolio(
-        portfolioBump,
         sumOfWeights,
         numPositions,
         numCurrencies,
@@ -59,7 +58,6 @@ export async function registerCurrencyInputInPortfolio(
         currencyMint
     );
     let ix: TransactionInstruction = solbondProgram.instruction.approveInitialCurrencyAmount(
-        new BN(bumpCurrency),
         new BN(amount),
         {
             accounts: {

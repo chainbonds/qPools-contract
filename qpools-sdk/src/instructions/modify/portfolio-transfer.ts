@@ -46,7 +46,6 @@ export async function transferUsdcFromUserToPortfolio(
     let ix = await solbondProgram.instruction.transferToPortfolio(
         new BN(portfolioBump),
         new BN(bumpCurrency),
-        new BN(bumpATA),
         {
             accounts: {
                 owner: owner,

@@ -6,6 +6,7 @@ export interface PositionAccountSolend {
     portfolioPda: PublicKey,
     // Pool Address is the Pool's Mint
     currencyMint: PublicKey,
+    poolAddress: PublicKey,
     isFulfilled: boolean,
     isRedeemed: boolean,
     redeemApproved: boolean,

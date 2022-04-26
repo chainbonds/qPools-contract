@@ -53,7 +53,6 @@ export async function approvePositionWeightSaber(
     // TODO: Gotta define how much to pay in, depending on if mintA == USDC, or mintB == USDC
     let approveWeightInstruction: TransactionInstruction = await solbondProgram.instruction.approvePositionWeightSaber(
         portfolioBump,
-        bumpPosition,
         new BN(weight),
         new BN(amountA),
         new BN(amountB),
@@ -174,9 +173,6 @@ export async function permissionlessFulfillSaber(
     let [ataLP, bumpATAlp] = await getATAPda(owner, state.poolTokenMint, solbondProgram)
 
     let ix = await solbondProgram.instruction.createPositionSaber(
-        new BN(bumpATAa),
-        new BN(bumpATAb),
-        new BN(bumpATAlp),
         new BN(index),
         {
             accounts: {
@@ -295,8 +291,6 @@ export async function redeemSinglePositionOnlyOne(
     console.log("🦒 mint LP", state.poolTokenMint.toString());
 
     let ix = await solbondProgram.instruction.redeemPositionOneSaber(
-        new BN(bumpATAa),
-        new BN(bumpATAlp),
         new BN(index),
         {
             accounts: {

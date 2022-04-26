@@ -290,7 +290,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     async createPortfolioSigned(
         weights: BN[],
         pool_addresses: PublicKey[],
-        numCurrencies: BN,
+        numCurrencies: number,
     ): Promise<TransactionInstruction> {
         let ix = await instructions.modify.portfolio.createPortfolioSigned(
             this.connection,

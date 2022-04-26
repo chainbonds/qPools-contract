@@ -14,6 +14,7 @@ anochr test
 solana config get
 solana config set --url http://127.0.0.1:8889
 solana config set --url https://api.devnet.solana.com
+
 ```
 
 (3) Now you can deploy the program. 

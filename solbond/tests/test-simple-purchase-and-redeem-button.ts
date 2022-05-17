@@ -41,10 +41,10 @@ describe('qPools!', () => {
     anchor.setProvider(provider);    //const provider = Provider.local("http://localhost:8899");
     //const provider = Provider.local();
     //anchor.setProvider(provider);
-    console.log("provider jsadkjjsdfjk ", provider);
+    //console.log("provider jsadkjjsdfjk ", provider);
     const connection = provider.connection;
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.LOCALNET);
-    console.log("got the solbond program ", solbondProgram);
+    //console.log("got the solbond program ", solbondProgram);
     const genericPayer = provider.wallet.publicKey;
 
     let weights: BN[];
@@ -102,9 +102,9 @@ describe('qPools!', () => {
         
         weights = [new BN(500), new BN(500), new BN(500)];
 
-        USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
+        USDC_mint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
         // USDC_USDT_pubkey = new PublicKey("VeNkoB1HvSP6bSeGybQDnx9wTWFsQb2NBCemeCDSuKL");  // This is the pool address, not the LP token ...
-        USDC_USDT_pubkey = new PublicKey("YakofBo4X3zMxa823THQJwZ8QeoU8pxPdFdxJs7JW57");
+        USDC_USDT_pubkey = new PublicKey("2poo1w1DL6yd2WNTCnNTzDqkC6MBXq7axo77P16yrBuf");
         mSOLLpToken = new PublicKey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");  // Assume the LP token to be the denominator for what underlying asset we target ...
 
         // Todo, wrap some SOL and send this to the account ...
@@ -135,12 +135,12 @@ describe('qPools!', () => {
 
         const solReserve = solendmarket.reserves.find(res => res.config.symbol === tokenSymbolSolend);
         solSolendMint = new PublicKey(solReserve.config.mintAddress);
-        console.log("Solend Sol Mint Address is: ", solSolendMint.toString());
+        //console.log("Solend Sol Mint Address is: ", solSolendMint.toString());
         // We need the mSOL, because in the end, this is what we will be sendin back to the user ...
         // We will probably need to apply a hack, where we replace the mSOL with SOL, bcs devnet.
         // Probably easiest to do so is by swapping on the frontend, once we are mainnet ready
         mSOL = portfolioObject.marinadeState.mSolMintAddress;
-        console.log("mSOL mint is: ", mSOL.toString());
+        //console.log("mSOL mint is: ", mSOL.toString());
         poolAddresses = [USDC_USDT_pubkey, mSOLLpToken, solSolendMint];
 
         // If poolAddresses or weights are empty, don't proceed!

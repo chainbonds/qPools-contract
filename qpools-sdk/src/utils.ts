@@ -4,6 +4,8 @@ import {PublicKey, Keypair, Transaction, Connection, TransactionInstruction, Tok
 import {account, util, WalletI} from "easy-spl";
 import {Wallet} from "@project-serum/anchor/src/provider";
 import {Buffer} from "buffer";
+//@ts-ignore
+import * as anchor from "@project-serum/anchor";
 const spl = require("@solana/spl-token");
 
 const DEFAULT_DECIMALS = 6;
@@ -72,24 +74,24 @@ export class QWallet implements Wallet {
     }
 }
 
-export async function sendAndSignTransaction(provider: Provider, tx: Transaction) {
-    let sg = await provider.send(tx);
-    await provider.connection.confirmTransaction(sg, "confirmed");
+export async function sendAndSignTransaction(provider: anchor.AnchorProvider, tx: Transaction) {
+    let sg = await provider.sendAndConfirm(tx);
+    //await provider.connection.confirmTransaction(sg, "confirmed");
     console.log("Transaction Signature is: ", sg);
     return sg;
 }
 
-export async function sendAndSignInstruction(provider: Provider, ix: TransactionInstruction) {
+export async function sendAndSignInstruction(provider: anchor.AnchorProvider, ix: TransactionInstruction) {
     let tx = new Transaction();
     tx.add(ix);
-    let sg = await provider.send(tx);
-    await provider.connection.confirmTransaction(sg, "confirmed");
+    let sg = await provider.sendAndConfirm(tx);
+    //await provider.connection.confirmTransaction(sg, "confirmed");
     console.log("Transaction Signature is: ", sg);
     return sg;
 }
 
 export const sendAndConfirmTransaction = async (
-    programProvider: Provider,
+    programProvider: anchor.AnchorProvider,
     connection: Connection,
     tx: Transaction,
     // feePayer: PublicKey
@@ -105,9 +107,9 @@ export const sendAndConfirmTransaction = async (
     //console.log("About to send the following transactions: ", tx);
     //console.log("Program provider is: ", programProvider, typeof programProvider);
     console.log("Sending wallet is: ",  programProvider.wallet.publicKey.toString());
-    let sg = await programProvider.send(tx);
+    let sg = await programProvider.sendAndConfirm(tx);
     console.log("sg1 is: ", sg);
-    await connection.confirmTransaction(sg, 'confirmed');
+    //await connection.confirmTransaction(sg, 'confirmed');
 }
 
 /**
@@ -163,7 +165,7 @@ export async function createMint2(provider: any) {
     return mint;
 }
 export async function createMint(
-    provider: Provider,
+    provider: anchor.AnchorProvider,
     payer: Keypair,
     authority?: web3.PublicKey,
     decimals = DEFAULT_DECIMALS,

@@ -28,7 +28,7 @@ export async function getTotalInputAmount(
     }];
     let response = await solbondProgram.account.userCurrencyAccount.all(ownerBytes);
     response.map((x) => {
-        allUserCurrencyAccounts.set(x.publicKey, x.account as UserCurrencyAccount);
+        allUserCurrencyAccounts.set(x.publicKey, x.account as unknown as UserCurrencyAccount);
         // return x.account as UserCurrencyAccount
     });
     // response

@@ -46,11 +46,11 @@ export async function fetchPortfolio(
 ): Promise<PortfolioAccount | null> {
     console.log("#fetchPortfolio()");
     let [portfolioPda, _] = await getPortfolioPda(owner, solbondProgram);
-    let portfolioContent = null;
+    let portfolioContent:PortfolioAccount | null = null;
     console.log("Before trying to fetch");
     if (await accountExists(connection, portfolioPda)) {
         console.log("Exists and trying to fetch", portfolioPda.toString());
-        portfolioContent = (await solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as PortfolioAccount;
+        portfolioContent = (await solbondProgram.account.portfolioAccount.fetch(portfolioPda)) as unknown as PortfolioAccount;
     }
     console.log("Now fetching again ...", portfolioContent);
     console.log("##fetchPortfolio()");

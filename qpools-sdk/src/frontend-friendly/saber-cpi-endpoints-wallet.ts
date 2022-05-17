@@ -4,7 +4,8 @@ import {Token} from "@solana/spl-token";
 import {StableSwapState} from "@saberhq/stableswap-sdk";
 import {createAssociatedTokenAccountUnsigned, getAssociatedTokenAddressOffCurve, IWallet} from "../utils";
 import {sendAndConfirm} from "easy-spl/dist/util";
-
+//@ts-ignore
+import * as anchor from "@project-serum/anchor";
 /*
     doing a deposit:
         a function which registers the portfolio with the weights
@@ -15,7 +16,7 @@ export class SaberInteractToolFrontendFriendly {
 
     public connection: Connection;
     public solbondProgram: Program;
-    public provider: Provider;
+    public provider: anchor.AnchorProvider;
     public providerWallet: IWallet;
     public wallet: Keypair;
 
@@ -29,7 +30,7 @@ export class SaberInteractToolFrontendFriendly {
 
     constructor(
         connection: Connection,
-        provider: Provider,
+        provider: anchor.AnchorProvider,
         solbondProgram: Program,
     ) {
         this.connection = connection;

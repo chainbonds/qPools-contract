@@ -2,6 +2,7 @@ import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solan
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
+// @ts-ignore
 import * as anchor from "@project-serum/anchor";
 import {
     createAssociatedTokenAccountUnsignedInstruction,
@@ -91,7 +92,7 @@ export async function signApproveWithdrawAmountSaber(
     let tx: Transaction = new Transaction();
 
     console.log("aaa 26");
-    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as unknown as PositionAccountSaber;
     console.log("aaa 27");
 
     // FOr some address, this is not needed ...
@@ -149,7 +150,7 @@ export async function permissionlessFulfillSaber(
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("aaa 20");
-    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as unknown as PositionAccountSaber;
     console.log("aaa 21");
     // FOr some address, this is not needed ...
     let poolAddress: PublicKey | null = await registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
@@ -218,7 +219,7 @@ export async function redeemSinglePositionOnlyOne(
     console.log("positionPDA ", positionPDA.toString());
 
     console.log("aaa 24");
-    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as unknown as PositionAccountSaber;
     console.log("aaa 25");
 
     // FOr some address, this is not needed ...
@@ -330,7 +331,7 @@ export async function redeem_single_position(
     console.log("positionPDA ", positionPDA.toString())
     // TODO : replace this, by fetching the poolAddress from the position ...
     console.log("aaa 22");
-    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+    let positionAccount: PositionAccountSaber = (await solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as unknown as PositionAccountSaber;
     console.log("aaa 23");
 
     // FOr some address, this is not needed ...
@@ -419,7 +420,7 @@ export async function registerLiquidityPoolAssociatedTokenAccountsForPortfolio(
     let [userAccountPoolToken, userAccountPoolTokenBump] = await getATAPda(owner, state.poolTokenMint, solbondProgram);
     console.log("Checkpoint (2.2)");
 
-    let txs = [];
+    let txs: TransactionInstruction[] = [];
     // Check for each account if it exists, and if it doesn't exist, create it
     if (!(await tokenAccountExists(connection, userAccountA)) && !createdAtaAccounts.has(userAccountA.toString())) {
         console.log("Chaining userAccountA");

@@ -2,6 +2,7 @@ import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solan
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {getMarinadeSolPda, getPortfolioPda, getPositionPda, getATAPda} from "../../types/account/pdas";
+// @ts-ignore
 import * as anchor from "@project-serum/anchor";
 import {MarinadeState} from '@marinade.finance/marinade-ts-sdk'
 import {getAccountForMintAndPDADontCreate} from "../../utils";

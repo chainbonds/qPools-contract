@@ -14,4 +14,6 @@ solbond/Anchor.toml
 ../qpools-sdk/lib/
 ../qpools-sdk/node_modules/
 ../qpools-sdk/package-lock.json
+tests/mainnet-accounts/test-ledger/
+
 package-lock.json

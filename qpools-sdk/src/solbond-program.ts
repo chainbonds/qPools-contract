@@ -1,3 +1,4 @@
+//@ts-ignore
 import * as anchor from "@project-serum/anchor";
 import {Connection} from "@solana/web3.js";
 import {Provider} from "@project-serum/anchor";
@@ -13,7 +14,8 @@ export const getSolbondProgram = (connection: Connection, provider: Provider, ne
         programAddress = "ELkkgofct1n4bpFASAe9C27nWQEKkd7HYwoFq5hXT9XW";
     } else if (network == Cluster.MAINNET) {
         programAddress = "ELkkgofct1n4bpFASAe9C27nWQEKkd7HYwoFq5hXT9XW";
-
+    } else if (network == Cluster.LOCALNET) {
+        programAddress = "ELkkgofct1n4bpFASAe9C27nWQEKkd7HYwoFq5hXT9XW";
     } else {
         throw Error("Solana Cluster not specified!" + String(network));
     }

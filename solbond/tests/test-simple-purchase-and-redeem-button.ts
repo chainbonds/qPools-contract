@@ -1,4 +1,5 @@
 import {BN, Provider} from '@project-serum/anchor';
+import * as anchor from '@project-serum/anchor';
 import {Keypair, PublicKey, SystemProgram} from "@solana/web3.js";
 import {
     Transaction,
@@ -35,14 +36,16 @@ const SOLANA_START_AMOUNT = 10_000_000_000;
 describe('qPools!', () => {
 
     // Configure the client to use the local cluster.
-    const provider = Provider.local("https://api.devnet.solana.com");
+    //// @ts-expect-error
+    const provider = anchor.AnchorProvider.env();
+    anchor.setProvider(provider);    //const provider = Provider.local("http://localhost:8899");
+    //const provider = Provider.local();
     //anchor.setProvider(provider);
     console.log("provider jsadkjjsdfjk ", provider);
     const connection = provider.connection;
-    const solbondProgram = getSolbondProgram(connection, provider, Cluster.DEVNET);
-
-    // @ts-expect-error
-    const genericPayer = provider.wallet.payer as Keypair;
+    const solbondProgram = getSolbondProgram(connection, provider, Cluster.LOCALNET);
+    console.log("got the solbond program ", solbondProgram);
+    const genericPayer = provider.wallet.publicKey;
 
     let weights: BN[];
     let USDC_USDT_pubkey: PublicKey;
@@ -72,7 +75,6 @@ describe('qPools!', () => {
         // TODO: For the crank, create a new keypair who runs these cranks ... (as is done on the front-end)
 
         registry = new Registry(connection);
-
         portfolioObject = new PortfolioFrontendFriendlyChainedInstructions(
             connection,
             provider,
@@ -80,14 +82,13 @@ describe('qPools!', () => {
             registry
         );
         await portfolioObject.initializeState();
-
         // TODO: Create a new provider for the crank ... (?), and airdrop them some SOL
 
         // Send some SOL to the tmpKeypair
         let tmpKeypair = Keypair.generate();
-        const sg = await connection.requestAirdrop(tmpKeypair.publicKey, 500_000_000);
-        const tx = await connection.confirmTransaction(sg);
-        console.log("airdrop tx: ", tx);
+        //const sg = await connection.requestAirdrop(tmpKeypair.publicKey, 500_000_000);
+        //const tx = await connection.confirmTransaction(sg);
+        //console.log("airdrop tx: ", tx);
         crankRpcTool = new CrankRpcCalls(
             connection,
             tmpKeypair,
@@ -96,7 +97,6 @@ describe('qPools!', () => {
             registry
         );
         await crankRpcTool.initializeState();
-
         // Delay a bit so the async call works ...
         await delay(5000);
         
@@ -112,9 +112,26 @@ describe('qPools!', () => {
         // let USDC_mint = new PublicKey("2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8");
 
         wrappedSolMint = new PublicKey("So11111111111111111111111111111111111111112");
+        console.log("disaster ")
+        solendmarket = await SolendMarket.initialize(connection, "production")
+        console.log("solendmarket")
+        //console.log(solendmarket.reserves)
+        //const solendConfigs = solendmarket.reserves.map((element, index, array) => element.config)
+        //console.log("kirekhar ",solendConfigs)
+        //const fs = require('fs');
+        //const {parse, stringify} = require('flatted');
 
-        solendmarket = await SolendMarket.initialize(connection, "devnet")
+        //let user = solendmarket;
+        //stringify(user);
+        //JSON.stringify(user,null,2)
+        //fs.writeFile('SolendMarket.json', JSON.stringify(solendConfigs), (err) => {
+        //    if (err) {
+        //        throw err;
+        //    }
+        //    console.log("JSON data is saved.");
+        //});
         await solendmarket.loadReserves();
+        console.log("kire khar ", solendmarket)
 
         const solReserve = solendmarket.reserves.find(res => res.config.symbol === tokenSymbolSolend);
         solSolendMint = new PublicKey(solReserve.config.mintAddress);
@@ -169,18 +186,18 @@ describe('qPools!', () => {
         // If it exists, skip this.
         const associatedTokenAccountWrappedSol = await getAssociatedTokenAddress(
             wrappedSolMint,
-            genericPayer.publicKey
+            genericPayer
         );
         const givemoney = new Transaction().add(
             SystemProgram.transfer({
-                     fromPubkey: genericPayer.publicKey,
+                     fromPubkey: genericPayer,
                      toPubkey: associatedTokenAccountWrappedSol,
                      lamports: 4e8,
             }),
             // createSyncNativeInstruction(associatedTokenAccountWrappedSol)
             syncNative(associatedTokenAccountWrappedSol)
         )
-        let sendsig = await provider.send(givemoney)
+        let sendsig = await provider.sendAndConfirm(givemoney)
         await provider.connection.confirmTransaction(sendsig);
         console.log("send money from user to portfolio: ", sendsig);
 

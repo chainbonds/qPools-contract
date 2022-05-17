@@ -22,10 +22,10 @@ export async function fetchSinglePositionSaber(
     console.log("#fetchSinglePosition()");
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
-    let positionContent = null;
+    let positionContent: PositionAccountSaber | null = null;
     if (await accountExists(connection, positionPDA)) {
         let response = await solbondProgram.account.positionAccountSaber.fetch(positionPDA);
-        positionContent = response as PositionAccountSaber;
+        positionContent = response as unknown as PositionAccountSaber;
     }
     console.log("##fetchSinglePosition()");
     return positionContent;
@@ -40,10 +40,10 @@ export async function fetchSinglePositionMarinade(
     console.log("#fetchSinglePosition()");
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
-    let positionContent = null;
+    let positionContent: PositionAccountMarinade | null = null;
     if (await accountExists(connection, positionPDA)) {
         let response = await solbondProgram.account.positionAccountMarinade.fetch(positionPDA);
-        positionContent = response as PositionAccountMarinade;
+        positionContent = response as unknown as PositionAccountMarinade;
     }
     console.log("##fetchSinglePosition()");
     return positionContent;

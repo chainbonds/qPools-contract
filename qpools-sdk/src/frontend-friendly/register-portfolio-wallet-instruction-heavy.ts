@@ -7,6 +7,8 @@ import {
     Transaction,
     TransactionInstruction
 } from "@solana/web3.js";
+// @ts-ignore
+import * as anchor from "@project-serum/anchor";
 import {BN, Program, Provider} from "@project-serum/anchor";
 import {u64} from '@solana/spl-token';
 import {WalletI} from "easy-spl";
@@ -60,7 +62,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
 
     public connection: Connection;
     public solbondProgram: Program;
-    public provider: Provider;
+    public provider: anchor.AnchorProvider;
     public providerWallet: IWallet;
     public wallet: Keypair;
 
@@ -84,7 +86,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
     // TODO: Should also include an async constructor probably ...
     constructor(
         connection: Connection,
-        provider: Provider,
+        provider: anchor.AnchorProvider,
         solbondProgram: Program,
         registry: Registry
     ) {
@@ -377,7 +379,7 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         // Fetch the position
         // I guess, gotta double-check that Saber redeemable works ...
         console.log("aaa 28");
-        let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as PositionAccountSaber;
+        let positionAccount: PositionAccountSaber = (await this.solbondProgram.account.positionAccountSaber.fetch(positionPDA)) as unknown as PositionAccountSaber;
         console.log("aaa 29");
         let poolAddress = await this.registry.saberPoolLpToken2poolAddress(positionAccount.poolAddress);
         console.log("Calling Stableswap");

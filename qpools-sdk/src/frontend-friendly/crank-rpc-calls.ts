@@ -9,6 +9,7 @@ import {
     PositionAccountSaber,
     PositionAccountSolend
 } from "../index";
+import * as anchor from '@project-serum/anchor';
 import {getPortfolioPda, getPositionPda} from "../types/account/pdas";
 import {sendLamports} from "../instructions/modify/portfolio-transfer";
 import {redeemSinglePositionOnlyOne} from "../instructions/modify/saber";
@@ -22,7 +23,7 @@ export class CrankRpcCalls {
 
     public connection: Connection;
     public solbondProgram: Program;
-    public provider: Provider;
+    public provider: anchor.AnchorProvider;
     public providerWallet: IWallet;
     public wallet: Keypair;
 
@@ -46,7 +47,7 @@ export class CrankRpcCalls {
     constructor(
         connection: Connection,
         tmpKeypair: Keypair,
-        provider: Provider,
+        provider: anchor.AnchorProvider,
         solbondProgram: Program,
         registry: Registry
     ) {
@@ -55,22 +56,26 @@ export class CrankRpcCalls {
         this.provider = provider;
         this.solbondProgram = solbondProgram;
         this.registry = registry;
-
         // Create a new provider
         // The crank covers the keypair within the provider
 
         // Clean the different types of providers ...
 
         this.crankWallet = new QWallet(tmpKeypair);
-        this.crankProvider = new Provider(this.connection, this.crankWallet, {preflightCommitment: "confirmed"});
+        this.crankProvider = new anchor.AnchorProvider(this.connection, this.crankWallet, {preflightCommitment: "confirmed"});
+        anchor.setProvider(provider);    //const provider = Provider.local("http://localhost:8899");
         let cluster: Cluster;
         if (getNetworkCluster() === Cluster.DEVNET) {
             cluster = Cluster.DEVNET;
+        } else if (getNetworkCluster() === Cluster.LOCALNET) {
+            cluster = Cluster.LOCALNET;
+        } else if (getNetworkCluster() === Cluster.MAINNET) {
+            cluster = Cluster.MAINNET;
         } else {
             throw Error("Cluster not implemented! crankRpcCalls Helper class");
         }
         this.crankSolbondProgram = getSolbondProgram(connection, this.crankProvider, cluster);
-
+        //console.log("crankSolbondProgram ", this.crankProvider)
         this.providerWallet = this.provider.wallet;
         console.log("PPP Pubkey is: ", this.providerWallet.publicKey);
         // Get the keypair from the provider wallet

@@ -1,6 +1,7 @@
 import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {BN, Program, web3} from "@project-serum/anchor";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
+// @ts-ignore
 import * as anchor from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda} from "../../types/account/pdas";
 import {fetchPortfolio} from "../fetch/portfolio";

@@ -10,6 +10,7 @@
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src",
+    "noImplicitAny": false,
 //    "baseUrl": "./src",
     "strict": true,
 //    "noEmit": true,

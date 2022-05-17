@@ -3,6 +3,7 @@ import {BN, Program, web3} from "@project-serum/anchor";
 import {getPortfolioPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
 import {getAccountForMintAndPDADontCreate, getAssociatedTokenAddressOffCurve, tokenAccountExists} from "../../utils";
 import {TOKEN_PROGRAM_ID} from "@solana/spl-token";
+// @ts-ignore
 import * as anchor from "@project-serum/anchor";
 
 export async function sendLamports(

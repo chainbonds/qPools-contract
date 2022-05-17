@@ -1,7 +1,9 @@
 import {Connection, PublicKey, Transaction, TransactionInstruction} from "@solana/web3.js";
 import {TOKEN_PROGRAM_ID, u64} from "@solana/spl-token";
 import {BN, Program, web3} from "@project-serum/anchor";
+
 import {getPortfolioPda, getPositionPda, getUserCurrencyPda, getATAPda} from "../../types/account/pdas";
+// @ts-ignore
 import * as anchor from "@project-serum/anchor";
 
 import {SolendAction, SolendReserve} from "@solendprotocol/solend-sdk";
@@ -64,7 +66,7 @@ export async function signApproveWithdrawAmountSolend(
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
 
     console.log("aaa 26");
-    let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
+    let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as unknown as PositionAccountSolend;
     console.log("aaa 27");
 
     if (positionAccount.isRedeemed && !positionAccount.isFulfilled) {
@@ -122,7 +124,7 @@ export async function permissionlessFulfillSolend(
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("aaa 20");
-    let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
+    let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as unknown as PositionAccountSolend;
     //const pdaOwnedATA = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPDA)
     //const pdaOwnedCollateral = await getAccountForMintAndPDADontCreate(new PublicKey(solendAction.reserve.collateralMintAddress), portfolioPDA)
     console.log("aaa 21");
@@ -189,7 +191,7 @@ export async function redeemSinglePositionSolend(
     console.log("positionPDA ", positionPDA.toString());
 
     console.log("aaa 24solend");
-    let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as PositionAccountSolend;
+    let positionAccount: PositionAccountSolend = (await solbondProgram.account.positionAccountSolend.fetch(positionPDA)) as unknown as PositionAccountSolend;
     console.log("aaa 25solend");
 
     // Almost all the arguments should be fetched from the program online ... very important.

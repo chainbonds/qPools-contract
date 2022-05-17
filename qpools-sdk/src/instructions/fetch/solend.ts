@@ -13,10 +13,10 @@ export async function fetchSinglePositionSolend(
     console.log("#fetchSinglePosition()");
     let [positionPDA, bumpPosition] = await getPositionPda(owner, index, solbondProgram);
     console.log("(2) portfolio PDA: ", positionPDA, typeof positionPDA);
-    let positionContent = null;
+    let positionContent: PositionAccountSolend | null = null;
     if (await accountExists(connection, positionPDA)) {
         let response = await solbondProgram.account.positionAccountSolend.fetch(positionPDA);
-        positionContent = response as PositionAccountSolend;
+        positionContent = response as unknown as PositionAccountSolend;
     }
     console.log("##fetchSinglePosition()");
     return positionContent;

@@ -1,5 +1,6 @@
 import {PublicKey} from "@solana/web3.js";
 import {BN, Program} from "@project-serum/anchor";
+// @ts-ignore
 import * as anchor from "@project-serum/anchor";
 import {bnTo8} from "../../utils";
 

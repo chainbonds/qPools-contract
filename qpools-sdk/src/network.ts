@@ -15,7 +15,6 @@ export const getNetworkCluster = () => {
     // If not, read it from the .env variable
 
     // Read the .env variable (?)
-    console.log("process.env.NEXT_PUBLIC_CLUSTER_NAME ", process.env.NEXT_PUBLIC_CLUSTER_NAME )
     if (process.env.NEXT_PUBLIC_CLUSTER_NAME === "devnet") {
         return Cluster.DEVNET
     } else if (process.env.NEXT_PUBLIC_CLUSTER_NAME === "mainnet") {

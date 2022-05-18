@@ -31,7 +31,7 @@ export async function transferUsdcFromUserToPortfolio(
     
     //let pdaCurrencyAccount = await getAccountForMintAndPDADontCreate(currencyMint, portfolioPda);
     let userCurrencyAccount = await getAccountForMintAndPDADontCreate(currencyMint, owner);
-
+    console.log("fuijk , ", (await (await connection.getTokenAccountBalance(userCurrencyAccount)).value.amount).toString());
     console.log("Input Accounts are: ");
     console.log(
         {

@@ -56,7 +56,7 @@ export class Registry {
 
     async initializeSolend() {
         if (!this.solendMarket) {
-            this.solendMarket = await SolendMarket.initialize(this.connection, "devnet");
+            this.solendMarket = await SolendMarket.initialize(this.connection, "production");
         }
     }
 

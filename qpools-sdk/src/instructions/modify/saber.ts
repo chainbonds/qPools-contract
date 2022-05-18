@@ -27,7 +27,8 @@ export async function approvePositionWeightSaber(
     amountB: BN,
     minMintAmount: BN,
     index: number,
-    weight: BN
+    weight: BN,
+    Cluster= MOCK.MAIN,
 ): Promise<TransactionInstruction> {
     console.log("#approvePositionWeightSaber()");
     let [portfolioPDA, portfolioBump] = await getPortfolioPda(owner, solbondProgram);
@@ -38,10 +39,10 @@ export async function approvePositionWeightSaber(
     console.assert(amountB.eq( new BN(0)));
 
     // Double check if already fulfilled, and skip it if not ...
-    if (state.tokenA.mint.equals(MOCK.DEV.SABER_USDC)) {
+    if (state.tokenA.mint.equals(Cluster.USDC)) {
         console.log("tokenA");
         // Don't do any swap
-    } else if (state.tokenB.mint.equals(MOCK.DEV.SABER_USDC)) {
+    } else if (state.tokenB.mint.equals(Cluster.USDT)) {
         console.log("tokenB");
         amountB = amountA;
         amountA = new BN(0);

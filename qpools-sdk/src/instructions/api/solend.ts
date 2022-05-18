@@ -21,7 +21,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     if (getNetworkCluster() === Cluster.DEVNET) {
         connection = new Connection("https://api.devnet.solana.com");
         market = await SolendMarket.initialize(connection, "devnet");
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         connection = new Connection("https://api.mainnet-beta.solana.com");
         market = await SolendMarket.initialize(connection, "production");
     }  else {
@@ -37,7 +37,7 @@ export const getSolendTokens = async (): Promise<ExplicitToken[]> => {
     let filter;
     if (getNetworkCluster() === Cluster.DEVNET) {
         filter = (x: SolendReserve) => {return (new Set(["SOL"])).has(x.config.symbol)};
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         filter = (x: SolendReserve) => {return true};
         // Do not include any filters ...
     } else {
@@ -85,6 +85,9 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     } else if (getNetworkCluster() === Cluster.MAINNET) {
         connection = new Connection("https://api.mainnet-beta.solana.com");
         market = await SolendMarket.initialize(connection, "production");
+    } else if (getNetworkCluster() === Cluster.LOCALNET) {
+        connection = new Connection("http://localhost:8899");
+        market = await SolendMarket.initialize(connection, "production");
     } else {
         throw Error("Cluster not implemented! getSolendPools");
     }
@@ -97,7 +100,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
     let filter: any;
     if (getNetworkCluster() === Cluster.DEVNET) {
         filter = (x: SolendReserve) => {return (new Set(["SOL"])).has(x.config.symbol)};
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         filter = (x: SolendReserve) => {return true};
     } else {
         throw Error("Cluster not implemented! getSolendTokens");
@@ -130,7 +133,7 @@ export const getSolendPools = async (portfolioPubkey: PublicKey): Promise<Explic
         let solendAction: SolendAction;
         if (getNetworkCluster() === Cluster.DEVNET) {
             solendAction = await SolendAction.initialize("mint", new BN(0), x.config.symbol, portfolioPubkey, connection, "devnet");
-        } else if (getNetworkCluster() === Cluster.MAINNET) {
+        } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
             solendAction = await SolendAction.initialize("mint", new BN(0), x.config.symbol, portfolioPubkey, connection, "production");
         } else {
             throw Error("Cluster not implemented! getSolendPools");

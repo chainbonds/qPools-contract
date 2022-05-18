@@ -18,7 +18,7 @@ export const getMarinadeTokens = async (): Promise<ExplicitToken[]> => {
     let saberTokenList: ExplicitToken[];
     if (getNetworkCluster() === Cluster.DEVNET) {
         saberTokenList = DEV_TOKEN_LIST_MARINADE["tokens"];
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         saberTokenList = MAINNET_TOKEN_LIST_MARINADE["tokens"];
     } else {
         throw Error("Cluster not implemented! getMarinadeTokens");
@@ -35,7 +35,7 @@ export const getMarinadePools = async  (): Promise<ExplicitPool[]> => {
             x.protocol = Protocol.marinade;
             return x;
         });
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         marinadePoolList = MAINNET_POOLS_INFO_MARINADE.map((x: any) => {
             x.poolType = ProtocolType.Staking;
             x.protocol = Protocol.marinade;

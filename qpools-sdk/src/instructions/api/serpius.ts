@@ -5,7 +5,7 @@ export const getSerpiusUrl = (): string => {
     let url: string
     if (getNetworkCluster() === Cluster.DEVNET) {
         return "https://qpools.serpius.com/weight_status_v3_no_port_devnet.json"
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         return "https://qpools.serpius.com/weight_status_v3_no_port.json"
     } else {
         throw Error("Cluster not implemented! getSolendPools");

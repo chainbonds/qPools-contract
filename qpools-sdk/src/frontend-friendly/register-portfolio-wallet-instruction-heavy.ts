@@ -246,6 +246,21 @@ export class PortfolioFrontendFriendlyChainedInstructions {
         return tx;
     }
 
+    async createSingleATA(mint: PublicKey, wallet: IWallet) {
+        let userAta = await getAssociatedTokenAddressOffCurve(mint, this.owner.publicKey);
+        if (!(await tokenAccountExists(this.connection, userAta))) {
+            console.log("Creating ATA: ", userAta.toString());
+            let tx2 = await createAssociatedTokenAccountUnsignedInstruction(
+                this.connection,
+                mint,
+                userAta,
+                this.owner.publicKey,
+                wallet,
+            );
+            return tx2;
+        } else {console.log("Skipping Creation of ATA: ", userAta.toString());}
+    }
+
     /**
      *
      * Portfolio Operations ...

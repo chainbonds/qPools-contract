@@ -23,7 +23,7 @@ export const getSaberTokens = async (): Promise<ExplicitToken[]> => {
     let saberTokenList: ExplicitToken[];
     if (getNetworkCluster() === Cluster.DEVNET) {
         saberTokenList = DEV_TOKEN_LIST_SABER["tokens"];
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         // Do a get request from saber ...
         saberTokenList = MAINNET_TOKEN_LIST_SABER["tokens"];
     } else {
@@ -42,7 +42,7 @@ export const getSaberPools = async  (): Promise<ExplicitPool[]> => {
             x.protocol = Protocol.saber;
             return x;
         });
-    } else if (getNetworkCluster() === Cluster.MAINNET) {
+    } else if (getNetworkCluster() === Cluster.MAINNET || getNetworkCluster() === Cluster.LOCALNET) {
         // Do a get request from saber ...
         saberPoolList = MAINNET_POOLS_INFO_SABER.map((x: any) => {
             x.poolType = ProtocolType.DEXLP;

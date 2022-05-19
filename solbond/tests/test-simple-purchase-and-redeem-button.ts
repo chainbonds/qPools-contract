@@ -178,26 +178,7 @@ describe('qPools!', () => {
                 connection,
                 txCreateATA1
             );
-
-            const associatedTokenAccountUSDC = await getAssociatedTokenAddress(
-                USDC_mint,
-                genericPayer
-            );
-
-            const tx = new anchor.web3.Transaction().add(
-                TokenInstructions.mintTo({
-                  mint: USDC_mint,
-                  amount: 100,
-                  mintAuthority: genericPayer,
-                  destination: associatedTokenAccountUSDC,
-                })
-              );
-
-              await sendAndConfirmTransaction(
-                solbondProgram.provider,
-                connection,
-                tx
-            );
+            
         }
 
 
@@ -243,6 +224,26 @@ describe('qPools!', () => {
         if (!(valueInUsdc > 0)) {
             throw Error("Amount to be paid in must be bigger than 0");
         }
+
+        const associatedTokenAccountUSDC = await getAssociatedTokenAddress(
+            USDC_mint,
+            genericPayer
+        );
+
+        const tx = new anchor.web3.Transaction().add(
+            TokenInstructions.mintTo({
+              mint: USDC_mint,
+              amount: AmountUsdc,
+              mintAuthority: genericPayer,
+              destination: associatedTokenAccountUSDC,
+            })
+          );
+
+          await sendAndConfirmTransaction(
+            solbondProgram.provider,
+            connection,
+            tx
+        );
 
         
     });
@@ -315,7 +316,7 @@ describe('qPools!', () => {
         console.log("Sending USDC");
         let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
         let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
-        //tx.add(IxSendUsdcToPortfolio); // account does not exist for this
+        tx.add(IxSendUsdcToPortfolio); // account does not exist for this
         tx.add(IxSendSolendSoltoPortfolio); // insuffient funds for this
 
         // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...

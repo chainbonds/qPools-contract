@@ -11,7 +11,7 @@ state_path = "./state"
 programs_path = "programs"
 
 provider = Provider.local()
-pubkey = "2kvxryujoi4hk9r5XkFNQ5JNDWPMYuUEz79Lk4cim4iT"#str(provider.wallet.public_key)
+pubkey = str(provider.wallet.public_key) #"2kvxryujoi4hk9r5XkFNQ5JNDWPMYuUEz79Lk4cim4iT"
 print(pubkey)
 state_addr = []
 state_names = []

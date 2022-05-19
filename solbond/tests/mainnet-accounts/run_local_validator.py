@@ -3,13 +3,20 @@ from os import listdir
 from os import walk
 import json 
 import subprocess
+import base64
+import base58
+from anchorpy import Provider
 
 state_path = "./state"
 programs_path = "programs"
 
+provider = Provider.local()
+pubkey = "2kvxryujoi4hk9r5XkFNQ5JNDWPMYuUEz79Lk4cim4iT"#str(provider.wallet.public_key)
+print(pubkey)
 state_addr = []
 state_names = []
 cmd = "solana-test-validator "
+
 for s in listdir(state_path):
     filename = os.fsdecode(s)
     f = open(state_path + "/" + filename)
@@ -18,7 +25,14 @@ for s in listdir(state_path):
     addr = data["pubkey"]
     state_addr.append(addr)
     state_names.append(filename)
-
+    # if its a mint, make mint authority to pubkey 
+    tokens = filename.split("_")
+    if tokens[1] == "mintAddress.json":
+        data_tmp = bytearray(base64.b64decode(data["account"]["data"][0]))
+        data_tmp[4:4+32] = base58.b58decode(pubkey)
+        print(base64.b64encode(data_tmp))
+        data['account']['data'][0] = base64.b64encode(data_tmp).decode('utf8')
+        json.dump(data, open(str(state_path + "/" + filename), "w"))
     cmd += "--account" + " " + str(addr) + " " + str(state_path + "/" + filename) + " "
 
 

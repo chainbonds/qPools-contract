@@ -15,8 +15,7 @@ import {
     Registry,
     sendAndConfirmTransaction
 } from '@qpools/sdk';
-
-
+import { TokenInstructions } from "@project-serum/serum";
 const SOLANA_START_AMOUNT = 10_000_000_000;
 
 // interface SyncNativeInstructionData {
@@ -46,6 +45,7 @@ describe('qPools!', () => {
     const solbondProgram = getSolbondProgram(connection, provider, Cluster.LOCALNET);
     //console.log("got the solbond program ", solbondProgram);
     const genericPayer = provider.wallet.publicKey;
+    console.log("got the generic ", genericPayer.toString());
 
     let weights: BN[];
     let USDC_USDT_pubkey: PublicKey;
@@ -177,6 +177,26 @@ describe('qPools!', () => {
                 solbondProgram.provider,
                 connection,
                 txCreateATA1
+            );
+
+            const associatedTokenAccountUSDC = await getAssociatedTokenAddress(
+                USDC_mint,
+                genericPayer
+            );
+
+            const tx = new anchor.web3.Transaction().add(
+                TokenInstructions.mintTo({
+                  mint: USDC_mint,
+                  amount: 100,
+                  mintAuthority: genericPayer,
+                  destination: associatedTokenAccountUSDC,
+                })
+              );
+
+              await sendAndConfirmTransaction(
+                solbondProgram.provider,
+                connection,
+                tx
             );
         }
 

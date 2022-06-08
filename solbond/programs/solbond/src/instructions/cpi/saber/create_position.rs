@@ -63,10 +63,12 @@ pub struct SaberLiquidityInstruction<'info> {
     pub pool_mint: Box<Account<'info, Mint>>,
     /// The authority of the swap.
     // swap authority doesn't have to be mut, tests pass
+    /// CHECK: checked by saber
     pub swap_authority: AccountInfo<'info>,
 
     /// The swap.
     //#[account(mut)]approved_position_details
+    /// CHECK: checked by saber
     pub swap: AccountInfo<'info>,
 
     pub mint_a: Account<'info,Mint>,

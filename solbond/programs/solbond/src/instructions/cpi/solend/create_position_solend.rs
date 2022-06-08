@@ -52,20 +52,27 @@ pub struct SolendPositionInstruction<'info> {
     )]
     pub destination_collateral: Account<'info,TokenAccount>,
 
+
     #[account(mut)]
+    /// CHECK: checked by solend
     pub reserve: AccountInfo<'info>,
 
     #[account(mut)]
+    /// CHECK: checked by solend
     pub reserve_collateral_mint: AccountInfo<'info>,
     
     #[account(mut)]
+    /// CHECK: checked by solend
     pub reserve_liquidity_supply: AccountInfo<'info>,
 
+    /// CHECK: checked by solend
     pub lending_market: AccountInfo<'info>,
 
+    /// CHECK: checked by solend
     pub lending_market_authority: AccountInfo<'info>,
 
     // check address of this 
+    /// CHECK: checked by solend
     pub solend_program: AccountInfo<'info>,
 
     #[account(

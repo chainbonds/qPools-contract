@@ -2,6 +2,25 @@
 
 This githubs consists of two modules:
 
+
+### the "smart" contract
+if you clone the repo, you need to add the submodules. To do that run the following commands
+
+````
+cd solbond/deps/liquid-staking-program
+git submodule init
+git submodule update
+
+````
+
+if necessary, repeat that for the other submodule repositories (marinade-onchain-helper,solana-program-library,stable-swap)
+
+change to the solbond directory and run 
+
+```
+anchor build
+```
+
 ### qpools-sdk
 This is the typescript library that interfaces with the Solana program, written in typescript. 
 You can find more information [here](./qpools-sdk/README.md)

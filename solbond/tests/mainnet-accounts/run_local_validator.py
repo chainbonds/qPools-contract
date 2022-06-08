@@ -8,7 +8,7 @@ import base58
 from anchorpy import Provider
 
 state_path = "./state"
-programs_path = "programs"
+programs_path = "./programs"
 
 provider = Provider.local()
 pubkey = str(provider.wallet.public_key) #"2kvxryujoi4hk9r5XkFNQ5JNDWPMYuUEz79Lk4cim4iT"

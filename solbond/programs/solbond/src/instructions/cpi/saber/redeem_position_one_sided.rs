@@ -24,7 +24,7 @@ pub struct RedeemOneSaberPosition<'info> {
 
     #[account(mut)]
     pub puller: Signer<'info>,
-
+    /// CHECK: checked by saber, should also do one ourselve
     pub swap_authority: AccountInfo<'info>,
     #[account(
         mut,
@@ -37,6 +37,7 @@ pub struct RedeemOneSaberPosition<'info> {
     )]
     pub position_pda: Box<Account<'info, PositionAccountSaber>>,
 
+    /// CHECK: checked by saber, should also do one ourselves
     pub swap: AccountInfo<'info>,
 
     #[account(

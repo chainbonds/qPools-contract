@@ -43,6 +43,7 @@ pub struct ApprovePositionWeightMarinade<'info> {
         mut,
         seeds = [owner.key().as_ref(), seeds::USER_MARINADE_SEED], bump = _bump_marinade
     )] // have to put a check on this that its the right account
+    /// CHECK: safe (not)
     pub owner_sol_pda: AccountInfo<'info>,
 
     //#[account(mut)]

@@ -42,6 +42,7 @@ pub struct RedeemPositionSolend<'info> {
         seeds = [user_transfer_authority.owner.key().as_ref(),reserve_collateral_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_col,
     )]
+    /// CHECK: doing a seed check
     pub source_collateral: AccountInfo<'info>,
     
     pub liquidity_mint: Account<'info, Mint>,
@@ -51,22 +52,28 @@ pub struct RedeemPositionSolend<'info> {
         seeds = [user_transfer_authority.owner.key().as_ref(),liquidity_mint.key().as_ref(),seeds::TOKEN_ACCOUNT_SEED],
         bump = _bump_ata_liq
     )]
+    /// CHECK: doing a seed check
     pub destination_liquidity: AccountInfo<'info>,
 
     #[account(mut)]
+    /// CHECK: checked by solend
     pub reserve: AccountInfo<'info>,
 
     #[account(mut)]
     pub reserve_collateral_mint: Account<'info, Mint>,
     
     #[account(mut)]
+    /// CHECK: checked by solend
     pub reserve_liquidity_supply: AccountInfo<'info>,
 
+    /// CHECK: checked by solend
     pub lending_market: AccountInfo<'info>,
 
+    /// CHECK: checked by solend
     pub lending_market_authority: AccountInfo<'info>,
 
-    // check address of this 
+    // check address of this
+    /// CHECK: checked by solend 
     pub solend_program: AccountInfo<'info>,
 
     #[account(

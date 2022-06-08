@@ -55,20 +55,25 @@ pub struct MarinadePositionInstruction<'info> {
     pub puller: Signer<'info>,
 
     #[account(mut)]
+    /// CHECK: checked by marinade
     pub state: AccountInfo<'info>, // marinadeState.marinadeStateAddress,
 
     #[account(mut)]
+    /// CHECK: checked by marinade
     pub msol_mint: AccountInfo<'info>, // marinadeState.mSolMintAddress,.
 
     #[account(mut)]
+    /// CHECK: checked by marinade
     pub liq_pool_sol_leg_pda: AccountInfo<'info>, // await marinadeState.solLeg(),
 
     #[account(mut)]
     pub liq_pool_msol_leg: Account<'info, TokenAccount>, // marinadeState.mSolLeg,
 
+    /// CHECK: checked by marinade
     pub liq_pool_msol_leg_authority: AccountInfo<'info>, // marinadeState.mSolLegAuthority(),
 
     #[account(mut)]
+    /// CHECK: checked by marinade
     pub reserve_pda: AccountInfo<'info>, // marinadeState.reserveAddress(),
 
     #[account(
@@ -80,17 +85,19 @@ pub struct MarinadePositionInstruction<'info> {
         bump,
     )]
     pub mint_to: Account<'info,TokenAccount>, // associatedMSolTokenAccountAddress, need to create this
-
+    /// CHECK: checked by marinade
     pub msol_mint_authority: AccountInfo<'info>, // await marinadeState.mSolMintAuthority(),
 
     #[account(
         mut,
         seeds = [portfolio_pda.owner.key().as_ref(), seeds::USER_MARINADE_SEED], bump = _bump_marinade
     )]
+    /// CHECK: checked by marinade
     pub owner_sol_pda: AccountInfo<'info>, // check this the right one
     //#[account(mut)]
 
     #[account(address = marinade_finance::ID)]
+    /// CHECK: check if address is correct
     pub marinade_program: AccountInfo<'info>,
     
     pub system_program: Program<'info, System>,

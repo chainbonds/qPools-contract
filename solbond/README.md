@@ -17,6 +17,17 @@ solana config set --url https://api.devnet.solana.com
 
 ```
 
+After having installed all the node stuff, do 
+
+````
+cd qpools-sdk
+npm link 
+```
+and then from solbond directory do 
+```
+npm link @qpools/sdk
+```
+
 (3) Now you can deploy the program. 
 The program-id should always be equivalent due to the static keypairs.
 Make sure to change the keypairs for when you want to deploy to mainnet. 

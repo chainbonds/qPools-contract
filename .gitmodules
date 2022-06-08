@@ -4,3 +4,9 @@
 [submodule "solbond/deps/liquid-staking-program"]
 	path = solbond/deps/liquid-staking-program
 	url = git@github.com:chainbonds/liquid-staking-program.git
+[submodule "solbond/deps/solana-program-library"]
+	path = solbond/deps/solana-program-library
+	url = git@github.com:solana-labs/solana-program-library.git
+[submodule "solbond/deps/stable-swap"]
+	path = solbond/deps/stable-swap
+	url = git@github.com:saber-hq/stable-swap.git

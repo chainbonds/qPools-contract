@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token};
 use instructions::*;
 
-declare_id!("ELkkgofct1n4bpFASAe9C27nWQEKkd7HYwoFq5hXT9XW");
+declare_id!("6Yd2MaZJqmMVg4QoJpgfFSUG4sQk94UBHRMJhqejtFCo");
 
 
 #[program]

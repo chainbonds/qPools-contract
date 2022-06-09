@@ -260,22 +260,33 @@ describe('qPools!', () => {
             2
         );
         tx.add(IxCreatePortfolioPda);
-
+        await sendAndConfirmTransaction(
+            solbondProgram!.provider,
+            connection!,
+            tx
+        );
+        console.log("pashm ");
+        let tx1: Transaction = new Transaction();  
         console.log("Transfer Asset to Portfolio");
         console.log("registerCurrencyInputInPortfolio");
         let IxRegisterCurrencyUsdcInput = await portfolioObject.registerCurrencyInputInPortfolio(
             AmountUsdc,
             USDC_mint
         );
-        tx.add(IxRegisterCurrencyUsdcInput);
-
+        tx1.add(IxRegisterCurrencyUsdcInput);
+        
         console.log("registerCurrencyInputInPortfolio");
         let IxRegisterCurrencywSOLInput = await portfolioObject.registerCurrencyInputInPortfolio(
             new BN(1).mul(new BN(10**6)), solSolendMint
         );
         console.log("asbe khare sag ", (new BN(1).mul(new BN(10**9)).toString()))
-        tx.add(IxRegisterCurrencywSOLInput);
-  
+        tx1.add(IxRegisterCurrencywSOLInput);
+        await sendAndConfirmTransaction(
+            solbondProgram!.provider,
+            connection!,
+            tx1
+        );
+        console.log("pehen")
         // Set of instructions here are hard-coded
 
         // Create position approve for marinade, and the saber pool (again, hardcode this part lol).
@@ -283,7 +294,11 @@ describe('qPools!', () => {
         console.log("Approve Position Saber");
         // I guess we gotta make the case distinction here lol
         // TODO: Copy the case-distinction from below. Then you can continue
-        // TODO: figure out tokenA and tokenB ==> Currently hard-coded...
+        // TODO: figure out tokenA and tokenB ==> Currently hard-coded..
+        let tx2: Transaction = new Transaction();
+        let tx3: Transaction = new Transaction();
+        let tx4: Transaction = new Transaction();
+        let tx5: Transaction = new Transaction();
         console.log("approvePositionWeightSaber");
         let IxApproveiPositionWeightSaber = await portfolioObject.approvePositionWeightSaber(
             poolAddresses[0],
@@ -293,8 +308,13 @@ describe('qPools!', () => {
             0,  // Hardcoded
             weights[0]
         )
-        tx.add(IxApproveiPositionWeightSaber);
-
+        tx2.add(IxApproveiPositionWeightSaber);
+        await sendAndConfirmTransaction(
+            solbondProgram!.provider,
+            connection!,
+            tx2
+        );
+        console.log("labeyk")
         console.log("Approve Position Marinade");
         console.log("approvePositionWeightMarinade");
         let IxApprovePositionWeightMarinade = await portfolioObject.approvePositionWeightMarinade(
@@ -302,8 +322,13 @@ describe('qPools!', () => {
             1, // Hardcoded
             weights[1]
         );
-        tx.add(IxApprovePositionWeightMarinade);
-
+        tx3.add(IxApprovePositionWeightMarinade);
+        await sendAndConfirmTransaction(
+            solbondProgram!.provider,
+            connection!,
+            tx3
+        );
+        console.log("arezuye ")
         console.log("Approve Position Solend");
         let IxApprovePositionWeightSolend = await portfolioObject.approvePositionWeightSolend(
             solSolendMint,
@@ -311,24 +336,34 @@ describe('qPools!', () => {
             2, // Hardcoded
             weights[2]
         );
-        tx.add(IxApprovePositionWeightSolend);
-
-        console.log("Sending USDC");
-        let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
-        let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
-        tx.add(IxSendUsdcToPortfolio); // account does not exist for this
-        tx.add(IxSendSolendSoltoPortfolio); // insuffient funds for this
-
-        // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
-        console.log("Sending and signing the transaction");
-        console.log("Provider is: ");
-        console.log(solbondProgram!.provider);
-        console.log(solbondProgram!.provider.wallet.publicKey.toString());
+        tx4.add(IxApprovePositionWeightSolend);
         await sendAndConfirmTransaction(
             solbondProgram!.provider,
             connection!,
-            tx
+            tx4
         );
+        console.log("bahane kardam")
+        console.log("Sending USDC");
+        let IxSendUsdcToPortfolio = await portfolioObject.transfer_to_portfolio(USDC_mint);
+        let IxSendSolendSoltoPortfolio = await portfolioObject.transfer_to_portfolio(solSolendMint);
+        tx5.add(IxSendUsdcToPortfolio); // account does not exist for this
+        tx5.add(IxSendSolendSoltoPortfolio); // insuffient funds for this
+        await sendAndConfirmTransaction(
+            solbondProgram!.provider,
+            connection!,
+            tx5
+        );
+        // For now, we can make the generic payer also run the cranks, so we can skip the crank wallet functionality ...
+        console.log("Sending and signing the transaction");
+        console.log("gerye ra be masti")
+        console.log("Provider is: ");
+        console.log(solbondProgram!.provider);
+        console.log(solbondProgram!.provider.wallet.publicKey.toString());
+        //await sendAndConfirmTransaction(
+        //    solbondProgram!.provider,
+        //    connection!,
+        //    tx
+        //);
 
     });
 
